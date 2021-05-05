@@ -1,0 +1,23 @@
+[package]
+name = "bp-dbc"
+version = "0.5.0-rc.1"
+license = "Apache-2.0"
+authors = ["Dr. Maxim Orlovsky <orlovsky@pandoracore.com>"]
+description = "Deterministic bitcoin commitments library"
+repository = "https://github.com/LNP-BP/client_side_validation"
+homepage = "https://github.com/LNP-BP"
+keywords = ["lnp-bp", "bitcoin", "cryptography", "smart-contracts", "client-side-validation"]
+categories = ["cryptography::cryptocurrencies", "encoding"]
+readme = "README.md"
+edition = "2018"
+
+[lib]
+name = "dbc"
+path = "src/lib.rs"
+
+[dependencies]
+amplify = "3.4"
+bitcoin = "0.26"
+descriptor-wallet = "0.4.1"
+strict_encoding = "1.2.3"
+commit_verify = { version = "0.5.0-rc.1", path = "../commit_verify" }

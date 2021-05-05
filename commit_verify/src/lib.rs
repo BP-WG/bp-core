@@ -11,16 +11,23 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/MIT>.
 
-mod blind;
-mod error;
-pub mod lnpbp1;
-pub mod lnpbp2;
-pub mod lnpbp3;
-pub mod lnpbp4;
-mod txout_seal;
-mod txout_witness;
+#[macro_use]
+extern crate amplify_derive;
+#[macro_use]
+extern crate strict_encoding;
+#[macro_use]
+extern crate bitcoin_hashes;
 
-pub use blind::{OutpointHash, OutpointReveal, ParseError};
-pub use error::Error;
-pub use txout_seal::{TxResolve, TxoutSeal};
-pub use txout_witness::{InnerWitness, OuterWitness, Witness};
+mod commit_encode;
+mod commit_verify;
+mod digests;
+pub mod lnpbp4;
+pub mod tagged_hash;
+
+pub use commit_encode::{
+    commit_strategy, merklize, CommitConceal, CommitEncode,
+    CommitEncodeWithStrategy, ConsensusCommit, ConsensusMerkleCommit,
+    MerkleSource, ToMerkleSource,
+};
+pub use commit_verify::{CommitVerify, EmbedCommitVerify, TryCommitVerify};
+pub use tagged_hash::TaggedHash;
