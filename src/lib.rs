@@ -43,15 +43,3 @@ extern crate bitcoin_hashes;
 #[cfg(test)]
 #[macro_use]
 extern crate strict_encoding;
-
-#[macro_use]
-mod commit_encode;
-pub mod commit_verify;
-mod digests;
-pub mod single_use_seals;
-
-pub use crate::commit_encode::{
-    commit_strategy, merklize, CommitConceal, CommitEncode,
-    CommitEncodeWithStrategy, ConsensusCommit, ConsensusMerkleCommit,
-    MerkleNode, MerkleSource, ToMerkleSource,
-};
