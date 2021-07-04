@@ -20,4 +20,4 @@ amplify = "3.4"
 bitcoin = "0.26"
 descriptor-wallet = "0.4.1"
 strict_encoding = "1.2.3"
-commit_verify = { version = "0.5.0-rc.1", path = "../commit_verify" }
+commit_verify = "0.5.0"

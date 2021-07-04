@@ -111,7 +111,7 @@ v0.2.0-beta.1
 
 ### LNP/BP Services Library
 - Debugging and display logging improvements with LNP/BP Services library
-- ESB functionality improvements in LNP/BP Services libraru
+- ESB functionality improvements in LNP/BP Services library
 
 v0.2.0-alpha.3
 --------------
