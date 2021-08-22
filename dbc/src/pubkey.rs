@@ -28,7 +28,7 @@
 
 use bitcoin::hashes::{sha256, Hmac};
 use bitcoin::secp256k1;
-use client_side_validation::commit_verify::EmbedCommitVerify;
+use commit_verify::EmbedCommitVerify;
 
 use super::{Container, Error, Proof};
 use crate::lnpbp1;
@@ -125,12 +125,12 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test::*;
-    use amplify::Wrapper;
-    use bitcoin::hashes::{hex::ToHex, sha256, Hash};
+    use crate::lnpbp1::test_helpers::*;
+    use bitcoin::hashes::{sha256, Hash};
     use bitcoin::secp256k1;
-    use client_side_validation::commit_verify::test_helpers::*;
     use std::str::FromStr;
+    use amplify::Wrapper;
+    use amplify::hex::ToHex;
 
     #[test]
     fn test_pubkey_commitment() {

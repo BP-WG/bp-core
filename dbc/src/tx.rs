@@ -14,7 +14,7 @@
 use amplify::Wrapper;
 use bitcoin::hashes::{sha256, Hmac};
 use bitcoin::{secp256k1, Transaction, TxOut};
-use client_side_validation::commit_verify::EmbedCommitVerify;
+use commit_verify::EmbedCommitVerify;
 
 use super::{
     Container, Error, Proof, ScriptEncodeData, ScriptEncodeMethod,
@@ -155,7 +155,7 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::dbc::{ScriptEncodeData, ScriptEncodeMethod, SpkContainer};
+    use crate::{ScriptEncodeData, ScriptEncodeMethod, SpkContainer};
     use bitcoin::consensus::encode::deserialize;
     use bitcoin::hashes::hex::FromHex;
     use std::str::FromStr;

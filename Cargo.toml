@@ -1,5 +1,5 @@
 [package]
-name = "client_side_validation"
+name = "bp-core"
 version = "0.5.0-rc.1"
 license = "Apache-2.0"
 authors = ["Dr. Maxim Orlovsky <orlovsky@pandoracore.com>"]
@@ -13,14 +13,14 @@ edition = "2018"
 exclude = [".github", "bp-dbc", "bp-seals", "commit_verify", "strict_encoding", "single_use_seals"]
 
 [lib]
-name = "client_side_validation"
+name = "bp"
 path = "src/lib.rs"
 
 [dependencies]
 amplify = "3.7.1"
-strict_encoding = "1.5.1"
-commit_verify = "0.5.0"
-single_use_seals = "0.5.1"
+strict_encoding = { version = "1.6.0", features = ["bitcoin", "miniscript", "derive"] }
+commit_verify = "0.5.4"
+single_use_seals = "0.5.3"
 bp-dbc = { version = "0.5.0-rc.1", path = "./dbc", optional = true, default-features = false }
 bp-seals = { version = "0.5.0-rc.1", path = "./seals", optional = true, default-features = false }
 

@@ -13,9 +13,6 @@
 
 mod blind;
 mod error;
-pub mod lnpbp1;
-pub mod lnpbp2;
-pub mod lnpbp3;
 mod txout_seal;
 mod txout_witness;
 

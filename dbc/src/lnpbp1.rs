@@ -17,13 +17,12 @@ use bitcoin::hashes::{sha256, Hash, HashEngine, Hmac, HmacEngine};
 use bitcoin::secp256k1;
 use wallet::SECP256K1;
 
-lazy_static! {
-    /// Single SHA256 hash of "LNPBP1" string according to LNPBP-1 acting as a
-    /// prefix to the message in computing tweaking factor
-    pub static ref LNPBP1_HASHED_TAG: [u8; 32] = {
-        sha256::Hash::hash(b"LNPBP1").into_inner()
-    };
-}
+/// Single SHA256 hash of "LNPBP1" string according to LNPBP-1 acting as a
+/// prefix to the message in computing tweaking factor
+pub static LNPBP1_HASHED_TAG: [u8; 32] = [
+    245, 8, 242, 142, 252, 192, 113, 82, 108, 168, 134, 200, 224, 124, 105, 212,
+    149, 78, 46, 201, 252, 82, 171, 140, 204, 209, 41, 17, 12, 0, 64, 175
+];
 
 /// Deterministically-organized set of all public keys used by this mod
 /// internally
@@ -119,7 +118,7 @@ pub fn commit(
     // ! [CONSENSUS-CRITICAL]:
     // ! [STANDARD-CRITICAL]: Hash process started with consuming first
     //                        protocol prefix: single SHA256 hash of
-    //                        ASCII "LNPBP-1" string.
+    //                        ASCII "LNPBP1" string.
     // NB: We use the same hash as in LNPBP-1 so when there is no other
     //     keys involved the commitment would not differ.
     hmac_engine.input(&LNPBP1_HASHED_TAG[..]);
@@ -213,43 +212,150 @@ pub fn verify(
     }
 }
 
+/// Helpers for writing test functions working with commit-verify scheme
+#[cfg(test)]
+pub mod test_helpers {
+    use super::*;
+    use std::fmt::Debug;
+    use std::collections::HashSet;
+    use amplify::hex::FromHex;
+    use commit_verify::EmbedCommitVerify;
+
+    /// Generates a set of messages for testing purposes
+    ///
+    /// All of these messages MUST produce different commitments, otherwise the
+    /// commitment algorithm is not collision-resistant
+    pub fn gen_messages() -> Vec<Vec<u8>> {
+        vec![
+            // empty message
+            b"".to_vec(),
+            // zero byte message
+            b"\x00".to_vec(),
+            // text message
+            b"test".to_vec(),
+            // text length-extended message
+            b"test*".to_vec(),
+            // short binary message
+            Vec::from_hex("deadbeef").unwrap(),
+            // length-extended version
+            Vec::from_hex("deadbeef00").unwrap(),
+            // prefixed version
+            Vec::from_hex("00deadbeef").unwrap(),
+            // serialized public key as text
+            b"0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798".to_vec(),
+            // the same public key binary data
+            Vec::from_hex("0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798")
+                .unwrap(),
+            // different public key
+            Vec::from_hex("02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9")
+                .unwrap(),
+        ]
+    }
+
+    pub fn gen_secp_pubkeys(n: usize) -> Vec<secp256k1::PublicKey> {
+        let mut ret = Vec::with_capacity(n);
+        let mut sk = [0; 32];
+
+        for i in 1..n + 1 {
+            sk[0] = i as u8;
+            sk[1] = (i >> 8) as u8;
+            sk[2] = (i >> 16) as u8;
+
+            ret.push(secp256k1::PublicKey::from_secret_key(
+                &secp256k1::SECP256K1,
+                &secp256k1::SecretKey::from_slice(&sk[..]).unwrap(),
+            ));
+        }
+        ret
+    }
+
+
+    /// Runs round-trip of commitment-embed-verify for a given set of messages
+    /// and provided container
+    pub fn embed_commit_verify_suite<MSG, CMT>(
+        messages: Vec<MSG>,
+        container: &mut CMT::Container,
+    ) where
+        MSG: AsRef<[u8]> + Eq,
+        CMT: EmbedCommitVerify<MSG> + Eq + std::hash::Hash + Debug,
+    {
+        messages.iter().fold(
+            HashSet::<CMT>::with_capacity(messages.len()),
+            |mut acc, msg| {
+                let commitment = CMT::embed_commit(container, msg).unwrap();
+
+                // Commitments MUST be deterministic: each message should
+                // produce unique commitment
+                (1..10).for_each(|_| {
+                    assert_eq!(
+                        CMT::embed_commit(container, msg).unwrap(),
+                        commitment
+                    );
+                });
+
+                // Testing verification
+                assert!(commitment.verify(container, msg).unwrap());
+
+                messages.iter().for_each(|m| {
+                    // Testing that commitment verification succeeds only
+                    // for the original message and fails for the rest
+                    assert_eq!(
+                        commitment.verify(container, m).unwrap(),
+                        m == msg
+                    );
+                });
+
+                acc.iter().for_each(|cmt| {
+                    // Testing that verification against other commitments
+                    // returns `false`
+                    assert!(!cmt.verify(container, msg).unwrap());
+                });
+
+                // Detecting collision
+                assert!(acc.insert(commitment));
+
+                acc
+            },
+        );
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::str::FromStr;
 
     use super::*;
-    use crate::test::*;
-    use client_side_validation::commit_verify::test_helpers::*;
+    use crate::lnpbp1::test_helpers::*;
 
     #[test]
     fn test_lnpbp1_tag() {
         assert_eq!(
             sha256::Hash::hash(b"LNPBP1").into_inner(),
-            *LNPBP1_HASHED_TAG
+            LNPBP1_HASHED_TAG
         );
         assert_ne!(
             sha256::Hash::hash(b"LNPBP2").into_inner(),
-            *LNPBP1_HASHED_TAG
+            LNPBP1_HASHED_TAG
         );
         assert_ne!(
             sha256::Hash::hash(b"LNPBP-1").into_inner(),
-            *LNPBP1_HASHED_TAG
+            LNPBP1_HASHED_TAG
         );
         assert_ne!(
             sha256::Hash::hash(b"LNPBP_1").into_inner(),
-            *LNPBP1_HASHED_TAG
+            LNPBP1_HASHED_TAG
         );
         assert_ne!(
             sha256::Hash::hash(b"lnpbp1").into_inner(),
-            *LNPBP1_HASHED_TAG
+            LNPBP1_HASHED_TAG
         );
         assert_ne!(
             sha256::Hash::hash(b"lnpbp-1").into_inner(),
-            *LNPBP1_HASHED_TAG
+            LNPBP1_HASHED_TAG
         );
         assert_ne!(
             sha256::Hash::hash(b"lnpbp_1").into_inner(),
-            *LNPBP1_HASHED_TAG
+            LNPBP1_HASHED_TAG
         );
     }
 
@@ -292,7 +398,7 @@ mod test {
                 // Do commitment by hand
                 let mut engine =
                     HmacEngine::<sha256::Hash>::new(&original.serialize());
-                engine.input(&*LNPBP1_HASHED_TAG);
+                engine.input(&LNPBP1_HASHED_TAG);
                 engine.input(&tag.into_inner());
                 engine.input(&sha256::Hash::hash(msg));
                 let hmac = Hmac::from_engine(engine);
@@ -403,7 +509,7 @@ mod test {
                 // Do commitment by hand
                 let mut engine =
                     HmacEngine::<sha256::Hash>::new(&original.serialize());
-                engine.input(&*LNPBP1_HASHED_TAG);
+                engine.input(&LNPBP1_HASHED_TAG);
                 engine.input(&tag.into_inner());
                 engine.input(msg);
                 let hmac = Hmac::from_engine(engine);

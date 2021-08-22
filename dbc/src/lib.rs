@@ -11,7 +11,13 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/MIT>.
 
+#[macro_use]
+extern crate amplify;
+#[macro_use]
+extern crate strict_encoding;
+
 mod error;
+pub mod lnpbp1;
 pub mod keyset;
 pub mod lockscript;
 pub mod pubkey;
