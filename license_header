@@ -12,13 +12,3 @@
 // You should have received a copy of the Apache 2.0 License
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
-
-mod blind;
-mod error;
-mod txout_seal;
-mod txout_witness;
-
-pub use blind::{OutpointHash, OutpointReveal, ParseError};
-pub use error::Error;
-pub use txout_seal::{TxResolve, TxoutSeal};
-pub use txout_witness::{InnerWitness, OuterWitness, Witness};

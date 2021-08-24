@@ -1,5 +1,7 @@
-// LNP/BP Core Library implementing LNPBP specifications & standards
-// Written in 2020 by
+// BP Core Library implementing LNP/BP specifications & standards related to
+// bitcoin protocol
+//
+// Written in 2020-2021 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
 //
 // To the extent possible under law, the author(s) have dedicated all
@@ -7,9 +9,9 @@
 // the public domain worldwide. This software is distributed without
 // any warranty.
 //
-// You should have received a copy of the MIT License
+// You should have received a copy of the Apache 2.0 License
 // along with this software.
-// If not, see <https://opensource.org/licenses/MIT>.
+// If not, see <https://opensource.org/licenses/Apache-2.0>.
 
 #![recursion_limit = "256"]
 // Coding conventions
@@ -20,7 +22,8 @@
     unused_mut,
     unused_imports,
     dead_code,
-    //missing_docs
+    missing_docs,
+    warnings
 )]
 
 //! Primitives module defines core strict interfaces from informational LNPBP

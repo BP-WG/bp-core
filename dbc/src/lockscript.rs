@@ -1,5 +1,7 @@
-// LNP/BP Rust Library
-// Written in 2019 by
+// BP Core Library implementing LNP/BP specifications & standards related to
+// bitcoin protocol
+//
+// Written in 2020-2021 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
 //
 // To the extent possible under law, the author(s) have dedicated all
@@ -7,9 +9,9 @@
 // the public domain worldwide. This software is distributed without
 // any warranty.
 //
-// You should have received a copy of the MIT License
+// You should have received a copy of the Apache 2.0 License
 // along with this software.
-// If not, see <https://opensource.org/licenses/MIT>.
+// If not, see <https://opensource.org/licenses/Apache-2.0>.
 
 //! # LNPBP-2
 //!
@@ -27,8 +29,7 @@ use core::cell::RefCell;
 use std::collections::{BTreeSet, HashSet};
 
 use bitcoin::hashes::{hash160, sha256, Hmac};
-use bitcoin::secp256k1;
-use bitcoin::PubkeyHash;
+use bitcoin::{secp256k1, PubkeyHash};
 use commit_verify::EmbedCommitVerify;
 use miniscript::Segwitv0;
 use wallet::LockScript;
@@ -102,17 +103,8 @@ impl Container for LockscriptContainer {
 /// [`LockScript`] containing public keys which sum is commit to some message
 /// according to LNPBP-2
 #[derive(
-    Wrapper,
-    Clone,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    Default,
-    Debug,
-    Display,
-    From,
+    Wrapper, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug,
+    Display, From
 )]
 #[display(inner)]
 #[wrapper(LowerHex, UpperHex)]
@@ -503,7 +495,8 @@ mod test {
         let (keys, _, _) = gen_test_data();
 
         let ms = policy_str!(
-            "or(thresh(3,pk({}),pk({}),pk({})),and(thresh(2,pk({}),pk({})),older(10000)))",
+            "or(thresh(3,pk({}),pk({}),pk({})),and(thresh(2,pk({}),pk({})),\
+             older(10000)))",
             keys[0],
             keys[1],
             keys[2],

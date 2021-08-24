@@ -1,6 +1,6 @@
 [package]
 name = "bp-dbc"
-version = "0.5.0-rc.1"
+version = "0.5.0-alpha.1"
 license = "Apache-2.0"
 authors = ["Dr. Maxim Orlovsky <orlovsky@pandoracore.com>"]
 description = "Deterministic bitcoin commitments library"

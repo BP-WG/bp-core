@@ -1,5 +1,7 @@
-// LNP/BP Core Library implementing LNPBP specifications & standards
-// Written in 2020 by
+// BP Core Library implementing LNP/BP specifications & standards related to
+// bitcoin protocol
+//
+// Written in 2020-2021 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
 //
 // To the extent possible under law, the author(s) have dedicated all
@@ -7,9 +9,9 @@
 // the public domain worldwide. This software is distributed without
 // any warranty.
 //
-// You should have received a copy of the MIT License
+// You should have received a copy of the Apache 2.0 License
 // along with this software.
-// If not, see <https://opensource.org/licenses/MIT>.
+// If not, see <https://opensource.org/licenses/Apache-2.0>.
 
 use std::str::FromStr;
 
@@ -27,19 +29,9 @@ use crate::tagged_hash::TaggedHash;
 /// Data required to generate or reveal the information about blinded
 /// transaction outpoint
 #[derive(
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    Debug,
-    Display,
-    Default,
-    StrictEncode,
-    StrictDecode,
+    Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display, Default
 )]
+#[derive(StrictEncode, StrictDecode)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -92,15 +84,13 @@ impl CommitConceal for OutpointReveal {
 
 impl OutpointReveal {
     #[inline]
-    pub fn outpoint_hash(&self) -> OutpointHash {
-        OutpointHash::commit(self)
-    }
+    pub fn outpoint_hash(&self) -> OutpointHash { OutpointHash::commit(self) }
 }
 
 /// Errors happening during parsing string representation of different forms of
 /// single-use-seals
 #[derive(
-    Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display, Error, From,
+    Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display, Error, From
 )]
 #[display(doc_comments)]
 pub enum ParseError {
@@ -170,9 +160,7 @@ pub struct OutpointHashTag;
 
 impl sha256t::Tag for OutpointHashTag {
     #[inline]
-    fn engine() -> sha256::HashEngine {
-        sha256::HashEngine::default()
-    }
+    fn engine() -> sha256::HashEngine { sha256::HashEngine::default() }
 }
 
 /// Blind version of transaction outpoint
@@ -182,17 +170,8 @@ impl sha256t::Tag for OutpointHashTag {
     serde(crate = "serde_crate", transparent)
 )]
 #[derive(
-    Wrapper,
-    Copy,
-    Clone,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    Default,
-    Display,
-    From,
+    Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default,
+    Display, From
 )]
 #[wrapper(Debug, LowerHex, Index, IndexRange, IndexFrom, IndexTo, IndexFull)]
 #[display(OutpointHash::to_bech32_string)]
@@ -245,10 +224,11 @@ impl crate::bech32::Strategy for sha256t::Hash<OutpointHashTag> {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use bitcoin::hashes::hex::FromHex;
     use bitcoin::hashes::sha256d;
     use bitcoin::hashes::sha256t::Tag;
+
+    use super::*;
 
     #[test]
     fn outpoint_hash_midstate() {
@@ -297,7 +277,11 @@ mod test {
         };
 
         let s = outpoint_reveal.to_string();
-        assert_eq!(&s, "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:21#0x31bbed7e7b2d");
+        assert_eq!(
+            &s,
+            "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:\
+             21#0x31bbed7e7b2d"
+        );
 
         // round-trip
         assert_eq!(OutpointReveal::from_str(&s).unwrap(), outpoint_reveal);

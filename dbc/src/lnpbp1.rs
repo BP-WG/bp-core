@@ -1,5 +1,7 @@
-// LNP/BP Core Library implementing LNPBP specifications & standards
-// Written in 2020 by
+// BP Core Library implementing LNP/BP specifications & standards related to
+// bitcoin protocol
+//
+// Written in 2020-2021 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
 //
 // To the extent possible under law, the author(s) have dedicated all
@@ -7,9 +9,9 @@
 // the public domain worldwide. This software is distributed without
 // any warranty.
 //
-// You should have received a copy of the MIT License
+// You should have received a copy of the Apache 2.0 License
 // along with this software.
-// If not, see <https://opensource.org/licenses/MIT>.
+// If not, see <https://opensource.org/licenses/Apache-2.0>.
 
 use std::collections::BTreeSet;
 
@@ -20,8 +22,8 @@ use wallet::SECP256K1;
 /// Single SHA256 hash of "LNPBP1" string according to LNPBP-1 acting as a
 /// prefix to the message in computing tweaking factor
 pub static LNPBP1_HASHED_TAG: [u8; 32] = [
-    245, 8, 242, 142, 252, 192, 113, 82, 108, 168, 134, 200, 224, 124, 105, 212,
-    149, 78, 46, 201, 252, 82, 171, 140, 204, 209, 41, 17, 12, 0, 64, 175
+    245, 8, 242, 142, 252, 192, 113, 82, 108, 168, 134, 200, 224, 124, 105,
+    212, 149, 78, 46, 201, 252, 82, 171, 140, 204, 209, 41, 17, 12, 0, 64, 175,
 ];
 
 /// Deterministically-organized set of all public keys used by this mod
@@ -215,11 +217,13 @@ pub fn verify(
 /// Helpers for writing test functions working with commit-verify scheme
 #[cfg(test)]
 pub mod test_helpers {
-    use super::*;
-    use std::fmt::Debug;
     use std::collections::HashSet;
+    use std::fmt::Debug;
+
     use amplify::hex::FromHex;
     use commit_verify::EmbedCommitVerify;
+
+    use super::*;
 
     /// Generates a set of messages for testing purposes
     ///
@@ -268,7 +272,6 @@ pub mod test_helpers {
         }
         ret
     }
-
 
     /// Runs round-trip of commitment-embed-verify for a given set of messages
     /// and provided container

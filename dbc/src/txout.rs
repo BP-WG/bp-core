@@ -1,5 +1,7 @@
-// LNP/BP Rust Library
-// Written in 2019 by
+// BP Core Library implementing LNP/BP specifications & standards related to
+// bitcoin protocol
+//
+// Written in 2020-2021 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
 //
 // To the extent possible under law, the author(s) have dedicated all
@@ -7,9 +9,9 @@
 // the public domain worldwide. This software is distributed without
 // any warranty.
 //
-// You should have received a copy of the MIT License
+// You should have received a copy of the Apache 2.0 License
 // along with this software.
-// If not, see <https://opensource.org/licenses/MIT>.
+// If not, see <https://opensource.org/licenses/Apache-2.0>.
 
 use amplify::Wrapper;
 use bitcoin::hashes::{sha256, Hmac};
@@ -77,19 +79,13 @@ impl Container for TxoutContainer {
         self.script_container.deconstruct()
     }
 
-    fn to_proof(&self) -> Proof {
-        self.script_container.to_proof()
-    }
+    fn to_proof(&self) -> Proof { self.script_container.to_proof() }
 
-    fn into_proof(self) -> Proof {
-        self.script_container.into_proof()
-    }
+    fn into_proof(self) -> Proof { self.script_container.into_proof() }
 }
 
 /// [bitcoin::TxOut] containing LNPBP-2 commitment
-#[derive(
-    Wrapper, Clone, PartialEq, Eq, Hash, Default, Debug, Display, From,
-)]
+#[derive(Wrapper, Clone, PartialEq, Eq, Hash, Default, Debug, Display, From)]
 #[display(Debug)]
 pub struct TxoutCommitment(TxOut);
 

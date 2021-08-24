@@ -1,5 +1,7 @@
-// LNP/BP Rust Library
-// Written in 2019 by
+// BP Core Library implementing LNP/BP specifications & standards related to
+// bitcoin protocol
+//
+// Written in 2020-2021 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
 //
 // To the extent possible under law, the author(s) have dedicated all
@@ -7,9 +9,9 @@
 // the public domain worldwide. This software is distributed without
 // any warranty.
 //
-// You should have received a copy of the MIT License
+// You should have received a copy of the Apache 2.0 License
 // along with this software.
-// If not, see <https://opensource.org/licenses/MIT>.
+// If not, see <https://opensource.org/licenses/Apache-2.0>.
 
 use amplify::Wrapper;
 use bitcoin::hashes::{sha256, Hmac};
@@ -105,23 +107,16 @@ impl Container for TxContainer {
     }
 
     fn deconstruct(self) -> (Proof, Self::Supplement) {
-        (
-            self.txout_container.clone().into_proof(),
-            TxSupplement {
-                protocol_factor: self.protocol_factor,
-                fee: self.fee,
-                tag: self.txout_container.script_container.tag,
-            },
-        )
+        (self.txout_container.clone().into_proof(), TxSupplement {
+            protocol_factor: self.protocol_factor,
+            fee: self.fee,
+            tag: self.txout_container.script_container.tag,
+        })
     }
 
-    fn to_proof(&self) -> Proof {
-        self.txout_container.to_proof()
-    }
+    fn to_proof(&self) -> Proof { self.txout_container.to_proof() }
 
-    fn into_proof(self) -> Proof {
-        self.txout_container.into_proof()
-    }
+    fn into_proof(self) -> Proof { self.txout_container.into_proof() }
 }
 
 /// [bitcoin::Transaction] containing LNPBP-3 commitment
@@ -154,11 +149,13 @@ where
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use crate::{ScriptEncodeData, ScriptEncodeMethod, SpkContainer};
+    use std::str::FromStr;
+
     use bitcoin::consensus::encode::deserialize;
     use bitcoin::hashes::hex::FromHex;
-    use std::str::FromStr;
+
+    use super::*;
+    use crate::{ScriptEncodeData, ScriptEncodeMethod, SpkContainer};
 
     #[test]
     fn test_ability_to_commit() {

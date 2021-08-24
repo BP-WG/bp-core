@@ -1,5 +1,7 @@
-// LNP/BP Rust Library
-// Written in 2020 by
+// BP Core Library implementing LNP/BP specifications & standards related to
+// bitcoin protocol
+//
+// Written in 2020-2021 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
 //
 // To the extent possible under law, the author(s) have dedicated all
@@ -7,9 +9,9 @@
 // the public domain worldwide. This software is distributed without
 // any warranty.
 //
-// You should have received a copy of the MIT License
+// You should have received a copy of the Apache 2.0 License
 // along with this software.
-// If not, see <https://opensource.org/licenses/MIT>.
+// If not, see <https://opensource.org/licenses/Apache-2.0>.
 
 //! # LNPBP-2 related
 
@@ -131,15 +133,17 @@ where
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use crate::pubkey::*;
-    use crate::lnpbp1::test_helpers::*;
-    use bitcoin::hashes::{sha256, Hash};
-    use bitcoin::secp256k1;
     use std::iter::FromIterator;
     use std::str::FromStr;
-    use amplify::Wrapper;
+
     use amplify::hex::ToHex;
+    use amplify::Wrapper;
+    use bitcoin::hashes::{sha256, Hash};
+    use bitcoin::secp256k1;
+
+    use super::*;
+    use crate::lnpbp1::test_helpers::*;
+    use crate::pubkey::*;
 
     #[test]
     fn test_lnpbp1_vs_lnpbp2() {

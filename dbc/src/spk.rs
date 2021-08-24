@@ -1,5 +1,7 @@
-// LNP/BP Rust Library
-// Written in 2019 by
+// BP Core Library implementing LNP/BP specifications & standards related to
+// bitcoin protocol
+//
+// Written in 2020-2021 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
 //
 // To the extent possible under law, the author(s) have dedicated all
@@ -7,16 +9,17 @@
 // the public domain worldwide. This software is distributed without
 // any warranty.
 //
-// You should have received a copy of the MIT License
+// You should have received a copy of the Apache 2.0 License
 // along with this software.
-// If not, see <https://opensource.org/licenses/MIT>.
+// If not, see <https://opensource.org/licenses/Apache-2.0>.
+
+use core::convert::TryFrom;
 
 use amplify::Wrapper;
 use bitcoin::blockdata::script::Script;
 use bitcoin::hashes::{sha256, Hmac};
 use bitcoin::secp256k1;
 use commit_verify::EmbedCommitVerify;
-use core::convert::TryFrom;
 use wallet::{descriptor, LockScript, PubkeyScript, ToPubkeyScript};
 
 use super::{
@@ -53,9 +56,8 @@ pub enum ScriptEncodeMethod {
 /// Structure keeping the minimum of information (bytewise) required to verify
 /// deterministic bitcoin commitment given only the transaction source, its
 /// fee and protocol-specific constants. It is a part of the [`Proof`] data.
-#[derive(
-    Clone, PartialEq, Eq, Hash, Debug, Display, StrictEncode, StrictDecode,
-)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Display)]
+#[derive(StrictEncode, StrictDecode)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -84,9 +86,7 @@ pub enum ScriptEncodeData {
 }
 
 impl Default for ScriptEncodeData {
-    fn default() -> Self {
-        Self::SinglePubkey
-    }
+    fn default() -> Self { Self::SinglePubkey }
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Display)]
@@ -249,17 +249,8 @@ impl Container for SpkContainer {
 
 /// [`PubkeyScript`] containing LNPBP-2 commitment
 #[derive(
-    Wrapper,
-    Clone,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    Default,
-    Debug,
-    Display,
-    From,
+    Wrapper, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug,
+    Display, From
 )]
 #[display(inner)]
 #[wrapper(LowerHex, UpperHex)]
