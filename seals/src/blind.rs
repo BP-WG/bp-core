@@ -18,13 +18,11 @@ use std::str::FromStr;
 use bitcoin::hashes::{sha256, sha256d, sha256t, Hash, HashEngine};
 use bitcoin::secp256k1::rand::{thread_rng, RngCore};
 use bitcoin::{OutPoint, Txid};
+use commit_verify::{
+    commit_strategy, CommitConceal, CommitEncodeWithStrategy, CommitVerify,
+};
 
 use crate::bech32::{FromBech32Str, ToBech32String};
-use crate::client_side_validation::{
-    commit_strategy, CommitConceal, CommitEncodeWithStrategy,
-};
-use crate::commit_verify::CommitVerify;
-use crate::tagged_hash::TaggedHash;
 
 /// Data required to generate or reveal the information about blinded
 /// transaction outpoint

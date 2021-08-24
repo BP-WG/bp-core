@@ -13,6 +13,11 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
+#[macro_use]
+extern crate amplify;
+#[macro_use]
+extern crate strict_encoding;
+
 mod blind;
 mod error;
 mod txout_seal;

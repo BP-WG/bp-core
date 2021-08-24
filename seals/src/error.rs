@@ -13,7 +13,7 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use crate::dbc;
+use dbc;
 
 #[derive(Clone, PartialEq, Debug, Display, From, Error)]
 #[display(doc_comments)]

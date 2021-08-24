@@ -127,6 +127,7 @@ dependencies = [
  "bp-dbc",
  "commit_verify",
  "single_use_seals",
+ "strict_encoding",
 ]
 
 [[package]]

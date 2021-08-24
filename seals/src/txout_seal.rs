@@ -15,11 +15,11 @@
 
 use amplify::Wrapper;
 use bitcoin::{OutPoint, Transaction};
-use client_side_validation::commit_verify::EmbedCommitVerify;
-use client_side_validation::single_use_seals::{Message, SingleUseSeal};
+use commit_verify::{EmbedCommitVerify, Message};
+use dbc::{Container, TxCommitment, TxContainer, TxSupplement};
+use single_use_seals::SingleUseSeal;
 
 use super::{Error, Witness};
-use crate::dbc::{Container, TxCommitment, TxContainer, TxSupplement};
 
 pub struct TxoutSeal<'a, RESOLVER>
 where
