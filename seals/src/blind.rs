@@ -18,9 +18,7 @@ use std::str::FromStr;
 use bitcoin::hashes::{sha256, sha256d, sha256t, Hash, HashEngine};
 use bitcoin::secp256k1::rand::{thread_rng, RngCore};
 use bitcoin::{OutPoint, Txid};
-use commit_verify::{
-    commit_strategy, CommitConceal, CommitEncodeWithStrategy, CommitVerify,
-};
+use commit_verify::{CommitConceal, CommitVerify};
 
 use crate::bech32::{FromBech32Str, ToBech32String};
 

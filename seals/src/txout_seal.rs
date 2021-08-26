@@ -121,8 +121,6 @@ where
             SpendingStatus::Spent(_) => Ok(SealStatus::Closed),
         }
     }
-
-    // TODO #199: Implement publication-related methods
 }
  */
 

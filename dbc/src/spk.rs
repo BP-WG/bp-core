@@ -314,9 +314,9 @@ where
                     msg,
                 )?;
                 container.tweaking_factor = taproot_container.tweaking_factor;
-                // TODO #191: Finalize taproot commitments once taproot will be
-                //       finalized. We don't know yet how to form scripPubkey
-                //       from Taproot data
+                // TODO #2: Finalize taproot commitments once taproot will be
+                //          finalized. We don't know yet how to form scripPubkey
+                //          from Taproot data
                 unimplemented!()
             } else {
                 let mut pubkey_container = PubkeyContainer {
