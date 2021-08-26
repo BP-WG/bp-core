@@ -63,7 +63,7 @@ impl Container for KeysetContainer {
                     .into_iter()
                     .map(|pk| pk.key)
                     .collect(),
-                tag: supplement.clone(),
+                tag: *supplement,
                 tweaking_factor: None,
             })
         } else {
@@ -114,7 +114,7 @@ where
         msg: &MSG,
     ) -> Result<Self, Self::Error> {
         let mut keyset = keyset_container.keyset.clone();
-        let mut pubkey = keyset_container.pubkey.clone();
+        let mut pubkey = keyset_container.pubkey;
         keyset.insert(pubkey);
 
         let tweaking_factor = lnpbp1::commit(

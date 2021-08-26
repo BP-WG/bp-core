@@ -47,9 +47,9 @@ impl Container for TaprootContainer {
     ) -> Result<Self, Error> {
         if let ScriptEncodeData::Taproot(ref tapscript_root) = proof.source {
             Ok(Self {
-                script_root: tapscript_root.clone(),
+                script_root: *tapscript_root,
                 intermediate_key: proof.pubkey,
-                tag: supplement.clone(),
+                tag: *supplement,
                 tweaking_factor: None,
             })
         } else {
@@ -69,8 +69,8 @@ impl Container for TaprootContainer {
 
     fn to_proof(&self) -> Proof {
         Proof {
-            pubkey: self.intermediate_key.clone(),
-            source: ScriptEncodeData::Taproot(self.script_root.clone()),
+            pubkey: self.intermediate_key,
+            source: ScriptEncodeData::Taproot(self.script_root),
         }
     }
 
@@ -101,8 +101,8 @@ where
         msg: &MSG,
     ) -> Result<Self, Self::Error> {
         let mut pubkey_container = PubkeyContainer {
-            pubkey: container.intermediate_key.clone(),
-            tag: container.tag.clone(),
+            pubkey: container.intermediate_key,
+            tag: container.tag,
             tweaking_factor: None,
         };
 

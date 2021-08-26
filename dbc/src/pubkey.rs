@@ -64,7 +64,7 @@ impl Container for PubkeyContainer {
     ) -> Result<Self, Error> {
         Ok(Self {
             pubkey: proof.pubkey,
-            tag: supplement.clone(),
+            tag: *supplement,
             tweaking_factor: None,
         })
     }
@@ -78,7 +78,7 @@ impl Container for PubkeyContainer {
     // value, so the commitment container (original public key) just returns a
     // copy of itself
     #[inline]
-    fn to_proof(&self) -> Proof { Proof::from(self.pubkey.clone()) }
+    fn to_proof(&self) -> Proof { Proof::from(self.pubkey) }
 
     #[inline]
     fn into_proof(self) -> Proof { Proof::from(self.pubkey) }
@@ -103,8 +103,8 @@ where
         pubkey_container: &mut Self::Container,
         msg: &MSG,
     ) -> Result<Self, Self::Error> {
-        let mut keyset = bset![pubkey_container.pubkey.clone()];
-        let mut pubkey = pubkey_container.pubkey.clone();
+        let mut keyset = bset![pubkey_container.pubkey];
+        let mut pubkey = pubkey_container.pubkey;
 
         let tweaking_factor = lnpbp1::commit(
             &mut keyset,

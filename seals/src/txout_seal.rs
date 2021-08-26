@@ -69,7 +69,7 @@ where
         &self,
         msg: &Self::Message,
         witness: &Self::Witness,
-        medium: &impl SealMedium<Self>,
+        _medium: &impl SealMedium<Self>,
     ) -> Result<bool, Self::Error> {
         let (host, supplement) = self
             .resolver
@@ -80,7 +80,7 @@ where
             .iter()
             .filter(|txin| txin.previous_output == self.seal_definition);
         if found_seals.count() != 1 {
-            Err(Error::ResolverLying)?
+            return Err(Error::ResolverLying);
         }
         let container =
             TxContainer::reconstruct(&witness.1, &supplement, &host)?;

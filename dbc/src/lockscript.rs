@@ -64,7 +64,7 @@ impl Container for LockscriptContainer {
             Ok(Self {
                 pubkey: proof.pubkey,
                 script: script.clone(),
-                tag: supplement.clone(),
+                tag: *supplement,
                 tweaking_factor: None,
             })
         } else {
@@ -87,7 +87,7 @@ impl Container for LockscriptContainer {
     fn to_proof(&self) -> Proof {
         Proof {
             source: ScriptEncodeData::LockScript(self.script.clone()),
-            pubkey: self.pubkey.clone(),
+            pubkey: self.pubkey,
         }
     }
 
@@ -160,7 +160,7 @@ where
         let (keys, hashes) =
             container.script.extract_pubkey_hash_set::<Segwitv0>()?;
         if keys.is_empty() && hashes.is_empty() {
-            Err(Error::LockscriptContainsNoKeys)?;
+            return Err(Error::LockscriptContainsNoKeys);
         }
 
         let mut key_hashes: HashSet<PubkeyHash> =
@@ -171,12 +171,8 @@ where
         if hashes.is_empty() {
             keys.get(&container.pubkey)
                 .ok_or(Error::LockscriptKeyNotFound)?;
-        } else if hashes
-            .into_iter()
-            .find(|hash| !key_hashes.contains(hash))
-            .is_some()
-        {
-            Err(Error::LockscriptContainsUnknownHashes)?;
+        } else if hashes.into_iter().any(|hash| !key_hashes.contains(&hash)) {
+            return Err(Error::LockscriptContainsUnknownHashes);
         }
 
         let mut keyset_container = KeysetContainer {

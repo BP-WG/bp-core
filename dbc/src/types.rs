@@ -51,7 +51,7 @@ impl DumbDefault for Proof {
     fn dumb_default() -> Self {
         Proof {
             pubkey: secp256k1::PublicKey::from_secret_key(
-                &secp256k1::SECP256K1,
+                secp256k1::SECP256K1,
                 &secp256k1::key::ONE_KEY,
             ),
             source: Default::default(),

@@ -124,49 +124,45 @@ impl Default for Descriptor {
 
 impl Descriptor {
     pub fn try_validity(&self) -> Result<(), Error> {
-        use Descriptor::*;
-        use Error::*;
-
         match *self {
-            OnchainTransaction { block_height, .. }
-            | OnchainTxInput { block_height, .. }
-            | OnchainTxOutput { block_height, .. }
+            Descriptor::OnchainTransaction { block_height, .. }
+            | Descriptor::OnchainTxInput { block_height, .. }
+            | Descriptor::OnchainTxOutput { block_height, .. }
                 if block_height >= (2u32 << 22) =>
             {
-                Err(BlockHeightOutOfRange)
+                Err(Error::BlockHeightOutOfRange)
             }
-            OnchainTxInput { input_index, .. }
-            | OffchainTxInput { input_index, .. }
+            Descriptor::OnchainTxInput { input_index, .. }
+            | Descriptor::OffchainTxInput { input_index, .. }
                 if input_index + 1 >= (2u16 << 14) =>
             {
-                Err(InputIndexOutOfRange)
+                Err(Error::InputIndexOutOfRange)
             }
-            OnchainTxOutput { output_index, .. }
-            | OffchainTxOutput { output_index, .. }
+            Descriptor::OnchainTxOutput { output_index, .. }
+            | Descriptor::OffchainTxOutput { output_index, .. }
                 if output_index + 1 >= (2u16 << 14) =>
             {
-                Err(OutputIndexOutOfRange)
+                Err(Error::OutputIndexOutOfRange)
             }
-            OffchainTransaction { tx_checksum, .. }
-            | OffchainTxInput { tx_checksum, .. }
-            | OffchainTxOutput { tx_checksum, .. }
+            Descriptor::OffchainTransaction { tx_checksum, .. }
+            | Descriptor::OffchainTxInput { tx_checksum, .. }
+            | Descriptor::OffchainTxOutput { tx_checksum, .. }
                 if *tx_checksum >= (2u64 << 46) =>
             {
-                Err(ChecksumOutOfRange)
+                Err(Error::ChecksumOutOfRange)
             }
             _ => Ok(()),
         }
     }
 
     pub fn is_onchain(&self) -> bool {
-        use Descriptor::*;
-        match self {
-            OnchainBlock { .. }
-            | OnchainTransaction { .. }
-            | OnchainTxInput { .. }
-            | OnchainTxOutput { .. } => true,
-            _ => false,
-        }
+        matches!(
+            self,
+            Descriptor::OnchainBlock { .. }
+                | Descriptor::OnchainTransaction { .. }
+                | Descriptor::OnchainTxInput { .. }
+                | Descriptor::OnchainTxOutput { .. }
+        )
     }
 
     pub fn is_offchain(&self) -> bool { !self.is_onchain() }
@@ -176,169 +172,164 @@ impl Descriptor {
         index: u16,
         dimension: Option<Dimension>,
     ) -> Result<Self, Error> {
-        use Descriptor::*;
         use Dimension::*;
-        use Error::*;
 
         match (*self, dimension) {
             (
-                OnchainBlock {
+                Descriptor::OnchainBlock {
                     block_height,
                     block_checksum,
                 },
                 None,
-            ) => Ok(OnchainTransaction {
+            ) => Ok(Descriptor::OnchainTransaction {
                 block_height,
                 block_checksum,
                 tx_index: index,
             }),
             (
-                OnchainTransaction {
+                Descriptor::OnchainTransaction {
                     block_height,
                     block_checksum,
                     tx_index,
                 },
                 Some(dim),
-            ) if dim == Input => Ok(OnchainTxInput {
+            ) if dim == Input => Ok(Descriptor::OnchainTxInput {
                 block_height,
                 block_checksum,
                 tx_index,
                 input_index: index,
             }),
             (
-                OnchainTransaction {
+                Descriptor::OnchainTransaction {
                     block_height,
                     block_checksum,
                     tx_index,
                 },
                 Some(dim),
-            ) if dim == Output => Ok(OnchainTxOutput {
+            ) if dim == Output => Ok(Descriptor::OnchainTxOutput {
                 block_height,
                 block_checksum,
                 tx_index,
                 output_index: index,
             }),
-            (OffchainTransaction { tx_checksum }, Some(dim))
+            (Descriptor::OffchainTransaction { tx_checksum }, Some(dim))
                 if dim == Input =>
             {
-                Ok(OffchainTxInput {
+                Ok(Descriptor::OffchainTxInput {
                     tx_checksum,
                     input_index: index,
                 })
             }
-            (OffchainTransaction { tx_checksum }, Some(dim))
+            (Descriptor::OffchainTransaction { tx_checksum }, Some(dim))
                 if dim == Output =>
             {
-                Ok(OffchainTxOutput {
+                Ok(Descriptor::OffchainTxOutput {
                     tx_checksum,
                     output_index: index,
                 })
             }
-            (OnchainTransaction { .. }, None)
-            | (OffchainTransaction { .. }, None) => Err(DimensionRequired),
-            _ => Err(UpgradeImpossible),
+            (Descriptor::OnchainTransaction { .. }, None)
+            | (Descriptor::OffchainTransaction { .. }, None) => {
+                Err(Error::DimensionRequired)
+            }
+            _ => Err(Error::UpgradeImpossible),
         }
     }
 
     pub fn downgraded(self) -> Result<Self, Error> {
-        use Descriptor::*;
-        use Error::*;
-
         match self {
-            OnchainTransaction {
+            Descriptor::OnchainTransaction {
                 block_height,
                 block_checksum,
                 ..
-            } => Ok(OnchainBlock {
+            } => Ok(Descriptor::OnchainBlock {
                 block_height,
                 block_checksum,
             }),
-            OnchainTxInput {
+            Descriptor::OnchainTxInput {
                 block_height,
                 block_checksum,
                 tx_index,
                 ..
             }
-            | OnchainTxOutput {
+            | Descriptor::OnchainTxOutput {
                 block_height,
                 block_checksum,
                 tx_index,
                 ..
-            } => Ok(OnchainTransaction {
+            } => Ok(Descriptor::OnchainTransaction {
                 block_height,
                 block_checksum,
                 tx_index,
             }),
-            OffchainTxInput { tx_checksum, .. }
-            | OffchainTxOutput { tx_checksum, .. } => {
-                Ok(OffchainTransaction { tx_checksum })
+            Descriptor::OffchainTxInput { tx_checksum, .. }
+            | Descriptor::OffchainTxOutput { tx_checksum, .. } => {
+                Ok(Descriptor::OffchainTransaction { tx_checksum })
             }
-            _ => Err(DowngradeImpossible),
+            _ => Err(Error::DowngradeImpossible),
         }
     }
 
     pub fn get_block_height(&self) -> Option<u32> {
-        use Descriptor::*;
-
         match self {
-            OnchainBlock { block_height, .. }
-            | OnchainTransaction { block_height, .. }
-            | OnchainTxInput { block_height, .. }
-            | OnchainTxOutput { block_height, .. } => Some(*block_height),
+            Descriptor::OnchainBlock { block_height, .. }
+            | Descriptor::OnchainTransaction { block_height, .. }
+            | Descriptor::OnchainTxInput { block_height, .. }
+            | Descriptor::OnchainTxOutput { block_height, .. } => {
+                Some(*block_height)
+            }
             _ => None,
         }
     }
 
     pub fn get_block_checksum(&self) -> Option<u8> {
-        use Descriptor::*;
-
         match self {
-            OnchainBlock { block_checksum, .. }
-            | OnchainTransaction { block_checksum, .. }
-            | OnchainTxInput { block_checksum, .. }
-            | OnchainTxOutput { block_checksum, .. } => Some(**block_checksum),
+            Descriptor::OnchainBlock { block_checksum, .. }
+            | Descriptor::OnchainTransaction { block_checksum, .. }
+            | Descriptor::OnchainTxInput { block_checksum, .. }
+            | Descriptor::OnchainTxOutput { block_checksum, .. } => {
+                Some(**block_checksum)
+            }
             _ => None,
         }
     }
 
     pub fn get_tx_checksum(&self) -> Option<u64> {
-        use Descriptor::*;
-
         match self {
-            OffchainTransaction { tx_checksum, .. }
-            | OffchainTxInput { tx_checksum, .. }
-            | OffchainTxOutput { tx_checksum, .. } => Some(**tx_checksum),
+            Descriptor::OffchainTransaction { tx_checksum, .. }
+            | Descriptor::OffchainTxInput { tx_checksum, .. }
+            | Descriptor::OffchainTxOutput { tx_checksum, .. } => {
+                Some(**tx_checksum)
+            }
             _ => None,
         }
     }
 
     pub fn get_tx_index(&self) -> Option<u16> {
-        use Descriptor::*;
-
         match self {
-            OnchainTransaction { tx_index, .. }
-            | OnchainTxInput { tx_index, .. }
-            | OnchainTxOutput { tx_index, .. } => Some(*tx_index),
+            Descriptor::OnchainTransaction { tx_index, .. }
+            | Descriptor::OnchainTxInput { tx_index, .. }
+            | Descriptor::OnchainTxOutput { tx_index, .. } => Some(*tx_index),
             _ => None,
         }
     }
 
     pub fn get_input_index(&self) -> Option<u16> {
-        use Descriptor::*;
-
         match self {
-            OnchainTxInput { input_index, .. }
-            | OffchainTxInput { input_index, .. } => Some(*input_index),
+            Descriptor::OnchainTxInput { input_index, .. }
+            | Descriptor::OffchainTxInput { input_index, .. } => {
+                Some(*input_index)
+            }
             _ => None,
         }
     }
 
     pub fn get_output_index(&self) -> Option<u16> {
-        use Descriptor::*;
-
         match self {
-            OnchainTxOutput { output_index, .. }
-            | OffchainTxOutput { output_index, .. } => Some(*output_index),
+            Descriptor::OnchainTxOutput { output_index, .. }
+            | Descriptor::OffchainTxOutput { output_index, .. } => {
+                Some(*output_index)
+            }
             _ => None,
         }
     }

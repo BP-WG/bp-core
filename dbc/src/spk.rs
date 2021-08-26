@@ -113,7 +113,7 @@ impl SpkContainer {
             pubkey,
             source,
             method,
-            tag: protocol_tag.clone(),
+            tag: *protocol_tag,
             tweaking_factor: None,
         }
     }
@@ -148,16 +148,14 @@ impl Container for SpkContainer {
                     {
                         ScriptEncodeMethod::ShWScriptHash
                     } else {
-                        Err(Error::InvalidProofStructure)?
+                        return Err(Error::InvalidProofStructure);
                     }
+                } else if *proof.pubkey.to_pubkey_script(Category::Nested)
+                    == script
+                {
+                    ScriptEncodeMethod::ShWPubkeyHash
                 } else {
-                    if *proof.pubkey.to_pubkey_script(Category::Nested)
-                        == script
-                    {
-                        ScriptEncodeMethod::ShWPubkeyHash
-                    } else {
-                        Err(Error::InvalidProofStructure)?
-                    }
+                    return Err(Error::InvalidProofStructure);
                 }
             }
             descriptors::Compact::Bare(script)
@@ -188,7 +186,7 @@ impl Container for SpkContainer {
             | ScriptEncodeMethod::OpReturn => {
                 if let ScriptEncodeData::SinglePubkey = proof.source {
                 } else {
-                    Err(Error::InvalidProofStructure)?
+                    return Err(Error::InvalidProofStructure);
                 }
             }
             ScriptEncodeMethod::Bare
@@ -197,13 +195,13 @@ impl Container for SpkContainer {
             | ScriptEncodeMethod::ShWScriptHash => {
                 if let ScriptEncodeData::LockScript(_) = proof.source {
                 } else {
-                    Err(Error::InvalidProofStructure)?
+                    return Err(Error::InvalidProofStructure);
                 }
             }
             ScriptEncodeMethod::Taproot => {
                 if let ScriptEncodeData::Taproot(_) = proof.source {
                 } else {
-                    Err(Error::InvalidProofStructure)?
+                    return Err(Error::InvalidProofStructure);
                 }
             }
         }
@@ -212,7 +210,7 @@ impl Container for SpkContainer {
             pubkey: proof.pubkey,
             source: proof.source,
             method,
-            tag: supplement.clone(),
+            tag: *supplement,
             tweaking_factor: None,
         })
     }
@@ -229,7 +227,7 @@ impl Container for SpkContainer {
 
     fn to_proof(&self) -> Proof {
         Proof {
-            pubkey: self.pubkey.clone(),
+            pubkey: self.pubkey,
             source: self.source.clone(),
         }
     }
@@ -289,13 +287,13 @@ where
                     ShWScriptHash => {
                         lockscript.to_pubkey_script(Category::Nested)
                     }
-                    _ => Err(Error::InvalidProofStructure)?,
+                    _ => return Err(Error::InvalidProofStructure),
                 }
             } else if let ScriptEncodeData::Taproot(taproot_hash) =
                 container.source
             {
                 if container.method != Taproot {
-                    Err(Error::InvalidProofStructure)?
+                    return Err(Error::InvalidProofStructure);
                 }
                 let mut taproot_container = TaprootContainer {
                     script_root: taproot_hash,
@@ -331,11 +329,11 @@ where
                     OpReturn => {
                         let ser = pubkey.serialize();
                         if ser[0] != 0x02 {
-                            Err(Error::InvalidOpReturnKey)?
+                            return Err(Error::InvalidOpReturnKey);
                         }
                         Script::new_op_return(&ser).into()
                     }
-                    _ => Err(Error::InvalidProofStructure)?,
+                    _ => return Err(Error::InvalidProofStructure),
                 }
             };
         Ok(SpkCommitment::from_inner(script_pubkey))

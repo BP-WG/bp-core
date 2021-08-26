@@ -108,7 +108,7 @@ pub fn commit(
     //                        is represented by itself
     let pubkey_sum = keyset
         .iter()
-        .try_fold(target_pubkey.clone(), |sum, pubkey| sum.combine(pubkey))
+        .try_fold(*target_pubkey, |sum, pubkey| sum.combine(pubkey))
         .map_err(|_| Error::SumInfiniteResult)?;
 
     // ! [CONSENSUS-CRITICAL]:
@@ -143,10 +143,10 @@ pub fn commit(
 
     // Applying tweaking factor to public key
     target_pubkey
-        .add_exp_assign(&secp256k1::SECP256K1, &tweaking_factor[..])
+        .add_exp_assign(secp256k1::SECP256K1, &tweaking_factor[..])
         .map_err(|_| Error::InvalidTweak)?;
 
-    keyset.insert(target_pubkey.clone());
+    keyset.insert(*target_pubkey);
 
     // Returning tweaked public key
     Ok(tweaking_factor)
@@ -205,7 +205,7 @@ pub fn verify(
         // commit with the provided data, meaning that the commitment was not
         // created. Thus, we return that verification have not passed, and not
         // a error.
-        Err(_) => return false,
+        Err(_) => false,
 
         // Verification succeeds if the commitment procedure produces public key
         // equivalent to the verified one
