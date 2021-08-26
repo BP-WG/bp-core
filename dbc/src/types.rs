@@ -49,10 +49,9 @@ pub struct Proof {
 
 impl DumbDefault for Proof {
     fn dumb_default() -> Self {
-        use wallet::SECP256K1;
         Proof {
             pubkey: secp256k1::PublicKey::from_secret_key(
-                &SECP256K1,
+                &secp256k1::SECP256K1,
                 &secp256k1::key::ONE_KEY,
             ),
             source: Default::default(),

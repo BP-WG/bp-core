@@ -16,12 +16,11 @@ name = "dbc"
 path = "src/lib.rs"
 
 [dependencies]
-amplify = "3.7.1"
+amplify = "3.8.2"
 bitcoin = "0.27.0"
-descriptor-wallet = "0.5.0-alpha.1"
-strict_encoding = "1.6.0"
-commit_verify = "0.5.4"
-miniscript = "6.0.1"
-
-[dev-dependencies]
 secp256k1 = { version = "0.20.3", features = ["global-context"] }
+bitcoin_scripts = "0.5.0-alpha.2"
+descriptors = "0.5.0-alpha.2"
+strict_encoding = "1.6.1"
+commit_verify = "0.5.6"
+miniscript = "6.0.1"

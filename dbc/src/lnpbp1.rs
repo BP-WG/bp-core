@@ -17,7 +17,6 @@ use std::collections::BTreeSet;
 
 use bitcoin::hashes::{sha256, Hash, HashEngine, Hmac, HmacEngine};
 use bitcoin::secp256k1;
-use wallet::SECP256K1;
 
 /// Single SHA256 hash of "LNPBP1" string according to LNPBP-1 acting as a
 /// prefix to the message in computing tweaking factor
@@ -144,7 +143,7 @@ pub fn commit(
 
     // Applying tweaking factor to public key
     target_pubkey
-        .add_exp_assign(&SECP256K1, &tweaking_factor[..])
+        .add_exp_assign(&secp256k1::SECP256K1, &tweaking_factor[..])
         .map_err(|_| Error::InvalidTweak)?;
 
     keyset.insert(target_pubkey.clone());
@@ -408,7 +407,7 @@ mod test {
                 let tweaking_factor = *hmac.as_inner();
                 let mut altkey = original;
                 altkey
-                    .add_exp_assign(&SECP256K1, &tweaking_factor[..])
+                    .add_exp_assign(&secp256k1::SECP256K1, &tweaking_factor[..])
                     .unwrap();
                 assert_eq!(altkey, pk);
 
@@ -519,7 +518,7 @@ mod test {
                 let tweaking_factor = *hmac.as_inner();
                 let mut altkey = original;
                 altkey
-                    .add_exp_assign(&SECP256K1, &tweaking_factor[..])
+                    .add_exp_assign(&secp256k1::SECP256K1, &tweaking_factor[..])
                     .unwrap();
                 // It must not match because done with a single key, not
                 // their sum

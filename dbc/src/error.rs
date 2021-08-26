@@ -13,8 +13,6 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use wallet::descriptor;
-
 use crate::lnpbp1;
 
 /// Different error types which may happen during deterministic bitcoin
@@ -43,7 +41,7 @@ pub enum Error {
 
     /// Miniscript was unable to parse provided script data; they are either
     /// invalid or miniscript library contains a bug
-    #[from(wallet::PubkeyParseError)]
+    #[from(bitcoin_scripts::PubkeyParseError)]
     LockscriptParseError,
 
     /// Provided script contains no keys, so commitment or its verification is
@@ -69,21 +67,21 @@ pub enum Error {
     UncompressedKey,
 }
 
-impl From<descriptor::Error> for Error {
-    fn from(err: descriptor::Error) -> Self {
+impl From<descriptors::Error> for Error {
+    fn from(err: descriptors::Error) -> Self {
         match err {
-            descriptor::Error::InvalidKeyData => Error::InvalidKeyData,
-            descriptor::Error::UnsupportedWitnessVersion => {
+            descriptors::Error::InvalidKeyData => Error::InvalidKeyData,
+            descriptors::Error::UnsupportedWitnessVersion => {
                 Error::UnsupportedWitnessVersion
             }
-            descriptor::Error::PolicyCompilation(err) => {
+            descriptors::Error::PolicyCompilation(err) => {
                 Error::PolicyCompilation(err)
             }
-            descriptor::Error::UncompressedKeyInSegWitContext => {
+            descriptors::Error::UncompressedKeyInSegWitContext => {
                 Error::UncompressedKey
             }
             // Since we never parse strings, this error must not happen
-            descriptor::Error::CantParseDescriptor => unreachable!(),
+            descriptors::Error::CantParseDescriptor => unreachable!(),
             // If other errors appear this must crash so we know about that the
             // new implementation is required
             _ => unimplemented!(),

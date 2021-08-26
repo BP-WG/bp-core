@@ -17,23 +17,26 @@ use amplify::Wrapper;
 use bitcoin::{OutPoint, Transaction};
 use commit_verify::{EmbedCommitVerify, Message};
 use dbc::{Container, TxCommitment, TxContainer, TxSupplement};
-use single_use_seals::SingleUseSeal;
+use single_use_seals::{SealMedium, SingleUseSeal};
 
 use super::{Error, Witness};
 
-pub struct TxoutSeal<'a, RESOLVER>
+// TODO: Implement proper operations with SealMedium
+// TODO: Do asyncronous version
+
+pub struct TxoutSeal<'a, R>
 where
-    RESOLVER: TxResolve,
+    R: TxResolve,
 {
     seal_definition: OutPoint,
-    resolver: &'a RESOLVER,
+    resolver: &'a R,
 }
 
-impl<'a, RESOLVER> TxoutSeal<'a, RESOLVER>
+impl<'a, R> TxoutSeal<'a, R>
 where
-    RESOLVER: TxResolve,
+    R: TxResolve,
 {
-    pub fn new(seal_definition: OutPoint, resolver: &'a RESOLVER) -> Self {
+    pub fn new(seal_definition: OutPoint, resolver: &'a R) -> Self {
         Self {
             seal_definition,
             resolver,
@@ -41,15 +44,19 @@ where
     }
 }
 
-impl<'a, RESOLVER> SingleUseSeal for TxoutSeal<'a, RESOLVER>
+impl<'a, R> SingleUseSeal for TxoutSeal<'a, R>
 where
-    RESOLVER: TxResolve,
+    R: TxResolve,
 {
     type Witness = Witness;
     type Definition = OutPoint;
+    type Message = Message;
     type Error = Error;
 
-    fn close(&self, over: &Message) -> Result<Self::Witness, Self::Error> {
+    fn close(
+        &self,
+        over: &Self::Message,
+    ) -> Result<Self::Witness, Self::Error> {
         let mut container = self
             .resolver
             .tx_container(self.seal_definition)
@@ -60,8 +67,9 @@ where
 
     fn verify(
         &self,
-        msg: &Message,
+        msg: &Self::Message,
         witness: &Self::Witness,
+        medium: &impl SealMedium<Self>,
     ) -> Result<bool, Self::Error> {
         let (host, supplement) = self
             .resolver

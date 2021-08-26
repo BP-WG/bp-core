@@ -16,8 +16,8 @@
 use amplify::Wrapper;
 use bitcoin::hashes::{sha256, Hmac};
 use bitcoin::{secp256k1, TxOut};
+use bitcoin_scripts::PubkeyScript;
 use commit_verify::EmbedCommitVerify;
-use wallet::PubkeyScript;
 
 use super::{
     Container, Error, Proof, ScriptEncodeData, ScriptEncodeMethod,

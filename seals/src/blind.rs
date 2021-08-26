@@ -18,9 +18,8 @@ use std::str::FromStr;
 use bitcoin::hashes::{sha256, sha256d, sha256t, Hash, HashEngine};
 use bitcoin::secp256k1::rand::{thread_rng, RngCore};
 use bitcoin::{OutPoint, Txid};
-use commit_verify::{CommitConceal, CommitVerify};
-
-use crate::bech32::{FromBech32Str, ToBech32String};
+use commit_verify::{commit_encode, CommitConceal, CommitVerify, TaggedHash};
+use lnpbp_bech32::{FromBech32Str, ToBech32String};
 
 /// Data required to generate or reveal the information about blinded
 /// transaction outpoint
@@ -85,9 +84,7 @@ impl OutpointReveal {
 
 /// Errors happening during parsing string representation of different forms of
 /// single-use-seals
-#[derive(
-    Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display, Error, From
-)]
+#[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]
 #[display(doc_comments)]
 pub enum ParseError {
     /// full transaction id is required for the seal specification
@@ -117,7 +114,7 @@ pub enum ParseError {
 
     /// wrong Bech32 representation of the blinded UTXO seal – {0}
     #[from]
-    Bech32(crate::bech32::Error),
+    Bech32(lnpbp_bech32::Error),
 }
 
 impl FromStr for OutpointReveal {
@@ -188,8 +185,8 @@ impl strict_encoding::Strategy for OutpointHash {
     type Strategy = strict_encoding::strategies::Wrapped;
 }
 
-impl CommitEncodeWithStrategy for OutpointHash {
-    type Strategy = commit_strategy::UsingStrict;
+impl commit_encode::Strategy for OutpointHash {
+    type Strategy = commit_encode::strategies::UsingStrict;
 }
 
 impl CommitVerify<OutpointReveal> for OutpointHash {
@@ -208,14 +205,9 @@ impl CommitVerify<OutpointReveal> for OutpointHash {
     }
 }
 
-impl crate::bech32::Strategy for OutpointHash {
+impl lnpbp_bech32::Strategy for OutpointHash {
     const HRP: &'static str = "utxob";
-    type Strategy = crate::bech32::strategies::UsingStrictEncoding;
-}
-
-impl crate::bech32::Strategy for sha256t::Hash<OutpointHashTag> {
-    const HRP: &'static str = "utxob";
-    type Strategy = crate::bech32::strategies::UsingStrictEncoding;
+    type Strategy = lnpbp_bech32::strategies::UsingStrictEncoding;
 }
 
 #[cfg(test)]
@@ -257,7 +249,7 @@ mod test {
             vout: 2,
         }.outpoint_hash();
         let bech32 =
-            "utxob1ahrfaknwtv28c4yyhat5d9uel045ph797kxauj63p2gzykta9lkskn6smk";
+            "utxob1ahrfaknwtv28c4yyhat5d9uel045ph797kxauj63p2gzykta9lksr02u75";
         assert_eq!(bech32, outpoint_hash.to_string());
         assert_eq!(outpoint_hash.to_string(), outpoint_hash.to_bech32_string());
         let reconstructed = OutpointHash::from_str(bech32).unwrap();

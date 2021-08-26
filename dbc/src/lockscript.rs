@@ -30,9 +30,9 @@ use std::collections::{BTreeSet, HashSet};
 
 use bitcoin::hashes::{hash160, sha256, Hmac};
 use bitcoin::{secp256k1, PubkeyHash};
+use bitcoin_scripts::LockScript;
 use commit_verify::EmbedCommitVerify;
 use miniscript::Segwitv0;
-use wallet::LockScript;
 
 use super::{Container, Error, KeysetCommitment, Proof, ScriptEncodeData};
 use crate::KeysetContainer;
@@ -237,9 +237,7 @@ mod test {
     use std::str::FromStr;
 
     use bitcoin::hashes::{hash160, sha256, Hash};
-    use bitcoin::secp256k1;
     use miniscript::{Miniscript, Segwitv0};
-    use wallet::SECP256K1;
 
     use super::*;
     use crate::Error;
@@ -262,7 +260,7 @@ mod test {
 
             let pk = bitcoin::PublicKey {
                 key: secp256k1::PublicKey::from_secret_key(
-                    &SECP256K1,
+                    &secp256k1::SECP256K1,
                     &secp256k1::SecretKey::from_slice(&sk[..])
                         .expect("secret key"),
                 ),
