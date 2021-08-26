@@ -3,11 +3,11 @@ Change Log
 
 v0.5.0
 ------
-- TODO: Refactor LNP/BP Core library into client-side-validation library with
+- Refactor LNP/BP Core library into client-side-validation library with
   `core`, `bp` and (future) `mw`. Move ElGamal, Bech32 and tagged hash into 
   `core`
-- TODO: Refactor single-use-seals; finalize API
-- TODO: Move `chain` to BP Core library
+- Refactor single-use-seals; finalize API
+- Move `chain` to BP Core library
 - Finalized string representation for bitcoin seals data
 - Removed unused `seals::tx_graph` API
 

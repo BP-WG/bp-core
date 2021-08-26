@@ -16,9 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         feature:
-          - elgamal
-          - bulletproofs
-          - serde
+          - async
     steps:
       - uses: actions/checkout@v2
       - name: Install rust stable
