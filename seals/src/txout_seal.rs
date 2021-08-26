@@ -17,16 +17,19 @@ use amplify::Wrapper;
 use bitcoin::{OutPoint, Transaction};
 use commit_verify::{EmbedCommitVerify, Message};
 use dbc::{Container, TxCommitment, TxContainer, TxSupplement};
+#[cfg(feature = "async")]
+use single_use_seals::SealMediumAsync;
 use single_use_seals::{SealMedium, SingleUseSeal};
 
 use super::{Error, Witness};
 
-// TODO: Implement proper operations with SealMedium
-// TODO: Do asyncronous version
+// TODO: #8 Implement proper operations with SealMedium
+// TODO: #9 Do asyncronous version
 
 pub struct TxoutSeal<'a, R>
 where
     R: TxResolve,
+    Self: 'a,
 {
     seal_definition: OutPoint,
     resolver: &'a R,
@@ -35,6 +38,7 @@ where
 impl<'a, R> TxoutSeal<'a, R>
 where
     R: TxResolve,
+    Self: 'a,
 {
     pub fn new(seal_definition: OutPoint, resolver: &'a R) -> Self {
         Self {
@@ -44,9 +48,11 @@ where
     }
 }
 
+#[cfg_attr(feature = "async", async_trait)]
 impl<'a, R> SingleUseSeal for TxoutSeal<'a, R>
 where
     R: TxResolve,
+    Self: 'a,
 {
     type Witness = Witness;
     type Definition = OutPoint;
@@ -86,6 +92,19 @@ where
             TxContainer::reconstruct(&witness.1, &supplement, &host)?;
         let commitment = TxCommitment::from_inner(host);
         Ok(commitment.verify(&container, &msg)?)
+    }
+
+    #[cfg(feature = "async")]
+    async fn verify_async(
+        &self,
+        _msg: &Self::Message,
+        _witness: &Self::Witness,
+        _medium: &impl SealMediumAsync<Self>,
+    ) -> Result<bool, Self::Error>
+    where
+        Self: Sized + Sync + Send,
+    {
+        todo!("#9 Implement verify_async")
     }
 }
 

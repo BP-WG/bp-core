@@ -23,8 +23,9 @@ commit_verify = "0.5.6"
 strict_encoding = "1.6.1"
 lnpbp_bech32 = "0.5.0-beta.1"
 bp-dbc = { version = "0.5.0-alpha.1", path = "../dbc" }
+async-trait = { version = "0.1.51", optional = true }
 
 [features]
 default = []
 all = ["async"]
-async = ["single_use_seals/async"]
+async = ["single_use_seals/async", "async-trait"]

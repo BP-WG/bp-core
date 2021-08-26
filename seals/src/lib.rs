@@ -21,6 +21,9 @@
 extern crate amplify;
 #[macro_use]
 extern crate strict_encoding;
+#[cfg(feature = "async")]
+#[macro_use]
+extern crate async_trait;
 
 mod blind;
 mod error;

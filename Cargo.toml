@@ -28,7 +28,7 @@ bitcoin = "0.27.0"
 [features]
 default = []
 all = ["async"]
-async = ["single_use_seals/async"]
+async = ["bp-seals/async"]
 
 [workspace]
 members = [".", "dbc", "seals"]

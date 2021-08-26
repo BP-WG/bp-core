@@ -90,7 +90,7 @@ jobs:
       - name: Create dependency
         run: |
           cargo new dep_test
-          cp contrib/depCargo.toml dep_test/Cargo.toml
+          cp test/depCargo.toml dep_test/Cargo.toml
           cd dep_test
       - name: Build dependency
         uses: actions-rs/cargo@v1
