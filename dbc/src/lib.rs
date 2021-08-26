@@ -13,6 +13,10 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
+// Coding conventions
+#![recursion_limit = "256"]
+#![deny(dead_code, /* missing_docs, */ warnings)]
+
 #[macro_use]
 extern crate amplify;
 #[macro_use]

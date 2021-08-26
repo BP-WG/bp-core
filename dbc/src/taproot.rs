@@ -29,7 +29,7 @@ pub struct TaprootContainer {
     pub intermediate_key: secp256k1::PublicKey,
     /// Single SHA256 hash of the protocol-specific tag
     pub tag: sha256::Hash,
-    /// Tweaking factor stored after [TaprootContainer::commit_verify]
+    /// Tweaking factor stored after [`TaprootCommitment::embed_commit`]
     /// procedure
     pub tweaking_factor: Option<Hmac<sha256::Hash>>,
 }

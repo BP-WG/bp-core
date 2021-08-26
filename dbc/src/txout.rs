@@ -29,7 +29,8 @@ use super::{
 pub struct TxoutContainer {
     pub value: u64,
     pub script_container: SpkContainer,
-    /// Tweaking factor stored after [TxoutContainer::commit_verify] procedure
+    /// Tweaking factor stored after [`TxoutCommitment::embed_commit`]
+    /// procedure
     pub tweaking_factor: Option<Hmac<sha256::Hash>>,
 }
 
@@ -84,7 +85,7 @@ impl Container for TxoutContainer {
     fn into_proof(self) -> Proof { self.script_container.into_proof() }
 }
 
-/// [bitcoin::TxOut] containing LNPBP-2 commitment
+/// [`bitcoin::TxOut`] containing LNPBP-2 commitment
 #[derive(Wrapper, Clone, PartialEq, Eq, Hash, Default, Debug, Display, From)]
 #[display(Debug)]
 pub struct TxoutCommitment(TxOut);

@@ -38,7 +38,8 @@ pub struct KeysetContainer {
     pub keyset: BTreeSet<secp256k1::PublicKey>,
     /// Single SHA256 hash of the protocol-specific tag
     pub tag: sha256::Hash,
-    /// Tweaking factor stored after [KeysetContainer::commit_verify] procedure
+    /// Tweaking factor stored after [`KeysetCommitment::embed_commit`]
+    /// procedure
     pub tweaking_factor: Option<Hmac<sha256::Hash>>,
 }
 

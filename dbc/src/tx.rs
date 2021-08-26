@@ -30,7 +30,7 @@ pub struct TxContainer {
     pub fee: u64,
     pub txout_container: TxoutContainer,
     pub tx: Transaction,
-    /// Tweaking factor stored after [TxContainer::commit_verify] procedure
+    /// Tweaking factor stored after [`TxCommitment::embed_commit`] procedure
     pub tweaking_factor: Option<Hmac<sha256::Hash>>,
 }
 
@@ -119,7 +119,7 @@ impl Container for TxContainer {
     fn into_proof(self) -> Proof { self.txout_container.into_proof() }
 }
 
-/// [bitcoin::Transaction] containing LNPBP-3 commitment
+/// [`bitcoin::Transaction`] containing LNPBP-3 commitment
 #[derive(Wrapper, Clone, PartialEq, Eq, Hash, Debug, Display, From)]
 #[display(Debug)]
 pub struct TxCommitment(Transaction);

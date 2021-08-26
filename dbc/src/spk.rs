@@ -29,14 +29,14 @@ use super::{
 
 /// Enum defining how given `scriptPubkey` is constructed from the script data
 /// or a public key. It is similar to Bitcoin Core descriptors, however it does
-/// provide additional variants required for RGB, in particular - `OpReturn`
-/// variant with a requirement of public key presence (this key will contain
-/// commitment). Because of this we can't use miniscript descriptors as well;
-/// also in miniscript, descriptor contains a script source, while here the
-/// script source is kept separately and is a part of the [`Proof`], while
-/// [`DescriptorInfo`] is not included into the proof (it can be guessed from
-/// a given proof and `scriptPubkey` and we'd like to preserve space with
-/// client-validated data).
+/// provide additional variants required for RGB, in particular -
+/// [`ScriptEncodeMethod::OpReturn`] variant with a requirement of public key
+/// presence (this key will contain commitment). Because of this we can't use
+/// miniscript descriptors as well; also in miniscript, descriptor contains a
+/// script source, while here the script source is kept separately and is a part
+/// of the [`Proof`], while [`ScriptEncodeMethod`] is not included into the
+/// proof (it can be guessed from a given proof and `scriptPubkey` and we'd like
+/// to preserve space with client-validated data).
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Display)]
 #[display(Debug)]
 #[non_exhaustive]
@@ -73,7 +73,7 @@ pub enum ScriptEncodeData {
     SinglePubkey,
 
     /// Any output containing script information, aside from OP_RETURN outputs
-    /// (using [`ScriptInfo::SimplePubkey`]) and tapscript.
+    /// (using [`ScriptEncodeData::SinglePubkey`]) and tapscript.
     /// We have to store full original script in it's byte form since when
     /// the deteministic bitcoin commitment is verified, the output may be
     /// still unspent and we will not be able to reconstruct the script without
@@ -97,7 +97,7 @@ pub struct SpkContainer {
     pub source: ScriptEncodeData,
     /// Single SHA256 hash of the protocol-specific tag
     pub tag: sha256::Hash,
-    /// Tweaking factor stored after [ScriptPubkeyContainer::commit_verify]
+    /// Tweaking factor stored after [`SpkCommitment::embed_commit`]
     /// procedure
     pub tweaking_factor: Option<Hmac<sha256::Hash>>,
 }

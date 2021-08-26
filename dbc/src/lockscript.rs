@@ -44,7 +44,7 @@ pub struct LockscriptContainer {
     pub pubkey: secp256k1::PublicKey,
     /// Single SHA256 hash of the protocol-specific tag
     pub tag: sha256::Hash,
-    /// Tweaking factor stored after [LockscriptContainer::commit_verify]
+    /// Tweaking factor stored after [`LockscriptCommitment::embed_commit`]
     /// procedure
     pub tweaking_factor: Option<Hmac<sha256::Hash>>,
 }
