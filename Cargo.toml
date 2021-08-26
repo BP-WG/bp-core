@@ -6,11 +6,11 @@ authors = ["Dr. Maxim Orlovsky <orlovsky@pandoracore.com>"]
 description = "Client-side validation library"
 repository = "https://github.com/LNP-BP/client_side_validation"
 homepage = "https://github.com/LNP-BP"
-keywords = ["lnp-bp", "cryptocurrency", "smart-contracts", "client-side-validation"]
+keywords = ["lnp-bp", "cryptocurrency", "smart-contracts", "single-use-seals"]
 categories = ["cryptography::cryptocurrencies", "encoding", "parsing"]
 readme = "README.md"
 edition = "2018"
-exclude = [".github", "bp-dbc", "bp-seals", "commit_verify", "strict_encoding", "single_use_seals"]
+exclude = [".github", "bp-dbc", "bp-seals"]
 
 [lib]
 name = "bp"

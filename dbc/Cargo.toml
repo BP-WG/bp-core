@@ -6,9 +6,9 @@ authors = ["Dr. Maxim Orlovsky <orlovsky@pandoracore.com>"]
 description = "Deterministic bitcoin commitments library"
 repository = "https://github.com/LNP-BP/client_side_validation"
 homepage = "https://github.com/LNP-BP"
-keywords = ["lnp-bp", "bitcoin", "cryptography", "smart-contracts", "client-side-validation"]
+keywords = ["lnp-bp", "bitcoin", "cryptography", "smart-contracts", "single-use-seals"]
 categories = ["cryptography::cryptocurrencies", "encoding"]
-readme = "README.md"
+readme = "../README.md"
 edition = "2018"
 
 [lib]
