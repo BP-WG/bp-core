@@ -156,12 +156,12 @@ impl sha256t::Tag for OutpointHashTag {
     fn engine() -> sha256::HashEngine { sha256::HashEngine::default() }
 }
 
+impl lnpbp_bech32::Strategy for OutpointHashTag {
+    const HRP: &'static str = "utxob";
+    type Strategy = lnpbp_bech32::strategies::UsingStrictEncoding;
+}
+
 /// Blind version of transaction outpoint
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
 #[derive(
     Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default,
     Display, From
@@ -169,9 +169,75 @@ impl sha256t::Tag for OutpointHashTag {
 #[wrapper(Debug, LowerHex, Index, IndexRange, IndexFrom, IndexTo, IndexFull)]
 #[display(OutpointHash::to_bech32_string)]
 pub struct OutpointHash(
-    #[cfg_attr(feature = "serde", serde(with = "crate::bech32"))]
+    // #[cfg_attr(feature = "serde", serde(with = "_OutpointTaggedHash"))]
     sha256t::Hash<OutpointHashTag>,
 );
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for OutpointHash {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&self.to_bech32_string())
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for OutpointHash {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        struct StrVisitor;
+        impl serde::de::Visitor<'_> for StrVisitor {
+            type Value = OutpointHash;
+
+            fn expecting(
+                &self,
+                formatter: &mut std::fmt::Formatter,
+            ) -> std::fmt::Result {
+                formatter.write_str("Bech32 string with `utxob` HRP")
+            }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                OutpointHash::from_str(v).map_err(serde::de::Error::custom)
+            }
+        }
+        deserializer.deserialize_str(StrVisitor)
+    }
+}
+
+/*
+// This terrible code is a workaround for rust foreign trait limitations.
+// We need serde to use Bech32 serialization, but `with` can be defined only
+// for the fields, not container. And the field is a foreign `hash256t` type...
+// Thus, it can't have Bech32 traits implemented on it and always serializes as
+// hex string. To avoid it, we need to re-implement serde for `hash256t` as
+// remote type and make it serialize through newtype implementing serde in a
+// correct way.
+#[cfg(feature = "serde")]
+#[derive(Serialize, Deserialize)]
+#[serde(crate = "serde_crate", remote = "sha256t::Hash::<OutpointHashTag>")]
+struct _OutpointTaggedHash(
+    #[serde(getter = "sha256t::Hash::as_inner")] pub [u8; 32],
+);
+#[cfg(feature = "serde")]
+impl From<sha256t::Hash<OutpointHashTag>> for _OutpointTaggedHash {
+    #[inline]
+    fn from(hash: sha256t::Hash<OutpointHashTag>) -> Self {
+        Self(hash.into_inner())
+    }
+}
+#[cfg(feature = "serde")]
+impl From<_OutpointTaggedHash> for sha256t::Hash<OutpointHashTag> {
+    #[inline]
+    fn from(hash: _OutpointTaggedHash) -> Self { Self::from_inner(hash.0) }
+}
+ */
 
 impl FromStr for OutpointHash {
     type Err = ParseError;
