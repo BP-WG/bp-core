@@ -18,11 +18,11 @@ path = "src/lib.rs"
 
 [dependencies]
 amplify = "3.8.2"
-strict_encoding = { version = "1.6.1", features = ["bitcoin", "miniscript", "derive"] }
-commit_verify = "0.5.6"
+strict_encoding = { version = "1.7.4", features = ["bitcoin", "miniscript", "derive"] }
+commit_verify = "0.5.11"
 single_use_seals = "0.5.5"
-bp-dbc = { version = "0.5.0-beta.4", path = "./dbc" }
-bp-seals = { version = "0.5.0-beta.4", path = "./seals" }
+bp-dbc = { version = "0.5.0-rc.1", path = "./dbc" }
+bp-seals = { version = "0.5.0-rc.1", path = "./seals" }
 bitcoin = "0.27.0"
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
 serde_with = { version = "1.8", optional = true }
