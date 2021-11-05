@@ -38,4 +38,6 @@ extern crate strict_encoding;
 pub extern crate dbc;
 pub extern crate seals;
 
-mod short_id;
+/// pub short_id module
+/// allows efficient representation of protocol entities
+pub mod short_id;
