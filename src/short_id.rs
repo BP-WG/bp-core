@@ -206,7 +206,9 @@ impl Descriptor {
     }
 
     /// Returns true if Descriptor type is not onchain type
-    pub fn is_offchain(&self) -> bool { !self.is_onchain() }
+    pub fn is_offchain(&self) -> bool {
+        !self.is_onchain()
+    }
 
     /// Upgraded returns the "wrapped descriptor" based on provided parameters.
     /// for instance, tx is returned in case descriptor is a block, as well as
@@ -516,11 +518,15 @@ impl ShortId {
     }
 
     /// Converts short id into inner u64
-    pub fn into_u64(self) -> u64 { self.into() }
+    pub fn into_u64(self) -> u64 {
+        self.into()
+    }
 }
 
 impl From<ShortId> for Descriptor {
-    fn from(short_id: ShortId) -> Self { short_id.get_descriptor() }
+    fn from(short_id: ShortId) -> Self {
+        short_id.get_descriptor()
+    }
 }
 
 impl TryFrom<Descriptor> for ShortId {
@@ -590,9 +596,91 @@ impl TryFrom<Descriptor> for ShortId {
 }
 
 impl From<u64> for ShortId {
-    fn from(val: u64) -> Self { Self(val) }
+    fn from(val: u64) -> Self {
+        Self(val)
+    }
 }
 
 impl From<ShortId> for u64 {
-    fn from(short_id: ShortId) -> Self { short_id.0 }
+    fn from(short_id: ShortId) -> Self {
+        short_id.0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn short_id_is_onchain() {
+        let test_cases = vec![
+            0,
+            1,
+            100,
+            16,
+            32,
+            40,
+            0x7FFF_FF00_0000_0000,
+            0x0000_0000_0000_8000,
+        ];
+        for c in &test_cases {
+            let sid = ShortId(*c);
+            assert!(sid.is_onchain());
+        }
+    }
+
+    #[test]
+    fn short_id_is_offchain() {
+        let test_cases = vec![
+            0x8000_0000_0000_0000,
+            0x8000_0000_0000_0001,
+            0x9000_0000_0000_0000,
+            0xFFFF_0000_0000_0000,
+        ];
+        for c in &test_cases {
+            let sid = ShortId(*c);
+            assert!(sid.is_offchain());
+        }
+    }
+
+    #[test]
+    fn short_id_into() {
+        let test_cases = [0, 1];
+        for c in &test_cases {
+            let sid = ShortId(*c);
+            assert_eq!(sid.into_u64(), *c);
+        }
+    }
+
+    #[test]
+    fn short_id_get_descriptor_empty() {
+        let sid = ShortId(0);
+        let descriptor = sid.get_descriptor();
+        match descriptor.get_block_height() {
+            Some(h) => assert_eq!(h, 0),
+            None => {}
+        }
+    }
+
+    #[test]
+    fn short_id_get_descriptor_block_height_valid() {
+        let test_cases = [
+            [0x0000_0100_0000_0000, 1],
+            [0x0000_1000_0000_0000, 16],
+            [0x0001_0000_0000_0000, 256],
+        ];
+        for c in &test_cases {
+            let sid = ShortId(c[0]);
+            match sid.get_descriptor().get_block_height() {
+                Some(h) => assert_eq!(u64::from(h), c[1]),
+                None => {}
+            }
+        }
+    }
+
+    #[test]
+    #[should_panic(expected = "attempt to subtract with overflow")]
+    fn short_id_get_descriptor_block_height_overflow() {
+        let sid = ShortId(0x0000_0000_1000_0000);
+        sid.get_descriptor().get_block_height();
+    }
 }
