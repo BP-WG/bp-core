@@ -19,15 +19,22 @@ use std::fmt::Debug;
 use bitcoin::{BlockHash, Txid};
 
 #[derive(Copy, Clone, Debug, Display, PartialEq, Eq)]
-#[display(Debug)]
+#[display(doc_comments)]
+/// Errors from descriptor validation and parsing
 pub enum Error {
+    /// invalid block height
     BlockHeightOutOfRange,
+    /// invalid tx input index
     InputIndexOutOfRange,
+    /// invalid tx output index
     OutputIndexOutOfRange,
+    /// invalid tx checksum
     ChecksumOutOfRange,
+    /// tx dimension not defined
     DimensionRequired,
-    NoDimensionIsPossible,
+    /// descriptor upgrade
     UpgradeImpossible,
+    /// descriptor downgrade
     DowngradeImpossible,
 }
 
@@ -69,47 +76,76 @@ impl From<Txid> for TxChecksum {
     }
 }
 
+/// Descriptor enum defines the onchain/offchain entity type
 #[derive(Copy, Clone, Debug, Display)]
 #[display(Debug)]
 pub enum Descriptor {
+    /// Block included onchain
     OnchainBlock {
+        /// Height of onchain block
         block_height: u32,
+        /// Checksum of onchain block
         block_checksum: BlockChecksum,
     },
+    /// Tx included onchain
     OnchainTransaction {
+        /// Height of the block tx belongs to
         block_height: u32,
+        /// Checksum of the block tx belongs to
         block_checksum: BlockChecksum,
+        /// Index in the block tx belongs to
         tx_index: u16,
     },
+    /// Tx input included onchain
     OnchainTxInput {
+        /// Height of the block the tx input belongs to
         block_height: u32,
+        /// Checksum of the block the tx input belongs to
         block_checksum: BlockChecksum,
+        /// Index in the block tx belongs to
         tx_index: u16,
+        /// Index in the tx the input belongs to
         input_index: u16,
     },
+    /// Tx output included onchain
     OnchainTxOutput {
+        /// Height of the block the tx input belongs to
         block_height: u32,
+        /// Checksum of the block the tx input belongs to
         block_checksum: BlockChecksum,
+        /// Index in the block tx belongs to
         tx_index: u16,
+        /// Index in the tx the output belongs to
         output_index: u16,
     },
+    /// Tx not included onchain
     OffchainTransaction {
+        /// Offchain tx checksum
         tx_checksum: TxChecksum,
     },
+    /// Tx input not included onchain
     OffchainTxInput {
+        /// Offchain tx checksum
         tx_checksum: TxChecksum,
+        /// Index in the tx the input belongs to
         input_index: u16,
     },
+    /// Tx output not included onchain
     OffchainTxOutput {
+        /// Offchain tx checksum
         tx_checksum: TxChecksum,
+        /// Index in the tx the output belongs to
         output_index: u16,
     },
 }
 
+/// Dimension enum defines tx dimension scope in terms of input/output relation
 #[derive(Copy, Clone, Debug, Display, PartialEq, Eq)]
 #[display(Debug)]
 pub enum Dimension {
+    /// Tx input
     Input,
+    /// Tx output
     Output,
 }
 
@@ -123,6 +159,8 @@ impl Default for Descriptor {
 }
 
 impl Descriptor {
+    /// Verifies if Descriptor type has valid properties otherwise returns
+    /// validation error
     pub fn try_validity(&self) -> Result<(), Error> {
         match *self {
             Descriptor::OnchainTransaction { block_height, .. }
@@ -155,6 +193,8 @@ impl Descriptor {
         }
     }
 
+    /// Returns true if Descriptor type is either OnchainBlock or
+    /// OnchainTransaction or OnchainTxInput or OnchainTxOutput
     pub fn is_onchain(&self) -> bool {
         matches!(
             self,
@@ -165,8 +205,15 @@ impl Descriptor {
         )
     }
 
-    pub fn is_offchain(&self) -> bool { !self.is_onchain() }
+    /// Returns true if Descriptor type is not onchain type
+    pub fn is_offchain(&self) -> bool {
+        !self.is_onchain()
+    }
 
+    /// Upgraded returns the "wrapped descriptor" based on provided parameters.
+    /// for instance, tx is returned in case descriptor is a block, as well as
+    /// input/out is returned in case descriptor is a tx and dimension is
+    /// specified
     pub fn upgraded(
         &self,
         index: u16,
@@ -236,6 +283,9 @@ impl Descriptor {
         }
     }
 
+    /// Downgraded returns the "wrapper descriptor", i.e. in case the descriptor
+    /// is an onchain tx, the onchain block is returned, as well as the onchain
+    /// tx is returned for onchain input/output
     pub fn downgraded(self) -> Result<Self, Error> {
         match self {
             Descriptor::OnchainTransaction {
@@ -270,6 +320,7 @@ impl Descriptor {
         }
     }
 
+    /// Get block height extracting from Descriptor
     pub fn get_block_height(&self) -> Option<u32> {
         match self {
             Descriptor::OnchainBlock { block_height, .. }
@@ -282,6 +333,7 @@ impl Descriptor {
         }
     }
 
+    /// Get block checksum extracting from Descriptor
     pub fn get_block_checksum(&self) -> Option<u8> {
         match self {
             Descriptor::OnchainBlock { block_checksum, .. }
@@ -294,6 +346,7 @@ impl Descriptor {
         }
     }
 
+    /// Get tx checksum extracting from Descriptor
     pub fn get_tx_checksum(&self) -> Option<u64> {
         match self {
             Descriptor::OffchainTransaction { tx_checksum, .. }
@@ -305,6 +358,7 @@ impl Descriptor {
         }
     }
 
+    /// Get tx index extracting from Descriptor
     pub fn get_tx_index(&self) -> Option<u16> {
         match self {
             Descriptor::OnchainTransaction { tx_index, .. }
@@ -314,6 +368,7 @@ impl Descriptor {
         }
     }
 
+    /// Get input index extracting from Descriptor
     pub fn get_input_index(&self) -> Option<u16> {
         match self {
             Descriptor::OnchainTxInput { input_index, .. }
@@ -324,6 +379,7 @@ impl Descriptor {
         }
     }
 
+    /// Get output index extracting from Descriptor
     pub fn get_output_index(&self) -> Option<u16> {
         match self {
             Descriptor::OnchainTxOutput { output_index, .. }
@@ -334,11 +390,14 @@ impl Descriptor {
         }
     }
 
+    /// Tries to convert short id from Descriptor to u64
     pub fn try_into_u64(self) -> Result<u64, Error> {
         ShortId::try_from(self).map(ShortId::into_u64)
     }
 }
 
+/// Short id is a descriptor representation that allows to build a Descriptor
+/// starting from a specific mask
 #[derive(
     Copy,
     Clone,
@@ -356,26 +415,38 @@ impl Descriptor {
 pub struct ShortId(u64);
 
 impl ShortId {
+    /// Specifies offchain descriptor
     pub const FLAG_OFFCHAIN: u64 = 0x8000_0000_0000_0000;
+    /// Specifies block descriptor and allows block height definition
     pub const MASK_BLOCK: u64 = 0x7FFF_FF00_0000_0000;
+    /// Allows block checksum definition
     pub const MASK_BLOCKCHECK: u64 = 0x0000_00FF_0000_0000;
+    /// Allows tx index definition
     pub const MASK_TXIDX: u64 = 0x0000_0000_FFFF_0000;
+    /// Allows tx checksum definition
     pub const MASK_TXCHECK: u64 = 0x7FFF_FFFF_FFFF_0000;
+    /// Specifies tx input or output descriptor
     pub const FLAG_INOUT: u64 = 0x0000_0000_0000_8000;
+    /// Allows tx index definition and specifies tx descriptor
     pub const MASK_INOUT: u64 = 0x0000_0000_0000_7FFF;
 
+    /// Operation for block height definition
     pub const SHIFT_BLOCK: u64 = 40;
+    /// Operation for block checksum definition
     pub const SHIFT_BLOCKCHECK: u64 = 32;
+    /// Operation for tx id and tx checksum definition
     pub const SHIFT_TXIDX: u64 = 16;
 
+    /// Returns if onchain descriptor is represented
     pub fn is_onchain(&self) -> bool {
         self.0 & Self::FLAG_OFFCHAIN != Self::FLAG_OFFCHAIN
     }
-
+    /// Returns if offchain descriptor is represented
     pub fn is_offchain(&self) -> bool {
         self.0 & Self::FLAG_OFFCHAIN == Self::FLAG_OFFCHAIN
     }
 
+    /// Generates descriptor from short id definition
     pub fn get_descriptor(&self) -> Descriptor {
         #[inline]
         fn iconv<T>(val: u64) -> T
@@ -446,11 +517,16 @@ impl ShortId {
         }
     }
 
-    pub fn into_u64(self) -> u64 { self.into() }
+    /// Converts short id into inner u64
+    pub fn into_u64(self) -> u64 {
+        self.into()
+    }
 }
 
 impl From<ShortId> for Descriptor {
-    fn from(short_id: ShortId) -> Self { short_id.get_descriptor() }
+    fn from(short_id: ShortId) -> Self {
+        short_id.get_descriptor()
+    }
 }
 
 impl TryFrom<Descriptor> for ShortId {
@@ -520,9 +596,91 @@ impl TryFrom<Descriptor> for ShortId {
 }
 
 impl From<u64> for ShortId {
-    fn from(val: u64) -> Self { Self(val) }
+    fn from(val: u64) -> Self {
+        Self(val)
+    }
 }
 
 impl From<ShortId> for u64 {
-    fn from(short_id: ShortId) -> Self { short_id.0 }
+    fn from(short_id: ShortId) -> Self {
+        short_id.0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn short_id_is_onchain() {
+        let test_cases = vec![
+            0,
+            1,
+            100,
+            16,
+            32,
+            40,
+            0x7FFF_FF00_0000_0000,
+            0x0000_0000_0000_8000,
+        ];
+        for c in &test_cases {
+            let sid = ShortId(*c);
+            assert!(sid.is_onchain());
+        }
+    }
+
+    #[test]
+    fn short_id_is_offchain() {
+        let test_cases = vec![
+            0x8000_0000_0000_0000,
+            0x8000_0000_0000_0001,
+            0x9000_0000_0000_0000,
+            0xFFFF_0000_0000_0000,
+        ];
+        for c in &test_cases {
+            let sid = ShortId(*c);
+            assert!(sid.is_offchain());
+        }
+    }
+
+    #[test]
+    fn short_id_into() {
+        let test_cases = [0, 1];
+        for c in &test_cases {
+            let sid = ShortId(*c);
+            assert_eq!(sid.into_u64(), *c);
+        }
+    }
+
+    #[test]
+    fn short_id_get_descriptor_empty() {
+        let sid = ShortId(0);
+        let descriptor = sid.get_descriptor();
+        match descriptor.get_block_height() {
+            Some(h) => assert_eq!(h, 0),
+            None => {}
+        }
+    }
+
+    #[test]
+    fn short_id_get_descriptor_block_height_valid() {
+        let test_cases = [
+            [0x0000_0100_0000_0000, 1],
+            [0x0000_1000_0000_0000, 16],
+            [0x0001_0000_0000_0000, 256],
+        ];
+        for c in &test_cases {
+            let sid = ShortId(c[0]);
+            match sid.get_descriptor().get_block_height() {
+                Some(h) => assert_eq!(u64::from(h), c[1]),
+                None => {}
+            }
+        }
+    }
+
+    #[test]
+    #[should_panic(expected = "attempt to subtract with overflow")]
+    fn short_id_get_descriptor_block_height_overflow() {
+        let sid = ShortId(0x0000_0000_1000_0000);
+        sid.get_descriptor().get_block_height();
+    }
 }
