@@ -14,7 +14,7 @@ The library implements bitcoin protocol elements which are missed from other
 existing bitcoin libraries, like [rust-bitcoin] and [descriptor wallet].
 Currently, it includes components necessary for [client-side-validation] over
 bitcoin, specifically
-- deterministic bitcoin commitments API (LNPBP-1, 2 & 3 standards)
+- deterministic bitcoin commitments API (LNPBP-14, 6 standards)
 - bitcoin-based single-use-seal API (LNPBP-10 and LNPBP-39 standards)
 
 Client-side-validation is a paradigm for distributed computing, based on top of

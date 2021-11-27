@@ -37,8 +37,7 @@ use miniscript::Segwitv0;
 use super::{Container, Error, KeysetCommitment, Proof, ScriptEncodeData};
 use crate::KeysetContainer;
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug, Display)]
-#[display(Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct LockscriptContainer {
     pub script: LockScript,
     pub pubkey: secp256k1::PublicKey,

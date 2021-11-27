@@ -29,8 +29,7 @@ use crate::lnpbp1;
 /// requires an original public key and a protocol-specific tag, which
 /// must be hashed during commitment process. Here we use pre-hashed version
 /// of the tag in order to maximize performance for multiple commitments.
-#[derive(Clone, PartialEq, Eq, Debug, Display)]
-#[display(Debug)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct KeysetContainer {
     /// The original public key: host for the commitment
     pub pubkey: secp256k1::PublicKey,

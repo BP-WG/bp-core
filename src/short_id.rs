@@ -77,8 +77,7 @@ impl From<Txid> for TxChecksum {
 }
 
 /// Descriptor enum defines the onchain/offchain entity type
-#[derive(Copy, Clone, Debug, Display)]
-#[display(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub enum Descriptor {
     /// Block included onchain
     OnchainBlock {
@@ -141,11 +140,12 @@ pub enum Descriptor {
 
 /// Dimension enum defines tx dimension scope in terms of input/output relation
 #[derive(Copy, Clone, Debug, Display, PartialEq, Eq)]
-#[display(Debug)]
 pub enum Dimension {
     /// Tx input
+    #[display("input")]
     Input,
     /// Tx output
+    #[display("output")]
     Output,
 }
 
@@ -206,9 +206,7 @@ impl Descriptor {
     }
 
     /// Returns true if Descriptor type is not onchain type
-    pub fn is_offchain(&self) -> bool {
-        !self.is_onchain()
-    }
+    pub fn is_offchain(&self) -> bool { !self.is_onchain() }
 
     /// Upgraded returns the "wrapped descriptor" based on provided parameters.
     /// for instance, tx is returned in case descriptor is a block, as well as
@@ -411,7 +409,7 @@ impl Descriptor {
     StrictEncode,
     StrictDecode
 )]
-#[display(Debug)]
+#[display("{0:016X}")]
 pub struct ShortId(u64);
 
 impl ShortId {
@@ -518,15 +516,11 @@ impl ShortId {
     }
 
     /// Converts short id into inner u64
-    pub fn into_u64(self) -> u64 {
-        self.into()
-    }
+    pub fn into_u64(self) -> u64 { self.into() }
 }
 
 impl From<ShortId> for Descriptor {
-    fn from(short_id: ShortId) -> Self {
-        short_id.get_descriptor()
-    }
+    fn from(short_id: ShortId) -> Self { short_id.get_descriptor() }
 }
 
 impl TryFrom<Descriptor> for ShortId {
@@ -596,15 +590,11 @@ impl TryFrom<Descriptor> for ShortId {
 }
 
 impl From<u64> for ShortId {
-    fn from(val: u64) -> Self {
-        Self(val)
-    }
+    fn from(val: u64) -> Self { Self(val) }
 }
 
 impl From<ShortId> for u64 {
-    fn from(short_id: ShortId) -> Self {
-        short_id.0
-    }
+    fn from(short_id: ShortId) -> Self { short_id.0 }
 }
 
 #[cfg(test)]

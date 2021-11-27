@@ -24,8 +24,7 @@ use super::{
     SpkCommitment, SpkContainer,
 };
 
-#[derive(Clone, PartialEq, Eq, Debug, Display)]
-#[display(Debug)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct TxoutContainer {
     pub value: u64,
     pub script_container: SpkContainer,
@@ -86,8 +85,7 @@ impl Container for TxoutContainer {
 }
 
 /// [`bitcoin::TxOut`] containing LNPBP-2 commitment
-#[derive(Wrapper, Clone, PartialEq, Eq, Hash, Default, Debug, Display, From)]
-#[display(Debug)]
+#[derive(Wrapper, Clone, PartialEq, Eq, Hash, Default, Debug, From)]
 pub struct TxoutCommitment(TxOut);
 
 impl<MSG> EmbedCommitVerify<MSG> for TxoutCommitment

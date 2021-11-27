@@ -38,18 +38,27 @@ use super::{
 /// proof (it can be guessed from a given proof and `scriptPubkey` and we'd like
 /// to preserve space with client-validated data).
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Display)]
-#[display(Debug)]
 #[non_exhaustive]
 pub enum ScriptEncodeMethod {
+    #[display("PublicKey")]
     PublicKey,
+    #[display("PubkeyHash")]
     PubkeyHash,
+    #[display("ScriptHash")]
     ScriptHash,
+    #[display("WPubkeyHash")]
     WPubkeyHash,
+    #[display("WScriptHash")]
     WScriptHash,
+    #[display("ShWPubkeyHash")]
     ShWPubkeyHash,
+    #[display("ShWScriptHash")]
     ShWScriptHash,
+    #[display("Taproot")]
     Taproot,
+    #[display("OpReturn")]
     OpReturn,
+    #[display("Bare")]
     Bare,
 }
 
@@ -64,7 +73,6 @@ pub enum ScriptEncodeMethod {
     serde(crate = "serde_crate")
 )]
 #[display(doc_comments)]
-#[non_exhaustive]
 pub enum ScriptEncodeData {
     /// Public key. Since we keep the original public key as a part of a proof,
     /// and value of the tweaked key can be reconstructed with DBC source data
@@ -80,6 +88,7 @@ pub enum ScriptEncodeData {
     /// this data kept in the client-validated part.
     LockScript(LockScript),
 
+    // TODO: Add `WrappedWitnessScript(WitnessScript) variant
     /// Taproot-based outputs. We need to keep only the hash of the taprscript
     /// merkle tree root.
     Taproot(sha256::Hash),
@@ -89,8 +98,7 @@ impl Default for ScriptEncodeData {
     fn default() -> Self { Self::SinglePubkey }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug, Display)]
-#[display(Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct SpkContainer {
     pub pubkey: secp256k1::PublicKey,
     pub method: ScriptEncodeMethod,
@@ -146,6 +154,7 @@ impl Container for SpkContainer {
                     } else if *lockscript.to_pubkey_script(Category::Nested)
                         == script
                     {
+                        // TODO: Fail here, use WrappedWitnessScript variant
                         ScriptEncodeMethod::ShWScriptHash
                     } else {
                         return Err(Error::InvalidProofStructure);
@@ -174,7 +183,7 @@ impl Container for SpkContainer {
             descriptors::Compact::Wpkh(_) => ScriptEncodeMethod::WPubkeyHash,
             descriptors::Compact::Wsh(_) => ScriptEncodeMethod::WScriptHash,
             descriptors::Compact::Taproot(_) => ScriptEncodeMethod::Taproot,
-            _ => unimplemented!(),
+            _ => unimplemented!(), // TODO: Fail with error here
         };
         let proof = proof;
 
@@ -184,23 +193,21 @@ impl Container for SpkContainer {
             | ScriptEncodeMethod::WPubkeyHash
             | ScriptEncodeMethod::ShWPubkeyHash
             | ScriptEncodeMethod::OpReturn => {
-                if let ScriptEncodeData::SinglePubkey = proof.source {
-                } else {
+                if ScriptEncodeData::SinglePubkey != proof.source {
                     return Err(Error::InvalidProofStructure);
                 }
             }
-            ScriptEncodeMethod::Bare
+            ScriptEncodeMethod::Bare // TODO: Move bare to pubkey only encoding
             | ScriptEncodeMethod::ScriptHash
             | ScriptEncodeMethod::WScriptHash
             | ScriptEncodeMethod::ShWScriptHash => {
-                if let ScriptEncodeData::LockScript(_) = proof.source {
-                } else {
+                if ! matches!(proof.source, ScriptEncodeData::LockScript(_)) {
                     return Err(Error::InvalidProofStructure);
                 }
             }
+            // TODO: Use WrappedWitnessScript variant
             ScriptEncodeMethod::Taproot => {
-                if let ScriptEncodeData::Taproot(_) = proof.source {
-                } else {
+                if ! matches!(proof.source, ScriptEncodeData::Taproot(_) | ScriptEncodeData::SinglePubkey) {
                     return Err(Error::InvalidProofStructure);
                 }
             }
@@ -261,10 +268,8 @@ where
         msg: &MSG,
     ) -> Result<Self, Self::Error> {
         use ScriptEncodeMethod::*;
-        let script_pubkey =
-            if let ScriptEncodeData::LockScript(ref lockscript) =
-                container.source
-            {
+        let script_pubkey = match container.source {
+            ScriptEncodeData::LockScript(ref lockscript) => {
                 let mut lockscript_container = LockscriptContainer {
                     script: lockscript.clone(),
                     pubkey: container.pubkey,
@@ -289,9 +294,8 @@ where
                     }
                     _ => return Err(Error::InvalidProofStructure),
                 }
-            } else if let ScriptEncodeData::Taproot(taproot_hash) =
-                container.source
-            {
+            }
+            ScriptEncodeData::Taproot(taproot_hash) => {
                 if container.method != Taproot {
                     return Err(Error::InvalidProofStructure);
                 }
@@ -310,7 +314,8 @@ where
                 //          finalized. We don't know yet how to form scripPubkey
                 //          from Taproot data
                 unimplemented!()
-            } else {
+            }
+            ScriptEncodeData::SinglePubkey => {
                 let mut pubkey_container = PubkeyContainer {
                     pubkey: container.pubkey,
                     tag: container.tag,
@@ -335,7 +340,8 @@ where
                     }
                     _ => return Err(Error::InvalidProofStructure),
                 }
-            };
+            }
+        };
         Ok(SpkCommitment::from_inner(script_pubkey))
     }
 }

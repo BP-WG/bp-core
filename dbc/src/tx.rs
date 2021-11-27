@@ -23,8 +23,7 @@ use super::{
     TxoutCommitment, TxoutContainer,
 };
 
-#[derive(Clone, PartialEq, Eq, Debug, Display)]
-#[display(Debug)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct TxContainer {
     pub protocol_factor: u32,
     pub fee: u64,
@@ -34,8 +33,7 @@ pub struct TxContainer {
     pub tweaking_factor: Option<Hmac<sha256::Hash>>,
 }
 
-#[derive(Clone, PartialEq, Eq, Debug, Display)]
-#[display(Debug)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct TxSupplement {
     pub protocol_factor: u32,
     pub fee: u64,
@@ -120,8 +118,7 @@ impl Container for TxContainer {
 }
 
 /// [`bitcoin::Transaction`] containing LNPBP-3 commitment
-#[derive(Wrapper, Clone, PartialEq, Eq, Hash, Debug, Display, From)]
-#[display(Debug)]
+#[derive(Wrapper, Clone, PartialEq, Eq, Hash, Debug, From)]
 pub struct TxCommitment(Transaction);
 
 impl<MSG> EmbedCommitVerify<MSG> for TxCommitment
