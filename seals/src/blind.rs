@@ -21,6 +21,23 @@ use bitcoin::{OutPoint, Txid};
 use commit_verify::{commit_encode, CommitConceal, CommitVerify, TaggedHash};
 use lnpbp_bech32::{FromBech32Str, ToBech32String};
 
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
+#[derive(StrictEncode, StrictDecode)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
+pub enum CommitmentSchema {
+    /// Pay-to-contract, return-to-contract and taproot-to-contract commitments
+    /// as they are defined by LNPBP-2 and LNPBP-2 specifications
+    #[display("P2C")]
+    TxOutCommitment,
+
+    #[display("S2C")]
+    TxInCommitment,
+}
+
 /// Data required to generate or reveal the information about blinded
 /// transaction outpoint
 #[derive(
@@ -43,6 +60,8 @@ pub struct OutpointReveal {
 
     /// Tx output number that should be blinded
     pub vout: u32,
+
+    pub cmt_schema: CommitmentSchema,
 }
 
 impl From<OutpointReveal> for OutPoint {
