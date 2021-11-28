@@ -60,8 +60,7 @@ pub struct OutpointReveal {
 
     /// Tx output number that should be blinded
     pub vout: u32,
-
-    pub cmt_schema: CommitmentSchema,
+    // pub cmt_schema: CommitmentSchema,
 }
 
 impl From<OutpointReveal> for OutPoint {

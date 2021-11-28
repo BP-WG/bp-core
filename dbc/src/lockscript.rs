@@ -28,8 +28,8 @@
 use core::cell::RefCell;
 use std::collections::{BTreeSet, HashSet};
 
-use bitcoin::hashes::{hash160, sha256, Hmac};
-use bitcoin::{secp256k1, PubkeyHash};
+use bitcoin::hashes::{hash160, sha256, Hash, Hmac};
+use bitcoin::secp256k1;
 use bitcoin_scripts::LockScript;
 use commit_verify::EmbedCommitVerify;
 use miniscript::Segwitv0;
@@ -150,11 +150,13 @@ where
         container: &mut Self::Container,
         msg: &MSG,
     ) -> Result<Self, Self::Error> {
-        let original_hash = bitcoin::PublicKey {
-            compressed: true,
-            key: container.pubkey,
-        }
-        .pubkey_hash();
+        let original_hash = hash160::Hash::hash(
+            &bitcoin::PublicKey {
+                compressed: true,
+                key: container.pubkey,
+            }
+            .to_bytes(),
+        );
 
         let (keys, hashes) =
             container.script.extract_pubkey_hash_set::<Segwitv0>()?;
@@ -162,8 +164,10 @@ where
             return Err(Error::LockscriptContainsNoKeys);
         }
 
-        let mut key_hashes: HashSet<PubkeyHash> =
-            keys.iter().map(bitcoin::PublicKey::pubkey_hash).collect();
+        let mut key_hashes: HashSet<hash160::Hash> = keys
+            .iter()
+            .map(|key| hash160::Hash::hash(&key.to_bytes()))
+            .collect();
         key_hashes.insert(original_hash);
         let keys: BTreeSet<_> = keys.into_iter().map(|pk| pk.key).collect();
 
@@ -214,7 +218,7 @@ where
                     }
                     false => *pubkey,
                 },
-                |hash: &hash160::Hash| match *hash == original_hash.as_hash() {
+                |hash: &hash160::Hash| match *hash == original_hash {
                     true => {
                         *found.borrow_mut() += 1;
                         tweaked_hash.as_hash()
@@ -232,6 +236,7 @@ mod test {
     use std::str::FromStr;
 
     use bitcoin::hashes::{hash160, sha256, Hash};
+    use bitcoin::PubkeyHash;
     use miniscript::{Miniscript, Segwitv0};
 
     use super::*;

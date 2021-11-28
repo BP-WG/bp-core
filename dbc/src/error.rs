@@ -13,6 +13,8 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
+use descriptors::UnsupportedScriptPubkey;
+
 use crate::lnpbp1;
 
 /// Different error types which may happen during deterministic bitcoin
@@ -37,6 +39,7 @@ pub enum Error {
     InvalidKeyData,
 
     /// Wrong witness version, may be you need to upgrade used library version
+    #[from(UnsupportedScriptPubkey)]
     UnsupportedWitnessVersion,
 
     /// Miniscript was unable to parse provided script data; they are either

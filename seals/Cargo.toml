@@ -1,6 +1,6 @@
 [package]
 name = "bp-seals"
-version = "0.5.0"
+version = "0.6.0"
 license = "Apache-2.0"
 authors = ["Dr. Maxim Orlovsky <orlovsky@pandoracore.com>"]
 description = "Bitcoin single-use-seals library"
@@ -17,12 +17,12 @@ path = "src/lib.rs"
 
 [dependencies]
 amplify = "3.9.1"
-bitcoin = "0.27.1"
-single_use_seals = "0.5.5"
-commit_verify = "0.5.11"
-strict_encoding = "1.7.4"
-lnpbp_bech32 = "0.5.0"
-bp-dbc = { version = "0.5.0", path = "../dbc" }
+bitcoin = "0.28.1"
+single_use_seals = "0.6.1"
+commit_verify = "0.6.1"
+strict_encoding = "1.8.0"
+lnpbp_bech32 = "0.6.0"
+bp-dbc = { version = "0.6.0", path = "../dbc" }
 async-trait = { version = "0.1.51", optional = true }
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
 serde_with = { version = "1.8", optional = true }

@@ -19,8 +19,10 @@ use amplify::Wrapper;
 use bitcoin::blockdata::script::Script;
 use bitcoin::hashes::{sha256, Hmac};
 use bitcoin::secp256k1;
-use bitcoin_scripts::{Category, LockScript, PubkeyScript, ToPubkeyScript};
+use bitcoin_scripts::convert::ToPubkeyScript;
+use bitcoin_scripts::{ConvertInfo, LockScript, PubkeyScript};
 use commit_verify::EmbedCommitVerify;
+use descriptors::ScriptPubkeyDescr;
 
 use super::{
     Container, Error, LockscriptCommitment, LockscriptContainer, Proof,
@@ -144,45 +146,48 @@ impl Container for SpkContainer {
         };
 
         let mut proof = proof.clone();
-        let method = match descriptors::Compact::try_from(host.clone())? {
-            descriptors::Compact::Sh(script_hash) => {
-                let script = Script::new_p2sh(&script_hash);
+        let method = match ScriptPubkeyDescr::try_from(host.clone())? {
+            ScriptPubkeyDescr::Sh(script_hash) => {
+                let script =
+                    PubkeyScript::from_inner(Script::new_p2sh(&script_hash));
+                let some_script = Some(script);
                 if let Some(lockscript) = lockscript {
-                    if *lockscript.to_pubkey_script(Category::Hashed) == script
+                    if lockscript.to_pubkey_script(ConvertInfo::Hashed)
+                        == some_script
                     {
                         ScriptEncodeMethod::ScriptHash
-                    } else if *lockscript.to_pubkey_script(Category::Nested)
-                        == script
+                    } else if lockscript.to_pubkey_script(ConvertInfo::NestedV0)
+                        == some_script
                     {
                         // TODO: Fail here, use WrappedWitnessScript variant
                         ScriptEncodeMethod::ShWScriptHash
                     } else {
                         return Err(Error::InvalidProofStructure);
                     }
-                } else if *proof.pubkey.to_pubkey_script(Category::Nested)
-                    == script
+                } else if proof.pubkey.to_pubkey_script(ConvertInfo::NestedV0)
+                    == some_script
                 {
                     ScriptEncodeMethod::ShWPubkeyHash
                 } else {
                     return Err(Error::InvalidProofStructure);
                 }
             }
-            descriptors::Compact::Bare(script)
+            ScriptPubkeyDescr::Bare(script)
                 if script.as_inner().is_op_return() =>
             {
                 ScriptEncodeMethod::OpReturn
             }
-            descriptors::Compact::Bare(script) => {
+            ScriptPubkeyDescr::Bare(script) => {
                 proof.source = ScriptEncodeData::LockScript(LockScript::from(
                     script.to_inner(),
                 ));
                 ScriptEncodeMethod::Bare
             }
-            descriptors::Compact::Pk(_) => ScriptEncodeMethod::PublicKey,
-            descriptors::Compact::Pkh(_) => ScriptEncodeMethod::PubkeyHash,
-            descriptors::Compact::Wpkh(_) => ScriptEncodeMethod::WPubkeyHash,
-            descriptors::Compact::Wsh(_) => ScriptEncodeMethod::WScriptHash,
-            descriptors::Compact::Taproot(_) => ScriptEncodeMethod::Taproot,
+            ScriptPubkeyDescr::Pk(_) => ScriptEncodeMethod::PublicKey,
+            ScriptPubkeyDescr::Pkh(_) => ScriptEncodeMethod::PubkeyHash,
+            ScriptPubkeyDescr::Wpkh(_) => ScriptEncodeMethod::WPubkeyHash,
+            ScriptPubkeyDescr::Wsh(_) => ScriptEncodeMethod::WScriptHash,
+            ScriptPubkeyDescr::Tr(_) => ScriptEncodeMethod::Taproot,
             _ => unimplemented!(), // TODO: Fail with error here
         };
         let proof = proof;
@@ -284,13 +289,15 @@ where
                 container.tweaking_factor =
                     lockscript_container.tweaking_factor;
                 match container.method {
-                    Bare => lockscript.to_pubkey_script(Category::Bare),
-                    ScriptHash => lockscript.to_pubkey_script(Category::Hashed),
+                    Bare => lockscript.to_pubkey_script(ConvertInfo::Bare),
+                    ScriptHash => {
+                        lockscript.to_pubkey_script(ConvertInfo::Hashed)
+                    }
                     WScriptHash => {
-                        lockscript.to_pubkey_script(Category::SegWit)
+                        lockscript.to_pubkey_script(ConvertInfo::SegWitV0)
                     }
                     ShWScriptHash => {
-                        lockscript.to_pubkey_script(Category::Nested)
+                        lockscript.to_pubkey_script(ConvertInfo::NestedV0)
                     }
                     _ => return Err(Error::InvalidProofStructure),
                 }
@@ -327,21 +334,26 @@ where
                 )?;
                 container.tweaking_factor = pubkey_container.tweaking_factor;
                 match container.method {
-                    PublicKey => pubkey.to_pubkey_script(Category::Bare),
-                    PubkeyHash => pubkey.to_pubkey_script(Category::Hashed),
-                    WPubkeyHash => pubkey.to_pubkey_script(Category::SegWit),
-                    ShWScriptHash => pubkey.to_pubkey_script(Category::Nested),
+                    PublicKey => pubkey.to_pubkey_script(ConvertInfo::Bare),
+                    PubkeyHash => pubkey.to_pubkey_script(ConvertInfo::Hashed),
+                    WPubkeyHash => {
+                        pubkey.to_pubkey_script(ConvertInfo::SegWitV0)
+                    }
+                    ShWScriptHash => {
+                        pubkey.to_pubkey_script(ConvertInfo::NestedV0)
+                    }
                     OpReturn => {
                         let ser = pubkey.serialize();
                         if ser[0] != 0x02 {
                             return Err(Error::InvalidOpReturnKey);
                         }
-                        Script::new_op_return(&ser).into()
+                        Some(Script::new_op_return(&ser).into())
                     }
                     _ => return Err(Error::InvalidProofStructure),
                 }
             }
-        };
+        }
+        .ok_or(Error::UncompressedKey)?;
         Ok(SpkCommitment::from_inner(script_pubkey))
     }
 }
