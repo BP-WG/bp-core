@@ -16,6 +16,11 @@ exclude = [".github", "bp-dbc", "bp-seals"]
 name = "bp"
 path = "src/lib.rs"
 
+[[bin]]
+name = "bp"
+path = "src/main.rs"
+required-features = ["shell"]
+
 [dependencies]
 amplify = "3.9.1"
 strict_encoding = { version = "1.7.4", features = ["bitcoin", "miniscript", "derive"] }
@@ -26,10 +31,13 @@ bp-seals = { version = "0.5.0", path = "./seals" }
 bitcoin = "0.27.0"
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
 serde_with = { version = "1.8", optional = true }
+clap = { version = "3.0", optional = true, features = ["derive"] }
+descriptor-wallet = { version = "0.5.2", optional = true }
 
 [features]
 default = []
-all = ["async", "serde"]
+all = ["async", "serde", "shell"]
+shell = ["clap", "descriptor-wallet"]
 async = ["bp-seals/async"]
 serde = ["amplify/serde", "bitcoin/use-serde",
          "commit_verify/serde", "bp-dbc/serde", "bp-seals/serde",
