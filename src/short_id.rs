@@ -1,7 +1,7 @@
 // BP Core Library implementing LNP/BP specifications & standards related to
 // bitcoin protocol
 //
-// Written in 2020-2021 by
+// Written in 2020-2022 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
 //
 // To the extent possible under law, the author(s) have dedicated all
@@ -206,7 +206,9 @@ impl Descriptor {
     }
 
     /// Returns true if Descriptor type is not onchain type
-    pub fn is_offchain(&self) -> bool { !self.is_onchain() }
+    pub fn is_offchain(&self) -> bool {
+        !self.is_onchain()
+    }
 
     /// Upgraded returns the "wrapped descriptor" based on provided parameters.
     /// for instance, tx is returned in case descriptor is a block, as well as
@@ -516,11 +518,15 @@ impl ShortId {
     }
 
     /// Converts short id into inner u64
-    pub fn into_u64(self) -> u64 { self.into() }
+    pub fn into_u64(self) -> u64 {
+        self.into()
+    }
 }
 
 impl From<ShortId> for Descriptor {
-    fn from(short_id: ShortId) -> Self { short_id.get_descriptor() }
+    fn from(short_id: ShortId) -> Self {
+        short_id.get_descriptor()
+    }
 }
 
 impl TryFrom<Descriptor> for ShortId {
@@ -590,11 +596,15 @@ impl TryFrom<Descriptor> for ShortId {
 }
 
 impl From<u64> for ShortId {
-    fn from(val: u64) -> Self { Self(val) }
+    fn from(val: u64) -> Self {
+        Self(val)
+    }
 }
 
 impl From<ShortId> for u64 {
-    fn from(short_id: ShortId) -> Self { short_id.0 }
+    fn from(short_id: ShortId) -> Self {
+        short_id.0
+    }
 }
 
 #[cfg(test)]

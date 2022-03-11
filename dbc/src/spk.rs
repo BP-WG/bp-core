@@ -1,7 +1,7 @@
 // BP Core Library implementing LNP/BP specifications & standards related to
 // bitcoin protocol
 //
-// Written in 2020-2021 by
+// Written in 2020-2022 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
 //
 // To the extent possible under law, the author(s) have dedicated all
@@ -95,7 +95,9 @@ pub enum ScriptEncodeData {
 }
 
 impl Default for ScriptEncodeData {
-    fn default() -> Self { Self::SinglePubkey }
+    fn default() -> Self {
+        Self::SinglePubkey
+    }
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]

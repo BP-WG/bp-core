@@ -1,7 +1,7 @@
 // BP Core Library implementing LNP/BP specifications & standards related to
 // bitcoin protocol
 //
-// Written in 2020-2021 by
+// Written in 2020-2022 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
 //
 // To the extent possible under law, the author(s) have dedicated all
@@ -36,5 +36,7 @@ pub enum Error {
 }
 
 impl From<dbc::Error> for Error {
-    fn from(err: dbc::Error) -> Self { Self::CommitmentError(err) }
+    fn from(err: dbc::Error) -> Self {
+        Self::CommitmentError(err)
+    }
 }

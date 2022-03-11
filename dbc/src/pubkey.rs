@@ -1,7 +1,7 @@
 // BP Core Library implementing LNP/BP specifications & standards related to
 // bitcoin protocol
 //
-// Written in 2020-2021 by
+// Written in 2020-2022 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
 //
 // To the extent possible under law, the author(s) have dedicated all
@@ -77,10 +77,14 @@ impl Container for PubkeyContainer {
     // value, so the commitment container (original public key) just returns a
     // copy of itself
     #[inline]
-    fn to_proof(&self) -> Proof { Proof::from(self.pubkey) }
+    fn to_proof(&self) -> Proof {
+        Proof::from(self.pubkey)
+    }
 
     #[inline]
-    fn into_proof(self) -> Proof { Proof::from(self.pubkey) }
+    fn into_proof(self) -> Proof {
+        Proof::from(self.pubkey)
+    }
 }
 
 /// Public key committed to some message via LNPBP1-based tweaking procedure

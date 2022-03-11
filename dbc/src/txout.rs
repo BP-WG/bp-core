@@ -1,7 +1,7 @@
 // BP Core Library implementing LNP/BP specifications & standards related to
 // bitcoin protocol
 //
-// Written in 2020-2021 by
+// Written in 2020-2022 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
 //
 // To the extent possible under law, the author(s) have dedicated all
@@ -79,9 +79,13 @@ impl Container for TxoutContainer {
         self.script_container.deconstruct()
     }
 
-    fn to_proof(&self) -> Proof { self.script_container.to_proof() }
+    fn to_proof(&self) -> Proof {
+        self.script_container.to_proof()
+    }
 
-    fn into_proof(self) -> Proof { self.script_container.into_proof() }
+    fn into_proof(self) -> Proof {
+        self.script_container.into_proof()
+    }
 }
 
 /// [`bitcoin::TxOut`] containing LNPBP-2 commitment

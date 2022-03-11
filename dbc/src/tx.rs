@@ -1,7 +1,7 @@
 // BP Core Library implementing LNP/BP specifications & standards related to
 // bitcoin protocol
 //
-// Written in 2020-2021 by
+// Written in 2020-2022 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
 //
 // To the extent possible under law, the author(s) have dedicated all
@@ -105,16 +105,23 @@ impl Container for TxContainer {
     }
 
     fn deconstruct(self) -> (Proof, Self::Supplement) {
-        (self.txout_container.clone().into_proof(), TxSupplement {
-            protocol_factor: self.protocol_factor,
-            fee: self.fee,
-            tag: self.txout_container.script_container.tag,
-        })
+        (
+            self.txout_container.clone().into_proof(),
+            TxSupplement {
+                protocol_factor: self.protocol_factor,
+                fee: self.fee,
+                tag: self.txout_container.script_container.tag,
+            },
+        )
     }
 
-    fn to_proof(&self) -> Proof { self.txout_container.to_proof() }
+    fn to_proof(&self) -> Proof {
+        self.txout_container.to_proof()
+    }
 
-    fn into_proof(self) -> Proof { self.txout_container.into_proof() }
+    fn into_proof(self) -> Proof {
+        self.txout_container.into_proof()
+    }
 }
 
 /// [`bitcoin::Transaction`] containing LNPBP-3 commitment

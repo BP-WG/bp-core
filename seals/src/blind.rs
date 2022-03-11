@@ -1,7 +1,7 @@
 // BP Core Library implementing LNP/BP specifications & standards related to
 // bitcoin protocol
 //
-// Written in 2020-2021 by
+// Written in 2020-2022 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
 //
 // To the extent possible under law, the author(s) have dedicated all
@@ -79,7 +79,9 @@ impl CommitConceal for OutpointReveal {
 
 impl OutpointReveal {
     #[inline]
-    pub fn outpoint_hash(&self) -> OutpointHash { OutpointHash::commit(self) }
+    pub fn outpoint_hash(&self) -> OutpointHash {
+        OutpointHash::commit(self)
+    }
 }
 
 /// Errors happening during parsing string representation of different forms of
@@ -153,7 +155,9 @@ pub struct OutpointHashTag;
 
 impl sha256t::Tag for OutpointHashTag {
     #[inline]
-    fn engine() -> sha256::HashEngine { sha256::HashEngine::default() }
+    fn engine() -> sha256::HashEngine {
+        sha256::HashEngine::default()
+    }
 }
 
 impl lnpbp_bech32::Strategy for OutpointHashTag {
