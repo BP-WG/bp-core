@@ -1,5 +1,5 @@
-// BP Core Library implementing LNP/BP specifications & standards related to
-// bitcoin protocol
+// Deterministic bitcoin commitments library, implementing LNPBP standards
+// Part of bitcoin protocol core library (BP Core Lib)
 //
 // Written in 2020-2022 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
@@ -13,26 +13,22 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use amplify::DumbDefault;
+use amplify::Slice32;
+use bitcoin::hashes::sha256;
+use bitcoin_scripts::PubkeyScript;
 
-use super::{Error, ScriptEncodeData};
+use crate::Error;
 
-pub trait Container: Sized {
-    type Supplement;
-    type Host;
-
-    fn reconstruct(
-        proof: &Proof,
-        supplement: &Self::Supplement,
-        host: &Self::Host,
-    ) -> Result<Self, Error>;
-
-    fn deconstruct(self) -> (Proof, Self::Supplement);
-
-    fn to_proof(&self) -> Proof;
-    fn into_proof(self) -> Proof;
-}
-
+/// Extra-transaction proof of a deterministic bitcoin commitment.
+///
+/// Encodes only extra-transaction data in the most compact form; without
+/// information on which specific commitment type is used. The commitment type
+/// must be determined by the protocol data and transaction structure.
+///
+/// Proof does not stores the actual key data internally not to consume
+/// resources on validating elliptic key points each time the proof is
+/// deserialized (client-side-validated data may contain many thousands of
+/// proofs and such validation may significantly reduce performance).
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Display)]
 #[derive(StrictEncode, StrictDecode)]
 #[cfg_attr(
@@ -41,28 +37,103 @@ pub trait Container: Sized {
     serde(crate = "serde_crate")
 )]
 #[display("proof({pubkey}, {source}")]
-pub struct Proof {
-    pub pubkey: secp256k1::PublicKey,
-    pub source: ScriptEncodeData,
-}
+pub enum Proof {
+    /// No extra-transaction data are required
+    #[strict_encoding(value = 0x01)]
+    Embedded,
 
-impl DumbDefault for Proof {
-    fn dumb_default() -> Self {
-        Proof {
-            pubkey: secp256k1::PublicKey::from_secret_key(
-                secp256k1::SECP256K1,
-                &secp256k1::ONE_KEY,
-            ),
-            source: Default::default(),
-        }
-    }
+    /// Extra-transaction proof consists of a single public key.
+    ///
+    /// This variant covers even public keys, prefixed with `0x02` as a part of
+    /// the proof type data.
+    #[strict_encoding(value = 0x02)]
+    EvenKey(Slice32),
+
+    /// Extra-transaction proof consists of a single public key.
+    ///
+    /// This variant covers odd public keys, prefixed with `0x03` as a part of
+    /// the proof type data.
+    #[strict_encoding(value = 0x03)]
+    OddKey(Slice32),
+
+    // 0x04 encoding is skipped to distinguish with a stored uncompressed keys
+    /// Extra-transaction proof consists of a single public key as a part of
+    /// P2WPKH-in-P2SH nested legacy structure.
+    ///
+    /// This variant covers even public keys.
+    #[strict_encoding(value = 0x05)]
+    NestedEvenKey(Slice32),
+
+    /// Extra-transaction proof consists of a single public key as a part of
+    /// P2WPKH-in-P2SH nested legacy structure.
+    ///
+    /// This variant covers odd public keys.
+    #[strict_encoding(value = 0x06)]
+    NestedOddKey(Slice32),
+
+    /// Extra-transaction proof consists of a single public key and script.
+    ///
+    /// This variant covers even public keys.
+    #[strict_encoding(value = 0x07)]
+    ScriptEvenKey {
+        target_key: Slice32,
+        script: Box<[u8]>,
+    },
+
+    /// Extra-transaction proof consists of a single public key and script.
+    ///
+    /// This variant covers odd public keys.
+    #[strict_encoding(value = 0x08)]
+    ScriptOddKey {
+        target_key: Slice32,
+        script: Box<[u8]>,
+    },
+
+    /// Extra-transaction proof consists of a single public key and witness
+    /// script structured as P2WSH-in-P2SH nested legacy structure.
+    ///
+    /// This variant covers even public keys.
+    #[strict_encoding(value = 0x09)]
+    NestedScriptEvenKey {
+        target_key: Slice32,
+        script: Box<[u8]>,
+    },
+
+    /// Extra-transaction proof consists of a single public key and witness
+    /// script structured as P2WSH-in-P2SH nested legacy structure.
+    ///
+    /// This variant covers odd public keys.
+    #[strict_encoding(value = 0x10)]
+    NestedScriptOddKey {
+        target_key: Slice32,
+        script: Box<[u8]>,
+    },
+
+    /// Extra-transaction proof consists of a taproot internal public key and
+    /// a merkle proof for a second branch of the merkle tree in the taproot
+    /// script tree.
+    #[strict_encoding(value = 0x11)]
+    XOnlyKeyTaproot {
+        internal_key: Slice32,
+        merkle_subroot: sha256::Hash,
+    },
 }
 
 impl From<secp256k1::PublicKey> for Proof {
     fn from(pubkey: secp256k1::PublicKey) -> Self {
-        Self {
-            pubkey,
-            source: ScriptEncodeData::SinglePubkey,
+        let data = pubkey.serialize();
+        let inner =
+            Slice32::from_slice(&data[1..]).expect("fixed-length slice");
+        match data[0] {
+            0x02 => Proof::EvenKey(inner),
+            0x03 => Proof::OddKey(inner),
+            _ => unreachable!(
+                "Secp256k1 public key with non-0x02 and non-0x03 prefix"
+            ),
         }
     }
+}
+
+impl Proof {
+    pub fn pubkey_script(&self) -> Result<PubkeyScript, Error> {}
 }
