@@ -1,5 +1,5 @@
-// BP Core Library implementing LNP/BP specifications & standards related to
-// bitcoin protocol
+// Deterministic bitcoin commitments library, implementing LNPBP standards
+// Part of bitcoin protocol core library (BP Core Lib)
 //
 // Written in 2020-2022 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
@@ -12,6 +12,9 @@
 // You should have received a copy of the Apache 2.0 License
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
+
+#[cfg(feature = "miniscript")]
+use miniscript::policy::compiler::CompilerError;
 
 use crate::lnpbp1;
 
@@ -61,7 +64,7 @@ pub enum Error {
     /// Policy compilation error
     #[from]
     #[display(inner)]
-    PolicyCompilation(miniscript::policy::compiler::CompilerError),
+    PolicyCompilation(CompilerError),
 
     /// Deterministic bitcoin commitments require use of compressed public keys
     UncompressedKey,

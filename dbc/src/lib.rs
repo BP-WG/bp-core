@@ -1,5 +1,5 @@
-// BP Core Library implementing LNP/BP specifications & standards related to
-// bitcoin protocol
+// Deterministic bitcoin commitments library, implementing LNPBP standards
+// Part of bitcoin protocol core library (BP Core Lib)
 //
 // Written in 2020-2022 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
@@ -24,26 +24,16 @@ extern crate strict_encoding;
 #[cfg(feature = "serde")]
 #[macro_use]
 extern crate serde_crate as serde;
+#[cfg(feature = "miniscript")]
+extern crate miniscript_crate as miniscript;
 
+pub mod container;
 mod error;
-pub mod keyset;
-pub mod lnpbp1;
-pub mod lockscript;
-pub mod pubkey;
+pub mod proof;
+pub mod sigs;
 pub mod spk;
-pub mod taproot;
-pub mod tx;
 pub mod txout;
-pub mod types;
 
+pub use container::Container;
 pub use error::Error;
-pub use keyset::{KeysetCommitment, KeysetContainer};
-pub use lockscript::{LockscriptCommitment, LockscriptContainer};
-pub use pubkey::{PubkeyCommitment, PubkeyContainer};
-pub use spk::{
-    ScriptEncodeData, ScriptEncodeMethod, SpkCommitment, SpkContainer,
-};
-pub use taproot::{TaprootCommitment, TaprootContainer};
-pub use tx::{TxCommitment, TxContainer, TxSupplement};
-pub use txout::{TxoutCommitment, TxoutContainer};
-pub use types::{Container, Proof};
+pub use proof::Proof;
