@@ -1,6 +1,6 @@
 [package]
 name = "bp-core"
-version = "0.5.0"
+version = "0.6.0-alpha.1"
 license = "Apache-2.0"
 authors = ["Dr. Maxim Orlovsky <orlovsky@pandoracore.com>"]
 description = "Bitcoin Protocol Core Library (BP Core Lib)"
@@ -17,24 +17,25 @@ name = "bp"
 path = "src/lib.rs"
 
 [dependencies]
-amplify = "3.9.1"
-strict_encoding = { version = "1.7.4", features = ["bitcoin", "miniscript", "derive"] }
-commit_verify = "0.5.11"
+amplify = "3.12.0"
+strict_encoding = "1.8.0-rc.1"
+commit_verify = "0.6.0-alpha.1"
 single_use_seals = "0.5.5"
-bp-dbc = { version = "0.5.0", path = "./dbc" }
-bp-seals = { version = "0.5.0", path = "./seals" }
-bitcoin = "0.27.0"
+bp-dbc = { version = "0.6.0-alpha.1", path = "./dbc" }
+bp-seals = { version = "0.6.0-alpha.1", path = "./seals" }
+bitcoin = "0.28.0-rc.1"
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
 serde_with = { version = "1.8", optional = true }
 
 [features]
 default = []
-all = ["async", "serde"]
+all = ["async", "serde", "miniscript"]
+miniscript = ["bp-dbc/miniscript"]
 async = ["bp-seals/async"]
 serde = ["amplify/serde", "bitcoin/use-serde",
          "commit_verify/serde", "bp-dbc/serde", "bp-seals/serde",
          "serde_crate", "serde_with"]
 
 [workspace]
-members = [".", "dbc", "dbc/tapret", "seals"]
-default-members = [".", "dbc", "dbc/tapret", "seals"]
+members = [".", "dbc", "seals"]
+default-members = [".", "dbc", "seals"]
