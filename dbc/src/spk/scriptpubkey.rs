@@ -29,76 +29,77 @@ use super::{
 };
 use crate::{Container, Error, Proof};
 
-/// Enum defining how given `scriptPubkey` is constructed from the script data
-/// or a public key. It is similar to Bitcoin Core descriptors, however it does
-/// provide additional variants required for RGB, in particular -
-/// [`ScriptEncodeMethod::OpReturn`] variant with a requirement of public key
-/// presence (this key will contain commitment). Because of this we can't use
-/// miniscript descriptors as well; also in miniscript, descriptor contains a
-/// script source, while here the script source is kept separately and is a part
-/// of the [`Proof`], while [`ScriptEncodeMethod`] is not included into the
-/// proof (it can be guessed from a given proof and `scriptPubkey` and we'd like
-/// to preserve space with client-validated data).
-#[derive(Clone, PartialEq, Eq, Hash, Debug, Display)]
-#[non_exhaustive]
-pub enum ScriptEncodeMethod {
-    #[display("PublicKey")]
-    PublicKey,
-    #[display("PubkeyHash")]
-    PubkeyHash,
-    #[display("ScriptHash")]
-    ScriptHash,
-    #[display("WPubkeyHash")]
-    WPubkeyHash,
-    #[display("WScriptHash")]
-    WScriptHash,
-    #[display("ShWPubkeyHash")]
-    ShWPubkeyHash,
-    #[display("ShWScriptHash")]
-    ShWScriptHash,
-    #[display("Taproot")]
-    Taproot,
-    #[display("OpReturn")]
-    OpReturn,
-    #[display("Bare")]
-    Bare,
+/// Structure with a set of allowed transaction output-based commitment schema.
+///
+/// Transaction output-based commitments can be created with a different
+/// schemata, specific to a specific structure of `scriptPubkey`. Different
+/// client-side-validation protocols, working with output-based commitments may
+/// allow different forms of commitments; for instance RGBv1 requires that
+/// only tapscript-based op_return commitments must be supported inside P2TR
+/// outputs. This structure allows to specify the list of supported commitment
+/// schemata as a set of flags.
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+pub struct CommitmentSchema {
+    /// Tweaks of a single pubkey using LNPBP-1 schema inside P2PK output.
+    pub p2pk_tweak: bool,
+
+    /// Tweaks of a single pubkey using LNPBP-1 schema inside P2PKH output.
+    pub p2pkh_tweak: bool,
+
+    /// Tweaks of a single pubkey using LNPBP-1 schema inside P2WPKH output.
+    pub p2wpkh_tweak: bool,
+
+    /// Tweaks of a single pubkey using LNPBP-1 schema inside a legacy
+    /// P2WPKH-in-P2SH output.
+    pub p2wpkh_sh_tweak: bool,
+
+    /// Tweaks of a keyset according to LNPBP-1 schema inside a bare scripts
+    /// contained within `pubkeyScript`. The set of keys is extracted from the
+    /// script using LNPBP-2 schema.
+    pub bare_tweak: bool,
+
+    /// Tweaks of a keyset according to LNPBP-1 schema inside a plain
+    /// (non-witness-nested) P2SH outputs. The set of keys is extracted from the
+    /// script using LNPBP-2 schema.
+    pub p2sh_tweak: bool,
+
+    /// Tweaks of a keyset according to LNPBP-1 schema inside a non-nested/
+    /// non-legacy P2WSH outputs. The set of keys is extracted from the
+    /// script using LNPBP-2 schema.
+    pub p2wsh_tweak: bool,
+
+    /// Tweaks of a keyset according to LNPBP-1 schema inside the nested/
+    /// legacy P2WSH-in-P2SH outputs. The set of keys is extracted from the
+    /// script using LNPBP-2 schema.
+    pub p2wsh_sh_tweak: bool,
+
+    /// Commitment directly added to a single and alone `OP_RETURN` operation
+    /// contained in a bare `scriptPubkey` in transaction output.
+    pub p2pk_return: bool,
+
+    /// Commitment put inside a single `OP_RETURN` tapscript code in the first
+    /// leaf of taproot script path spending according to LNPBP-6 schema.
+    pub p2tr_return: bool,
 }
 
-/// Structure keeping the minimum of information (bytewise) required to verify
-/// deterministic bitcoin commitment given only the transaction source, its
-/// fee and protocol-specific constants. It is a part of the [`Proof`] data.
-#[derive(Clone, PartialEq, Eq, Hash, Debug, Display)]
-#[derive(StrictEncode, StrictDecode)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate")
-)]
-#[display(doc_comments)]
-pub enum ScriptEncodeData {
-    /// Public key. Since we keep the original public key as a part of a proof,
-    /// and value of the tweaked key can be reconstructed with DBC source data
-    /// and the original pubkey, so we do not need to keep any additional data
-    /// here).
-    SinglePubkey,
+impl CommitmentSchema {
+    /// Sets/clears flags for all commitment schemata based on tweaking of a
+    /// single public key (P2PK, P2PKH, P2WPKH, P2WPKH-in-P2SH).
+    pub fn update_pubkey_tweaks(&mut self, allow: bool) {
+        self.p2pk_tweak = allow;
+        self.p2pkh_tweak = allow;
+        self.p2wpkh_tweak = allow;
+        self.p2wpkh_sh_tweak = allow;
+    }
 
-    /// Any output containing script information, aside from OP_RETURN outputs
-    /// (using [`ScriptEncodeData::SinglePubkey`]) and tapscript.
-    /// We have to store full original script in it's byte form since when
-    /// the deteministic bitcoin commitment is verified, the output may be
-    /// still unspent and we will not be able to reconstruct the script without
-    /// this data kept in the client-validated part.
-    LockScript(LockScript),
-
-    // TODO: Add `WrappedWitnessScript(WitnessScript) variant
-    /// Taproot-based outputs. We need to keep only the hash of the taprscript
-    /// merkle tree root.
-    Taproot(sha256::Hash),
-}
-
-impl Default for ScriptEncodeData {
-    fn default() -> Self {
-        Self::SinglePubkey
+    /// Sets/clears flags for all commitment schemata based on tweaking of a
+    /// public key set extracted from a script (Bare, P2PSH, P2WSH,
+    /// P2WSH-in-P2SH).
+    pub fn update_script_tweaks(&mut self, allow: bool) {
+        self.bare_tweak = allow;
+        self.p2sh_tweak = allow;
+        self.p2wsh_tweak = allow;
+        self.p2wsh_sh_tweak = allow;
     }
 }
 
