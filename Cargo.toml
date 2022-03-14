@@ -3,7 +3,7 @@ name = "bp-core"
 version = "0.5.0"
 license = "Apache-2.0"
 authors = ["Dr. Maxim Orlovsky <orlovsky@pandoracore.com>"]
-description = "Client-side validation library"
+description = "Bitcoin Protocol Core Library (BP Core Lib)"
 repository = "https://github.com/LNP-BP/bp-core"
 homepage = "https://github.com/LNP-BP"
 keywords = ["lnp-bp", "cryptocurrency", "smart-contracts", "bitcoin"]
@@ -36,5 +36,5 @@ serde = ["amplify/serde", "bitcoin/use-serde",
          "serde_crate", "serde_with"]
 
 [workspace]
-members = [".", "dbc", "seals"]
-default-members = [".", "dbc", "seals"]
+members = [".", "dbc", "dbc/tapret", "seals"]
+default-members = [".", "dbc", "dbc/tapret", "seals"]

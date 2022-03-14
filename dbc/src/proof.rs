@@ -14,7 +14,6 @@
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
 use amplify::DumbDefault;
-use bitcoin::secp256k1;
 
 use super::{Error, ScriptEncodeData};
 
@@ -52,7 +51,7 @@ impl DumbDefault for Proof {
         Proof {
             pubkey: secp256k1::PublicKey::from_secret_key(
                 secp256k1::SECP256K1,
-                &secp256k1::key::ONE_KEY,
+                &secp256k1::ONE_KEY,
             ),
             source: Default::default(),
         }
