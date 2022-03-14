@@ -1,5 +1,5 @@
-// BP Core Library implementing LNP/BP specifications & standards related to
-// bitcoin protocol
+// Deterministic bitcoin commitments library, implementing LNPBP standards
+// Part of bitcoin protocol core library (BP Core Lib)
 //
 // Written in 2020-2022 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
@@ -13,7 +13,7 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-//! # LNPBP-2 related
+//! # LNPBP-1 related
 
 use std::collections::BTreeSet;
 
@@ -22,8 +22,8 @@ use bitcoin::secp256k1;
 use commit_verify::EmbedCommitVerify;
 use miniscript::Segwitv0;
 
-use super::{Container, Error, Proof, ScriptEncodeData};
 use crate::lnpbp1;
+use crate::{Container, Error, Proof, ScriptEncodeData};
 
 /// Container for LNPBP-1 commitments. In order to be constructed, commitment
 /// requires an original public key and a protocol-specific tag, which

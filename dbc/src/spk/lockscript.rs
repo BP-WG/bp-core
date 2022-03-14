@@ -1,5 +1,5 @@
-// BP Core Library implementing LNP/BP specifications & standards related to
-// bitcoin protocol
+// Deterministic bitcoin commitments library, implementing LNPBP standards
+// Part of bitcoin protocol core library (BP Core Lib)
 //
 // Written in 2020-2022 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
@@ -34,8 +34,8 @@ use bitcoin_scripts::LockScript;
 use commit_verify::EmbedCommitVerify;
 use miniscript::Segwitv0;
 
-use super::{Container, Error, KeysetCommitment, Proof, ScriptEncodeData};
-use crate::KeysetContainer;
+use super::{KeysetCommitment, KeysetContainer};
+use crate::{Container, Error, Proof};
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct LockscriptContainer {
@@ -150,11 +150,8 @@ where
         container: &mut Self::Container,
         msg: &MSG,
     ) -> Result<Self, Self::Error> {
-        let original_hash = bitcoin::PublicKey {
-            compressed: true,
-            key: container.pubkey,
-        }
-        .pubkey_hash();
+        let original_hash =
+            bitcoin::PublicKey::new(container.pubkey).pubkey_hash();
 
         let (keys, hashes) =
             container.script.extract_pubkey_hash_set::<Segwitv0>()?;
@@ -186,11 +183,8 @@ where
 
         container.tweaking_factor = keyset_container.tweaking_factor;
 
-        let tweaked_hash = bitcoin::PublicKey {
-            key: *tweaked_pubkey,
-            compressed: true,
-        }
-        .pubkey_hash();
+        let tweaked_hash =
+            bitcoin::PublicKey::new(*tweaked_pubkey).pubkey_hash();
 
         let found = RefCell::new(0);
 
@@ -207,10 +201,7 @@ where
                 {
                     true => {
                         *found.borrow_mut() += 1;
-                        bitcoin::PublicKey {
-                            compressed: true,
-                            key: *tweaked_pubkey,
-                        }
+                        bitcoin::PublicKey::new(*tweaked_pubkey)
                     }
                     false => *pubkey,
                 },
@@ -253,14 +244,12 @@ mod test {
             sk[1] = (i >> 8) as u8;
             sk[2] = (i >> 16) as u8;
 
-            let pk = bitcoin::PublicKey {
-                key: secp256k1::PublicKey::from_secret_key(
+            let pk =
+                bitcoin::PublicKey::new(secp256k1::PublicKey::from_secret_key(
                     &secp256k1::SECP256K1,
                     &secp256k1::SecretKey::from_slice(&sk[..])
                         .expect("secret key"),
-                ),
-                compressed: true,
-            };
+                ));
             ret.push(pk);
         }
         ret

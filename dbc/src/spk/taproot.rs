@@ -1,5 +1,5 @@
-// BP Core Library implementing LNP/BP specifications & standards related to
-// bitcoin protocol
+// Deterministic bitcoin commitments library, implementing LNPBP standards
+// Part of bitcoin protocol core library (BP Core Lib)
 //
 // Written in 2020-2022 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
@@ -17,10 +17,8 @@ use bitcoin::hashes::{sha256, Hmac};
 use bitcoin::secp256k1;
 use commit_verify::EmbedCommitVerify;
 
-use super::{
-    Container, Error, Proof, PubkeyCommitment, PubkeyContainer,
-    ScriptEncodeData,
-};
+use super::{PubkeyCommitment, PubkeyContainer, ScriptEncodeData};
+use crate::{Container, Error, Proof};
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct TaprootContainer {

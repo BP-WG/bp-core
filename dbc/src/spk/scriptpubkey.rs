@@ -1,5 +1,5 @@
-// BP Core Library implementing LNP/BP specifications & standards related to
-// bitcoin protocol
+// Deterministic bitcoin commitments library, implementing LNPBP standards
+// Part of bitcoin protocol core library (BP Core Lib)
 //
 // Written in 2020-2022 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
@@ -19,13 +19,15 @@ use amplify::Wrapper;
 use bitcoin::blockdata::script::Script;
 use bitcoin::hashes::{sha256, Hmac};
 use bitcoin::secp256k1;
-use bitcoin_scripts::{Category, LockScript, PubkeyScript, ToPubkeyScript};
+use bitcoin_scripts::convert::ToPubkeyScript;
+use bitcoin_scripts::{Category, LockScript, PubkeyScript};
 use commit_verify::EmbedCommitVerify;
 
 use super::{
-    Container, Error, LockscriptCommitment, LockscriptContainer, Proof,
-    PubkeyCommitment, PubkeyContainer, TaprootCommitment, TaprootContainer,
+    LockscriptCommitment, LockscriptContainer, PubkeyCommitment,
+    PubkeyContainer, ScriptEncodeData, TaprootCommitment, TaprootContainer,
 };
+use crate::{Container, Error, Proof};
 
 /// Enum defining how given `scriptPubkey` is constructed from the script data
 /// or a public key. It is similar to Bitcoin Core descriptors, however it does
