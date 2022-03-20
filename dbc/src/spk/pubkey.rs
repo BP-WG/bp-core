@@ -14,7 +14,6 @@
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
 use bitcoin::hashes::{sha256, Hmac};
-use bitcoin::secp256k1;
 use commit_verify::EmbedCommitVerify;
 
 use super::lnpbp1;
@@ -47,7 +46,7 @@ impl Container for PubkeyContainer {
         _: &Self::Host,
     ) -> Result<Self, Error> {
         Ok(Self {
-            pubkey: proof.pubkey,
+            pubkey: proof.public_key()?,
             tag: *supplement,
             tweaking_factor: None,
         })
@@ -115,10 +114,9 @@ mod test {
     use amplify::hex::ToHex;
     use amplify::Wrapper;
     use bitcoin::hashes::{sha256, Hash};
-    use bitcoin::secp256k1;
 
+    use super::lnpbp1::test_helpers::*;
     use super::*;
-    use crate::lnpbp1::test_helpers::*;
 
     #[test]
     fn test_pubkey_commitment() {

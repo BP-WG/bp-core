@@ -30,10 +30,14 @@ extern crate serde_crate as serde;
 
 mod blind;
 mod error;
+#[cfg(feature = "miniscript")]
 mod txout_seal;
+#[cfg(feature = "miniscript")]
 mod txout_witness;
 
 pub use blind::{OutpointHash, OutpointReveal, ParseError};
 pub use error::Error;
+#[cfg(feature = "miniscript")]
 pub use txout_seal::{TxResolve, TxoutSeal};
+#[cfg(feature = "miniscript")]
 pub use txout_witness::{InnerWitness, OuterWitness, Witness};

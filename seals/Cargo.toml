@@ -17,7 +17,7 @@ path = "src/lib.rs"
 
 [dependencies]
 amplify = "3.12.0"
-bitcoin = "0.28.0-rc.1"
+bitcoin = { version = "0.28.0-rc.1", features = ["rand"] }
 single_use_seals = "0.5.5"
 commit_verify = "0.6.0-alpha.1"
 strict_encoding = "1.8.0-rc.1"
@@ -29,6 +29,7 @@ serde_with = { version = "1.8", optional = true }
 
 [features]
 default = []
-all = ["async", "serde"]
+all = ["async", "serde", "miniscript"]
+miniscript = ["bp-dbc/miniscript"]
 async = ["single_use_seals/async", "async-trait"]
 serde = ["amplify/serde", "bitcoin/use-serde", "commit_verify/serde", "lnpbp_bech32/serde", "bp-dbc/serde", "serde_crate", "serde_with"]

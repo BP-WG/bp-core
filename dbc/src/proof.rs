@@ -13,11 +13,9 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use amplify::Slice32;
-use bitcoin::hashes::sha256;
-use bitcoin_scripts::PubkeyScript;
-
 use crate::Error;
+use amplify::{Slice32, Wrapper};
+use bitcoin::hashes::sha256;
 
 /// Extra-transaction proof of a deterministic bitcoin commitment.
 ///
@@ -135,5 +133,31 @@ impl From<secp256k1::PublicKey> for Proof {
 }
 
 impl Proof {
-    pub fn pubkey_script(&self) -> Result<PubkeyScript, Error> {}
+    pub fn public_key(&self) -> Result<secp256k1::PublicKey, Error> {
+        let mut data: Vec<u8> = Vec::with_capacity(32);
+
+        match self {
+            Proof::Embedded => return Err(Error::InvalidProofStructure),
+            Proof::EvenKey(pk)
+            | Proof::NestedEvenKey(pk)
+            | Proof::ScriptEvenKey { target_key: pk, .. }
+            | Proof::NestedScriptEvenKey { target_key: pk, .. }
+            | Proof::XOnlyKeyTaproot {
+                internal_key: pk, ..
+            } => {
+                data.extend([0x02]);
+                data.extend(pk.as_inner());
+            }
+            Proof::OddKey(pk)
+            | Proof::NestedOddKey(pk)
+            | Proof::ScriptOddKey { target_key: pk, .. }
+            | Proof::NestedScriptOddKey { target_key: pk, .. } => {
+                data.extend([0x03]);
+                data.extend(pk.as_inner());
+            }
+        }
+
+        Ok(secp256k1::PublicKey::from_slice(&data)
+            .expect("fixed-size public key"))
+    }
 }

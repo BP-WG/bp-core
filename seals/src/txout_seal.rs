@@ -16,7 +16,8 @@
 use amplify::Wrapper;
 use bitcoin::{OutPoint, Transaction};
 use commit_verify::{EmbedCommitVerify, Message};
-use dbc::{Container, TxCommitment, TxContainer, TxSupplement};
+use dbc::txout::feeproto::{TxCommitment, TxContainer, TxSupplement};
+use dbc::Container;
 #[cfg(feature = "async")]
 use single_use_seals::SealMediumAsync;
 use single_use_seals::{SealMedium, SingleUseSeal};

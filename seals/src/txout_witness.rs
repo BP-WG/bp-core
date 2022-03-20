@@ -13,7 +13,8 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use dbc::{Proof, TxCommitment};
+use dbc::txout::feeproto::TxCommitment;
+use dbc::Proof;
 
 pub struct Witness(pub InnerWitness, pub OuterWitness);
 

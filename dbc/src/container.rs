@@ -19,6 +19,8 @@ pub trait Container: Sized {
     type Supplement;
     type Host;
 
+    /// Reconstructs commitment container from the extra-transaction proof
+    /// and protocol-specific data.
     fn reconstruct(
         proof: &Proof,
         supplement: &Self::Supplement,

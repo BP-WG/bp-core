@@ -15,6 +15,3 @@
 
 #[cfg(feature = "miniscript")]
 pub mod feeproto;
-
-#[cfg(feature = "miniscript")]
-pub use feeproto::{TxCommitment, TxContainer, TxSupplement};

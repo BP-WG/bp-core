@@ -18,7 +18,6 @@
 use std::collections::BTreeSet;
 
 use bitcoin::hashes::{sha256, Hmac};
-use bitcoin::secp256k1;
 use commit_verify::EmbedCommitVerify;
 use miniscript::Segwitv0;
 
@@ -139,7 +138,6 @@ mod test {
     use amplify::hex::ToHex;
     use amplify::Wrapper;
     use bitcoin::hashes::{sha256, Hash};
-    use bitcoin::secp256k1;
 
     use super::*;
     use crate::lnpbp1::test_helpers::*;
