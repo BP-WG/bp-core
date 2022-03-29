@@ -18,10 +18,8 @@ use bitcoin::hashes::{sha256, Hmac};
 use bitcoin::{secp256k1, Transaction, TxOut};
 use commit_verify::EmbedCommitVerify;
 
-use super::{
-    Container, Error, Proof, ScriptEncodeData, ScriptEncodeMethod,
-    TxoutCommitment, TxoutContainer,
-};
+use crate::spk::{ScriptEncodeData, TxoutCommitment, TxoutContainer};
+use crate::{Container, Error, Proof};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct TxContainer {
@@ -159,7 +157,7 @@ mod test {
     use bitcoin::hashes::hex::FromHex;
 
     use super::*;
-    use crate::{ScriptEncodeData, ScriptEncodeMethod, SpkContainer};
+    use crate::spk::{ScriptEncodeData, ScriptEncodeMethod, SpkContainer};
 
     #[test]
     fn test_ability_to_commit() {
