@@ -39,29 +39,11 @@ pub enum Error {
     TapTree(TaprootError),
 }
 
-/// Extra-transaction proof for tapret commitment
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate")
-)]
-#[derive(StrictEncode, StrictDecode)]
-pub struct TaprootMerkleProof {
-    /// Internal taproot key
-    pub internal_key: UntweakedPublicKey,
-
-    /// Merkle path in the script key to the last leaf containing `OP_RETURN`
-    /// commitment
-    pub merkle_path: TaprootMerkleBranch,
-}
-
-/// Container for embedding tapret commitments, containing data assembled from
-/// either:
+/// Extra-transaction data for tapret commitment.
+///
+/// Can be assembled from either
 /// - PSBT (used in commitment creation),
-/// - mined transaction and [`TaprootMerkleProof`] using
-///   [`EmbedCommitProof::restore_original_container`] method (used in
-///   commitment verification).
+/// - client-side data (single-use-seal extra-transaction witness etc).
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[cfg_attr(
     feature = "serde",
@@ -69,17 +51,19 @@ pub struct TaprootMerkleProof {
     serde(crate = "serde_crate")
 )]
 #[derive(StrictEncode, StrictDecode)]
-pub struct TaprootMerkleContainer {
-    /// Internal taproot key
+pub struct TapretExtraTx {
+    /// Internal taproot key.
     pub internal_key: UntweakedPublicKey,
 
-    /// Merkle path in the script key to the last leaf containing `OP_RETURN`
-    /// commitment
+    /// Merkle path in the tap tree to the last (in DFS order) script leaf.
+    ///
+    /// If the data structure is used as a commitment proof, this path should
+    /// point to `OP_RETURN` commitment.
     pub merkle_path: TaprootMerkleBranch,
 }
 
 /*
-impl TaprootMerkleContainer {
+impl TapretExtraTx {
     fn original_merkle_root(&self) -> Result<TapBranchHash, Error> {
         self.merkle_path
             .as_inner()
@@ -106,16 +90,16 @@ impl TaprootMerkleContainer {
 }
  */
 
-impl EmbedCommitProof<MultiCommitment, TaprootMerkleContainer, Lnpbp6>
-    for TaprootMerkleProof
+impl EmbedCommitProof<MultiCommitment, TapretExtraTx, Lnpbp6>
+    for TapretExtraTx
 {
     fn restore_original_container(
         &self,
-        _postcommit_container: &TaprootMerkleContainer,
-    ) -> TaprootMerkleContainer {
+        _postcommit_container: &TapretExtraTx,
+    ) -> TapretExtraTx {
         let mut path = self.merkle_path.as_inner().to_vec();
         path.pop().ok_or(Error::EmptyProof).unwrap(); // TODO: Return error type
-        return TaprootMerkleContainer {
+        return TapretExtraTx {
             internal_key: self.internal_key,
             merkle_path: TaprootMerkleBranch::from_inner(path)
                 .expect("merkle path with reduced length"),
@@ -123,19 +107,14 @@ impl EmbedCommitProof<MultiCommitment, TaprootMerkleContainer, Lnpbp6>
     }
 }
 
-impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for TaprootMerkleContainer {
-    type Proof = TaprootMerkleProof;
+impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for TapretExtraTx {
+    type Proof = TapretExtraTx;
     type CommitError = Error;
 
     fn embed_commit(
         &mut self,
         msg: &MultiCommitment,
     ) -> Result<Self::Proof, Self::CommitError> {
-        let proof = TaprootMerkleProof {
-            internal_key: self.internal_key,
-            merkle_path: self.merkle_path.clone(),
-        };
-
         let commitment_script = script::Builder::new()
             .push_opcode(all::OP_RETURN)
             .push_slice(&msg.commit_serialize())
@@ -149,6 +128,6 @@ impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for TaprootMerkleContainer {
         path.push(sha256::Hash::from_inner(commitment.into_inner()));
         self.merkle_path = TaprootMerkleBranch::from_inner(path)?;
 
-        Ok(proof)
+        Ok(self.clone())
     }
 }
