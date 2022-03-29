@@ -17,6 +17,7 @@
 
 use bitcoin::blockdata::opcodes::all;
 use bitcoin::blockdata::script;
+use bitcoin::psbt::TapTree;
 use bitcoin::util::taproot::{
     LeafVersion, TaprootBuilder, TaprootBuilderError, TaprootMerkleBranch,
 };
@@ -100,12 +101,18 @@ impl CommitFinalizer for (TxOut, psbt::Output) {
         let internal_key = output
             .tap_internal_key
             .ok_or(CommitmentError::NonTaprootOutput)?;
+        let builder = builder
+            .add_leaf(max_depth as usize + 1, script_commitment.clone())?
+            .add_leaf(max_depth as usize + 1, script_commitment.clone())?;
+
+        output.tap_tree = Some(
+            TapTree::from_inner(builder.clone())
+                .expect("non-finalized TapTree after tapret commitment"),
+        );
+
         let spend_info = builder
-            .add_leaf(max_depth as usize + 1, script_commitment.clone())?
-            .add_leaf(max_depth as usize + 1, script_commitment.clone())?
             .finalize(secp, internal_key)
             .expect("tapret TapTree commitment algorithm failure");
-
         txout.script_pubkey =
             Script::new_v1_p2tr_tweaked(spend_info.output_key());
 
@@ -126,4 +133,12 @@ impl CommitFinalizer for (TxOut, psbt::Output) {
 
         Ok(Some(proof))
     }
+}
+
+#[cfg(test)]
+mod test {
+    //use super::*;
+
+    #[test]
+    fn noscript() {}
 }
