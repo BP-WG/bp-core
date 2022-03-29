@@ -10,7 +10,7 @@ keywords = ["lnp-bp", "cryptocurrency", "smart-contracts", "bitcoin"]
 categories = ["cryptography::cryptocurrencies", "encoding", "parsing"]
 readme = "README.md"
 edition = "2018"
-exclude = [".github", "bp-dbc", "bp-seals"]
+exclude = [".github", "dbc", "seals", "dbc-legacy", "seals-legacy"]
 
 [lib]
 name = "bp"
@@ -51,3 +51,4 @@ serde = ["amplify/serde", "bitcoin/use-serde",
 [workspace]
 members = [".", "dbc", "seals"]
 default-members = [".", "dbc", "seals"]
+exclude = ["seals-legacy", "dbc-legacy"]

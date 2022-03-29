@@ -193,6 +193,7 @@ dependencies = [
  "colored",
  "commit_verify",
  "electrum-client",
+ "psbt",
  "serde",
  "serde_with",
  "single_use_seals",

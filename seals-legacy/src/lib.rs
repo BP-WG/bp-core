@@ -17,7 +17,6 @@
 #![recursion_limit = "256"]
 #![deny(dead_code, /* missing_docs, */ warnings)]
 
-/*
 #[macro_use]
 extern crate amplify;
 #[macro_use]
@@ -28,4 +27,17 @@ extern crate async_trait;
 #[cfg(feature = "serde")]
 #[macro_use]
 extern crate serde_crate as serde;
-*/
+
+mod blind;
+mod error;
+#[cfg(feature = "miniscript")]
+mod txout_seal;
+#[cfg(feature = "miniscript")]
+mod txout_witness;
+
+pub use blind::{OutpointHash, OutpointReveal, ParseError};
+pub use error::Error;
+#[cfg(feature = "miniscript")]
+pub use txout_seal::{TxResolve, TxoutSeal};
+#[cfg(feature = "miniscript")]
+pub use txout_witness::{InnerWitness, OuterWitness, Witness};
