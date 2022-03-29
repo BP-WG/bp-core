@@ -29,9 +29,10 @@ amplify = "3.12.0"
 strict_encoding = "1.8.0-rc.7"
 commit_verify = "0.7.0-alpha.2"
 single_use_seals = "0.7.0-alpha.1"
+bitcoin = "0.28.0-rc.2"
+psbt = { version = "0.7.0-alpha.1", optional = true }
 bp-dbc = { version = "0.7.0-alpha.1", path = "./dbc" }
 bp-seals = { version = "0.7.0-alpha.1", path = "./seals" }
-bitcoin = "0.28.0-rc.2"
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
 serde_with = { version = "1.8", optional = true }
 electrum-client = { version = "=0.9.0-rc.1", optional = true }
@@ -41,7 +42,7 @@ colored = { version = "2", optional = true }
 [features]
 default = []
 all = ["async", "serde", "miniscript", "cli"]
-cli = ["clap", "colored", "electrum-client"]
+cli = ["clap", "colored", "electrum-client", "miniscript", "psbt"]
 miniscript = ["bp-dbc/miniscript"]
 async = ["bp-seals/async"]
 serde = ["amplify/serde", "bitcoin/use-serde",

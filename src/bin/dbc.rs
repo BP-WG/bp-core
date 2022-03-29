@@ -19,10 +19,15 @@ extern crate clap;
 extern crate amplify;
 
 use std::fs;
+use std::io;
 use std::path::{Path, PathBuf};
 
 use amplify::{IoError, Slice32};
+use bitcoin::psbt::PsbtParseError;
+use clap::Parser;
 use colored::Colorize;
+use psbt::{ProprietaryKeyDescriptor, Psbt};
+use strict_encoding::{StrictDecode, StrictEncode};
 
 /// Command-line arguments
 #[derive(Parser)]
@@ -126,21 +131,6 @@ pub enum Error {
 
     #[from]
     StrictEncoding(strict_encoding::Error),
-
-    #[from]
-    Miniscript(miniscript::Error),
-
-    #[from]
-    Derive(DeriveError),
-
-    #[from]
-    ResolveUtxo(UtxoResolverError),
-
-    #[from]
-    Electrum(electrum::Error),
-
-    #[from]
-    Yaml(serde_yaml::Error),
 
     #[from]
     PsbtBase58(PsbtParseError),

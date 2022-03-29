@@ -18,10 +18,10 @@ extern crate clap;
 #[macro_use]
 extern crate amplify;
 
-use std::fs;
-use std::path::{Path, PathBuf};
+use std::io;
 
-use amplify::{IoError, Slice32};
+use amplify::IoError;
+use clap::Parser;
 use colored::Colorize;
 
 /// Command-line arguments
@@ -47,7 +47,8 @@ pub enum Command {}
 
 impl Args {
     pub fn exec(&self) -> Result<(), Error> {
-        match &self.command {}
+        match self.command {}
+        Ok(())
     }
 }
 
@@ -59,21 +60,6 @@ pub enum Error {
 
     #[from]
     StrictEncoding(strict_encoding::Error),
-
-    #[from]
-    Miniscript(miniscript::Error),
-
-    #[from]
-    Derive(DeriveError),
-
-    #[from]
-    ResolveUtxo(UtxoResolverError),
-
-    #[from]
-    Electrum(electrum::Error),
-
-    #[from]
-    Yaml(serde_yaml::Error),
 }
 
 fn main() {
