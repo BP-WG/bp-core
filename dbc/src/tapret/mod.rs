@@ -24,6 +24,7 @@
 //! Find & spend procedures are wallet-specific, embed-commit and verify -
 //! are not.
 
+mod partial_tree;
 pub mod psbt;
 mod taptree;
 
