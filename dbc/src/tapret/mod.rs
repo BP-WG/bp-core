@@ -25,3 +25,6 @@
 //! are not.
 
 pub mod psbt;
+mod taptree;
+
+pub use taptree::{TapTreeContainer, TapTreeError};

@@ -15,17 +15,19 @@
 
 //! Implementation of tapret commitments for PSBT-related data structures.
 
-use bitcoin::blockdata::opcodes::all;
-use bitcoin::blockdata::script;
+use amplify::Wrapper;
+use bitcoin::hashes::{sha256t, Hash};
 use bitcoin::psbt::TapTree;
-use bitcoin::util::taproot::{
-    LeafVersion, TaprootBuilder, TaprootBuilderError, TaprootMerkleBranch,
-};
+use bitcoin::util::taproot::TaprootMerkleBranch;
 use bitcoin::{Script, TxOut};
+use commit_verify::multi_commit::{Lnpbp4Tag, MultiCommitment};
+use commit_verify::EmbedCommitVerify;
 use psbt::commit::tapret::ProprietaryKeyTapret;
 use psbt::{ProprietaryKey, TapretOutput};
 use secp256k1::Secp256k1;
 use strict_encoding::StrictEncode;
+
+use crate::tapret::{TapTreeContainer, TapTreeError};
 
 /// Error finalizing deterministic bitcoin commitments in the PSBT
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
@@ -44,13 +46,10 @@ pub enum CommitmentError {
     /// [`PSBT_OUT_TAPRET_HOST`] flag on it first.
     OutputCantHostCommitment,
 
-    /// the provided commitment data can't be strict encoded. Details: {0}
+    /// Errors during commitment embedding into [`TapTreeContainer`]
     #[from]
-    StrictEncoding(strict_encoding::Error),
-
-    /// unable to update tap tree with the commitment. Details: {0}
-    #[from]
-    TapTree(TaprootBuilderError),
+    #[display(inner)]
+    TapTree(TapTreeError),
 }
 
 /// PSBT commitment finalizer does output-type specific modifications – and
@@ -78,58 +77,39 @@ impl CommitFinalizer for (TxOut, psbt::Output) {
             return Err(CommitmentError::CommitmentAlreadyFinalized);
         }
 
+        // TODO: Use multimessage commitment data type
         let commitment = match output.tapret_commitment() {
             None => return Ok(None),
             Some(commitment) => commitment,
-        };
-        let script_commitment = script::Builder::new()
-            .push_opcode(all::OP_RETURN)
-            .push_slice(&commitment[..])
-            .into_script();
+        }
+        .into_inner();
+        let commitment = sha256t::Hash::<Lnpbp4Tag>::from_inner(commitment);
+        let commitment = MultiCommitment::from_inner(commitment);
+
+        let internal_key = output
+            .tap_internal_key
+            .ok_or(CommitmentError::NonTaprootOutput)?;
 
         let taptree = output
             .tap_tree
             .as_ref()
             .ok_or(CommitmentError::NonTaprootOutput)?;
-        let mut builder = TaprootBuilder::new();
-        let mut max_depth = 0u8;
-        for (depth, script) in taptree {
-            builder = builder.add_leaf(depth as usize, script.clone())?;
-            max_depth = max_depth.max(depth);
-        }
 
-        let internal_key = output
-            .tap_internal_key
-            .ok_or(CommitmentError::NonTaprootOutput)?;
-        let builder = builder
-            .add_leaf(max_depth as usize + 1, script_commitment.clone())?
-            .add_leaf(max_depth as usize + 1, script_commitment.clone())?;
+        let mut container = TapTreeContainer::from_inner(taptree.clone());
+        let proof = container.embed_commit(&commitment)?;
+        let taptree: TapTree = container.into_inner();
+        output.tap_tree = Some(taptree.clone());
 
-        output.tap_tree = Some(
-            TapTree::from_inner(builder.clone())
-                .expect("non-finalized TapTree after tapret commitment"),
-        );
-
+        let builder = taptree.into_inner();
         let spend_info = builder
             .finalize(secp, internal_key)
             .expect("tapret TapTree commitment algorithm failure");
         txout.script_pubkey =
             Script::new_v1_p2tr_tweaked(spend_info.output_key());
 
-        // Both of the DFS-last two leafs has the same merkle path, so we can
-        // use any of them.
-        let control_block = spend_info
-            .control_block(&(script_commitment, LeafVersion::TapScript))
-            .expect("tapret TapTree commitment algorithm failure");
-        debug_assert_eq!(
-            control_block.merkle_branch.as_inner().len(),
-            max_depth as usize + 1
-        );
-        let proof = control_block.merkle_branch;
-
         output
             .proprietary
-            .insert(ProprietaryKey::tapret_proof(), proof.strict_serialize()?);
+            .insert(ProprietaryKey::tapret_proof(), proof.strict_serialize().expect("proof size limited by 127 hashes can't exceed strict encoding limitations"));
 
         Ok(Some(proof))
     }
