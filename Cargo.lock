@@ -163,9 +163,9 @@ dependencies = [
 
 [[package]]
 name = "bitcoin_scripts"
-version = "0.7.0-alpha.3"
+version = "0.7.0-alpha.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b22717573b41ff5379a836eb7d4c0913887007f574a0154a5b7c39e02087260"
+checksum = "983c36a5296f224b2b5484fc308c2ced5c5d2a536f6a4a8f7827223b242b9c17"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -323,9 +323,9 @@ dependencies = [
 
 [[package]]
 name = "commit_verify"
-version = "0.7.0-alpha.4"
+version = "0.7.0-alpha.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "40c68554c505f556a65026ef9c3b9ec82ed7dafe67253d26c3cde244b80997e6"
+checksum = "7b35f586e851bbcaf8fbb0458c6690de0f92c00f7b8dedbf4816cbbd6cab828a"
 dependencies = [
  "amplify",
  "bitcoin_hashes",

@@ -83,7 +83,7 @@ impl CommitmentProtocol for Lnpbp6 {
 /// Information proving tapret determinism for a given original [`TapTree`].
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, From)]
 #[derive(StrictEncode, StrictDecode)]
-pub enum TapNode {
+pub enum TapNodeProof {
     /// Script spending path was absent; tapret commitment is represented
     /// by a single leaf.
     #[display("~")]
@@ -110,7 +110,7 @@ pub enum TapNode {
 /// of the commitment.
 pub struct TapretProof {
     /// Information about other script spending paths present in the [`TapTree`]
-    pub other_node: TapNode,
+    pub other_node: TapNodeProof,
 
     /// The internal key used by the taproot output.
     ///

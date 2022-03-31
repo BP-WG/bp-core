@@ -15,25 +15,17 @@
 
 //! `EmbedCommit: TapTree, Msg -> TapTree', TapNode`
 
-/*
-use bitcoin::blockdata::opcodes::all;
-use bitcoin::blockdata::script;
-use bitcoin::hashes::Hash;
+use amplify::Wrapper;
 use bitcoin::psbt::TapTree;
-use bitcoin::util::taproot::{
-    LeafVersion, TapLeafHash, TaprootBuilder, TaprootBuilderError,
+use bitcoin::util::taproot::{TaprootBuilder, TaprootBuilderError};
+use bitcoin_scripts::taproot::{
+    DfsOrdering, MaxDepthExceeded, Node, TaprootScriptTree, TreeNode,
 };
 use bitcoin_scripts::TapScript;
 use commit_verify::multi_commit::MultiCommitment;
-use commit_verify::{
-    CommitEncode, CommitVerify, EmbedCommitProof, EmbedCommitVerify,
-};
-use secp256k1::{KeyPair, SECP256K1};
+use commit_verify::{CommitVerify, EmbedCommitProof, EmbedCommitVerify};
 
-use crate::tapret::{Lnpbp6, TapNode};
-*/
-
-use bitcoin::util::taproot::TaprootBuilderError;
+use crate::tapret::{Lnpbp6, TapNodeProof};
 
 /// Errors during tapret commitment embedding into [`TapTree`] container.
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
@@ -46,92 +38,92 @@ pub enum TapTreeError {
     /// unable to update tap tree with the commitment. Details: {0}
     #[from]
     TapTree(TaprootBuilderError),
+
+    /// the tree
+    #[from]
+    TreeBuilder(TaprootBuilder),
+
+    /// the tapret commitment can't be performet since the taproot script
+    /// tree already has maximal depth.
+    #[from(MaxDepthExceeded)]
+    MaxDepthExceeded,
+
+    /// the provided taproot script tree has no revealed nodes to prove the
+    /// commitment.
+    IncompleteTree(TaprootScriptTree),
 }
 
-/*
-impl EmbedCommitProof<MultiCommitment, TapTree, Lnpbp6> for TapNode {
+impl EmbedCommitProof<MultiCommitment, TaprootScriptTree, Lnpbp6>
+    for TapNodeProof
+{
     fn restore_original_container(
         &self,
-        commit_container: &TapTree,
-    ) -> TapTree {
-        todo!()
+        modified_tree: &TaprootScriptTree,
+    ) -> Result<TaprootScriptTree, TapTreeError> {
+        let (_, original_tree) = modified_tree
+            .clone()
+            .split()
+            .map_err(|_| TapTreeError::IncompleteTree(modified_tree.clone()))?;
+        Ok(original_tree)
     }
 }
 
-impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for TapTree {
-    type Proof = TapNode;
+impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for TaprootScriptTree {
+    type Proof = TapNodeProof;
     type CommitError = TapTreeError;
 
     fn embed_commit(
         &mut self,
         msg: &MultiCommitment,
     ) -> Result<Self::Proof, Self::CommitError> {
-        let script_commitment = TapScript::commit(msg).into_inner();
+        let script_commitment = TapScript::commit(msg);
 
-        // TODO: Replace with `self.script_count()` upon rust-bitcoin #922 merge
-
-        let mut tap_node = TapNode::None;
-        let mut builder = TaprootBuilder::new();
-        let mut first_branch = None;
-        builder.add_leaf(0, script_commitment);
-        for (depth, script) in self.iter() {
-            match (tap_node, depth) {
-                (TapNode::None, 0) => {
-                    tap_node = TapNode::Leaf(script.clone().into())
-                }
-                (TapNode::None, 1) => {
-                    let hash2 = TapLeafHash::from_script(script, ver)
-                        .into_hidden_hash();
-                    match first_branch {
-                        None => {
-                            first_branch = Some(
-                                TapLeafHash::from_script(script, ver)
-                                    .into_hidden_hash(),
-                            )
-                        }
-                        Some(hash1) if hash1 < hash2 => {
-                            tap_node = TapNode::Branch(hash1, hash2)
-                        }
-                        Some(hash1) => tap_node = TapNode::Branch(hash2, hash1),
-                    }
-                }
-                (TapNode::None, _) => {
-                    let hash2 = TapLeafHash::from_script(script, ver)
-                        .into_hidden_hash();
-                }
-                (TapNode::Leaf(ref left_script), 1)
-                    if left_script.tap_leaf_hash() < script.tap_leaf_hash() =>
-                {
-                    TapNode::Branch(
-                        left_script.tap_leaf_hash().into_hidden_hash(),
-                        script.tap_leaf_hash().into_hidden_hash(),
-                    )
-                }
+        let root_node = self.to_root_node();
+        let tap_node = match root_node {
+            TreeNode::Leaf(leaf_script, _) => {
+                TapNodeProof::Leaf(leaf_script.clone())
             }
-            builder = builder.add_leaf(depth as usize + 1, script.clone())?;
-        }
+            TreeNode::Hidden(..) => {
+                return Err(TapTreeError::IncompleteTree(self.clone()))
+            }
+            TreeNode::Branch(branch, _) => TapNodeProof::Branch(
+                branch.as_left_node().node_hash(),
+                branch.as_right_node().node_hash(),
+            ),
+        };
 
-        // We use a dumb internal key since its data are not used anywhere
-        // TODO: Allow extraction of script merkle branches in rust-bitcoin from
-        //       TaprootTreeBuilder without using internal key
-        let internal_key =
-            KeyPair::from_secret_key(SECP256K1, secp256k1::ONE_KEY)
-                .public_key();
-        let spend_info = builder
-            .finalize(SECP256K1, internal_key)
-            .expect("tapret TapTree commitment algorithm failure");
+        let mut builder = TaprootBuilder::new();
+        builder = builder.add_leaf(0, script_commitment.into_inner())?;
+        let commit_tree =
+            TaprootScriptTree::from(TapTree::from_inner(builder)?);
 
-        // Both of the DFS-last two leafs has the same merkle path, so we can
-        // use any of them.
-        let control_block = spend_info
-            .control_block(&(script_commitment, LeafVersion::TapScript))
-            .expect("tapret TapTree commitment algorithm failure");
-        debug_assert_eq!(
-            control_block.merkle_branch.as_inner().len(),
-            commit_depth
-        );
+        *self = self.clone().join(commit_tree, DfsOrdering::LeftRight)?;
 
-        Ok(control_block.merkle_branch)
+        Ok(tap_node)
     }
 }
-*/
+
+impl EmbedCommitProof<MultiCommitment, TapTree, Lnpbp6> for TapNodeProof {
+    fn restore_original_container(
+        &self,
+        commit_container: &TapTree,
+    ) -> Result<TapTree, TapTreeError> {
+        let tree = TaprootScriptTree::from(commit_container.clone());
+        EmbedCommitProof::<_, TaprootScriptTree, _>::restore_original_container(
+            self, &tree,
+        )
+        .map(TapTree::from)
+    }
+}
+
+impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for TapTree {
+    type Proof = TapNodeProof;
+    type CommitError = TapTreeError;
+
+    fn embed_commit(
+        &mut self,
+        msg: &MultiCommitment,
+    ) -> Result<Self::Proof, Self::CommitError> {
+        TaprootScriptTree::from(self.clone()).embed_commit(msg)
+    }
+}
