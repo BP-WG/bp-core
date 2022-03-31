@@ -27,13 +27,7 @@ use commit_verify::{
 };
 use secp256k1::{schnorr, KeyPair, SECP256K1};
 
-/// Marker non-instantiable enum defining LNPBP-6 taproot OP_RETURN (`tapret`)
-/// protocol.
-pub enum Lnpbp6 {}
-
-impl EmbedCommitProtocol for Lnpbp6 {
-    const HASH_TAG_MIDSTATE: Midstate = Midstate([0u8; 32]);
-}
+use crate::tapret::Lnpbp6;
 
 /// Extra-transaction proof for tapret commitment
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
@@ -67,26 +61,6 @@ pub struct Proof {
     /// commitment
     pub merkle_path: TaprootMerkleBranch,
 }
-
-/*
-impl EmbedCommitProof<MultiCommitment, TapTreeContainer, Lnpbp6> for Proof {
-    fn restore_original_container(
-        &self,
-        commit_container: &TapTreeContainer,
-        message: MultiCommitment,
-    ) -> TapTreeContainer {
-    }
-}
-
-impl EmbedCommitProof<MultiCommitment, ControlBlock, Lnpbp6> for Proof {
-    fn restore_original_container(
-        &self,
-        commit_container: &TapTreeContainer,
-        message: MultiCommitment,
-    ) -> ControlBlock {
-    }
-}
- */
 
 impl EmbedCommitProof<MultiCommitment, TapTreeContainer, Lnpbp6>
     for TaprootMerkleBranch

@@ -163,13 +163,14 @@ dependencies = [
 
 [[package]]
 name = "bitcoin_scripts"
-version = "0.7.0-alpha.1"
+version = "0.7.0-alpha.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e87dbb94f602a4c825b26a32f2bc7d1776dbfa3ef66e9748f7f544e318583878"
+checksum = "8b22717573b41ff5379a836eb7d4c0913887007f574a0154a5b7c39e02087260"
 dependencies = [
  "amplify",
  "bitcoin",
  "miniscript",
+ "secp256k1",
  "serde",
  "serde_with",
  "strict_encoding",
@@ -322,9 +323,9 @@ dependencies = [
 
 [[package]]
 name = "commit_verify"
-version = "0.7.0-alpha.2"
+version = "0.7.0-alpha.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "24cc940241eebfb7348b4ccaf4693502994b51203db316ed582d8d40e6cc9595"
+checksum = "40c68554c505f556a65026ef9c3b9ec82ed7dafe67253d26c3cde244b80997e6"
 dependencies = [
  "amplify",
  "bitcoin_hashes",
@@ -457,9 +458,9 @@ checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
 
 [[package]]
 name = "indexmap"
-version = "1.8.0"
+version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "282a6247722caba404c065016bbfa522806e51714c34f5dfc3e4a3a46fcb4223"
+checksum = "0f647032dfaa1f8b6dc29bd3edb7bbef4861b8b8007ebb118d6db284fd59f6ee"
 dependencies = [
  "autocfg 1.1.0",
  "hashbrown",

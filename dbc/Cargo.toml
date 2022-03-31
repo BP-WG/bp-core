@@ -19,7 +19,7 @@ path = "src/lib.rs"
 amplify = "3.12.0"
 bitcoin = "0.28.0-rc.2"
 secp256k1 = { version = "0.22.1", features = ["global-context"] }
-bitcoin_scripts = "0.7.0-alpha.1"
+bitcoin_scripts = "0.7.0-alpha.3"
 descriptors = { version = "0.7.0-alpha.1", default-features = false }
 psbt = { version = "0.7.0-alpha.1", default-features = false }
 strict_encoding = "1.8.0-rc.7"
