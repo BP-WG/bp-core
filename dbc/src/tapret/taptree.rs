@@ -13,91 +13,27 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use bitcoin::blockdata::opcodes::all;
-use bitcoin::blockdata::script;
-use bitcoin::hashes::sha256::Midstate;
-use bitcoin::schnorr::UntweakedPublicKey;
-use bitcoin::util::psbt::TapTree;
-use bitcoin::util::taproot::{
-    LeafVersion, TaprootBuilder, TaprootBuilderError, TaprootMerkleBranch,
-};
-use commit_verify::multi_commit::MultiCommitment;
-use commit_verify::{
-    CommitEncode, EmbedCommitProof, EmbedCommitProtocol, EmbedCommitVerify,
-};
-use secp256k1::{schnorr, KeyPair, SECP256K1};
-
-/// Marker non-instantiable enum defining LNPBP-6 taproot OP_RETURN (`tapret`)
-/// protocol.
-pub enum Lnpbp6 {}
-
-impl EmbedCommitProtocol for Lnpbp6 {
-    const HASH_TAG_MIDSTATE: Midstate = Midstate([0u8; 32]);
-}
-
-/// Extra-transaction proof for tapret commitment
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate")
-)]
-// TODO: Add strict encoding
-pub struct Proof {
-    /// The signature over the output public key produced with the output
-    /// private key.
-    ///
-    /// This information is required for the validation, since the
-    /// `scriptPubkey` in the DBC transaction contains x-only public key,
-    /// corresponding to two different elliptic curve points. It may be possible
-    /// (while still a very challenging from a cryptographic perspective) to
-    /// construct two *different* messages and proofs of the commitment, each
-    /// of which will correspond to one of these two elliptic curve points.
-    /// Thus, we need to commit to the parity of the resulting output key by
-    /// signing output public key with the corresponding private output key.
-    ///
-    /// On the client-side signatures may be aggregated for validation, but
-    /// still they have to be kept as a part of the client-side-data.
-    pub output_key_sig: schnorr::Signature,
-
-    /// Internal taproot key
-    pub internal_key: UntweakedPublicKey,
-
-    /// Merkle path in the script key to the last leaf containing `OP_RETURN`
-    /// commitment
-    pub merkle_path: TaprootMerkleBranch,
-}
+//! `EmbedCommit: TapTree, Msg -> TapTree', TapNode`
 
 /*
-impl EmbedCommitProof<MultiCommitment, TapTreeContainer, Lnpbp6> for Proof {
-    fn restore_original_container(
-        &self,
-        commit_container: &TapTreeContainer,
-        message: MultiCommitment,
-    ) -> TapTreeContainer {
-    }
-}
+use bitcoin::blockdata::opcodes::all;
+use bitcoin::blockdata::script;
+use bitcoin::hashes::Hash;
+use bitcoin::psbt::TapTree;
+use bitcoin::util::taproot::{
+    LeafVersion, TapLeafHash, TaprootBuilder, TaprootBuilderError,
+};
+use bitcoin_scripts::TapScript;
+use commit_verify::multi_commit::MultiCommitment;
+use commit_verify::{
+    CommitEncode, CommitVerify, EmbedCommitProof, EmbedCommitVerify,
+};
+use secp256k1::{KeyPair, SECP256K1};
 
-impl EmbedCommitProof<MultiCommitment, ControlBlock, Lnpbp6> for Proof {
-    fn restore_original_container(
-        &self,
-        commit_container: &TapTreeContainer,
-        message: MultiCommitment,
-    ) -> ControlBlock {
-    }
-}
- */
+use crate::tapret::{Lnpbp6, TapNode};
+*/
 
-impl EmbedCommitProof<MultiCommitment, TapTreeContainer, Lnpbp6>
-    for TaprootMerkleBranch
-{
-    fn restore_original_container(
-        &self,
-        _commit_container: &TapTreeContainer,
-    ) -> TapTreeContainer {
-        todo!()
-    }
-}
+use bitcoin::util::taproot::TaprootBuilderError;
 
 /// Errors during tapret commitment embedding into [`TapTree`] container.
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
@@ -112,36 +48,70 @@ pub enum TapTreeError {
     TapTree(TaprootBuilderError),
 }
 
-/// Container for tapret commitments. Represents a newtype around [`TapTree`].
-#[derive(Wrapper, Clone, PartialEq, Eq, Debug, From)]
-pub struct TapTreeContainer(TapTree);
+/*
+impl EmbedCommitProof<MultiCommitment, TapTree, Lnpbp6> for TapNode {
+    fn restore_original_container(
+        &self,
+        commit_container: &TapTree,
+    ) -> TapTree {
+        todo!()
+    }
+}
 
-impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for TapTreeContainer {
-    type Proof = TaprootMerkleBranch;
+impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for TapTree {
+    type Proof = TapNode;
     type CommitError = TapTreeError;
 
     fn embed_commit(
         &mut self,
         msg: &MultiCommitment,
     ) -> Result<Self::Proof, Self::CommitError> {
-        let script_commitment = script::Builder::new()
-            .push_opcode(all::OP_RETURN)
-            .push_slice(&msg.commit_serialize())
-            .into_script();
+        let script_commitment = TapScript::commit(msg).into_inner();
 
+        // TODO: Replace with `self.script_count()` upon rust-bitcoin #922 merge
+
+        let mut tap_node = TapNode::None;
         let mut builder = TaprootBuilder::new();
-        let mut max_depth = 0u8;
-        for (depth, script) in &self.0 {
-            builder = builder.add_leaf(depth as usize, script.clone())?;
-            max_depth = max_depth.max(depth);
+        let mut first_branch = None;
+        builder.add_leaf(0, script_commitment);
+        for (depth, script) in self.iter() {
+            match (tap_node, depth) {
+                (TapNode::None, 0) => {
+                    tap_node = TapNode::Leaf(script.clone().into())
+                }
+                (TapNode::None, 1) => {
+                    let hash2 = TapLeafHash::from_script(script, ver)
+                        .into_hidden_hash();
+                    match first_branch {
+                        None => {
+                            first_branch = Some(
+                                TapLeafHash::from_script(script, ver)
+                                    .into_hidden_hash(),
+                            )
+                        }
+                        Some(hash1) if hash1 < hash2 => {
+                            tap_node = TapNode::Branch(hash1, hash2)
+                        }
+                        Some(hash1) => tap_node = TapNode::Branch(hash2, hash1),
+                    }
+                }
+                (TapNode::None, _) => {
+                    let hash2 = TapLeafHash::from_script(script, ver)
+                        .into_hidden_hash();
+                }
+                (TapNode::Leaf(ref left_script), 1)
+                    if left_script.tap_leaf_hash() < script.tap_leaf_hash() =>
+                {
+                    TapNode::Branch(
+                        left_script.tap_leaf_hash().into_hidden_hash(),
+                        script.tap_leaf_hash().into_hidden_hash(),
+                    )
+                }
+            }
+            builder = builder.add_leaf(depth as usize + 1, script.clone())?;
         }
 
-        let commit_depth = max_depth as usize + 1;
-        let builder = builder
-            .add_leaf(commit_depth, script_commitment.clone())?
-            .add_leaf(commit_depth, script_commitment.clone())?;
-
-        // We use a dump internal key since its data are not used anywhere
+        // We use a dumb internal key since its data are not used anywhere
         // TODO: Allow extraction of script merkle branches in rust-bitcoin from
         //       TaprootTreeBuilder without using internal key
         let internal_key =
@@ -164,3 +134,4 @@ impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for TapTreeContainer {
         Ok(control_block.merkle_branch)
     }
 }
+*/
