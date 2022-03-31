@@ -35,6 +35,9 @@ extern crate serde_crate as serde;
 #[macro_use]
 extern crate strict_encoding;
 
+pub mod keytweak;
+pub mod opret;
+pub mod sigtweak;
 pub mod tapret;
 
 mod _temp {
