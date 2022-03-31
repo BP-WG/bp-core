@@ -65,8 +65,8 @@ mod _temp {
         /// Internal taproot key
         pub internal_key: UntweakedPublicKey,
 
-        /// Merkle path in the script key to the last leaf containing `OP_RETURN`
-        /// commitment
+        /// Merkle path in the script key to the last leaf containing
+        /// `OP_RETURN` commitment
         pub merkle_path: TaprootMerkleBranch,
     }
 

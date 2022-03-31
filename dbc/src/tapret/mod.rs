@@ -95,8 +95,9 @@ pub enum TapNodeProof {
     #[display(inner)]
     Leaf(LeafScript),
 
-    /// Multiple script spending paths were present; or a single script spending
-    /// path should be hidden from revelaing the script in the proof.
+    /// Multiple script spending paths were present; or a single script
+    /// spending path should be hidden from revelaing the script in the
+    /// proof.
     ///
     /// To prove that the 1-nd level branch is not a script leafs containing
     /// an alternative OP_RETURN commitment we have to reveal the presence of
@@ -106,10 +107,11 @@ pub enum TapNodeProof {
 }
 
 /// Information proving tapret determinism for a given tapret commitment.
-/// Used both in the commitment procedure for PSBTs and in client-side-validation
-/// of the commitment.
+/// Used both in the commitment procedure for PSBTs and in
+/// client-side-validation of the commitment.
 pub struct TapretProof {
-    /// Information about other script spending paths present in the [`TapTree`]
+    /// Information about other script spending paths present in the
+    /// [`TapTree`]
     pub other_node: TapNodeProof,
 
     /// The internal key used by the taproot output.

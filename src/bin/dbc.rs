@@ -18,9 +18,8 @@ extern crate clap;
 #[macro_use]
 extern crate amplify;
 
-use std::fs;
-use std::io;
 use std::path::{Path, PathBuf};
+use std::{fs, io};
 
 use amplify::{IoError, Slice32};
 use bitcoin::psbt::PsbtParseError;
@@ -135,8 +134,8 @@ pub enum Error {
     #[from]
     PsbtBase58(PsbtParseError),
 
-    /// output no {requested} exceeds total number of outputs in the transaction
-    /// ({total}).
+    /// output no {requested} exceeds total number of outputs in the
+    /// transaction ({total}).
     #[display(doc_comments)]
     NoOutput { requested: u16, total: usize },
 }

@@ -13,7 +13,6 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use crate::tapret::{Lnpbp6, TapNodeProof, TapTreeError};
 use amplify::Wrapper;
 use bitcoin::hashes::Hash;
 use bitcoin::psbt::TapTree;
@@ -25,6 +24,8 @@ use commit_verify::embed_commit::ConvolveCommitVerify;
 use commit_verify::multi_commit::MultiCommitment;
 use commit_verify::CommitVerify;
 use secp256k1::SECP256K1;
+
+use crate::tapret::{Lnpbp6, TapNodeProof, TapTreeError};
 
 impl ConvolveCommitVerify<MultiCommitment, TapNodeProof, Lnpbp6>
     for UntweakedPublicKey
