@@ -13,20 +13,20 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-//! Taproot OP_RETURN-based deterministic bitcoin commitment scheme.
-//!
-//! EmbedCommit: `TapTree + Message -> TapTree* + Proof`
-//! Verify: `ScriptPubkey + Proof + Message -> bool`
-//! Find: `descriptor::Tr<PublicKey> + TapretTweak -> descriptor::Tapret`
-//! Spend: `TapretTweak + ControlBlock -> ControlBlock*`
-//!   where `Message + Proof + TapTree -> TapretTweak`
-//!
-//! Find & spend procedures are wallet-specific, embed-commit and verify -
-//! are not.
+use bitcoin::blockdata::opcodes::all;
+use bitcoin::blockdata::script;
+use bitcoin_scripts::TapScript;
+use commit_verify::multi_commit::MultiCommitment;
+use commit_verify::{CommitEncode, CommitVerify};
 
-mod partial_tree;
-pub mod psbt;
-mod taptree;
-mod xonlypk;
+use crate::tapret::Lnpbp6;
 
-pub use taptree::{TapTreeContainer, TapTreeError};
+impl CommitVerify<MultiCommitment, Lnpbp6> for TapScript {
+    fn commit(msg: &MultiCommitment) -> Self {
+        script::Builder::new()
+            .push_opcode(all::OP_RETURN)
+            .push_slice(&msg.commit_serialize())
+            .into_script()
+            .into()
+    }
+}
