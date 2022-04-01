@@ -25,13 +25,13 @@ use commit_verify::multi_commit::MultiCommitment;
 use commit_verify::CommitVerify;
 use secp256k1::SECP256K1;
 
-use crate::tapret::{Lnpbp6, TapNodeProof, TapTreeError};
+use super::{Lnpbp6, TapNodeProof, TapretTreeError};
 
 impl ConvolveCommitVerify<MultiCommitment, TapNodeProof, Lnpbp6>
     for UntweakedPublicKey
 {
     type Commitment = TweakedPublicKey;
-    type CommitError = TapTreeError;
+    type CommitError = TapretTreeError;
 
     fn convolve_commit(
         &self,
@@ -69,6 +69,7 @@ impl ConvolveCommitVerify<MultiCommitment, TapNodeProof, Lnpbp6>
         let merkle_root =
             TapBranchHash::from_inner(commit_node.node_hash().into_inner());
 
+        // TODO: Use secp instance from Lnpbp6
         let (output_key, _parity) =
             self.tap_tweak(SECP256K1, Some(merkle_root));
 

@@ -25,12 +25,12 @@ use bitcoin_scripts::TapScript;
 use commit_verify::multi_commit::MultiCommitment;
 use commit_verify::{CommitVerify, EmbedCommitProof, EmbedCommitVerify};
 
-use crate::tapret::{Lnpbp6, TapNodeProof};
+use super::{Lnpbp6, TapNodeProof};
 
-/// Errors during tapret commitment embedding into [`TapTree`] container.
+/// Errors during tapret commitment embedding into tapscript tree.
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
 #[display(doc_comments)]
-pub enum TapTreeError {
+pub enum TapretTreeError {
     /// the provided commitment data can't be strict encoded. Details: {0}
     #[from]
     StrictEncoding(strict_encoding::Error),
@@ -59,18 +59,18 @@ impl EmbedCommitProof<MultiCommitment, TaprootScriptTree, Lnpbp6>
     fn restore_original_container(
         &self,
         modified_tree: &TaprootScriptTree,
-    ) -> Result<TaprootScriptTree, TapTreeError> {
-        let (_, original_tree) = modified_tree
-            .clone()
-            .split()
-            .map_err(|_| TapTreeError::IncompleteTree(modified_tree.clone()))?;
+    ) -> Result<TaprootScriptTree, TapretTreeError> {
+        let (_, original_tree) =
+            modified_tree.clone().split().map_err(|_| {
+                TapretTreeError::IncompleteTree(modified_tree.clone())
+            })?;
         Ok(original_tree)
     }
 }
 
 impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for TaprootScriptTree {
     type Proof = TapNodeProof;
-    type CommitError = TapTreeError;
+    type CommitError = TapretTreeError;
 
     fn embed_commit(
         &mut self,
@@ -84,7 +84,7 @@ impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for TaprootScriptTree {
                 TapNodeProof::Leaf(leaf_script.clone())
             }
             TreeNode::Hidden(..) => {
-                return Err(TapTreeError::IncompleteTree(self.clone()))
+                return Err(TapretTreeError::IncompleteTree(self.clone()))
             }
             TreeNode::Branch(branch, _) => TapNodeProof::Branch(
                 branch.as_left_node().node_hash(),
@@ -107,7 +107,7 @@ impl EmbedCommitProof<MultiCommitment, TapTree, Lnpbp6> for TapNodeProof {
     fn restore_original_container(
         &self,
         commit_container: &TapTree,
-    ) -> Result<TapTree, TapTreeError> {
+    ) -> Result<TapTree, TapretTreeError> {
         let tree = TaprootScriptTree::from(commit_container.clone());
         EmbedCommitProof::<_, TaprootScriptTree, _>::restore_original_container(
             self, &tree,
@@ -118,7 +118,7 @@ impl EmbedCommitProof<MultiCommitment, TapTree, Lnpbp6> for TapNodeProof {
 
 impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for TapTree {
     type Proof = TapNodeProof;
-    type CommitError = TapTreeError;
+    type CommitError = TapretTreeError;
 
     fn embed_commit(
         &mut self,

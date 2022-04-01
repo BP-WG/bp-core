@@ -63,7 +63,9 @@ mod tx;
 mod txout;
 mod xonlypk;
 
-pub use taptree::TapTreeError;
+pub use psbtout::TapretPsbtError;
+pub use taptree::TapretTreeError;
+pub use tx::TapretError;
 
 /// Marker non-instantiable enum defining LNPBP-6 taproot OP_RETURN (`tapret`)
 /// protocol.
