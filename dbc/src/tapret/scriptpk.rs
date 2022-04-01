@@ -12,3 +12,29 @@
 // You should have received a copy of the Apache 2.0 License
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
+
+use bitcoin::Script;
+use bitcoin_scripts::PubkeyScript;
+use commit_verify::embed_commit::ConvolveCommitVerify;
+use commit_verify::multi_commit::MultiCommitment;
+
+use super::{Lnpbp6, TapretProof, TapretTreeError};
+
+impl ConvolveCommitVerify<MultiCommitment, TapretProof, Lnpbp6>
+    for PubkeyScript
+{
+    type Commitment = PubkeyScript;
+    type CommitError = TapretTreeError;
+
+    fn convolve_commit(
+        &self,
+        supplement: &TapretProof,
+        msg: &MultiCommitment,
+    ) -> Result<Self::Commitment, Self::CommitError> {
+        let output_key = supplement
+            .internal_key
+            .convolve_commit(&supplement.other_node, msg)?;
+
+        Script::new_v1_p2tr_tweaked(output_key).map_err(TapretTreeError::from)
+    }
+}
