@@ -19,7 +19,7 @@ use bitcoin_scripts::TapScript;
 use commit_verify::multi_commit::MultiCommitment;
 use commit_verify::{CommitEncode, CommitVerify};
 
-use crate::tapret::Lnpbp6;
+use super::Lnpbp6;
 
 impl CommitVerify<MultiCommitment, Lnpbp6> for TapScript {
     fn commit(msg: &MultiCommitment) -> Self {
