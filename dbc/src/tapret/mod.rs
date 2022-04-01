@@ -109,6 +109,7 @@ pub enum TapNodeProof {
 /// Information proving tapret determinism for a given tapret commitment.
 /// Used both in the commitment procedure for PSBTs and in
 /// client-side-validation of the commitment.
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 pub struct TapretProof {
     /// Information about other script spending paths present in the
     /// [`TapTree`]
