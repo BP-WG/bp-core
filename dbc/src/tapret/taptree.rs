@@ -27,7 +27,7 @@ use bitcoin_scripts::TapScript;
 use commit_verify::multi_commit::MultiCommitment;
 use commit_verify::{CommitVerify, EmbedCommitProof, EmbedCommitVerify};
 
-use super::{Lnpbp6, TapNodeProof};
+use super::{Lnpbp6, TapRightPartner};
 
 /// Errors during tapret commitment embedding into tapscript tree.
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
@@ -56,7 +56,7 @@ pub enum TapretTreeError {
 }
 
 impl EmbedCommitProof<MultiCommitment, TaprootScriptTree, Lnpbp6>
-    for TapNodeProof
+    for TapRightPartner
 {
     fn restore_original_container(
         &self,
@@ -71,7 +71,7 @@ impl EmbedCommitProof<MultiCommitment, TaprootScriptTree, Lnpbp6>
 }
 
 impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for TaprootScriptTree {
-    type Proof = TapNodeProof;
+    type Proof = TapRightPartner;
     type CommitError = TapretTreeError;
 
     fn embed_commit(
@@ -83,12 +83,12 @@ impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for TaprootScriptTree {
         let root_node = self.to_root_node();
         let tap_node = match root_node {
             TreeNode::Leaf(leaf_script, _) => {
-                TapNodeProof::Leaf(leaf_script.clone())
+                TapRightPartner::Leaf(leaf_script.clone())
             }
             TreeNode::Hidden(..) => {
                 return Err(TapretTreeError::IncompleteTree(self.clone()))
             }
-            TreeNode::Branch(branch, _) => TapNodeProof::Branch(
+            TreeNode::Branch(branch, _) => TapRightPartner::Branch(
                 branch.as_left_node().node_hash(),
                 branch.as_right_node().node_hash(),
             ),
@@ -105,7 +105,7 @@ impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for TaprootScriptTree {
     }
 }
 
-impl EmbedCommitProof<MultiCommitment, TapTree, Lnpbp6> for TapNodeProof {
+impl EmbedCommitProof<MultiCommitment, TapTree, Lnpbp6> for TapRightPartner {
     fn restore_original_container(
         &self,
         commit_container: &TapTree,
@@ -119,7 +119,7 @@ impl EmbedCommitProof<MultiCommitment, TapTree, Lnpbp6> for TapNodeProof {
 }
 
 impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for TapTree {
-    type Proof = TapNodeProof;
+    type Proof = TapRightPartner;
     type CommitError = TapretTreeError;
 
     fn embed_commit(

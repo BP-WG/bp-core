@@ -82,12 +82,17 @@ impl CommitmentProtocol for Lnpbp6 {
     const HASH_TAG_MIDSTATE: Option<Midstate> = None;
 }
 
-/// Information proving tapret determinism for a given original [`TapTree`].
+/// Information proving stap of a tapret path in determined way within a given
+/// original [`TapTree`].
+///
+/// The structure hosts proofs that the right-side partner at the taproot script
+/// tree node does not contain an alternative OP-RETURN commitment script.
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, From)]
 #[derive(StrictEncode, StrictDecode)]
-pub enum TapNodeProof {
-    /// Script spending path was absent; tapret commitment is represented
-    /// by a single leaf.
+pub enum TapRightPartner {
+    /// Script spending path on the right side of the parent node is absent;
+    /// tapret commitment represented by a single leaf or is sitra ahra: it
+    /// exists on the left side of the tree.
     #[display("~")]
     None,
 
@@ -115,7 +120,7 @@ pub enum TapNodeProof {
 pub struct TapretProof {
     /// Information about other script spending paths present in the
     /// [`TapTree`]
-    pub other_node: TapNodeProof,
+    pub other_node: TapRightPartner,
 
     /// The internal key used by the taproot output.
     ///

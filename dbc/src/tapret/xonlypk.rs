@@ -27,9 +27,9 @@ use commit_verify::multi_commit::MultiCommitment;
 use commit_verify::CommitVerify;
 use secp256k1::SECP256K1;
 
-use super::{Lnpbp6, TapNodeProof, TapretTreeError};
+use super::{Lnpbp6, TapRightPartner, TapretTreeError};
 
-impl ConvolveCommitVerify<MultiCommitment, TapNodeProof, Lnpbp6>
+impl ConvolveCommitVerify<MultiCommitment, TapRightPartner, Lnpbp6>
     for UntweakedPublicKey
 {
     type Commitment = TweakedPublicKey;
@@ -37,7 +37,7 @@ impl ConvolveCommitVerify<MultiCommitment, TapNodeProof, Lnpbp6>
 
     fn convolve_commit(
         &self,
-        supplement: &TapNodeProof,
+        supplement: &TapRightPartner,
         msg: &MultiCommitment,
     ) -> Result<Self::Commitment, Self::CommitError> {
         let script_commitment = TapScript::commit(msg);
@@ -45,11 +45,11 @@ impl ConvolveCommitVerify<MultiCommitment, TapNodeProof, Lnpbp6>
         let mut builder = TaprootBuilder::new();
 
         match supplement {
-            TapNodeProof::None => {
+            TapRightPartner::None => {
                 builder =
                     builder.add_leaf(0, script_commitment.into_inner())?;
             }
-            TapNodeProof::Leaf(leaf_script) => {
+            TapRightPartner::Leaf(leaf_script) => {
                 builder =
                     builder.add_leaf(1, script_commitment.into_inner())?;
                 builder = builder.add_leaf_with_ver(
@@ -58,7 +58,7 @@ impl ConvolveCommitVerify<MultiCommitment, TapNodeProof, Lnpbp6>
                     leaf_script.version,
                 )?;
             }
-            TapNodeProof::Branch(branch, _) => {
+            TapRightPartner::Branch(branch, _) => {
                 builder =
                     builder.add_leaf(1, script_commitment.into_inner())?;
                 builder.add_hidden(1, branch.into_node_hash())
