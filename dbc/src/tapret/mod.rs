@@ -16,22 +16,23 @@
 //! Taproot OP_RETURN-based deterministic bitcoin commitment scheme ("tapret").
 //!
 //! **Embed-commit by constructor:**
-//! a) `TapTree, Msg -> TapTree', TapNode`, defined in [`taptree`] module;
+//! a) `TapTree, Msg -> TapTree', TapRightPartner`, defined in [`taptree`] mod;
 //! b) `(psbt::Output, TxOut), Msg -> (psbt::Output, TxOut)', TapretProof`,
-//!    defined in [`output`] module;
-//! c) `PSBT, Msg -> PSBT', TapretProof`, defined in [`psbt`] module;
+//!    defined in [`output`] mod;
+//! c) `PSBT, Msg -> PSBT', TapretProof`, defined in [`psbt`] mod;
 //! **Convolve-commit by receiver:**
-//! d) `UntweakedPublicKey, TapNode, Msg -> TweakedPublicKey'` in [`xonlypk`];
+//! d) `UntweakedPublicKey, TapRightPartner, Msg -> TweakedPublicKey'` in
+//!    [`xonlypk`];
 //! e) `PubkeyScript, TapretProof, Msg -> PubkeyScript'` in [`scriptpk`];
 //! f) `TxOut, TapretProof, Msg -> TxOut'` in [`txout`];
 //! g) `Tx, TapretProof, Msg -> Tx'` in [`tx`].
 //!
 //! **Verify by constructor:**
-//! a) `TapNode, Msg, TapTree' -> bool`;
+//! a) `TapRightPartner, Msg, TapTree' -> bool`;
 //! b) `TapretProof, Msg, (psbt::Output, TxOut)' -> bool`;
 //! c) `TapretProof, Msg, PSBT' -> bool`.
 //! **Verify by receiver:**
-//! d) `UntweakedPublicKey, TapNode, Msg, TweakedPublicKey -> bool`;
+//! d) `UntweakedPublicKey, TapRightPartner, Msg, TweakedPublicKey -> bool`;
 //! e) `PubkeyScript, TapretProof, Msg, PubkeyScript' -> bool`;
 //! f) `TxOut, TapretProof, Msg, TxOut' -> bool`;
 //! g) `Tx, TapretProof, Msg -> Tx'`.
@@ -45,12 +46,12 @@
 //!
 //! **Possible data type conversions:**
 //! - `TapTree', UntweakedPublicKey -> TweakedPublicKey'`
-//! - `TapNode, UntweakedPublicKey -> TweakedPublicKey`
-//! - `TapNode, Msg -> TapretTweak`
+//! - `TapRightPartner, UntweakedPublicKey -> TweakedPublicKey`
+//! - `TapRightPartner, Msg -> TapretTweak`
 //! - `TapretProof, Msg -> TweakedPublicKey'`
 //!
 //! **Embed-commitment containers and proofs (container/proof):**
-//! a) `TapTree` / `TapNode`
+//! a) `TapTree` / `TapRightPartner`
 //! b) `TapretProof` / `TweakedPublicKey'`
 //! b) `XOnlyPublicKey` / `TapretProof`
 
@@ -64,6 +65,7 @@ mod txout;
 mod xonlypk;
 
 pub use psbtout::TapretPsbtError;
+pub use tapscript::TAPRET_SCRIPT_COMMITMENT_PREFIX;
 pub use taptree::TapretTreeError;
 pub use tx::TapretError;
 
@@ -73,7 +75,7 @@ pub enum Lnpbp6 {}
 
 use bitcoin::hashes::sha256::{self, Midstate};
 use bitcoin::schnorr::UntweakedPublicKey;
-use bitcoin::util::taproot::TaprootMerkleBranch;
+use bitcoin::util::taproot::{TapBranchHash, TaprootMerkleBranch};
 use bitcoin_scripts::LeafScript;
 use commit_verify::CommitmentProtocol;
 
