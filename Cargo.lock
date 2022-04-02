@@ -114,8 +114,7 @@ checksum = "cf9ff0bbfd639f15c74af777d81383cf53efb7c93613f6cab67c6c11e05bbf8b"
 [[package]]
 name = "bitcoin"
 version = "0.28.0-rc.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fbcdc1e8a189ee0421557ce7adcbc001df053076d75ab6b7d0d645e13cf414ff"
+source = "git+https://github.com/rust-bitcoin/rust-bitcoin#cb4d34fd400d2c6ffefc140e9d7f06c5b3e82b0d"
 dependencies = [
  "base64-compat",
  "bech32",
@@ -323,9 +322,9 @@ dependencies = [
 
 [[package]]
 name = "commit_verify"
-version = "0.7.0-alpha.5"
+version = "0.7.0-alpha.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b35f586e851bbcaf8fbb0458c6690de0f92c00f7b8dedbf4816cbbd6cab828a"
+checksum = "ea6edb999d479a0c95f2a810ef09074de909f29b6e6e459fe4ab1fe378099d99"
 dependencies = [
  "amplify",
  "bitcoin_hashes",
