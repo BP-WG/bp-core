@@ -23,9 +23,23 @@ use commit_verify::{CommitEncode, CommitVerify};
 
 use super::Lnpbp6;
 
+/// Hardcoded tapret script prefix consisting of 30 `OP_RESERVED` pushes,
+/// followed by `OP_RETURN` and `OP_PUSHBYTES_32`.
+pub const TAPRET_SCRIPT_COMMITMENT_PREFIX: [u8; 32] = [
+    0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50,
+    0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50,
+    0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x6a, 0x20,
+];
+
 impl CommitVerify<MultiCommitment, Lnpbp6> for TapScript {
     fn commit(msg: &MultiCommitment) -> Self {
-        script::Builder::new()
+        let mut builder = script::Builder::new();
+        for _ in 0..30 {
+            // Filling first 30 bytes with OP_RESERVED in order to avoid
+            // representation of sibling partner script as child hashes.
+            builder = builder.push_opcode(all::OP_RESERVED);
+        }
+        builder
             .push_opcode(all::OP_RETURN)
             .push_slice(&msg.commit_serialize())
             .into_script()
