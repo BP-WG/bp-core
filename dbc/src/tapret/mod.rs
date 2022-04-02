@@ -113,6 +113,36 @@ pub enum TapRightPartner {
     Branch(sha256::Hash, sha256::Hash),
 }
 
+impl TapRightPartner {
+    /// Checks that the sibling data does not contain another tapret commitment.
+    ///
+    /// The check ensures that if the sibling data are present, their first 32
+    /// bytes are not equal to [`TAPRET_SCRIPT_COMMITMENT_PREFIX`], and if
+    /// the sibling is another node, the hash of its first child in the proof
+    /// is smaller than the hash of the other.
+    pub fn check(&self) -> bool {
+        match self {
+            TapRightPartner::None => true,
+            TapRightPartner::Leaf(LeafScript { script, .. })
+                if script.len() < 32 =>
+            {
+                true
+            }
+            TapRightPartner::Leaf(LeafScript { script, .. }) => {
+                script[0..32] != TAPRET_SCRIPT_COMMITMENT_PREFIX[..]
+            }
+            TapRightPartner::Branch(left_hash, right_hash)
+                if right_hash < left_hash =>
+            {
+                false
+            }
+            TapRightPartner::Branch(left_hash, _) => {
+                left_hash[..] != TAPRET_SCRIPT_COMMITMENT_PREFIX[..]
+            }
+        }
+    }
+}
+
 /// Information proving tapret determinism for a given tapret commitment.
 /// Used both in the commitment procedure for PSBTs and in
 /// client-side-validation of the commitment.
