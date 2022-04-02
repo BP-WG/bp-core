@@ -20,7 +20,7 @@ use bitcoin::hashes::Hash;
 use bitcoin::psbt::TapTree;
 use bitcoin::schnorr::{TapTweak, TweakedPublicKey, UntweakedPublicKey};
 use bitcoin::util::taproot::{TapBranchHash, TaprootBuilder};
-use bitcoin_scripts::taproot::{Node, TaprootScriptTree};
+use bitcoin_scripts::taproot::{BranchNode, Node, TaprootScriptTree};
 use bitcoin_scripts::TapScript;
 use commit_verify::embed_commit::ConvolveCommitVerify;
 use commit_verify::multi_commit::MultiCommitment;
@@ -58,9 +58,10 @@ impl ConvolveCommitVerify<MultiCommitment, TapRightPartner, Lnpbp6>
                     leaf_script.version,
                 )?;
             }
-            TapRightPartner::Branch(branch, _) => {
+            TapRightPartner::Branch(child1, child2) => {
                 builder =
                     builder.add_leaf(1, script_commitment.into_inner())?;
+                let branch = TapBranchHash::from_node_hashes(child1, child2);
                 builder.add_hidden(1, branch.into_node_hash())
             }
         };
