@@ -21,8 +21,8 @@ amplify = "3.12.0"
 bitcoin = "0.28.0-rc.2"
 secp256k1 = { version = "0.22.1", features = ["global-context"] }
 bitcoin_scripts = "0.7.0-alpha.6"
-descriptors = { version = "0.7.0-alpha.1", default-features = false }
-psbt = { version = "0.7.0-alpha.1", default-features = false }
+descriptors = { version = "0.7.0-alpha.1", optional = true }
+psbt = { version = "0.7.0-alpha.1", default-features = false, optional = true }
 strict_encoding = "1.8.0-rc.7"
 commit_verify = "0.7.0-alpha.5"
 miniscript_crate = { package = "miniscript", version = "7.0.0-rc.2", optional = true }
@@ -31,6 +31,8 @@ serde_with = { version = "1.8", optional = true }
 
 [features]
 default = []
-all = ["serde", "miniscript"]
-miniscript = ["miniscript_crate", "bitcoin_scripts/miniscript", "descriptors/miniscript", "psbt/miniscript"]
+all = ["serde", "miniscript", "consensus", "wallet"]
+consensus = []
+wallet = ["psbt"]
+miniscript = ["miniscript_crate", "bitcoin_scripts/miniscript", "psbt/miniscript", "descriptors"]
 serde = ["amplify/serde", "bitcoin/use-serde", "bitcoin_scripts/serde", "commit_verify/serde", "serde_crate", "serde_with"]

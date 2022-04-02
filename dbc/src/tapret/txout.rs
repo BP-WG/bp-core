@@ -13,6 +13,8 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
+#![cfg(any(feature = "consensus", feature = "wallet"))]
+
 use bitcoin::TxOut;
 use commit_verify::embed_commit::ConvolveCommitVerify;
 use commit_verify::multi_commit::MultiCommitment;

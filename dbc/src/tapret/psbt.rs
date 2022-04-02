@@ -13,6 +13,8 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
+#![cfg(feature = "wallet")]
+
 use bitcoin::Transaction;
 use commit_verify::multi_commit::MultiCommitment;
 use commit_verify::{EmbedCommitProof, EmbedCommitVerify};
