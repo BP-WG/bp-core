@@ -150,9 +150,10 @@ impl TapRightPartner {
 /// client-side-validation of the commitment.
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 pub struct TapretProof {
-    /// Information about other script spending paths present in the
-    /// [`TapTree`]
-    pub other_node: TapRightPartner,
+    /// A merkle path to the commitment inside the taproot script tree. For
+    /// each node it also must hold information about the sibling in form of
+    /// [`TapRightPartner`].
+    pub merkle_path: Vec<(TapBranchHash, TapRightPartner)>,
 
     /// The internal key used by the taproot output.
     ///
