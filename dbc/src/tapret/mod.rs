@@ -143,16 +143,11 @@ impl TapretRightBranch {
 
     /// Computes node hash of the partner node defined by this proof.
     pub fn node_hash(&self) -> TapNodeHash {
-        let mut engine = TapBranchHash::engine();
-        engine.input(&self.left_node_hash.min(self.right_node_hash));
-        engine.input(&self.left_node_hash.max(self.right_node_hash));
-        TapNodeHash::from_engine(engine)
-        /* TODO: Replace with:
         TapBranchHash::from_node_hashes(
             self.left_node_hash,
             self.right_node_hash,
         )
-         */
+        .into_node_hash()
     }
 }
 
