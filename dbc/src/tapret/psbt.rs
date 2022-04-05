@@ -35,8 +35,7 @@ impl EmbedCommitProof<MultiCommitment, Psbt, Lnpbp6> for TapretProof {
             }
         }
 
-        return Err(PsbtCommitError::NoTaprootOutput)
-            .map_err(PsbtVerifyError::from);
+        Err(PsbtCommitError::NoTaprootOutput).map_err(PsbtVerifyError::from)
     }
 }
 
@@ -55,6 +54,6 @@ impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for Psbt {
             }
         }
 
-        return Err(PsbtCommitError::NoTaprootOutput);
+        Err(PsbtCommitError::NoTaprootOutput)
     }
 }

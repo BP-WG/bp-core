@@ -13,19 +13,21 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
+#![allow(clippy::init_numbered_fields)]
+
 //! Taproot OP_RETURN-based deterministic bitcoin commitment scheme ("tapret").
 //!
 //! **Embed-commit by constructor:**
-//! a) `TapTree, Msg -> TapTree', TapRightPartner`, defined in [`taptree`] mod;
+//! a) `TapTree, Msg -> TapTree', TapRightPartner`, defined in `taptree` mod;
 //! b) `(psbt::Output, TxOut), Msg -> (psbt::Output, TxOut)', TapretProof`,
-//!    defined in [`output`] mod;
-//! c) `PSBT, Msg -> PSBT', TapretProof`, defined in [`psbt`] mod;
+//!    defined in `output` mod;
+//! c) `PSBT, Msg -> PSBT', TapretProof`, defined in `psbt` mod;
 //! **Convolve-commit by receiver:**
 //! d) `UntweakedPublicKey, TapRightPartner, Msg -> TweakedPublicKey'` in
-//!    [`xonlypk`];
-//! e) `PubkeyScript, TapretProof, Msg -> PubkeyScript'` in [`scriptpk`];
-//! f) `TxOut, TapretProof, Msg -> TxOut'` in [`txout`];
-//! g) `Tx, TapretProof, Msg -> Tx'` in [`tx`].
+//!    `xonlypk`;
+//! e) `PubkeyScript, TapretProof, Msg -> PubkeyScript'` in `scriptpk`;
+//! f) `TxOut, TapretProof, Msg -> TxOut'` in `txout`;
+//! g) `Tx, TapretProof, Msg -> Tx'` in `tx`.
 //!
 //! **Verify by constructor:**
 //! a) `TapRightPartner, Msg, TapTree' -> bool`;
@@ -171,7 +173,7 @@ impl StrictDecode for TapretRightBranch {
 }
 
 /// Information proving step of a tapret path in determined way within a given
-/// original [`TapTree`].
+/// original [`bitcoin::psbt::TapTree`].
 ///
 /// The structure hosts proofs that the right-side partner at the taproot script
 /// tree node does not contain an alternative OP-RETURN commitment script.
@@ -248,7 +250,7 @@ impl TapretNodePartner {
 /// taproot script tree does not have an alternative commitment.
 ///
 /// For each node holds information about the sibling in form of
-/// [`TapRightPartner`].
+/// [`TapretNodePartner`].
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 pub struct TapretPathProof(Vec<TapretNodePartner>);
 
@@ -279,7 +281,7 @@ impl TapretPathProof {
             ));
         }
         self.0.push(elem);
-        return Ok(self.0.len() as u8);
+        Ok(self.0.len() as u8)
     }
 
     /// Checks that the sibling data does not contain another tapret commitment
@@ -319,7 +321,7 @@ impl<'data> IntoIterator for &'data TapretPathProof {
 pub struct TapretProof {
     /// A merkle path to the commitment inside the taproot script tree. For
     /// each node it also must hold information about the sibling in form of
-    /// [`TapRightPartner`].
+    /// [`TapretNodePartner`].
     pub path_proof: TapretPathProof,
 
     /// The internal key used by the taproot output.

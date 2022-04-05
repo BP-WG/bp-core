@@ -57,6 +57,6 @@ impl ConvolveCommitVerify<MultiCommitment, TapretProof, Lnpbp6>
             }
         }
 
-        return Err(TapretError::NoTaprootOutput);
+        Err(TapretError::NoTaprootOutput)
     }
 }

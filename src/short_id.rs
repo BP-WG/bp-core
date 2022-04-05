@@ -50,7 +50,7 @@ pub struct BlockChecksum(u8);
 impl From<BlockHash> for BlockChecksum {
     fn from(block_hash: BlockHash) -> Self {
         let mut xor: u8 = 0;
-        for byte in block_hash.to_vec() {
+        for byte in &block_hash[..] {
             xor ^= byte;
         }
         Self::from(xor)
