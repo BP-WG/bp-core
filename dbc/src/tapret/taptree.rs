@@ -289,8 +289,11 @@ impl
         &self,
         modified_tree: &TapretSourceInfo<TaprootScriptTree>,
     ) -> Result<TapretSourceInfo<TaprootScriptTree>, TapretProofError> {
-        let tap_tree =
-            modified_tree.tap_tree.ok_or(TapretProofError::EmptyTree)?;
+        let tap_tree = modified_tree
+            .tap_tree
+            .as_ref()
+            .cloned()
+            .ok_or(TapretProofError::EmptyTree)?;
         let mut dfs_path = modified_tree.dfs_path.clone();
         // Taproot has key-only spending
         if dfs_path.pop().is_none() {
@@ -410,6 +413,11 @@ impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for TapretSourceInfo<TapTree> {
         &mut self,
         msg: &MultiCommitment,
     ) -> Result<Self::Proof, Self::CommitError> {
-        TapretSourceInfo::from(self.clone()).embed_commit(msg)
+        let mut source = TapretSourceInfo::<TaprootScriptTree>::from(
+            self as &TapretSourceInfo<_>,
+        );
+        let proof = source.embed_commit(msg)?;
+        *self = source.into();
+        Ok(proof)
     }
 }

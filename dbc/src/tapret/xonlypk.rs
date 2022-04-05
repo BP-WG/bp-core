@@ -61,26 +61,26 @@ impl ConvolveCommitVerify<MultiCommitment, TapretPathProof, Lnpbp6>
                     builder = builder.add_hidden(depth as usize, *left_node)?;
                     builder = builder.add_leaf(
                         depth as usize,
-                        script_commitment.into_inner(),
+                        script_commitment.to_inner(),
                     )?;
                 }
                 TapretNodePartner::RightLeaf(leaf_script) => {
                     builder = builder.add_leaf(
                         depth as usize,
-                        script_commitment.into_inner(),
+                        script_commitment.to_inner(),
                     )?;
                     builder = builder.add_leaf_with_ver(
                         1,
-                        leaf_script.script.into_inner(),
+                        leaf_script.script.to_inner(),
                         leaf_script.version,
                     )?;
                 }
                 TapretNodePartner::RightBranch(partner_branch) => {
                     builder = builder.add_leaf(
                         depth as usize,
-                        script_commitment.into_inner(),
+                        script_commitment.to_inner(),
                     )?;
-                    builder.add_hidden(
+                    builder = builder.add_hidden(
                         depth as usize,
                         partner_branch.node_hash(),
                     )?;

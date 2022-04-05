@@ -15,17 +15,16 @@
 
 #![cfg(feature = "wallet")]
 
+use amplify::Wrapper;
 use bitcoin::hashes::Hash;
-use bitcoin::psbt::{Output, TapTree};
+use bitcoin::psbt::TapTree;
 use bitcoin::util::taproot::TapBranchHash;
-use bitcoin::{Script, TxOut};
+use bitcoin::Script;
 use bitcoin_scripts::taproot::{Node, TaprootScriptTree, TreeNode};
-use bitcoin_scripts::TapNodeHash;
-use commit_verify::embed_commit::ConvolveCommitVerify;
+use bitcoin_scripts::{TapNodeHash, TapScript};
 use commit_verify::multi_commit::MultiCommitment;
-use commit_verify::{EmbedCommitProof, EmbedCommitVerify};
+use commit_verify::{CommitVerify, EmbedCommitProof, EmbedCommitVerify};
 use psbt::commit::tapret::DfsPathEncodeError;
-use psbt::TapretOutput;
 use secp256k1::SECP256K1;
 
 use super::{Lnpbp6, TapretProof};
@@ -64,28 +63,27 @@ pub enum PsbtCommitError {
 
 /// Errors during tapret PSBT commitment process.
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
-#[display(doc_comments)]
+#[display(inner)]
 pub enum PsbtVerifyError {
+    /// Error during commitment process.
     #[from]
     #[from(DfsPathEncodeError)]
     #[from(TapretSourceError)]
     Commit(PsbtCommitError),
 
+    /// Error during verification process.
     #[from]
     Proof(TapretProofError),
 }
 
-impl EmbedCommitProof<MultiCommitment, (psbt::Output, TxOut), Lnpbp6>
-    for TapretProof
-{
+impl EmbedCommitProof<MultiCommitment, psbt::Output, Lnpbp6> for TapretProof {
     fn restore_original_container(
         &self,
-        commit_container: &(Output, TxOut),
-    ) -> Result<(Output, TxOut), PsbtVerifyError> {
+        commit_container: &psbt::Output,
+    ) -> Result<psbt::Output, PsbtVerifyError> {
         let mut original_container = commit_container.clone();
-        let (output, txout) = &mut original_container;
 
-        let internal_key = output
+        let internal_key = original_container
             .tap_internal_key
             .ok_or(PsbtCommitError::InternalKeyMissed)?;
         if internal_key != self.internal_key {
@@ -93,11 +91,11 @@ impl EmbedCommitProof<MultiCommitment, (psbt::Output, TxOut), Lnpbp6>
                 .map_err(PsbtVerifyError::from);
         }
 
-        let dfs_path = output
+        let dfs_path = original_container
             .tapret_dfs_path()
             .ok_or(PsbtCommitError::TapretPathMissed)??;
 
-        let tap_tree = output.tap_tree.map(TaprootScriptTree::from);
+        let tap_tree = original_container.tap_tree.map(TaprootScriptTree::from);
         let source =
             TapretSourceInfo::<TaprootScriptTree>::with(tap_tree, dfs_path)?;
         let source = self.path_proof.restore_original_container(&source)?;
@@ -107,16 +105,16 @@ impl EmbedCommitProof<MultiCommitment, (psbt::Output, TxOut), Lnpbp6>
             .map(TreeNode::node_hash)
             .map(TapNodeHash::into_inner)
             .map(TapBranchHash::from_inner);
-        txout.script_pubkey =
+        original_container.script =
             Script::new_v1_p2tr(SECP256K1, self.internal_key, merkle_root);
 
-        output.tap_tree = source.into_tap_tree();
+        original_container.tap_tree = source.into_tap_tree();
 
         Ok(original_container)
     }
 }
 
-impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for (psbt::Output, TxOut) {
+impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for psbt::Output {
     type Proof = TapretProof;
     type CommitError = PsbtCommitError;
     type VerifyError = PsbtVerifyError;
@@ -125,31 +123,27 @@ impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for (psbt::Output, TxOut) {
         &mut self,
         msg: &MultiCommitment,
     ) -> Result<Self::Proof, Self::CommitError> {
-        let (output, txout) = self;
-
-        let internal_key = if let Some(internal_key) = output.tap_internal_key {
+        let internal_key = if let Some(internal_key) = self.tap_internal_key {
             internal_key
         } else {
             return Err(PsbtCommitError::InternalKeyMissed);
         };
 
-        let dfs_path = output
+        let dfs_path = self
             .tapret_dfs_path()
             .ok_or(PsbtCommitError::TapretPathMissed)??;
 
-        let mut source = TapretSourceInfo::<TapTree>::with(
-            output.tap_tree.clone(),
-            dfs_path,
-        )?;
+        let mut source =
+            TapretSourceInfo::<TapTree>::with(self.tap_tree.clone(), dfs_path)?;
 
         let path_proof = source.embed_commit(msg)?;
+
+        self.script = TapScript::commit(msg).into_inner();
 
         let proof = TapretProof {
             path_proof,
             internal_key,
         };
-
-        txout.convolve_commit(&proof, msg);
 
         Ok(proof)
     }
