@@ -49,9 +49,6 @@ serde = ["amplify/serde", "bitcoin/use-serde",
          "commit_verify/serde", "bp-dbc/serde", "bp-seals/serde",
          "serde_crate", "serde_with"]
 
-[patch.crates-io]
-bitcoin = { git = "https://github.com/rust-bitcoin/rust-bitcoin" }
-
 [workspace]
 members = [".", "dbc", "seals"]
 default-members = [".", "dbc", "seals"]

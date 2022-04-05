@@ -35,8 +35,8 @@ impl ConvolveCommitVerify<MultiCommitment, TapretProof, Lnpbp6>
     ) -> Result<Self::Commitment, Self::CommitError> {
         let output_key = supplement
             .internal_key
-            .convolve_commit(&supplement.other_node, msg)?;
+            .convolve_commit(&supplement.path_proof, msg)?;
 
-        Script::new_v1_p2tr_tweaked(output_key).map_err(TapretTreeError::from)
+        Ok(Script::new_v1_p2tr_tweaked(output_key).into())
     }
 }

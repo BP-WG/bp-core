@@ -20,7 +20,7 @@ use commit_verify::multi_commit::MultiCommitment;
 use commit_verify::{EmbedCommitProof, EmbedCommitVerify};
 use psbt::Psbt;
 
-use super::{Lnpbp6, TapretProof, TapretPsbtError};
+use super::{Lnpbp6, PsbtCommitError, TapretProof};
 
 impl EmbedCommitProof<MultiCommitment, (Psbt, Transaction), Lnpbp6>
     for TapretProof
@@ -28,7 +28,7 @@ impl EmbedCommitProof<MultiCommitment, (Psbt, Transaction), Lnpbp6>
     fn restore_original_container(
         &self,
         commit_container: &(Psbt, Transaction),
-    ) -> Result<(Psbt, Transaction), TapretPsbtError> {
+    ) -> Result<(Psbt, Transaction), PsbtCommitError> {
         let (psbt, tx) = commit_container.clone();
 
         for (output, txout) in (psbt.outputs, tx.output) {
@@ -37,13 +37,14 @@ impl EmbedCommitProof<MultiCommitment, (Psbt, Transaction), Lnpbp6>
             }
         }
 
-        return Err(TapretPsbtError::NoTaprootOutput);
+        return Err(PsbtCommitError::NoTaprootOutput);
     }
 }
 
 impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for (Psbt, Transaction) {
     type Proof = TapretProof;
-    type CommitError = TapretPsbtError;
+    type CommitError = PsbtCommitError;
+    type VerifyError = PsbtCommitError;
 
     fn embed_commit(
         &mut self,
@@ -57,6 +58,6 @@ impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for (Psbt, Transaction) {
             }
         }
 
-        return Err(TapretPsbtError::NoTaprootOutput);
+        return Err(PsbtCommitError::NoTaprootOutput);
     }
 }

@@ -15,7 +15,9 @@
 
 #![cfg(any(feature = "consensus", feature = "wallet"))]
 
+use amplify::Wrapper;
 use bitcoin::TxOut;
+use bitcoin_scripts::PubkeyScript;
 use commit_verify::embed_commit::ConvolveCommitVerify;
 use commit_verify::multi_commit::MultiCommitment;
 
@@ -30,10 +32,11 @@ impl ConvolveCommitVerify<MultiCommitment, TapretProof, Lnpbp6> for TxOut {
         supplement: &TapretProof,
         msg: &MultiCommitment,
     ) -> Result<Self::Commitment, Self::CommitError> {
+        let script_pubkey =
+            PubkeyScript::from_inner(self.script_pubkey.clone());
         Ok(TxOut {
             value: self.value,
-            script_pubkey: self
-                .script_pubkey
+            script_pubkey: script_pubkey
                 .convolve_commit(supplement, msg)?
                 .into_inner(),
         })

@@ -20,16 +20,16 @@ use bitcoin::hashes::Hash;
 use bitcoin::psbt::TapTree;
 use bitcoin::schnorr::{TapTweak, TweakedPublicKey, UntweakedPublicKey};
 use bitcoin::util::taproot::{TapBranchHash, TaprootBuilder};
-use bitcoin_scripts::taproot::{BranchNode, Node, TaprootScriptTree};
+use bitcoin_scripts::taproot::{Node, TaprootScriptTree};
 use bitcoin_scripts::TapScript;
 use commit_verify::embed_commit::ConvolveCommitVerify;
 use commit_verify::multi_commit::MultiCommitment;
 use commit_verify::CommitVerify;
 use secp256k1::SECP256K1;
 
-use super::{Lnpbp6, TapRightPartner, TapretTreeError};
+use super::{Lnpbp6, TapretNodePartner, TapretPathProof, TapretTreeError};
 
-impl ConvolveCommitVerify<MultiCommitment, TapRightPartner, Lnpbp6>
+impl ConvolveCommitVerify<MultiCommitment, TapretPathProof, Lnpbp6>
     for UntweakedPublicKey
 {
     type Commitment = TweakedPublicKey;
@@ -37,34 +37,56 @@ impl ConvolveCommitVerify<MultiCommitment, TapRightPartner, Lnpbp6>
 
     fn convolve_commit(
         &self,
-        supplement: &TapRightPartner,
+        supplement: &TapretPathProof,
         msg: &MultiCommitment,
     ) -> Result<Self::Commitment, Self::CommitError> {
         let script_commitment = TapScript::commit(msg);
 
+        // TODO: Refactor without builder but with new bitcoin_scripts::taproot
+        // APIs
         let mut builder = TaprootBuilder::new();
 
-        match supplement {
-            TapRightPartner::None => {
-                builder =
-                    builder.add_leaf(0, script_commitment.into_inner())?;
+        for (depth, partner) in supplement.iter().enumerate() {
+            let depth = depth as u8 + 1;
+
+            if !partner.check() {
+                return Err(TapretTreeError::InvalidPartnerProof(
+                    depth,
+                    partner.clone(),
+                ));
             }
-            TapRightPartner::Leaf(leaf_script) => {
-                builder =
-                    builder.add_leaf(1, script_commitment.into_inner())?;
-                builder = builder.add_leaf_with_ver(
-                    1,
-                    leaf_script.script.into_inner(),
-                    leaf_script.version,
-                )?;
+
+            match partner {
+                TapretNodePartner::LeftNode(left_node) => {
+                    builder = builder.add_hidden(depth as usize, *left_node)?;
+                    builder = builder.add_leaf(
+                        depth as usize,
+                        script_commitment.into_inner(),
+                    )?;
+                }
+                TapretNodePartner::RightLeaf(leaf_script) => {
+                    builder = builder.add_leaf(
+                        depth as usize,
+                        script_commitment.into_inner(),
+                    )?;
+                    builder = builder.add_leaf_with_ver(
+                        1,
+                        leaf_script.script.into_inner(),
+                        leaf_script.version,
+                    )?;
+                }
+                TapretNodePartner::RightBranch(partner_branch) => {
+                    builder = builder.add_leaf(
+                        depth as usize,
+                        script_commitment.into_inner(),
+                    )?;
+                    builder.add_hidden(
+                        depth as usize,
+                        partner_branch.node_hash(),
+                    )?;
+                }
             }
-            TapRightPartner::Branch(child1, child2) => {
-                builder =
-                    builder.add_leaf(1, script_commitment.into_inner())?;
-                let branch = TapBranchHash::from_node_hashes(child1, child2);
-                builder.add_hidden(1, branch.into_node_hash())
-            }
-        };
+        }
 
         let commit_node =
             TaprootScriptTree::from(TapTree::from_inner(builder)?)
