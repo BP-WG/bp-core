@@ -58,17 +58,13 @@ impl ConvolveCommitVerify<MultiCommitment, TapretPathProof, Lnpbp6>
 
             match partner {
                 TapretNodePartner::LeftNode(left_node) => {
-                    builder = builder.add_hidden(depth as usize, *left_node)?;
-                    builder = builder.add_leaf(
-                        depth as usize,
-                        script_commitment.to_inner(),
-                    )?;
+                    builder = builder.add_hidden_node(depth, *left_node)?;
+                    builder = builder
+                        .add_leaf(depth, script_commitment.to_inner())?;
                 }
                 TapretNodePartner::RightLeaf(leaf_script) => {
-                    builder = builder.add_leaf(
-                        depth as usize,
-                        script_commitment.to_inner(),
-                    )?;
+                    builder = builder
+                        .add_leaf(depth, script_commitment.to_inner())?;
                     builder = builder.add_leaf_with_ver(
                         1,
                         leaf_script.script.to_inner(),
@@ -76,20 +72,16 @@ impl ConvolveCommitVerify<MultiCommitment, TapretPathProof, Lnpbp6>
                     )?;
                 }
                 TapretNodePartner::RightBranch(partner_branch) => {
-                    builder = builder.add_leaf(
-                        depth as usize,
-                        script_commitment.to_inner(),
-                    )?;
-                    builder = builder.add_hidden(
-                        depth as usize,
-                        partner_branch.node_hash(),
-                    )?;
+                    builder = builder
+                        .add_leaf(depth, script_commitment.to_inner())?;
+                    builder = builder
+                        .add_hidden_node(depth, partner_branch.node_hash())?;
                 }
             }
         }
 
         let commit_node =
-            TaprootScriptTree::from(TapTree::from_inner(builder)?)
+            TaprootScriptTree::from(TapTree::from_builder(builder)?)
                 .into_root_node();
         let merkle_root =
             TapBranchHash::from_inner(commit_node.node_hash().into_inner());

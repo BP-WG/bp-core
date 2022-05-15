@@ -20,8 +20,8 @@
 use core::fmt::Debug;
 use core::hash::Hash;
 
-use bitcoin::psbt::TapTree;
-use bitcoin::util::taproot::{TaprootBuilder, TaprootBuilderError};
+use bitcoin::psbt::{IncompleteTapTree, TapTree};
+use bitcoin::util::taproot::TaprootBuilderError;
 use bitcoin_scripts::taproot::{
     Branch, CutError, DfsOrder, DfsOrdering, DfsPath, DfsTraversalError,
     InstillError, MaxDepthExceeded, Node, TaprootScriptTree, TreeNode,
@@ -48,7 +48,7 @@ pub enum TapretTreeError {
 
     /// the tree
     #[from]
-    TreeBuilder(TaprootBuilder),
+    TreeBuilder(IncompleteTapTree),
 
     /// the tapret commitment can't be performet since the taproot script
     /// tree already has maximal depth.
