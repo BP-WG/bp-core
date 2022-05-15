@@ -13,8 +13,6 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-#![cfg(any(feature = "consensus", feature = "wallet"))]
-
 use amplify::Wrapper;
 use bitcoin::TxOut;
 use bitcoin_scripts::PubkeyScript;

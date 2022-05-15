@@ -31,8 +31,7 @@ serde_with = { version = "1.8", optional = true }
 
 [features]
 default = []
-all = ["serde", "miniscript", "consensus", "wallet"]
-consensus = []
+all = ["serde", "miniscript", "wallet"]
 wallet = ["psbt"]
 miniscript = ["miniscript_crate", "bitcoin_scripts/miniscript", "psbt/miniscript", "descriptors"]
 serde = ["amplify/serde", "bitcoin/use-serde", "bitcoin_scripts/serde", "commit_verify/serde", "serde_crate", "serde_with"]

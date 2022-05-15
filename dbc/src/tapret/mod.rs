@@ -57,7 +57,9 @@
 //! b) `TapretProof` / `TweakedPublicKey'`
 //! b) `XOnlyPublicKey` / `TapretProof`
 
+#[cfg(feature = "wallet")]
 mod psbt;
+#[cfg(feature = "wallet")]
 mod psbtout;
 mod scriptpk;
 mod tapscript;
@@ -66,6 +68,7 @@ mod tx;
 mod txout;
 mod xonlypk;
 
+#[cfg(feature = "wallet")]
 pub use psbtout::{PsbtCommitError, PsbtVerifyError};
 pub use tapscript::TAPRET_SCRIPT_COMMITMENT_PREFIX;
 pub use taptree::TapretTreeError;
