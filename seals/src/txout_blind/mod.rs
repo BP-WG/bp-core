@@ -20,4 +20,4 @@ mod seal;
 
 // pub use error::Error;
 // pub use imp::{TxResolve, TxoutSeal, Witness};
-pub use seal::{OutpointHash, OutpointReveal, ParseError};
+pub use seal::{ConcealedSeal, ParseError, RevealedSeal};
