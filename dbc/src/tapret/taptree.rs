@@ -258,7 +258,7 @@ impl
             .cloned()
             .ok_or(TapretProofError::EmptyTree)?;
 
-        match self.0 {
+        match self.partner_node {
             // Taproot has key-only spending
             None => Ok(TapretSourceInfo(None)),
             // Taproot has script spendings
@@ -281,49 +281,59 @@ impl EmbedCommitVerify<MultiCommitment, Lnpbp6>
         &mut self,
         msg: &MultiCommitment,
     ) -> Result<Self::Proof, Self::CommitError> {
-        let commitment_script = TapScript::commit(msg);
-        let commitment_node = TreeNode::with_tap_script(commitment_script, 0);
-        let commitment_subtree = TaprootScriptTree::with(commitment_node)
-            .expect("invalid commitment node construction");
+        for nonce in 0..=u8::MAX {
+            let commitment_script = TapScript::commit(&(*msg, nonce));
 
-        let tap_tree = if let Some(ref mut tap_tree) = self.0 {
-            tap_tree
-        } else {
-            self.0 = Some(commitment_subtree);
-            return Ok(TapretPathProof::new());
-        };
+            let commitment_node =
+                TreeNode::with_tap_script(commitment_script, 0);
+            let commitment_subtree = TaprootScriptTree::with(commitment_node)
+                .expect("invalid commitment node construction");
 
-        *tap_tree =
-            tap_tree.clone().join(commitment_subtree, DfsOrder::Last)?;
+            let tap_tree = if let Some(ref mut tap_tree) = self.0 {
+                tap_tree
+            } else {
+                self.0 = Some(commitment_subtree);
+                return Ok(TapretPathProof::new());
+            };
 
-        let branch = tap_tree
-            .as_root_node()
-            .as_branch()
-            .expect("instill algorithm is broken");
-        let partner = branch.as_dfs_child_node(DfsOrder::First);
+            let original_tree = tap_tree.clone();
+            *tap_tree =
+                original_tree.join(commitment_subtree, DfsOrder::Last)?;
 
-        let partner_is_left_node =
-            branch.dfs_ordering() == DfsOrdering::LeftRight;
+            let branch = tap_tree
+                .as_root_node()
+                .as_branch()
+                .expect("instill algorithm is broken");
+            let partner = branch.as_dfs_child_node(DfsOrder::First);
 
-        let partner_proof = match (partner_is_left_node, partner) {
-            (true, node) => TapretNodePartner::LeftNode(node.node_hash()),
-            (false, TreeNode::Leaf(script, _)) => {
-                TapretNodePartner::RightLeaf(script.clone())
+            let partner_is_left_node =
+                branch.dfs_ordering() == DfsOrdering::LeftRight;
+
+            let partner_proof = match (partner_is_left_node, partner) {
+                (true, node) => TapretNodePartner::LeftNode(node.node_hash()),
+                (false, TreeNode::Leaf(script, _)) => {
+                    TapretNodePartner::RightLeaf(script.clone())
+                }
+                (false, TreeNode::Hidden(partner_hash, _)) => {
+                    return Err(TapretSourceError::HiddenNode(
+                        *partner_hash,
+                        vec![DfsOrder::First].into(),
+                    ))
+                }
+                (false, TreeNode::Branch(partner_branch, _)) => {
+                    TapretNodePartner::right_branch(
+                        partner_branch.as_left_node().node_hash(),
+                        partner_branch.as_right_node().node_hash(),
+                    )
+                }
+            };
+
+            if partner_is_left_node || nonce == u8::MAX {
+                return TapretPathProof::with(partner_proof, nonce)
+                    .map_err(TapretSourceError::from);
             }
-            (false, TreeNode::Hidden(partner_hash, _)) => {
-                return Err(TapretSourceError::HiddenNode(
-                    *partner_hash,
-                    vec![DfsOrder::First].into(),
-                ))
-            }
-            (false, TreeNode::Branch(partner_branch, _)) => {
-                TapretNodePartner::right_branch(
-                    partner_branch.as_left_node().node_hash(),
-                    partner_branch.as_right_node().node_hash(),
-                )
-            }
-        };
-        TapretPathProof::with(partner_proof).map_err(TapretSourceError::from)
+        }
+        unreachable!("for cycle always returns before exiting")
     }
 }
 

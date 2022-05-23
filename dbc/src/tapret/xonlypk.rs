@@ -38,13 +38,13 @@ impl ConvolveCommitVerify<MultiCommitment, TapretPathProof, Lnpbp6>
         supplement: &TapretPathProof,
         msg: &MultiCommitment,
     ) -> Result<Self::Commitment, Self::CommitError> {
-        let script_commitment = TapScript::commit(msg);
+        let script_commitment = TapScript::commit(&(*msg, supplement.nonce));
 
         // TODO: Refactor without builder but with new bitcoin_scripts::taproot
         //       APIs
         let mut builder = TaprootBuilder::new();
 
-        for (depth, partner) in supplement.iter().enumerate() {
+        for (depth, partner) in supplement.partner_node.iter().enumerate() {
             let depth = depth as u8 + 1;
 
             if !partner.check() {

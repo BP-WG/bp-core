@@ -127,7 +127,7 @@ impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for psbt::Output {
 
         let path_proof = source.embed_commit(msg)?;
 
-        self.script = TapScript::commit(msg).into_inner();
+        self.script = TapScript::commit(&(*msg, path_proof.nonce)).into_inner();
 
         let proof = TapretProof {
             path_proof,

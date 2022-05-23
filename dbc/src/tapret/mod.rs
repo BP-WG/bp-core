@@ -78,7 +78,6 @@ pub use tx::TapretError;
 /// protocol.
 pub enum Lnpbp6 {}
 
-use core::ops::Deref;
 use std::io::Read;
 
 use bitcoin::hashes::sha256::Midstate;
@@ -176,9 +175,8 @@ impl StrictDecode for TapretRightBranch {
 #[derive(StrictEncode, StrictDecode)]
 #[display(inner)]
 pub enum TapretNodePartner {
-    /// Script spending path on the right side of the parent node is absent;
-    /// tapret commitment represented by a single leaf or is sitra ahra: it
-    /// exists on the left side of the tree.
+    /// Tapret commitment is on the right side of the tree; i.e the node
+    /// hashing partner can't contain an alternative commitment.
     LeftNode(TapNodeHash),
 
     /// Single script spending path was present before tapret commitment, which
@@ -244,16 +242,16 @@ impl TapretNodePartner {
 /// Structure proving that a merkle path to the tapret commitment inside the
 /// taproot script tree does not have an alternative commitment.
 ///
-/// For each node holds information about the sibling in form of
+/// Holds information about the sibling at level 1 of the tree in form of
 /// [`TapretNodePartner`].
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
-pub struct TapretPathProof(Option<TapretNodePartner>);
+pub struct TapretPathProof {
+    /// Information about the sibling at level 1 of the tree
+    partner_node: Option<TapretNodePartner>,
 
-impl Deref for TapretPathProof {
-    type Target = Option<TapretNodePartner>;
-
-    #[inline]
-    fn deref(&self) -> &Self::Target { &self.0 }
+    /// A nonce value used to put the tapret commitment into the right side of
+    /// the tree.
+    nonce: u8,
 }
 
 impl TapretPathProof {
@@ -264,18 +262,22 @@ impl TapretPathProof {
     /// Adds element to the path proof.
     pub fn with(
         elem: TapretNodePartner,
+        nonce: u8,
     ) -> Result<TapretPathProof, TapretPathError> {
         if !elem.check() {
             return Err(TapretPathError::InvalidNodePartner(elem));
         }
-        Ok(TapretPathProof(Some(elem)))
+        Ok(TapretPathProof {
+            partner_node: Some(elem),
+            nonce,
+        })
     }
 
     /// Checks that the sibling data does not contain another tapret commitment
     /// for any step of the mekrle path.
     #[inline]
     pub fn check(&self) -> bool {
-        self.0
+        self.partner_node
             .as_ref()
             .map(TapretNodePartner::check)
             .unwrap_or(true)

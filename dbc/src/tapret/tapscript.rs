@@ -29,17 +29,20 @@ pub const TAPRET_SCRIPT_COMMITMENT_PREFIX: [u8; 32] = [
     0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x6a, 0x20,
 ];
 
-impl CommitVerify<MultiCommitment, Lnpbp6> for TapScript {
-    fn commit(msg: &MultiCommitment) -> Self {
+impl CommitVerify<(MultiCommitment, u8), Lnpbp6> for TapScript {
+    fn commit(msg: &(MultiCommitment, u8)) -> Self {
+        let (msg, nonce) = msg;
         let mut builder = script::Builder::new();
         for _ in 0..30 {
             // Filling first 30 bytes with OP_RESERVED in order to avoid
             // representation of sibling partner script as child hashes.
             builder = builder.push_opcode(all::OP_RESERVED);
         }
+        let mut data = msg.commit_serialize();
+        data.push(*nonce);
         builder
             .push_opcode(all::OP_RETURN)
-            .push_slice(&msg.commit_serialize())
+            .push_slice(&data)
             .into_script()
             .into()
     }
