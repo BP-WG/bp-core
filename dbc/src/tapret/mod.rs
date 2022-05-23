@@ -82,7 +82,6 @@ use core::ops::Deref;
 use std::io::Read;
 
 use bitcoin::hashes::sha256::Midstate;
-use bitcoin::hashes::{Hash, HashEngine};
 use bitcoin::schnorr::UntweakedPublicKey;
 use bitcoin::util::taproot::{
     TapBranchHash, TaprootMerkleBranch, TAPROOT_CONTROL_MAX_NODE_COUNT,
