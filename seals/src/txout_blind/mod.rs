@@ -13,10 +13,11 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use dbc::txout::feeproto::TxCommitment;
-use dbc::Proof;
+// TODO: Re-implement when new single_use_seal API wii be done
+// mod imp;
+// mod error;
+mod seal;
 
-pub struct Witness(pub InnerWitness, pub OuterWitness);
-
-pub type InnerWitness = TxCommitment;
-pub type OuterWitness = Proof;
+// pub use error::Error;
+// pub use imp::{TxResolve, TxoutSeal, Witness};
+pub use seal::{OutpointHash, OutpointReveal, ParseError};

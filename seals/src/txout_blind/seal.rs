@@ -19,6 +19,7 @@ use bitcoin::hashes::{sha256, sha256d, sha256t, Hash, HashEngine};
 use bitcoin::secp256k1::rand::{thread_rng, RngCore};
 use bitcoin::{OutPoint, Txid};
 use commit_verify::{commit_encode, CommitConceal, CommitVerify, TaggedHash};
+use dbc::tapret::Lnpbp6;
 use lnpbp_bech32::{FromBech32Str, ToBech32String};
 
 /// Data required to generate or reveal the information about blinded
@@ -79,9 +80,7 @@ impl CommitConceal for OutpointReveal {
 
 impl OutpointReveal {
     #[inline]
-    pub fn outpoint_hash(&self) -> OutpointHash {
-        OutpointHash::commit(self)
-    }
+    pub fn outpoint_hash(&self) -> OutpointHash { OutpointHash::commit(self) }
 }
 
 /// Errors happening during parsing string representation of different forms of
@@ -155,9 +154,7 @@ pub struct OutpointHashTag;
 
 impl sha256t::Tag for OutpointHashTag {
     #[inline]
-    fn engine() -> sha256::HashEngine {
-        sha256::HashEngine::default()
-    }
+    fn engine() -> sha256::HashEngine { sha256::HashEngine::default() }
 }
 
 impl lnpbp_bech32::Strategy for OutpointHashTag {
@@ -259,7 +256,7 @@ impl commit_encode::Strategy for OutpointHash {
     type Strategy = commit_encode::strategies::UsingStrict;
 }
 
-impl CommitVerify<OutpointReveal> for OutpointHash {
+impl CommitVerify<OutpointReveal, Lnpbp6> for OutpointHash {
     fn commit(reveal: &OutpointReveal) -> Self {
         let mut engine = sha256::Hash::engine();
         // NB: We are using different serialization byte order comparing to

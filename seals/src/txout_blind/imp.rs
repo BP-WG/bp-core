@@ -16,16 +16,20 @@
 use amplify::Wrapper;
 use bitcoin::{OutPoint, Transaction};
 use commit_verify::{EmbedCommitVerify, Message};
-use dbc::txout::feeproto::{TxCommitment, TxContainer, TxSupplement};
-use dbc::Container;
+use dbc::tapret::TapretProof;
 #[cfg(feature = "async")]
 use single_use_seals::SealMediumAsync;
 use single_use_seals::{SealMedium, SingleUseSeal};
 
-use super::{Error, Witness};
+use super::Error;
 
 // TODO: #8 Implement proper operations with SealMedium
 // TODO: #9 Do asyncronous version
+
+pub struct Witness(pub InnerWitness, pub OuterWitness);
+
+pub type InnerWitness = Transaction;
+pub type OuterWitness = TapretProof;
 
 pub struct TxoutSeal<'a, R>
 where

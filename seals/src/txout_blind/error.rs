@@ -27,7 +27,7 @@ pub enum Error {
 
     /// Error in commitment: {0}
     #[from]
-    CommitmentError(dbc::Error),
+    CommitmentError(dbc::tapret::TapretError),
 
     /// Error from transaction resolver
     ResolverError,
