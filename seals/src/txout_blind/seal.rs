@@ -15,35 +15,37 @@
 
 use std::str::FromStr;
 
-use bitcoin::hashes::{sha256, sha256d, sha256t, Hash, HashEngine};
+use bitcoin::hashes::{sha256, sha256t, Hash, HashEngine};
 use bitcoin::secp256k1::rand::{thread_rng, RngCore};
 use bitcoin::{OutPoint, Txid};
 use commit_verify::{commit_encode, CommitConceal, CommitVerify, TaggedHash};
 use dbc::tapret::Lnpbp6;
 use lnpbp_bech32::{FromBech32Str, ToBech32String};
 
+use crate::{MethodParseError, TxoutMethod};
+
 /// Data required to generate or reveal the information about blinded
 /// transaction outpoint
-#[derive(
-    Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display, Default
-)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
 #[derive(StrictEncode, StrictDecode)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate")
 )]
-#[display("{txid}:{vout}#{blinding:#x}")]
+#[display("{method}:{txid}:{vout}#{blinding:#x}")]
 pub struct OutpointReveal {
-    /// Blinding factor preventing rainbow table bruteforce attack based on
-    /// the existing blockchain txid set
-    pub blinding: u64,
+    pub method: TxoutMethod,
 
     /// Txid that should be blinded
     pub txid: Txid,
 
     /// Tx output number that should be blinded
     pub vout: u32,
+
+    /// Blinding factor preventing rainbow table bruteforce attack based on
+    /// the existing blockchain txid set
+    pub blinding: u64,
 }
 
 impl From<OutpointReveal> for OutPoint {
@@ -56,6 +58,7 @@ impl From<OutpointReveal> for OutPoint {
 impl From<OutPoint> for OutpointReveal {
     fn from(outpoint: OutPoint) -> Self {
         Self {
+            method: TxoutMethod::TapretFirst,
             blinding: thread_rng().next_u64(),
             txid: outpoint.txid,
             vout: outpoint.vout as u32,
@@ -88,11 +91,18 @@ impl OutpointReveal {
 #[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]
 #[display(doc_comments)]
 pub enum ParseError {
+    /// single-use-seal must start with method name (e.g. 'tapret1st' etc)
+    MethodRequired,
+
     /// full transaction id is required for the seal specification
     TxidRequired,
 
     /// blinding factor must be specified after `#`
     BlindingRequired,
+
+    #[display(inner)]
+    #[from]
+    WrongMethod(MethodParseError),
 
     /// unable to parse blinding value; it must be a hexadecimal string
     /// starting with `0x`
@@ -123,18 +133,28 @@ impl FromStr for OutpointReveal {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut split = s.split(&[':', '#'][..]);
-        match (split.next(), split.next(), split.next(), split.next()) {
-            (Some("_"), ..) | (Some(""), ..) => Err(ParseError::TxidRequired),
+        match (
+            split.next(),
+            split.next(),
+            split.next(),
+            split.next(),
+            split.next(),
+        ) {
+            (Some("_"), ..) | (Some(""), ..) => Err(ParseError::MethodRequired),
+            (Some(_), Some("_"), ..) | (Some(_), Some(""), ..) => {
+                Err(ParseError::TxidRequired)
+            }
             (Some(_), Some(_), None, ..) if s.contains(':') => {
                 Err(ParseError::BlindingRequired)
             }
-            (Some(_), Some(_), Some(blinding), None)
+            (Some(_), Some(_), Some(_), Some(blinding), None)
                 if !blinding.starts_with("0x") =>
             {
                 Err(ParseError::NonHexBlinding)
             }
-            (Some(txid), Some(vout), Some(blinding), None) => {
+            (Some(method), Some(txid), Some(vout), Some(blinding), None) => {
                 Ok(OutpointReveal {
+                    method: method.parse()?,
                     blinding: u64::from_str_radix(
                         blinding.trim_start_matches("0x"),
                         16,
@@ -158,21 +178,18 @@ impl sha256t::Tag for OutpointHashTag {
 }
 
 impl lnpbp_bech32::Strategy for OutpointHashTag {
-    const HRP: &'static str = "utxob";
+    const HRP: &'static str = "txob";
     type Strategy = lnpbp_bech32::strategies::UsingStrictEncoding;
 }
 
-/// Blind version of transaction outpoint
+/// Blind version of transaction outpoint-based single-use-seal
 #[derive(
     Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default,
     Display, From
 )]
 #[wrapper(Debug, LowerHex, Index, IndexRange, IndexFrom, IndexTo, IndexFull)]
 #[display(OutpointHash::to_bech32_string)]
-pub struct OutpointHash(
-    // #[cfg_attr(feature = "serde", serde(with = "_OutpointTaggedHash"))]
-    sha256t::Hash<OutpointHashTag>,
-);
+pub struct OutpointHash(sha256t::Hash<OutpointHashTag>);
 
 #[cfg(feature = "serde")]
 impl serde::Serialize for OutpointHash {
@@ -198,7 +215,7 @@ impl<'de> serde::Deserialize<'de> for OutpointHash {
                 &self,
                 formatter: &mut std::fmt::Formatter,
             ) -> std::fmt::Result {
-                formatter.write_str("Bech32 string with `utxob` HRP")
+                formatter.write_str("Bech32 string with `txob` HRP")
             }
 
             fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
@@ -258,29 +275,24 @@ impl commit_encode::Strategy for OutpointHash {
 
 impl CommitVerify<OutpointReveal, Lnpbp6> for OutpointHash {
     fn commit(reveal: &OutpointReveal) -> Self {
-        let mut engine = sha256::Hash::engine();
-        // NB: We are using different serialization byte order comparing to
-        //     strict encode
-        engine.input(&reveal.blinding.to_be_bytes()[..]);
+        let mut engine = sha256t::Hash::<OutpointHashTag>::engine();
+        engine.input(&[reveal.method as u8]);
         engine.input(&reveal.txid[..]);
-        engine.input(&reveal.vout.to_be_bytes()[..]);
-
-        let inner = sha256d::Hash::from_engine(engine);
-        OutpointHash::from_hash(sha256t::Hash::<OutpointHashTag>::from_inner(
-            inner.into_inner(),
-        ))
+        engine.input(&reveal.vout.to_le_bytes()[..]);
+        engine.input(&reveal.blinding.to_le_bytes()[..]);
+        let inner = sha256t::Hash::<OutpointHashTag>::from_engine(engine);
+        OutpointHash::from_hash(inner)
     }
 }
 
 impl lnpbp_bech32::Strategy for OutpointHash {
-    const HRP: &'static str = "utxob";
+    const HRP: &'static str = "txob";
     type Strategy = lnpbp_bech32::strategies::UsingStrictEncoding;
 }
 
 #[cfg(test)]
 mod test {
     use bitcoin::hashes::hex::FromHex;
-    use bitcoin::hashes::sha256d;
     use bitcoin::hashes::sha256t::Tag;
 
     use super::*;
@@ -296,27 +308,33 @@ mod test {
     #[test]
     fn outpoint_hash_is_sha256d() {
         let reveal = OutpointReveal {
+            method: TxoutMethod::TapretFirst,
             blinding: 54683213134637,
             txid: Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839").unwrap(),
             vout: 2,
         };
         let outpoint_hash = reveal.outpoint_hash();
-        let mut engine = sha256::HashEngine::default();
-        engine.input(&reveal.blinding.to_be_bytes()[..]);
+        let mut engine = sha256t::Hash::<OutpointHashTag>::engine();
+        engine.input(&[reveal.method as u8]);
         engine.input(&reveal.txid[..]);
-        engine.input(&reveal.vout.to_be_bytes()[..]);
-        assert_eq!(**outpoint_hash, *sha256d::Hash::from_engine(engine))
+        engine.input(&reveal.vout.to_le_bytes()[..]);
+        engine.input(&reveal.blinding.to_le_bytes()[..]);
+        assert_eq!(
+            **outpoint_hash,
+            *sha256t::Hash::<OutpointHashTag>::from_engine(engine)
+        )
     }
 
     #[test]
     fn outpoint_hash_bech32() {
         let outpoint_hash = OutpointReveal {
+            method: TxoutMethod::TapretFirst,
             blinding: 54683213134637,
             txid: Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839").unwrap(),
             vout: 2,
         }.outpoint_hash();
         let bech32 =
-            "utxob1ahrfaknwtv28c4yyhat5d9uel045ph797kxauj63p2gzykta9lksr02u75";
+            "txob1w7f9tkxz4058e2xfahyj278lrktq0afja2zst25emzvf5nnff7ys83nt8y";
         assert_eq!(bech32, outpoint_hash.to_string());
         assert_eq!(outpoint_hash.to_string(), outpoint_hash.to_bech32_string());
         let reconstructed = OutpointHash::from_str(bech32).unwrap();
@@ -326,6 +344,7 @@ mod test {
     #[test]
     fn outpoint_reveal_str() {
         let outpoint_reveal = OutpointReveal {
+            method: TxoutMethod::TapretFirst,
             blinding: 54683213134637,
             txid: Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839").unwrap(),
             vout: 21,
@@ -334,73 +353,82 @@ mod test {
         let s = outpoint_reveal.to_string();
         assert_eq!(
             &s,
-            "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:\
+            "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:\
              21#0x31bbed7e7b2d"
         );
 
         // round-trip
         assert_eq!(OutpointReveal::from_str(&s).unwrap(), outpoint_reveal);
 
+        // wrong method
+        assert_eq!(OutpointReveal::from_str(
+            "tapret:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:0x765#0x78ca95"
+        ), Err(ParseError::WrongMethod(MethodParseError(s!("tapret")))));
+
         // wrong vout value
         assert_eq!(OutpointReveal::from_str(
-            "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:0x765#0x78ca95"
+            "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:0x765#0x78ca95"
         ), Err(ParseError::WrongVout));
         assert_eq!(OutpointReveal::from_str(
-            "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:i9#0x78ca95"
+            "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:i9#0x78ca95"
         ), Err(ParseError::WrongVout));
         assert_eq!(OutpointReveal::from_str(
-            "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:-5#0x78ca95"
+            "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:-5#0x78ca95"
         ), Err(ParseError::WrongVout));
 
         // wrong blinding secret value
         assert_eq!(OutpointReveal::from_str(
-            "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#0x78cs"
+            "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#0x78cs"
         ), Err(ParseError::WrongBlinding));
         assert_eq!(OutpointReveal::from_str(
-            "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#78ca95"
+            "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#78ca95"
         ), Err(ParseError::NonHexBlinding));
         assert_eq!(OutpointReveal::from_str(
-            "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#857"
+            "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#857"
         ), Err(ParseError::NonHexBlinding));
         assert_eq!(OutpointReveal::from_str(
-            "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#-5"
+            "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#-5"
         ), Err(ParseError::NonHexBlinding));
 
         // wrong txid value
         assert_eq!(OutpointReveal::from_str(
-            "646ca5c1062619e2a2d607719dfd820551fb773e4dc8c4ed67965a8d1fae839:5#0x78ca69"
+            "tapret1st:646ca5c1062619e2a2d607719dfd820551fb773e4dc8c4ed67965a8d1fae839:5#0x78ca69"
         ), Err(ParseError::WrongTxid));
         assert_eq!(
-            OutpointReveal::from_str("rvgbdg:5#0x78ca69"),
+            OutpointReveal::from_str("tapret1st:rvgbdg:5#0x78ca69"),
             Err(ParseError::WrongTxid)
         );
         assert_eq!(OutpointReveal::from_str(
-            "10@646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#0x78ca69"
+            "tapret1st:10@646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#0x78ca69"
         ), Err(ParseError::WrongTxid));
 
         // wrong structure
         assert_eq!(OutpointReveal::from_str(
-            "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:1"
+            "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:1"
+        ), Err(ParseError::WrongStructure));
+        assert_eq!(OutpointReveal::from_str(
+            "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839#0x78ca"
+        ), Err(ParseError::WrongStructure));
+        assert_eq!(OutpointReveal::from_str(
+            "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839"
         ), Err(ParseError::BlindingRequired));
         assert_eq!(OutpointReveal::from_str(
-            "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839#0x78ca"
-        ), Err(ParseError::WrongStructure));
-        assert_eq!(OutpointReveal::from_str(
-            "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839"
-        ), Err(ParseError::WrongStructure));
-        assert_eq!(OutpointReveal::from_str(
-            "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839##0x78ca"
+            "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839##0x78ca"
         ), Err(ParseError::WrongVout));
         assert_eq!(OutpointReveal::from_str(
-            "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:#0x78ca95"
+            "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:#0x78ca95"
         ), Err(ParseError::WrongVout));
         assert_eq!(
-            OutpointReveal::from_str("_:5#0x78ca"),
+            OutpointReveal::from_str("tapret1st:_:5#0x78ca"),
             Err(ParseError::TxidRequired)
         );
         assert_eq!(
             OutpointReveal::from_str(":5#0x78ca"),
-            Err(ParseError::TxidRequired)
+            Err(ParseError::MethodRequired)
+        );
+        assert_eq!(
+            OutpointReveal::from_str("_:5#0x78ca"),
+            Err(ParseError::MethodRequired)
         );
     }
 }
