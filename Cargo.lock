@@ -503,9 +503,9 @@ checksum = "7fb9b38af92608140b86b693604b9ffcc5824240a484d1ecd4795bacb2fe88f3"
 
 [[package]]
 name = "lnpbp_bech32"
-version = "0.7.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d4da7044659fa9c1c86335dda27686d1bc21f65517b264529cffb8bae1a0c7dc"
+checksum = "df3dd0d4d712b845b2981058cffb359202464a6f127dd78fa24951e1df882551"
 dependencies = [
  "amplify",
  "bech32",
