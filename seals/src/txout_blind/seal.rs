@@ -197,7 +197,11 @@ impl serde::Serialize for OutpointHash {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_str(&self.to_bech32_string())
+        if serializer.is_human_readable() {
+            serializer.serialize_str(&self.to_bech32_string())
+        } else {
+            serializer.serialize_bytes(&self[..])
+        }
     }
 }
 
@@ -207,8 +211,8 @@ impl<'de> serde::Deserialize<'de> for OutpointHash {
     where
         D: serde::Deserializer<'de>,
     {
-        struct StrVisitor;
-        impl serde::de::Visitor<'_> for StrVisitor {
+        struct Visitor;
+        impl serde::de::Visitor<'_> for Visitor {
             type Value = OutpointHash;
 
             fn expecting(
@@ -224,38 +228,31 @@ impl<'de> serde::Deserialize<'de> for OutpointHash {
             {
                 OutpointHash::from_str(v).map_err(serde::de::Error::custom)
             }
-        }
-        deserializer.deserialize_str(StrVisitor)
-    }
-}
 
-/*
-// This terrible code is a workaround for rust foreign trait limitations.
-// We need serde to use Bech32 serialization, but `with` can be defined only
-// for the fields, not container. And the field is a foreign `hash256t` type...
-// Thus, it can't have Bech32 traits implemented on it and always serializes as
-// hex string. To avoid it, we need to re-implement serde for `hash256t` as
-// remote type and make it serialize through newtype implementing serde in a
-// correct way.
-#[cfg(feature = "serde")]
-#[derive(Serialize, Deserialize)]
-#[serde(crate = "serde_crate", remote = "sha256t::Hash::<OutpointHashTag>")]
-struct _OutpointTaggedHash(
-    #[serde(getter = "sha256t::Hash::as_inner")] pub [u8; 32],
-);
-#[cfg(feature = "serde")]
-impl From<sha256t::Hash<OutpointHashTag>> for _OutpointTaggedHash {
-    #[inline]
-    fn from(hash: sha256t::Hash<OutpointHashTag>) -> Self {
-        Self(hash.into_inner())
+            fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                self.visit_str(&v)
+            }
+
+            fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                OutpointHash::from_slice(&v).map_err(|_| {
+                    serde::de::Error::invalid_length(v.len(), &"32 bytes")
+                })
+            }
+        }
+
+        if deserializer.is_human_readable() {
+            deserializer.deserialize_str(Visitor)
+        } else {
+            deserializer.deserialize_byte_buf(Visitor)
+        }
     }
 }
-#[cfg(feature = "serde")]
-impl From<_OutpointTaggedHash> for sha256t::Hash<OutpointHashTag> {
-    #[inline]
-    fn from(hash: _OutpointTaggedHash) -> Self { Self::from_inner(hash.0) }
-}
- */
 
 impl FromStr for OutpointHash {
     type Err = ParseError;
