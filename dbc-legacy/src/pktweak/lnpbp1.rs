@@ -1,5 +1,5 @@
-// BP Core Library implementing LNP/BP specifications & standards related to
-// bitcoin protocol
+// Deterministic bitcoin commitments library, implementing LNPBP standards
+// Part of bitcoin protocol core library (BP Core Lib)
 //
 // Written in 2020-2022 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
@@ -13,10 +13,14 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
+//! # LNPBP-1
+//!
+//! Module for Secp256k1 elliptic curve based collision-resistant commitments,
+//! implementing [LNPBP-1](https://github.com/LNP-BP/lnpbps/blob/master/lnpbp-0001.md)
+
 use std::collections::BTreeSet;
 
 use bitcoin::hashes::{sha256, Hash, HashEngine, Hmac, HmacEngine};
-use bitcoin::secp256k1;
 
 /// Single SHA256 hash of "LNPBP1" string according to LNPBP-1 acting as a
 /// prefix to the message in computing tweaking factor

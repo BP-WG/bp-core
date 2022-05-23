@@ -1,5 +1,5 @@
-// BP Core Library implementing LNP/BP specifications & standards related to
-// bitcoin protocol
+// Deterministic bitcoin commitments library, implementing LNPBP standards
+// Part of bitcoin protocol core library (BP Core Lib)
 //
 // Written in 2020-2022 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
@@ -15,35 +15,74 @@
 
 // Coding conventions
 #![recursion_limit = "256"]
-#![deny(dead_code, /* missing_docs, */ warnings)]
+#![deny(dead_code, missing_docs, warnings)]
+
+//! Deterministic bitcoin commitments library.
+//!
+//! Deterministic bitcoin commitments are part of the client-side-validation.
+//! They allow to embed commitment to extra-transaction data into a bitcoin
+//! transaction in a provable way, such that it can always be proven that a
+//! given transaction contains one and only one commitment of a specific type
+//! for a given commitment protocol.
 
 #[macro_use]
 extern crate amplify;
+#[cfg(feature = "miniscript")]
+extern crate miniscript_crate as miniscript;
+#[cfg(feature = "serde")]
+//#[macro_use]
+extern crate serde_crate as serde;
 #[macro_use]
 extern crate strict_encoding;
-#[cfg(feature = "serde")]
-#[macro_use]
-extern crate serde_crate as serde;
 
-mod error;
-pub mod keyset;
-pub mod lnpbp1;
-pub mod lockscript;
-pub mod pubkey;
-pub mod spk;
-pub mod taproot;
-pub mod tx;
-pub mod txout;
-pub mod types;
+pub mod keytweak;
+pub mod opret;
+pub mod sigtweak;
+pub mod tapret;
 
-pub use error::Error;
-pub use keyset::{KeysetCommitment, KeysetContainer};
-pub use lockscript::{LockscriptCommitment, LockscriptContainer};
-pub use pubkey::{PubkeyCommitment, PubkeyContainer};
-pub use spk::{
-    ScriptEncodeData, ScriptEncodeMethod, SpkCommitment, SpkContainer,
-};
-pub use taproot::{TaprootCommitment, TaprootContainer};
-pub use tx::{TxCommitment, TxContainer, TxSupplement};
-pub use txout::{TxoutCommitment, TxoutContainer};
-pub use types::{Container, Proof};
+mod _temp {
+    #![allow(missing_docs, dead_code)]
+
+    use amplify::Slice32;
+    use bitcoin::schnorr::UntweakedPublicKey;
+    use bitcoin::secp256k1::Parity;
+    use bitcoin::util::taproot::TaprootMerkleBranch;
+    use strict_encoding::{StrictDecode, StrictEncode};
+
+    pub trait CommitmentProof: StrictEncode + StrictDecode {}
+
+    pub enum TxoutCommitmentProof {
+        OpReturn,
+        TapRet(TapRetProof),
+        P2cPubkey(P2cPubkeyProof),
+        P2cScript(P2cScriptProof),
+    }
+
+    pub struct TapRetProof {
+        /// Parity of the output taproot key
+        pub output_parity: Parity,
+
+        /// Internal taproot key
+        pub internal_key: UntweakedPublicKey,
+
+        /// Merkle path in the script key to the last leaf containing
+        /// `OP_RETURN` commitment
+        pub merkle_path: TaprootMerkleBranch,
+    }
+
+    pub struct P2cPubkeyProof {
+        pub original_pubkey: bitcoin::PublicKey,
+    }
+
+    pub struct P2cScriptProof {
+        pub original_pubkey_sum: secp256k1::PublicKey,
+    }
+
+    pub struct ProvableCommitment<Proof>
+    where
+        Proof: CommitmentProof,
+    {
+        commitment: Slice32,
+        proof: Proof,
+    }
+}

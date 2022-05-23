@@ -26,17 +26,12 @@ pub enum Error {
     MediumAccessError,
 
     /// Error in commitment: {0}
-    CommitmentError(dbc::Error),
+    #[from]
+    CommitmentError(dbc::tapret::TapretError),
 
     /// Error from transaction resolver
     ResolverError,
 
     /// Resolver probably lies and can't be trusted
     ResolverLying,
-}
-
-impl From<dbc::Error> for Error {
-    fn from(err: dbc::Error) -> Self {
-        Self::CommitmentError(err)
-    }
 }

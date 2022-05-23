@@ -1,5 +1,5 @@
-// BP Core Library implementing LNP/BP specifications & standards related to
-// bitcoin protocol
+// Deterministic bitcoin commitments library, implementing LNPBP standards
+// Part of bitcoin protocol core library (BP Core Lib)
 //
 // Written in 2020-2022 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
@@ -13,27 +13,11 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-//! # LNPBP-1
-//!
-//! Module for Secp256k1 elliptic curve based collision-resistant commitments,
-//! implementing [LNPBP-1](https://github.com/LNP-BP/lnpbps/blob/master/lnpbp-0001.md)
-//!
-//! The work proposes a standard for cryptographic commitments based on elliptic
-//! curve properties, that can be embedded into Bitcoin transaction without
-//! additional storage footprint. This commitments are private: the can be
-//! detected and  revealed only to the parties sharing some secret (original
-//! value of the public key).
-//!
-//! NB: The library works with `secp256k1::PublicKey` and `secp256k1::SecretKey`
-//! keys, not their wrapped bitcoin counterparts `bitcoin::PublickKey` and
-//! `bitcoin::PrivateKey`.
-
 use bitcoin::hashes::{sha256, Hmac};
-use bitcoin::secp256k1;
 use commit_verify::EmbedCommitVerify;
 
-use super::{Container, Error, Proof};
-use crate::lnpbp1;
+use super::lnpbp1;
+use crate::{Container, Error, Proof};
 
 /// Container for LNPBP-1 commitments. In order to be constructed, commitment
 /// requires an original public key and a protocol-specific tag, which
@@ -51,7 +35,7 @@ pub struct PubkeyContainer {
 }
 
 impl Container for PubkeyContainer {
-    /// Out supplement is a protocol-specific tag in its hashed form
+    /// Our supplement is a protocol-specific tag in its hashed form
     type Supplement = sha256::Hash;
     /// Our proof contains the host, so we don't need host here
     type Host = Option<()>;
@@ -62,7 +46,7 @@ impl Container for PubkeyContainer {
         _: &Self::Host,
     ) -> Result<Self, Error> {
         Ok(Self {
-            pubkey: proof.pubkey,
+            pubkey: proof.public_key()?,
             tag: *supplement,
             tweaking_factor: None,
         })
@@ -130,10 +114,9 @@ mod test {
     use amplify::hex::ToHex;
     use amplify::Wrapper;
     use bitcoin::hashes::{sha256, Hash};
-    use bitcoin::secp256k1;
 
+    use super::lnpbp1::test_helpers::*;
     use super::*;
-    use crate::lnpbp1::test_helpers::*;
 
     #[test]
     fn test_pubkey_commitment() {

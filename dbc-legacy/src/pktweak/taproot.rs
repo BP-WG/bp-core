@@ -1,5 +1,5 @@
-// BP Core Library implementing LNP/BP specifications & standards related to
-// bitcoin protocol
+// Deterministic bitcoin commitments library, implementing LNPBP standards
+// Part of bitcoin protocol core library (BP Core Lib)
 //
 // Written in 2020-2022 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
@@ -13,19 +13,18 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
+use amplify::Wrapper;
 use bitcoin::hashes::{sha256, Hmac};
-use bitcoin::secp256k1;
+use bitcoin::{secp256k1, XOnlyPublicKey};
 use commit_verify::EmbedCommitVerify;
 
-use super::{
-    Container, Error, Proof, PubkeyCommitment, PubkeyContainer,
-    ScriptEncodeData,
-};
+use super::{PubkeyCommitment, PubkeyContainer};
+use crate::{Container, Error, Proof};
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct TaprootContainer {
     pub script_root: sha256::Hash,
-    pub intermediate_key: secp256k1::PublicKey,
+    pub intermediate_key: XOnlyPublicKey,
     /// Single SHA256 hash of the protocol-specific tag
     pub tag: sha256::Hash,
     /// Tweaking factor stored after [`TaprootCommitment::embed_commit`]
@@ -44,40 +43,38 @@ impl Container for TaprootContainer {
         supplement: &Self::Supplement,
         _: &Self::Host,
     ) -> Result<Self, Error> {
-        if let ScriptEncodeData::Taproot(ref tapscript_root) = proof.source {
-            Ok(Self {
-                script_root: *tapscript_root,
-                intermediate_key: proof.pubkey,
+        match proof {
+            Proof::XOnlyKeyTaproot {
+                internal_key,
+                merkle_subroot,
+            } => Ok(Self {
+                script_root: *merkle_subroot,
+                intermediate_key: XOnlyPublicKey::from_slice(
+                    internal_key.as_inner(),
+                )
+                .map_err(|_| Error::InvalidProofStructure)?,
                 tag: *supplement,
                 tweaking_factor: None,
-            })
-        } else {
-            Err(Error::InvalidProofStructure)
+            }),
+            _ => Err(Error::InvalidProofStructure),
         }
     }
 
     fn deconstruct(self) -> (Proof, Self::Supplement) {
-        (
-            Proof {
-                pubkey: self.intermediate_key,
-                source: ScriptEncodeData::Taproot(self.script_root),
-            },
-            self.tag,
-        )
+        (self.to_proof(), self.tag)
     }
 
+    #[inline]
     fn to_proof(&self) -> Proof {
-        Proof {
-            pubkey: self.intermediate_key,
-            source: ScriptEncodeData::Taproot(self.script_root),
+        Proof::XOnlyKeyTaproot {
+            internal_key: self.intermediate_key.serialize().into(),
+            merkle_subroot: self.script_root,
         }
     }
 
+    #[inline]
     fn into_proof(self) -> Proof {
-        Proof {
-            pubkey: self.intermediate_key,
-            source: ScriptEncodeData::Taproot(self.script_root),
-        }
+        self.to_proof()
     }
 }
 
@@ -98,8 +95,14 @@ where
         container: &mut Self::Container,
         msg: &MSG,
     ) -> Result<Self, Self::Error> {
+        let mut data: Vec<u8> = vec![0x02];
+        data.extend(container.intermediate_key.serialize().iter());
+        let pubkey = secp256k1::PublicKey::from_slice(&data).expect(
+            "Failed to construct 33 Publickey from 0x02 appended x-only key",
+        );
+
         let mut pubkey_container = PubkeyContainer {
-            pubkey: container.intermediate_key,
+            pubkey,
             tag: container.tag,
             tweaking_factor: None,
         };

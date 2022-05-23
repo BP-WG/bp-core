@@ -1,5 +1,5 @@
-// BP Core Library implementing LNP/BP specifications & standards related to
-// bitcoin protocol
+// Deterministic bitcoin commitments library, implementing LNPBP standards
+// Part of bitcoin protocol core library (BP Core Lib)
 //
 // Written in 2020-2022 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
@@ -13,7 +13,17 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use crate::lnpbp1;
+#[cfg(feature = "miniscript")]
+use miniscript::policy::compiler::CompilerError;
+
+use crate::spk::lnpbp1;
+
+#[cfg(not(feature = "miniscript"))]
+#[derive(
+    Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display, Error
+)]
+#[display(Debug)]
+pub enum CompilerError {}
 
 /// Different error types which may happen during deterministic bitcoin
 /// commitment generation procedures
@@ -41,7 +51,10 @@ pub enum Error {
 
     /// Miniscript was unable to parse provided script data; they are either
     /// invalid or miniscript library contains a bug
-    #[from(bitcoin_scripts::PubkeyParseError)]
+    #[cfg_attr(
+        feature = "miniscript",
+        from(bitcoin_scripts::PubkeyParseError)
+    )]
     LockscriptParseError,
 
     /// Provided script contains no keys, so commitment or its verification is
@@ -61,7 +74,7 @@ pub enum Error {
     /// Policy compilation error
     #[from]
     #[display(inner)]
-    PolicyCompilation(miniscript::policy::compiler::CompilerError),
+    PolicyCompilation(CompilerError),
 
     /// Deterministic bitcoin commitments require use of compressed public keys
     UncompressedKey,
@@ -74,17 +87,24 @@ impl From<descriptors::Error> for Error {
             descriptors::Error::UnsupportedWitnessVersion => {
                 Error::UnsupportedWitnessVersion
             }
+            #[cfg(feature = "miniscript")]
             descriptors::Error::PolicyCompilation(err) => {
                 Error::PolicyCompilation(err)
             }
+            #[cfg(not(feature = "miniscript"))]
+            descriptors::Error::PolicyCompilation(_) => unreachable!(
+                "policy compilation error when miniscript is disabled",
+            ),
             descriptors::Error::UncompressedKeyInSegWitContext => {
                 Error::UncompressedKey
             }
             // Since we never parse strings, this error must not happen
-            descriptors::Error::CantParseDescriptor => unreachable!(),
+            descriptors::Error::CantParseDescriptor => {
+                unreachable!("miniscript parses string representation")
+            }
             // If other errors appear this must crash so we know about that the
             // new implementation is required
-            _ => unimplemented!(),
+            _ => unimplemented!("not all of descriptor errors is supported"),
         }
     }
 }

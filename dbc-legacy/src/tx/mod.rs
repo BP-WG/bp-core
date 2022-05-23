@@ -1,5 +1,5 @@
-// BP Core Library implementing LNP/BP specifications & standards related to
-// bitcoin protocol
+// Deterministic bitcoin commitments library, implementing LNPBP standards
+// Part of bitcoin protocol core library (BP Core Lib)
 //
 // Written in 2020-2022 by
 //     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
@@ -13,9 +13,8 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use dbc::{Proof, TxCommitment};
-
-pub struct Witness(pub InnerWitness, pub OuterWitness);
-
-pub type InnerWitness = TxCommitment;
-pub type OuterWitness = Proof;
+// `feeproto` requires support for tweaking arbitrary txout output; which
+// implies requirement for miniscript-based script parsing for collecting
+// all script keys from P2(W)SH outputs
+#[cfg(feature = "miniscript")]
+pub mod feeproto;
