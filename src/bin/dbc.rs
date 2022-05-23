@@ -100,7 +100,7 @@ impl Args {
         psbt_path: &Path,
         output_no: u16,
         commitment: Slice32,
-        proprietary_keys: &Vec<ProprietaryKeyDescriptor>,
+        proprietary_keys: &[ProprietaryKeyDescriptor],
     ) -> Result<(), Error> {
         let file = fs::File::open(psbt_path)?;
         let mut psbt = Psbt::strict_decode(&file)?;
