@@ -83,9 +83,7 @@ use std::io::Read;
 
 use bitcoin::hashes::sha256::Midstate;
 use bitcoin::schnorr::UntweakedPublicKey;
-use bitcoin::util::taproot::{
-    TapBranchHash, TaprootMerkleBranch, TAPROOT_CONTROL_MAX_NODE_COUNT,
-};
+use bitcoin::util::taproot::{TapBranchHash, TaprootMerkleBranch};
 use bitcoin_scripts::{IntoNodeHash, LeafScript, TapNodeHash};
 use commit_verify::CommitmentProtocol;
 use strict_encoding::{self, StrictDecode};
@@ -103,9 +101,9 @@ pub enum TapretPathError {
     /// length limit.
     MaxDepthExceeded,
 
-    /// the node partner {1} at the level {0} can't be proven not to contain an
+    /// the node partner {0} at the level 1 can't be proven not to contain an
     /// alternative tapret commitment.
-    InvalidNodePartner(u8, TapretNodePartner),
+    InvalidNodePartner(TapretNodePartner),
 }
 
 /// Rigt-side hashing partner in the taproot script tree, used by
@@ -249,10 +247,10 @@ impl TapretNodePartner {
 /// For each node holds information about the sibling in form of
 /// [`TapretNodePartner`].
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
-pub struct TapretPathProof(Vec<TapretNodePartner>);
+pub struct TapretPathProof(Option<TapretNodePartner>);
 
 impl Deref for TapretPathProof {
-    type Target = Vec<TapretNodePartner>;
+    type Target = Option<TapretNodePartner>;
 
     #[inline]
     fn deref(&self) -> &Self::Target { &self.0 }
@@ -264,27 +262,24 @@ impl TapretPathProof {
     pub fn new() -> TapretPathProof { TapretPathProof::default() }
 
     /// Adds element to the path proof.
-    pub fn push(
-        &mut self,
+    pub fn with(
         elem: TapretNodePartner,
-    ) -> Result<u8, TapretPathError> {
-        if self.len() > TAPROOT_CONTROL_MAX_NODE_COUNT {
-            return Err(TapretPathError::MaxDepthExceeded);
-        }
+    ) -> Result<TapretPathProof, TapretPathError> {
         if !elem.check() {
-            return Err(TapretPathError::InvalidNodePartner(
-                self.len() as u8,
-                elem,
-            ));
+            return Err(TapretPathError::InvalidNodePartner(elem));
         }
-        self.0.push(elem);
-        Ok(self.0.len() as u8)
+        Ok(TapretPathProof(Some(elem)))
     }
 
     /// Checks that the sibling data does not contain another tapret commitment
     /// for any step of the mekrle path.
     #[inline]
-    pub fn check(&self) -> bool { self.0.iter().all(TapretNodePartner::check) }
+    pub fn check(&self) -> bool {
+        self.0
+            .as_ref()
+            .map(TapretNodePartner::check)
+            .unwrap_or(true)
+    }
 }
 
 /*

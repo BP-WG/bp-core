@@ -89,13 +89,8 @@ impl EmbedCommitProof<MultiCommitment, psbt::Output, Lnpbp6> for TapretProof {
                 .map_err(PsbtVerifyError::from);
         }
 
-        let dfs_path = original_container
-            .tapret_dfs_path()
-            .ok_or(PsbtCommitError::TapretPathMissed)??;
-
         let tap_tree = original_container.tap_tree.map(TaprootScriptTree::from);
-        let source =
-            TapretSourceInfo::<TaprootScriptTree>::with(tap_tree, dfs_path)?;
+        let source = TapretSourceInfo::<TaprootScriptTree>::with(tap_tree)?;
         let source = self.path_proof.restore_original_container(&source)?;
 
         let merkle_root = source
@@ -127,12 +122,8 @@ impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for psbt::Output {
             return Err(PsbtCommitError::InternalKeyMissed);
         };
 
-        let dfs_path = self
-            .tapret_dfs_path()
-            .ok_or(PsbtCommitError::TapretPathMissed)??;
-
         let mut source =
-            TapretSourceInfo::<TapTree>::with(self.tap_tree.clone(), dfs_path)?;
+            TapretSourceInfo::<TapTree>::with(self.tap_tree.clone())?;
 
         let path_proof = source.embed_commit(msg)?;
 

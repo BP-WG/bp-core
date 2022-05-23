@@ -21,10 +21,11 @@ use core::hash::Hash;
 use bitcoin::psbt::{IncompleteTapTree, TapTree};
 use bitcoin::util::taproot::TaprootBuilderError;
 use bitcoin_scripts::taproot::{
-    Branch, CutError, DfsOrder, DfsOrdering, DfsPath, DfsTraversalError,
+    self, Branch, CutError, DfsOrder, DfsOrdering, DfsPath, DfsTraversalError,
     InstillError, MaxDepthExceeded, Node, TaprootScriptTree, TreeNode,
+    UnsplittableTree,
 };
-use bitcoin_scripts::{taproot, LeafScript, TapNodeHash, TapScript};
+use bitcoin_scripts::{LeafScript, TapNodeHash, TapScript};
 use commit_verify::multi_commit::MultiCommitment;
 use commit_verify::{CommitVerify, EmbedCommitProof, EmbedCommitVerify};
 
@@ -74,6 +75,7 @@ pub enum TapretProofError {
     EmptyTree,
 
     /// the provided tapret proof consists of a single node
+    #[from(UnsplittableTree)]
     UnsplittableTree,
 
     /// Errors in the taproot script tree and tapret path proof
@@ -93,16 +95,19 @@ impl From<taproot::CutError> for TapretProofError {
 }
 
 /// Errors during taproot script tree tapret commitment ebmedding.
-#[derive(Clone, PartialOrd, Ord, PartialEq, Eq, Hash, Debug, Display, Error)]
+#[derive(
+    Clone, PartialOrd, Ord, PartialEq, Eq, Hash, Debug, Display, Error, From
+)]
 #[display(doc_comments)]
 pub enum TapretSourceError {
     /// the length of the constructed tapret path proof exceeds taproot path
     /// length limit.
+    #[from(MaxDepthExceeded)]
     MaxDepthExceeded,
 
-    /// the node partner {1} at the level {0} can't be proven not to contain an
+    /// the node partner {0} at the level 1 can't be proven not to contain an
     /// alternative tapret commitment.
-    InvalidNodePartner(u8, TapretNodePartner),
+    InvalidNodePartner(TapretNodePartner),
 
     /// unable to produce tapret commitment since the commitment path {0} does
     /// not exist within the tree.
@@ -148,8 +153,8 @@ impl From<TapretPathError> for TapretSourceError {
     fn from(err: TapretPathError) -> Self {
         match err {
             TapretPathError::MaxDepthExceeded => Self::MaxDepthExceeded,
-            TapretPathError::InvalidNodePartner(depth, partner) => {
-                Self::InvalidNodePartner(depth, partner)
+            TapretPathError::InvalidNodePartner(partner) => {
+                Self::InvalidNodePartner(partner)
             }
         }
     }
@@ -161,16 +166,9 @@ impl From<TapretPathError> for TapretSourceError {
 ///
 /// The structure can be used with [`TapTree`] and [`TaprootScriptTree`].
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct TapretSourceInfo<Tree>
+pub struct TapretSourceInfo<Tree>(Option<Tree>)
 where
-    Tree: Clone + Eq + Debug,
-{
-    /// The concrete tree implementation.
-    tap_tree: Option<Tree>,
-
-    /// DFS path which should be used fot instilling tapret commitment.
-    dfs_path: DfsPath,
-}
+    Tree: Clone + Eq + Debug;
 
 impl TapretSourceInfo<TaprootScriptTree> {
     /// Validates that the provided path can be used for a tapret commitment
@@ -188,38 +186,19 @@ impl TapretSourceInfo<TaprootScriptTree> {
     /// - [`DfsPathError::LeafNode`], if the path points at a leaf node.
     pub fn with(
         tap_tree: Option<TaprootScriptTree>,
-        dfs_path: DfsPath,
     ) -> Result<Self, TapretSourceError> {
-        if let Some(ref tap_tree) = tap_tree {
-            match tap_tree.node_at(&dfs_path)? {
-                TreeNode::Hidden(hash, _) => {
-                    return Err(TapretSourceError::HiddenNode(*hash, dfs_path))
-                }
-                TreeNode::Leaf(leaf_script, _) => {
-                    return Err(TapretSourceError::LeafNode(
-                        leaf_script.clone(),
-                        dfs_path,
-                    ))
-                }
-                TreeNode::Branch(_, _) => {}
-            }
-        } else if !dfs_path.is_empty() {
-            return Err(TapretSourceError::PathNotExists(dfs_path));
-        }
-        Ok(TapretSourceInfo { tap_tree, dfs_path })
+        Ok(TapretSourceInfo(tap_tree))
     }
 
     /// Returns reference to the script tree root node, if taproot script tree
     /// is present in the source data.
     pub fn as_root_node(&self) -> Option<&TreeNode> {
-        self.tap_tree.as_ref().map(TaprootScriptTree::as_root_node)
+        self.0.as_ref().map(TaprootScriptTree::as_root_node)
     }
 
     /// Releases internal [`TapTree`] data, if present.
     #[inline]
-    pub fn into_tap_tree(self) -> Option<TapTree> {
-        self.tap_tree.map(TapTree::from)
-    }
+    pub fn into_tap_tree(self) -> Option<TapTree> { self.0.map(TapTree::from) }
 }
 
 impl TapretSourceInfo<TapTree> {
@@ -236,43 +215,29 @@ impl TapretSourceInfo<TapTree> {
     ///   of the tree;
     /// - [`DfsPathError::LeafNode`], if the path points at a leaf node.
     #[inline]
-    pub fn with(
-        tap_tree: Option<TapTree>,
-        dfs_path: DfsPath,
-    ) -> Result<Self, TapretSourceError> {
+    pub fn with(tap_tree: Option<TapTree>) -> Result<Self, TapretSourceError> {
         TapretSourceInfo::<TaprootScriptTree>::with(
             tap_tree.map(TaprootScriptTree::from),
-            dfs_path,
         )
         .map(TapretSourceInfo::from)
     }
 
     /// Releases internal [`TapTree`] data, if present.
     #[inline]
-    pub fn into_tap_tree(self) -> Option<TapTree> { self.tap_tree }
+    pub fn into_tap_tree(self) -> Option<TapTree> { self.0 }
 }
 
 impl From<&TapretSourceInfo<TapTree>> for TapretSourceInfo<TaprootScriptTree> {
     fn from(source: &TapretSourceInfo<TapTree>) -> Self {
-        let tap_tree = source
-            .tap_tree
-            .as_ref()
-            .cloned()
-            .map(TaprootScriptTree::from);
-        TapretSourceInfo {
-            tap_tree,
-            dfs_path: source.dfs_path.clone(),
-        }
+        let tap_tree = source.0.as_ref().cloned().map(TaprootScriptTree::from);
+        TapretSourceInfo(tap_tree)
     }
 }
 
 impl From<TapretSourceInfo<TaprootScriptTree>> for TapretSourceInfo<TapTree> {
     fn from(source: TapretSourceInfo<TaprootScriptTree>) -> Self {
-        let tap_tree = source.tap_tree.map(TapTree::from);
-        TapretSourceInfo {
-            tap_tree,
-            dfs_path: source.dfs_path,
-        }
+        let tap_tree = source.0.map(TapTree::from);
+        TapretSourceInfo(tap_tree)
     }
 }
 
@@ -288,24 +253,20 @@ impl
         modified_tree: &TapretSourceInfo<TaprootScriptTree>,
     ) -> Result<TapretSourceInfo<TaprootScriptTree>, TapretProofError> {
         let tap_tree = modified_tree
-            .tap_tree
+            .0
             .as_ref()
             .cloned()
             .ok_or(TapretProofError::EmptyTree)?;
-        let mut dfs_path = modified_tree.dfs_path.clone();
-        // Taproot has key-only spending
-        if dfs_path.pop().is_none() {
-            return Ok(TapretSourceInfo {
-                tap_tree: None,
-                dfs_path,
-            });
+
+        match self.0 {
+            // Taproot has key-only spending
+            None => Ok(TapretSourceInfo(None)),
+            // Taproot has script spendings
+            Some(_) => {
+                let (original_tree, _) = tap_tree.split()?;
+                Ok(TapretSourceInfo(Some(original_tree)))
+            }
         }
-        // Taproot has script spendings
-        let (_, original_tree) = tap_tree.cut(&dfs_path, DfsOrder::Last)?;
-        Ok(TapretSourceInfo {
-            tap_tree: Some(original_tree),
-            dfs_path,
-        })
     }
 }
 
@@ -321,67 +282,48 @@ impl EmbedCommitVerify<MultiCommitment, Lnpbp6>
         msg: &MultiCommitment,
     ) -> Result<Self::Proof, Self::CommitError> {
         let commitment_script = TapScript::commit(msg);
-        let commitment_node =
-            taproot::TreeNode::with_tap_script(commitment_script, 0);
+        let commitment_node = TreeNode::with_tap_script(commitment_script, 0);
         let commitment_subtree = TaprootScriptTree::with(commitment_node)
             .expect("invalid commitment node construction");
 
-        let tap_tree = if let Some(ref mut tap_tree) = self.tap_tree {
+        let tap_tree = if let Some(ref mut tap_tree) = self.0 {
             tap_tree
         } else {
-            self.tap_tree = Some(commitment_subtree);
+            self.0 = Some(commitment_subtree);
             return Ok(TapretPathProof::new());
         };
 
-        let commitment_path = tap_tree.instill(
-            commitment_subtree,
-            &self.dfs_path,
-            DfsOrder::Last,
-        )?;
-        tap_tree
-            .nodes_on_path(&commitment_path)
-            .enumerate()
-            .try_fold(
-                TapretPathProof::new(),
-                |mut path_proof, (index, node)| {
-                    let step = commitment_path[index];
-                    let branch = node
-                        .ok()
-                        .and_then(TreeNode::as_branch)
-                        .expect("instill algorithm is broken");
-                    let partner = branch.as_dfs_child_node(!step);
+        *tap_tree =
+            tap_tree.clone().join(commitment_subtree, DfsOrder::Last)?;
 
-                    let partner_is_left_node = {
-                        (branch.dfs_ordering() == DfsOrdering::LeftRight
-                            && step == DfsOrder::Last)
-                            || (branch.dfs_ordering() == DfsOrdering::RightLeft
-                                && step == DfsOrder::First)
-                    };
+        let branch = tap_tree
+            .as_root_node()
+            .as_branch()
+            .expect("instill algorithm is broken");
+        let partner = branch.as_dfs_child_node(DfsOrder::First);
 
-                    let partner_proof = match (partner_is_left_node, partner) {
-                        (true, node) => {
-                            TapretNodePartner::LeftNode(node.node_hash())
-                        }
-                        (false, TreeNode::Leaf(script, _)) => {
-                            TapretNodePartner::RightLeaf(script.clone())
-                        }
-                        (false, TreeNode::Hidden(partner_hash, _)) => {
-                            return Err(TapretSourceError::HiddenNode(
-                                *partner_hash,
-                                DfsPath::with(&commitment_path[..index]),
-                            ))
-                        }
-                        (false, TreeNode::Branch(partner_branch, _)) => {
-                            TapretNodePartner::right_branch(
-                                partner_branch.as_left_node().node_hash(),
-                                partner_branch.as_right_node().node_hash(),
-                            )
-                        }
-                    };
-                    path_proof.push(partner_proof)?;
-                    Ok(path_proof)
-                },
-            )
+        let partner_is_left_node =
+            branch.dfs_ordering() == DfsOrdering::LeftRight;
+
+        let partner_proof = match (partner_is_left_node, partner) {
+            (true, node) => TapretNodePartner::LeftNode(node.node_hash()),
+            (false, TreeNode::Leaf(script, _)) => {
+                TapretNodePartner::RightLeaf(script.clone())
+            }
+            (false, TreeNode::Hidden(partner_hash, _)) => {
+                return Err(TapretSourceError::HiddenNode(
+                    *partner_hash,
+                    vec![DfsOrder::First].into(),
+                ))
+            }
+            (false, TreeNode::Branch(partner_branch, _)) => {
+                TapretNodePartner::right_branch(
+                    partner_branch.as_left_node().node_hash(),
+                    partner_branch.as_right_node().node_hash(),
+                )
+            }
+        };
+        TapretPathProof::with(partner_proof).map_err(TapretSourceError::from)
     }
 }
 
