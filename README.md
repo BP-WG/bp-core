@@ -54,6 +54,10 @@ Contribution guidelines can be found in [CONTRIBUTING](CONTRIBUTING.md)
 
 ## More information
 
+### MSRV
+
+This library requires minimum rust compiler version (MSRV) 1.41.1.
+
 ### Policy on altcoins
 
 Altcoins and "blockchains" other than Bitcoin blockchain/Bitcoin protocols are 

@@ -206,7 +206,10 @@ impl Display for RevealedSeal {
             f,
             "{}:{}:{}#{:#010x}",
             self.method,
-            self.txid.as_ref().map(Txid::to_string).unwrap_or(s!("~")),
+            self.txid
+                .as_ref()
+                .map(Txid::to_string)
+                .unwrap_or_else(|| s!("~")),
             self.vout,
             self.blinding
         )

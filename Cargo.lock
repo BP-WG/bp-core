@@ -126,9 +126,9 @@ dependencies = [
 
 [[package]]
 name = "bitcoin_hd"
-version = "0.7.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "557293b70a325df3a3c40103a74fa2a4baa3542bffc9a32a735704b5145815a7"
+checksum = "1d080f88bdc1827e569d305765bc407a7cc9b5d464d25e1d36fe2294f274507f"
 dependencies = [
  "amplify",
  "bitcoin",
