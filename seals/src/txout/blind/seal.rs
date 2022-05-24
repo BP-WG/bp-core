@@ -22,7 +22,7 @@ use commit_verify::{commit_encode, CommitConceal, CommitVerify, TaggedHash};
 use dbc::tapret::Lnpbp6;
 use lnpbp_bech32::{FromBech32Str, ToBech32String};
 
-use crate::{MethodParseError, TxoutMethod};
+use crate::txout::{CloseMethod, MethodParseError};
 
 /// Data required to generate or reveal the information about blinded
 /// transaction outpoint
@@ -35,16 +35,19 @@ use crate::{MethodParseError, TxoutMethod};
 )]
 #[display("{method}:{txid}:{vout}#{blinding:#x}")]
 pub struct RevealedSeal {
-    pub method: TxoutMethod,
+    /// Commitment to the specific seal close method [`CloseMethod`] which must
+    /// be used to close this seal.
+    pub method: CloseMethod,
 
-    /// Txid that should be blinded
+    /// Txid of the seal definition.
     pub txid: Txid,
 
-    /// Tx output number that should be blinded
+    /// Tx output number, which should be always known.
     pub vout: u32,
 
-    /// Blinding factor preventing rainbow table bruteforce attack based on
-    /// the existing blockchain txid set
+    /// Blinding factor providing confidentiality of the seal definition.
+    /// Prevents rainbow table bruteforce attack based on the existing
+    /// blockchain txid set.
     pub blinding: u64,
 }
 
@@ -58,7 +61,7 @@ impl From<RevealedSeal> for OutPoint {
 impl From<OutPoint> for RevealedSeal {
     fn from(outpoint: OutPoint) -> Self {
         Self {
-            method: TxoutMethod::TapretFirst,
+            method: CloseMethod::TapretFirst,
             blinding: thread_rng().next_u64(),
             txid: outpoint.txid,
             vout: outpoint.vout as u32,
@@ -305,7 +308,7 @@ mod test {
     #[test]
     fn outpoint_hash_is_sha256d() {
         let reveal = RevealedSeal {
-            method: TxoutMethod::TapretFirst,
+            method: CloseMethod::TapretFirst,
             blinding: 54683213134637,
             txid: Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839").unwrap(),
             vout: 2,
@@ -325,7 +328,7 @@ mod test {
     #[test]
     fn outpoint_hash_bech32() {
         let outpoint_hash = RevealedSeal {
-            method: TxoutMethod::TapretFirst,
+            method: CloseMethod::TapretFirst,
             blinding: 54683213134637,
             txid: Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839").unwrap(),
             vout: 2,
@@ -341,7 +344,7 @@ mod test {
     #[test]
     fn outpoint_reveal_str() {
         let outpoint_reveal = RevealedSeal {
-            method: TxoutMethod::TapretFirst,
+            method: CloseMethod::TapretFirst,
             blinding: 54683213134637,
             txid: Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839").unwrap(),
             vout: 21,
