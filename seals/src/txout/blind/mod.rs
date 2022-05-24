@@ -17,9 +17,7 @@
 
 // TODO: Re-implement when new single_use_seal API wii be done
 // mod imp;
-mod error;
 mod seal;
 
-pub use error::{VerifyError, WitnessVoutError};
 // pub use imp::{TxResolve, TxoutSeal, Witness};
 pub use seal::{ConcealedSeal, ParseError, RevealedSeal};

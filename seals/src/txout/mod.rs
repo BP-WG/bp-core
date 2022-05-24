@@ -17,9 +17,11 @@
 //! spending that output ("TxOut seals").
 
 pub mod blind;
+mod error;
 
 use std::str::FromStr;
 
+pub use error::{MethodParseError, VerifyError, WitnessVoutError};
 /// Method of single-use-seal closing.
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[cfg_attr(
@@ -42,11 +44,6 @@ pub enum CloseMethod {
     #[display("tapret1st")]
     TapretFirst = 0x01,
 }
-
-/// wrong transaction ouput-based single-use-seal closing method id '{0}'.
-#[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]
-#[display(doc_comments)]
-pub struct MethodParseError(String);
 
 impl FromStr for CloseMethod {
     type Err = MethodParseError;

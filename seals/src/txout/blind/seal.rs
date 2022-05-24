@@ -24,11 +24,13 @@ use commit_verify::{commit_encode, CommitConceal, CommitVerify, TaggedHash};
 use dbc::tapret::Lnpbp6;
 use lnpbp_bech32::{FromBech32Str, ToBech32String};
 
-use super::WitnessVoutError;
-use crate::txout::{CloseMethod, MethodParseError};
+use crate::txout::{CloseMethod, MethodParseError, WitnessVoutError};
 
-/// Data required to generate or reveal the information about blinded
-/// transaction outpoint
+/// Revealed seal definition which may point to a witness transactions and
+/// contains blinding data.
+///
+/// Revealed seal means that the seal definition containing explicit information
+/// about the bitcoin transaction output.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[derive(StrictEncode, StrictDecode)]
 #[cfg_attr(
@@ -71,6 +73,7 @@ impl TryFrom<RevealedSeal> for OutPoint {
 }
 
 impl From<OutPoint> for RevealedSeal {
+    #[inline]
     fn from(outpoint: OutPoint) -> Self {
         Self {
             method: CloseMethod::TapretFirst,
@@ -81,27 +84,52 @@ impl From<OutPoint> for RevealedSeal {
     }
 }
 
-impl From<OutPoint> for ConcealedSeal {
-    fn from(outpoint: OutPoint) -> Self {
-        RevealedSeal::from(outpoint).commit_conceal()
-    }
-}
-
 impl CommitConceal for RevealedSeal {
     type ConcealedCommitment = ConcealedSeal;
 
     #[inline]
     fn commit_conceal(&self) -> Self::ConcealedCommitment {
-        self.to_concealed_seal()
+        ConcealedSeal::commit(self)
     }
 }
 
+impl commit_encode::Strategy for RevealedSeal {
+    type Strategy = commit_encode::strategies::UsingConceal;
+}
+
 impl RevealedSeal {
+    /// Constructs seal for the provided outpoint and seal closing method. Uses
+    /// `thread_rng` to initialize blinding factor.
+    #[inline]
+    pub fn new(method: CloseMethod, outpoint: OutPoint) -> RevealedSeal {
+        Self {
+            method,
+            blinding: thread_rng().next_u64(),
+            txid: Some(outpoint.txid),
+            vout: outpoint.vout as u32,
+        }
+    }
+
+    /// Constructs seal using the provided random number generator for creating
+    /// blinding factor value
+    #[inline]
+    pub fn with(
+        method: CloseMethod,
+        txid: Option<Txid>,
+        vout: u32,
+        rng: &mut impl RngCore,
+    ) -> RevealedSeal {
+        RevealedSeal {
+            method,
+            txid,
+            vout,
+            blinding: rng.next_u64(),
+        }
+    }
+
     /// Converts revealed seal into concealed.
     #[inline]
-    pub fn to_concealed_seal(&self) -> ConcealedSeal {
-        ConcealedSeal::commit(self)
-    }
+    pub fn to_concealed_seal(&self) -> ConcealedSeal { self.commit_conceal() }
 }
 
 /// Errors happening during parsing string representation of different forms of
@@ -314,6 +342,13 @@ impl FromStr for ConcealedSeal {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(ConcealedSeal::from_bech32_str(s)?)
+    }
+}
+
+impl From<OutPoint> for ConcealedSeal {
+    #[inline]
+    fn from(outpoint: OutPoint) -> Self {
+        RevealedSeal::from(outpoint).commit_conceal()
     }
 }
 
