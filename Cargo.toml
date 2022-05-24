@@ -28,7 +28,7 @@ required-features = ["cli", "serde"]
 amplify = "3.12.0"
 strict_encoding = "1.8.0"
 commit_verify = "0.7.0-alpha.7"
-single_use_seals = "0.7.0-alpha.1"
+single_use_seals = "0.7.0-beta.1"
 bitcoin = "0.28.1"
 psbt = { version = "0.7.0", optional = true }
 bp-dbc = { version = "0.7.0-alpha.1", path = "./dbc" }
