@@ -211,15 +211,23 @@ impl Display for RevealedSeal {
     }
 }
 
-/// Tag used for [`OutpointHash`] hash type
-pub struct OutpointHashTag;
+static MIDSTATE_CONCEALED_SEAL: [u8; 32] = [
+    250, 13, 163, 5, 178, 220, 248, 173, 139, 222, 67, 198, 134, 127, 63, 153,
+    147, 236, 172, 33, 17, 167, 176, 30, 70, 99, 185, 129, 217, 110, 183, 27,
+];
 
-impl sha256t::Tag for OutpointHashTag {
+/// Tag used for [`ConcealedSeal`] hash type
+pub struct ConcealedSealTag;
+
+impl sha256t::Tag for ConcealedSealTag {
     #[inline]
-    fn engine() -> sha256::HashEngine { sha256::HashEngine::default() }
+    fn engine() -> sha256::HashEngine {
+        let midstate = sha256::Midstate::from_inner(MIDSTATE_CONCEALED_SEAL);
+        sha256::HashEngine::from_midstate(midstate, 64)
+    }
 }
 
-impl lnpbp_bech32::Strategy for OutpointHashTag {
+impl lnpbp_bech32::Strategy for ConcealedSealTag {
     const HRP: &'static str = "txob";
     type Strategy = lnpbp_bech32::strategies::UsingStrictEncoding;
 }
@@ -231,7 +239,7 @@ impl lnpbp_bech32::Strategy for OutpointHashTag {
 )]
 #[wrapper(Debug, LowerHex, Index, IndexRange, IndexFrom, IndexTo, IndexFull)]
 #[display(ConcealedSeal::to_bech32_string)]
-pub struct ConcealedSeal(sha256t::Hash<OutpointHashTag>);
+pub struct ConcealedSeal(sha256t::Hash<ConcealedSealTag>);
 
 #[cfg(feature = "serde")]
 impl serde::Serialize for ConcealedSeal {
@@ -314,12 +322,12 @@ impl commit_encode::Strategy for ConcealedSeal {
 
 impl CommitVerify<RevealedSeal, Lnpbp6> for ConcealedSeal {
     fn commit(reveal: &RevealedSeal) -> Self {
-        let mut engine = sha256t::Hash::<OutpointHashTag>::engine();
+        let mut engine = sha256t::Hash::<ConcealedSealTag>::engine();
         engine.input(&[reveal.method as u8]);
         engine.input(&reveal.txid.unwrap_or_default()[..]);
         engine.input(&reveal.vout.to_le_bytes()[..]);
         engine.input(&reveal.blinding.to_le_bytes()[..]);
-        let inner = sha256t::Hash::<OutpointHashTag>::from_engine(engine);
+        let inner = sha256t::Hash::<ConcealedSealTag>::from_engine(engine);
         ConcealedSeal::from_hash(inner)
     }
 }
@@ -331,17 +339,16 @@ impl lnpbp_bech32::Strategy for ConcealedSeal {
 
 #[cfg(test)]
 mod test {
+    use amplify::Wrapper;
     use bitcoin::hashes::hex::FromHex;
-    use bitcoin::hashes::sha256t::Tag;
+    use commit_verify::tagged_hash;
 
     use super::*;
 
     #[test]
     fn outpoint_hash_midstate() {
-        assert_eq!(
-            OutpointHashTag::engine().midstate(),
-            sha256::HashEngine::default().midstate()
-        );
+        let midstate = tagged_hash::Midstate::with(b"bp:txout:concealed");
+        assert_eq!(midstate.into_inner().into_inner(), MIDSTATE_CONCEALED_SEAL);
     }
 
     #[test]
@@ -353,14 +360,14 @@ mod test {
             vout: 2,
         };
         let outpoint_hash = reveal.to_concealed_seal();
-        let mut engine = sha256t::Hash::<OutpointHashTag>::engine();
+        let mut engine = sha256t::Hash::<ConcealedSealTag>::engine();
         engine.input(&[reveal.method as u8]);
         engine.input(&reveal.txid.unwrap()[..]);
         engine.input(&reveal.vout.to_le_bytes()[..]);
         engine.input(&reveal.blinding.to_le_bytes()[..]);
         assert_eq!(
             **outpoint_hash,
-            *sha256t::Hash::<OutpointHashTag>::from_engine(engine)
+            *sha256t::Hash::<ConcealedSealTag>::from_engine(engine)
         )
     }
 
@@ -373,7 +380,7 @@ mod test {
             vout: 2,
         }.to_concealed_seal();
         let bech32 =
-            "txob1w7f9tkxz4058e2xfahyj278lrktq0afja2zst25emzvf5nnff7ys83nt8y";
+            "txob1a9peq6yx9x6ajt584qp5ge4jk9v7tmtgs3x2gntk2nf425cvpdgszt65je";
         assert_eq!(bech32, outpoint_hash.to_string());
         assert_eq!(outpoint_hash.to_string(), outpoint_hash.to_bech32_string());
         let reconstructed = ConcealedSeal::from_str(bech32).unwrap();
