@@ -34,7 +34,7 @@ use crate::txout::{CloseMethod, MethodParseError, TxoSeal, WitnessVoutError};
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "snake_case")
+    serde(crate = "serde_crate")
 )]
 #[derive(StrictEncode, StrictDecode)]
 pub struct ExplicitSeal {

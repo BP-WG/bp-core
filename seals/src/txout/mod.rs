@@ -19,10 +19,10 @@
 pub mod blind;
 mod error;
 pub mod explicit;
-// mod proto;
+mod proto;
 mod seal;
 
 pub use error::{MethodParseError, VerifyError, WitnessVoutError};
 pub use explicit::ExplicitSeal;
-// pub use proto::TxoProtocol;
+pub use proto::TxoProtocol;
 pub use seal::{CloseMethod, TxoSeal};
