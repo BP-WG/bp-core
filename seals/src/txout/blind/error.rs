@@ -35,3 +35,13 @@ pub enum Error {
     /// Resolver probably lies and can't be trusted
     ResolverLying,
 }
+
+/// Error happening if the seal data holds only witness transaction output
+/// number and thus can't be used alone for constructing full bitcoin
+/// transaction output data which must include the witness transaction id
+/// (unknown to the seal).
+#[derive(
+    Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display, Error
+)]
+#[display("witness txid is unknown; unable to reconstruct full outpoint data")]
+pub struct WitnessVoutError;

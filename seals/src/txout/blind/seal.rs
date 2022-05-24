@@ -13,6 +13,8 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
+use std::convert::TryFrom;
+use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 use bitcoin::hashes::{sha256, sha256t, Hash, HashEngine};
@@ -22,25 +24,30 @@ use commit_verify::{commit_encode, CommitConceal, CommitVerify, TaggedHash};
 use dbc::tapret::Lnpbp6;
 use lnpbp_bech32::{FromBech32Str, ToBech32String};
 
+use super::WitnessVoutError;
 use crate::txout::{CloseMethod, MethodParseError};
 
 /// Data required to generate or reveal the information about blinded
 /// transaction outpoint
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[derive(StrictEncode, StrictDecode)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate")
 )]
-#[display("{method}:{txid}:{vout}#{blinding:#x}")]
 pub struct RevealedSeal {
     /// Commitment to the specific seal close method [`CloseMethod`] which must
     /// be used to close this seal.
     pub method: CloseMethod,
 
     /// Txid of the seal definition.
-    pub txid: Txid,
+    ///
+    /// It may be missed in situations when ID of a transaction is not known,
+    /// but the transaction still can be identified by some other means (for
+    /// instance it is a transaction spending specific outpoint, like other
+    /// seal definition).
+    pub txid: Option<Txid>,
 
     /// Tx output number, which should be always known.
     pub vout: u32,
@@ -51,10 +58,15 @@ pub struct RevealedSeal {
     pub blinding: u64,
 }
 
-impl From<RevealedSeal> for OutPoint {
+impl TryFrom<RevealedSeal> for OutPoint {
+    type Error = WitnessVoutError;
+
     #[inline]
-    fn from(reveal: RevealedSeal) -> Self {
-        OutPoint::new(reveal.txid, reveal.vout as u32)
+    fn try_from(reveal: RevealedSeal) -> Result<Self, Self::Error> {
+        reveal
+            .txid
+            .map(|txid| OutPoint::new(txid, reveal.vout as u32))
+            .ok_or(WitnessVoutError)
     }
 }
 
@@ -63,7 +75,7 @@ impl From<OutPoint> for RevealedSeal {
         Self {
             method: CloseMethod::TapretFirst,
             blinding: thread_rng().next_u64(),
-            txid: outpoint.txid,
+            txid: Some(outpoint.txid),
             vout: outpoint.vout as u32,
         }
     }
@@ -80,13 +92,15 @@ impl CommitConceal for RevealedSeal {
 
     #[inline]
     fn commit_conceal(&self) -> Self::ConcealedCommitment {
-        self.outpoint_hash()
+        self.to_concealed_seal()
     }
 }
 
 impl RevealedSeal {
     #[inline]
-    pub fn outpoint_hash(&self) -> ConcealedSeal { ConcealedSeal::commit(self) }
+    pub fn to_concealed_seal(&self) -> ConcealedSeal {
+        ConcealedSeal::commit(self)
+    }
 }
 
 /// Errors happening during parsing string representation of different forms of
@@ -143,10 +157,8 @@ impl FromStr for RevealedSeal {
             split.next(),
             split.next(),
         ) {
-            (Some("_"), ..) | (Some(""), ..) => Err(ParseError::MethodRequired),
-            (Some(_), Some("_"), ..) | (Some(_), Some(""), ..) => {
-                Err(ParseError::TxidRequired)
-            }
+            (Some("~"), ..) | (Some(""), ..) => Err(ParseError::MethodRequired),
+            (Some(_), Some(""), ..) => Err(ParseError::TxidRequired),
             (Some(_), Some(_), None, ..) if s.contains(':') => {
                 Err(ParseError::BlindingRequired)
             }
@@ -154,6 +166,18 @@ impl FromStr for RevealedSeal {
                 if !blinding.starts_with("0x") =>
             {
                 Err(ParseError::NonHexBlinding)
+            }
+            (Some(method), Some("~"), Some(vout), Some(blinding), None) => {
+                Ok(RevealedSeal {
+                    method: method.parse()?,
+                    blinding: u64::from_str_radix(
+                        blinding.trim_start_matches("0x"),
+                        16,
+                    )
+                    .map_err(|_| ParseError::WrongBlinding)?,
+                    txid: None,
+                    vout: vout.parse().map_err(|_| ParseError::WrongVout)?,
+                })
             }
             (Some(method), Some(txid), Some(vout), Some(blinding), None) => {
                 Ok(RevealedSeal {
@@ -163,12 +187,27 @@ impl FromStr for RevealedSeal {
                         16,
                     )
                     .map_err(|_| ParseError::WrongBlinding)?,
-                    txid: txid.parse().map_err(|_| ParseError::WrongTxid)?,
+                    txid: Some(
+                        txid.parse().map_err(|_| ParseError::WrongTxid)?,
+                    ),
                     vout: vout.parse().map_err(|_| ParseError::WrongVout)?,
                 })
             }
             _ => Err(ParseError::WrongStructure),
         }
+    }
+}
+
+impl Display for RevealedSeal {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}:{}:{}#{:#010x}",
+            self.method,
+            self.txid.as_ref().map(Txid::to_string).unwrap_or(s!("~")),
+            self.vout,
+            self.blinding
+        )
     }
 }
 
@@ -277,7 +316,7 @@ impl CommitVerify<RevealedSeal, Lnpbp6> for ConcealedSeal {
     fn commit(reveal: &RevealedSeal) -> Self {
         let mut engine = sha256t::Hash::<OutpointHashTag>::engine();
         engine.input(&[reveal.method as u8]);
-        engine.input(&reveal.txid[..]);
+        engine.input(&reveal.txid.unwrap_or_default()[..]);
         engine.input(&reveal.vout.to_le_bytes()[..]);
         engine.input(&reveal.blinding.to_le_bytes()[..]);
         let inner = sha256t::Hash::<OutpointHashTag>::from_engine(engine);
@@ -310,13 +349,13 @@ mod test {
         let reveal = RevealedSeal {
             method: CloseMethod::TapretFirst,
             blinding: 54683213134637,
-            txid: Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839").unwrap(),
+            txid: Some(Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839").unwrap()),
             vout: 2,
         };
-        let outpoint_hash = reveal.outpoint_hash();
+        let outpoint_hash = reveal.to_concealed_seal();
         let mut engine = sha256t::Hash::<OutpointHashTag>::engine();
         engine.input(&[reveal.method as u8]);
-        engine.input(&reveal.txid[..]);
+        engine.input(&reveal.txid.unwrap()[..]);
         engine.input(&reveal.vout.to_le_bytes()[..]);
         engine.input(&reveal.blinding.to_le_bytes()[..]);
         assert_eq!(
@@ -330,9 +369,9 @@ mod test {
         let outpoint_hash = RevealedSeal {
             method: CloseMethod::TapretFirst,
             blinding: 54683213134637,
-            txid: Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839").unwrap(),
+            txid: Some(Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839").unwrap()),
             vout: 2,
-        }.outpoint_hash();
+        }.to_concealed_seal();
         let bech32 =
             "txob1w7f9tkxz4058e2xfahyj278lrktq0afja2zst25emzvf5nnff7ys83nt8y";
         assert_eq!(bech32, outpoint_hash.to_string());
@@ -343,10 +382,10 @@ mod test {
 
     #[test]
     fn outpoint_reveal_str() {
-        let outpoint_reveal = RevealedSeal {
+        let mut outpoint_reveal = RevealedSeal {
             method: CloseMethod::TapretFirst,
             blinding: 54683213134637,
-            txid: Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839").unwrap(),
+            txid: Some(Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839").unwrap()),
             vout: 21,
         };
 
@@ -356,7 +395,12 @@ mod test {
             "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:\
              21#0x31bbed7e7b2d"
         );
+        // round-trip
+        assert_eq!(RevealedSeal::from_str(&s).unwrap(), outpoint_reveal);
 
+        outpoint_reveal.txid = None;
+        let s = outpoint_reveal.to_string();
+        assert_eq!(&s, "tapret1st:~:21#0x31bbed7e7b2d");
         // round-trip
         assert_eq!(RevealedSeal::from_str(&s).unwrap(), outpoint_reveal);
 
@@ -420,14 +464,14 @@ mod test {
         ), Err(ParseError::WrongVout));
         assert_eq!(
             RevealedSeal::from_str("tapret1st:_:5#0x78ca"),
-            Err(ParseError::TxidRequired)
+            Err(ParseError::WrongTxid)
         );
         assert_eq!(
             RevealedSeal::from_str(":5#0x78ca"),
             Err(ParseError::MethodRequired)
         );
         assert_eq!(
-            RevealedSeal::from_str("_:5#0x78ca"),
+            RevealedSeal::from_str("~:5#0x78ca"),
             Err(ParseError::MethodRequired)
         );
     }
