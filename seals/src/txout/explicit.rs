@@ -13,9 +13,11 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use bitcoin::Txid;
+use std::convert::{TryFrom, TryInto};
 
-use crate::txout::CloseMethod;
+use bitcoin::{OutPoint, Txid};
+
+use crate::txout::{CloseMethod, TxoSeal, WitnessVoutError};
 
 /// Revealed seal definition which may point to a witness transactions and does
 /// not contain blinding data.
@@ -45,4 +47,65 @@ pub struct ExplicitSeal {
 
     /// Tx output number, which should be always known.
     pub vout: u32,
+}
+
+impl TryFrom<&ExplicitSeal> for OutPoint {
+    type Error = WitnessVoutError;
+
+    #[inline]
+    fn try_from(reveal: &ExplicitSeal) -> Result<Self, Self::Error> {
+        reveal
+            .txid
+            .map(|txid| OutPoint::new(txid, reveal.vout as u32))
+            .ok_or(WitnessVoutError)
+    }
+}
+
+impl TryFrom<ExplicitSeal> for OutPoint {
+    type Error = WitnessVoutError;
+
+    #[inline]
+    fn try_from(reveal: ExplicitSeal) -> Result<Self, Self::Error> {
+        OutPoint::try_from(&reveal)
+    }
+}
+
+impl From<&OutPoint> for ExplicitSeal {
+    #[inline]
+    fn from(outpoint: &OutPoint) -> Self {
+        Self {
+            method: CloseMethod::TapretFirst,
+            txid: Some(outpoint.txid),
+            vout: outpoint.vout as u32,
+        }
+    }
+}
+
+impl From<OutPoint> for ExplicitSeal {
+    #[inline]
+    fn from(outpoint: OutPoint) -> Self { ExplicitSeal::from(&outpoint) }
+}
+
+impl TxoSeal for ExplicitSeal {
+    #[inline]
+    fn method(&self) -> CloseMethod { self.method }
+
+    #[inline]
+    fn txid(&self) -> Option<Txid> { self.txid }
+
+    #[inline]
+    fn vout(&self) -> usize { self.vout as usize }
+
+    #[inline]
+    fn outpoint(&self) -> Option<OutPoint> { self.try_into().ok() }
+
+    #[inline]
+    fn txid_or(&self, default_txid: Txid) -> Txid {
+        self.txid.unwrap_or(default_txid)
+    }
+
+    #[inline]
+    fn outpoint_or(&self, default_txid: Txid) -> OutPoint {
+        OutPoint::new(self.txid.unwrap_or(default_txid), self.vout as u32)
+    }
 }
