@@ -18,10 +18,13 @@
 
 pub mod blind;
 mod error;
+mod seal;
 
 use std::str::FromStr;
 
 pub use error::{MethodParseError, VerifyError, WitnessVoutError};
+pub use seal::TxoutSeal;
+
 /// Method of single-use-seal closing.
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[cfg_attr(
