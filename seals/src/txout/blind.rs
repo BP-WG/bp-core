@@ -15,7 +15,7 @@
 
 //! TxOut seals which are blinded with additional entropy.
 
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
@@ -27,6 +27,7 @@ use dbc::tapret::Lnpbp6;
 use lnpbp_bech32::{FromBech32Str, ToBech32String};
 
 use super::{CloseMethod, MethodParseError, WitnessVoutError};
+use crate::txout::TxoSeal;
 
 /// Revealed seal definition which may point to a witness transactions and
 /// contains blinding data.
@@ -62,11 +63,11 @@ pub struct RevealedSeal {
     pub blinding: u64,
 }
 
-impl TryFrom<RevealedSeal> for OutPoint {
+impl TryFrom<&RevealedSeal> for OutPoint {
     type Error = WitnessVoutError;
 
     #[inline]
-    fn try_from(reveal: RevealedSeal) -> Result<Self, Self::Error> {
+    fn try_from(reveal: &RevealedSeal) -> Result<Self, Self::Error> {
         reveal
             .txid
             .map(|txid| OutPoint::new(txid, reveal.vout as u32))
@@ -74,9 +75,18 @@ impl TryFrom<RevealedSeal> for OutPoint {
     }
 }
 
-impl From<OutPoint> for RevealedSeal {
+impl TryFrom<RevealedSeal> for OutPoint {
+    type Error = WitnessVoutError;
+
     #[inline]
-    fn from(outpoint: OutPoint) -> Self {
+    fn try_from(reveal: RevealedSeal) -> Result<Self, Self::Error> {
+        OutPoint::try_from(&reveal)
+    }
+}
+
+impl From<&OutPoint> for RevealedSeal {
+    #[inline]
+    fn from(outpoint: &OutPoint) -> Self {
         Self {
             method: CloseMethod::TapretFirst,
             blinding: thread_rng().next_u64(),
@@ -84,6 +94,11 @@ impl From<OutPoint> for RevealedSeal {
             vout: outpoint.vout as u32,
         }
     }
+}
+
+impl From<OutPoint> for RevealedSeal {
+    #[inline]
+    fn from(outpoint: OutPoint) -> Self { RevealedSeal::from(&outpoint) }
 }
 
 impl CommitConceal for RevealedSeal {
@@ -97,6 +112,30 @@ impl CommitConceal for RevealedSeal {
 
 impl commit_encode::Strategy for RevealedSeal {
     type Strategy = commit_encode::strategies::UsingConceal;
+}
+
+impl TxoSeal for RevealedSeal {
+    #[inline]
+    fn method(&self) -> CloseMethod { self.method }
+
+    #[inline]
+    fn txid(&self) -> Option<Txid> { self.txid }
+
+    #[inline]
+    fn vout(&self) -> usize { self.vout as usize }
+
+    #[inline]
+    fn outpoint(&self) -> Option<OutPoint> { self.try_into().ok() }
+
+    #[inline]
+    fn txid_or(&self, default_txid: Txid) -> Txid {
+        self.txid.unwrap_or(default_txid)
+    }
+
+    #[inline]
+    fn outpoint_or(&self, default_txid: Txid) -> OutPoint {
+        OutPoint::new(self.txid.unwrap_or(default_txid), self.vout as u32)
+    }
 }
 
 impl RevealedSeal {
