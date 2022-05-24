@@ -16,7 +16,7 @@
 //! TxOut seals which are blinded with additional entropy.
 
 use std::convert::{TryFrom, TryInto};
-use std::fmt::{Display, Formatter};
+use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 
 use bitcoin::hashes::{sha256, sha256t, Hash, HashEngine};
@@ -270,7 +270,7 @@ impl FromStr for RevealedSeal {
 }
 
 impl Display for RevealedSeal {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}:{}:{}#{:#010x}",

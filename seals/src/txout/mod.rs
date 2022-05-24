@@ -18,7 +18,7 @@
 
 pub mod blind;
 mod error;
-mod explicit;
+pub mod explicit;
 // mod proto;
 mod seal;
 

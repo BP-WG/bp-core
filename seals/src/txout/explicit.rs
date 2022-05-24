@@ -13,12 +13,16 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
+//! TxOut single-use-seals.
+
 use std::convert::{TryFrom, TryInto};
+use std::fmt::{self, Display, Formatter};
+use std::str::FromStr;
 
 use bitcoin::{OutPoint, Txid};
 use commit_verify::commit_encode;
 
-use crate::txout::{CloseMethod, TxoSeal, WitnessVoutError};
+use crate::txout::{CloseMethod, MethodParseError, TxoSeal, WitnessVoutError};
 
 /// Revealed seal definition which may point to a witness transactions and does
 /// not contain blinding data.
@@ -134,5 +138,75 @@ impl ExplicitSeal {
         vout: u32,
     ) -> ExplicitSeal {
         ExplicitSeal { method, txid, vout }
+    }
+}
+
+/// Errors happening during parsing string representation of different forms of
+/// single-use-seals
+#[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]
+#[display(doc_comments)]
+pub enum ParseError {
+    /// single-use-seal must start with method name (e.g. 'tapret1st' etc)
+    MethodRequired,
+
+    /// full transaction id is required for the seal specification
+    TxidRequired,
+
+    /// wrong seal close method id
+    #[display(inner)]
+    #[from]
+    WrongMethod(MethodParseError),
+
+    /// unable to parse transaction id value; it must be 64-character
+    /// hexadecimal string
+    WrongTxid,
+
+    /// unable to parse transaction vout value; it must be a decimal unsigned
+    /// integer
+    WrongVout,
+
+    /// wrong structure of seal string representation
+    WrongStructure,
+
+    /// wrong Bech32 representation of the blinded TxOut seal – {0}
+    #[from]
+    Bech32(lnpbp_bech32::Error),
+}
+
+impl FromStr for ExplicitSeal {
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut split = s.split(&[':', '#'][..]);
+        match (split.next(), split.next(), split.next(), split.next()) {
+            (Some("~"), ..) | (Some(""), ..) => Err(ParseError::MethodRequired),
+            (Some(_), Some(""), ..) => Err(ParseError::TxidRequired),
+            (Some(method), Some("~"), Some(vout), None) => Ok(ExplicitSeal {
+                method: method.parse()?,
+                txid: None,
+                vout: vout.parse().map_err(|_| ParseError::WrongVout)?,
+            }),
+            (Some(method), Some(txid), Some(vout), None) => Ok(ExplicitSeal {
+                method: method.parse()?,
+                txid: Some(txid.parse().map_err(|_| ParseError::WrongTxid)?),
+                vout: vout.parse().map_err(|_| ParseError::WrongVout)?,
+            }),
+            _ => Err(ParseError::WrongStructure),
+        }
+    }
+}
+
+impl Display for ExplicitSeal {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}:{}:{}",
+            self.method,
+            self.txid
+                .as_ref()
+                .map(Txid::to_string)
+                .unwrap_or_else(|| s!("~")),
+            self.vout,
+        )
     }
 }
