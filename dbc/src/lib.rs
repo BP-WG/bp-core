@@ -30,15 +30,18 @@ extern crate amplify;
 #[cfg(feature = "miniscript")]
 extern crate miniscript_crate as miniscript;
 #[cfg(feature = "serde")]
-//#[macro_use]
+#[macro_use]
 extern crate serde_crate as serde;
 #[macro_use]
 extern crate strict_encoding;
 
+mod anchor;
 pub mod keytweak;
 pub mod opret;
 pub mod sigtweak;
 pub mod tapret;
+
+pub use anchor::{Anchor, AnchorId, Proof};
 
 mod _temp {
     #![allow(missing_docs, dead_code)]

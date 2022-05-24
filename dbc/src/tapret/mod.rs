@@ -109,6 +109,11 @@ pub enum TapretPathError {
 /// [`TapretNodePartner::RightBranch`] to ensure correct consensus ordering of
 /// the child elements.
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 #[derive(StrictEncode)]
 #[display("{left_node_hash}:{right_node_hash}")]
 pub struct TapretRightBranch {
@@ -173,6 +178,11 @@ impl StrictDecode for TapretRightBranch {
 /// tree node does not contain an alternative OP-RETURN commitment script.
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, From)]
 #[derive(StrictEncode, StrictDecode)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 #[display(inner)]
 pub enum TapretNodePartner {
     /// Tapret commitment is on the right side of the tree; i.e the node
@@ -245,6 +255,12 @@ impl TapretNodePartner {
 /// Holds information about the sibling at level 1 of the tree in form of
 /// [`TapretNodePartner`].
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
+#[derive(StrictEncode, StrictDecode)]
 pub struct TapretPathProof {
     /// Information about the sibling at level 1 of the tree
     partner_node: Option<TapretNodePartner>,
@@ -312,6 +328,12 @@ impl<'data> IntoIterator for &'data TapretPathProof {
 /// Used both in the commitment procedure for PSBTs and in
 /// client-side-validation of the commitment.
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
+#[derive(StrictEncode, StrictDecode)]
 pub struct TapretProof {
     /// A merkle path to the commitment inside the taproot script tree. For
     /// each node it also must hold information about the sibling in form of
