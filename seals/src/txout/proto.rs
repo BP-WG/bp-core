@@ -14,14 +14,16 @@
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
 use amplify::Wrapper;
-use bitcoin::{OutPoint, Transaction};
+use bitcoin::{OutPoint, Transaction, Txid};
+use commit_verify::multi_commit::MultiCommitment;
 use commit_verify::{EmbedCommitVerify, Message};
 use dbc::tapret::TapretProof;
 #[cfg(feature = "async")]
 use single_use_seals::SealMediumAsync;
-use single_use_seals::{SealMedium, SingleUseSeal};
+use single_use_seals::{SealMedium, SealProtocol, SealStatus, SingleUseSeal};
 
 use super::Error;
+use crate::txout::VerifyError;
 
 // TODO: #8 Implement proper operations with SealMedium
 // TODO: #9 Do asyncronous version
@@ -31,25 +33,28 @@ pub struct Witness(pub InnerWitness, pub OuterWitness);
 pub type InnerWitness = Transaction;
 pub type OuterWitness = TapretProof;
 
-pub struct TxoutSeal<'a, R>
-where
-    R: TxResolve,
-    Self: 'a,
-{
-    seal_definition: OutPoint,
-    resolver: &'a R,
-}
+pub struct TxoProtocol;
 
-impl<'a, R> TxoutSeal<'a, R>
+impl<Seal> SealProtocol<Seal> for TxoProtocol
 where
-    R: TxResolve,
-    Self: 'a,
+    Seal: Seal,
 {
-    pub fn new(seal_definition: OutPoint, resolver: &'a R) -> Self {
-        Self {
-            seal_definition,
-            resolver,
-        }
+    type Witness = Witness;
+    type Message = MultiCommitment;
+    type PublicationId = Txid;
+    type Error = VerifyError;
+
+    fn verify(
+        &self,
+        seal: &Seal,
+        msg: &Self::Message,
+        witness: &Self::Witness,
+    ) -> Result<bool, Self::Error> {
+        todo!()
+    }
+
+    fn get_seal_status(&self, seal: &Seal) -> Result<SealStatus, Self::Error> {
+        todo!()
     }
 }
 

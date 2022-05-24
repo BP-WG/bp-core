@@ -15,9 +15,6 @@
 
 //! TxOut seals which are blinded with additional entropy.
 
-// TODO: Re-implement when new single_use_seal API wii be done
-// mod imp;
 mod seal;
 
-// pub use imp::{TxResolve, TxoutSeal, Witness};
 pub use seal::{ConcealedSeal, ParseError, RevealedSeal};
