@@ -16,6 +16,7 @@
 use std::convert::{TryFrom, TryInto};
 
 use bitcoin::{OutPoint, Txid};
+use commit_verify::commit_encode;
 
 use crate::txout::{CloseMethod, TxoSeal, WitnessVoutError};
 
@@ -86,6 +87,10 @@ impl From<OutPoint> for ExplicitSeal {
     fn from(outpoint: OutPoint) -> Self { ExplicitSeal::from(&outpoint) }
 }
 
+impl commit_encode::Strategy for ExplicitSeal {
+    type Strategy = commit_encode::strategies::UsingStrict;
+}
+
 impl TxoSeal for ExplicitSeal {
     #[inline]
     fn method(&self) -> CloseMethod { self.method }
@@ -107,5 +112,27 @@ impl TxoSeal for ExplicitSeal {
     #[inline]
     fn outpoint_or(&self, default_txid: Txid) -> OutPoint {
         OutPoint::new(self.txid.unwrap_or(default_txid), self.vout as u32)
+    }
+}
+
+impl ExplicitSeal {
+    /// Constructs seal for the provided outpoint and seal closing method.
+    #[inline]
+    pub fn new(method: CloseMethod, outpoint: OutPoint) -> ExplicitSeal {
+        Self {
+            method,
+            txid: Some(outpoint.txid),
+            vout: outpoint.vout as u32,
+        }
+    }
+
+    /// Constructs seal.
+    #[inline]
+    pub fn with(
+        method: CloseMethod,
+        txid: Option<Txid>,
+        vout: u32,
+    ) -> ExplicitSeal {
+        ExplicitSeal { method, txid, vout }
     }
 }
