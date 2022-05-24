@@ -97,6 +97,7 @@ impl CommitConceal for RevealedSeal {
 }
 
 impl RevealedSeal {
+    /// Converts revealed seal into concealed.
     #[inline]
     pub fn to_concealed_seal(&self) -> ConcealedSeal {
         ConcealedSeal::commit(self)
@@ -117,6 +118,7 @@ pub enum ParseError {
     /// blinding factor must be specified after `#`
     BlindingRequired,
 
+    /// wrong seal close method id
     #[display(inner)]
     #[from]
     WrongMethod(MethodParseError),
@@ -126,7 +128,7 @@ pub enum ParseError {
     WrongBlinding,
 
     /// unable to parse transaction id value; it must be 64-character
-    /// hexacecimal string
+    /// hexadecimal string
     WrongTxid,
 
     /// unable to parse transaction vout value; it must be a decimal unsigned
@@ -140,7 +142,7 @@ pub enum ParseError {
     /// starting with `0x` and not with a decimal
     NonHexBlinding,
 
-    /// wrong Bech32 representation of the blinded UTXO seal – {0}
+    /// wrong Bech32 representation of the blinded TxOut seal – {0}
     #[from]
     Bech32(lnpbp_bech32::Error),
 }

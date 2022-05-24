@@ -10,10 +10,8 @@
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 [![Apache-2 licensed](https://img.shields.io/crates/l/bp-core)](./LICENSE)
 
-The library implements bitcoin protocol elements which are missed from other
-existing bitcoin libraries, like [rust-bitcoin] and [descriptor wallet].
-Currently, it includes components necessary for [client-side-validation] over
-bitcoin, specifically
+The library implements components necessary for [client-side-validation] in bitcoin 
+protocol, specifically
 - deterministic bitcoin commitments API (LNPBP-14, 6 standards)
 - bitcoin-based single-use-seal API (LNPBP-10 and LNPBP-39 standards)
 

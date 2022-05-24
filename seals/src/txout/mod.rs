@@ -13,6 +13,9 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
+//! Bitcoin single-use-seals defined by a transaction output and closed by
+//! spending that output ("TxOut seals").
+
 pub mod blind;
 
 use std::str::FromStr;
