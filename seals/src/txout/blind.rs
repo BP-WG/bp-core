@@ -13,6 +13,8 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
+//! TxOut seals which are blinded with additional entropy.
+
 use std::convert::TryFrom;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
@@ -24,7 +26,7 @@ use commit_verify::{commit_encode, CommitConceal, CommitVerify, TaggedHash};
 use dbc::tapret::Lnpbp6;
 use lnpbp_bech32::{FromBech32Str, ToBech32String};
 
-use crate::txout::{CloseMethod, MethodParseError, WitnessVoutError};
+use super::{CloseMethod, MethodParseError, WitnessVoutError};
 
 /// Revealed seal definition which may point to a witness transactions and
 /// contains blinding data.
