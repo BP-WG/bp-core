@@ -30,7 +30,7 @@ use crate::txout::CloseMethod;
     serde(crate = "serde_crate", rename_all = "snake_case")
 )]
 #[derive(StrictEncode, StrictDecode)]
-pub struct TxoutSeal {
+pub struct ExplicitSeal {
     /// Commitment to the specific seal close method [`CloseMethod`] which must
     /// be used to close this seal.
     pub method: CloseMethod,
