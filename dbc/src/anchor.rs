@@ -17,13 +17,15 @@ use std::cmp::Ordering;
 
 use amplify::Wrapper;
 use bitcoin::hashes::{sha256, sha256t};
-use bitcoin::Txid;
+use bitcoin::{Transaction, Txid};
+use commit_verify::convolve_commit::ConvolveCommitProof;
+use commit_verify::multi_commit::MultiCommitment;
 use commit_verify::{
     commit_encode, CommitVerify, ConsensusCommit, MultiCommitBlock, TaggedHash,
     UntaggedProtocol,
 };
 
-use crate::tapret::TapretProof;
+use crate::tapret::{TapretError, TapretProof};
 
 static MIDSTATE_ANCHOR_ID: [u8; 32] = [
     148, 72, 59, 59, 150, 173, 163, 140, 159, 237, 69, 118, 104, 132, 194, 110,
@@ -131,6 +133,22 @@ pub enum Proof {
 
     /// Tapret commitment and a proof of it.
     Tapret1st(TapretProof),
+}
+
+impl Proof {
+    /// Verifies validity of the proof.
+    pub fn verify(
+        &self,
+        msg: &MultiCommitment,
+        tx: Transaction,
+    ) -> Result<bool, TapretError> {
+        match self {
+            Proof::Opret1st => todo!(),
+            Proof::Tapret1st(proof) => {
+                ConvolveCommitProof::<_, Transaction, _>::verify(proof, msg, tx)
+            }
+        }
+    }
 }
 
 #[cfg(test)]
