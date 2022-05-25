@@ -176,7 +176,7 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "bp-core"
-version = "0.7.0-alpha.1"
+version = "0.7.0-beta.1"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -195,7 +195,7 @@ dependencies = [
 
 [[package]]
 name = "bp-dbc"
-version = "0.7.0-alpha.1"
+version = "0.7.0-beta.1"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -212,7 +212,7 @@ dependencies = [
 
 [[package]]
 name = "bp-seals"
-version = "0.7.0-alpha.1"
+version = "0.7.0-beta.1"
 dependencies = [
  "amplify",
  "async-trait",
@@ -892,8 +892,9 @@ dependencies = [
 
 [[package]]
 name = "single_use_seals"
-version = "0.7.0-beta.1"
-source = "git+https://github.com/LNP-BP/client_side_validation?branch=develop#a479fb49368036a469cb02407286066202f6f926"
+version = "0.7.0-beta.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a7e6c23fec0a6a3fca871002edada4a23e58b730eff60ed4126eadba2d4333c0"
 dependencies = [
  "amplify_derive",
  "async-trait",
