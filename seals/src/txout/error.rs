@@ -13,28 +13,33 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
+use bitcoin::{OutPoint, Txid};
+use bitcoin_onchain::TxResolverError;
+
 /// Seal verification errors.
-#[derive(Clone, PartialEq, Debug, Display, From, Error)]
+#[derive(Debug, Display, From, Error)]
 #[display(doc_comments)]
 pub enum VerifyError {
-    /// Invalid seal definition
-    InvalidSealDefinition,
+    /// seals provided for a batch verification have inconsistent close method.
+    InconsistentCloseMethod,
 
-    /// Transaction output is already spent
-    SpentTxout,
+    /// witness transaction can't be found in the publication medium
+    /// (blockchain or channel) by the given id {0}.
+    WitnessTxUnknown(Txid),
 
-    /// Unable to access commitment publication medium
-    MediumAccessError,
+    /// the provided witness transaction {0} does not closes seal {1}.
+    WitnessNotClosingSeal(Txid, OutPoint),
 
-    /// Error in commitment: {0}
+    /// tapret commitment is invalid.
+    ///
+    /// Details: {0}
     #[from]
-    CommitmentError(dbc::tapret::TapretError),
+    InvalidTapretCommitment(dbc::tapret::TapretError),
 
-    /// Error from transaction resolver
-    ResolverError,
-
-    /// Resolver probably lies and can't be trusted
-    ResolverLying,
+    /// unable to access commitment publication medium.
+    #[from]
+    #[display(inner)]
+    TxResolverError(TxResolverError),
 }
 
 /// Error happening if the seal data holds only witness transaction output

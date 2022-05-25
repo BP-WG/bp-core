@@ -19,10 +19,11 @@ path = "src/lib.rs"
 amplify = "3.12.0"
 bitcoin = { version = "0.28.0-rc.2", features = ["rand"] }
 single_use_seals = { version = "0.7.0-beta.1", git = "https://github.com/LNP-BP/client_side_validation", branch = "develop" }
-commit_verify = "0.7.0-alpha.3"
+commit_verify = "0.7.0-beta.1"
 strict_encoding = "1.8.0-rc.7"
 lnpbp_bech32 = "0.6.0-rc.1"
 bp-dbc = { version = "0.7.0-alpha.1", path = "../dbc" }
+bitcoin_onchain = "0.7.0"
 async-trait = { version = "0.1.51", optional = true }
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
 serde_with = { version = "1.8", optional = true }
