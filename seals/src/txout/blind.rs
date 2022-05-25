@@ -27,7 +27,7 @@ use dbc::tapret::Lnpbp6;
 use lnpbp_bech32::{FromBech32Str, ToBech32String};
 
 use super::{CloseMethod, MethodParseError, WitnessVoutError};
-use crate::txout::TxoSeal;
+use crate::txout::{ExplicitSeal, TxoSeal};
 
 /// Revealed seal definition which may point to a witness transactions and
 /// contains blinding data.
@@ -99,6 +99,23 @@ impl From<&OutPoint> for RevealedSeal {
 impl From<OutPoint> for RevealedSeal {
     #[inline]
     fn from(outpoint: OutPoint) -> Self { RevealedSeal::from(&outpoint) }
+}
+
+impl From<&ExplicitSeal> for RevealedSeal {
+    #[inline]
+    fn from(seal: &ExplicitSeal) -> Self {
+        Self {
+            method: seal.method,
+            blinding: thread_rng().next_u64(),
+            txid: seal.txid,
+            vout: seal.vout,
+        }
+    }
+}
+
+impl From<ExplicitSeal> for RevealedSeal {
+    #[inline]
+    fn from(seal: ExplicitSeal) -> Self { RevealedSeal::from(&seal) }
 }
 
 impl CommitConceal for RevealedSeal {

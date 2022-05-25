@@ -212,7 +212,7 @@ dependencies = [
 
 [[package]]
 name = "bp-seals"
-version = "0.7.0-beta.1"
+version = "0.7.0-beta.2"
 dependencies = [
  "amplify",
  "async-trait",
