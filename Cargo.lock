@@ -217,6 +217,7 @@ dependencies = [
  "amplify",
  "async-trait",
  "bitcoin",
+ "bitcoin_onchain",
  "bp-dbc",
  "commit_verify",
  "lnpbp_bech32",
@@ -324,9 +325,9 @@ dependencies = [
 
 [[package]]
 name = "commit_verify"
-version = "0.7.0-alpha.7"
+version = "0.7.0-beta.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77d4407223e48f00990648d8dda000626a56e5efb6fa5d83b39cf0019d57909a"
+checksum = "143dce2d8b6ad01a04299672135a49307e39126ab98c8059dfbecf29cddbecd2"
 dependencies = [
  "amplify",
  "bitcoin_hashes",
@@ -892,7 +893,7 @@ dependencies = [
 [[package]]
 name = "single_use_seals"
 version = "0.7.0-beta.1"
-source = "git+https://github.com/LNP-BP/client_side_validation?branch=develop#e1905f59eb9d969a6d18af3fcedec0f1c92a5981"
+source = "git+https://github.com/LNP-BP/client_side_validation?branch=develop#a479fb49368036a469cb02407286066202f6f926"
 dependencies = [
  "amplify_derive",
  "async-trait",

@@ -34,10 +34,10 @@
 //! b) `TapretProof, Msg, (psbt::Output, TxOut)' -> bool`;
 //! c) `TapretProof, Msg, PSBT' -> bool`.
 //! **Verify by receiver:**
-//! d) `UntweakedPublicKey, TapRightPartner, Msg, TweakedPublicKey -> bool`;
-//! e) `PubkeyScript, TapretProof, Msg, PubkeyScript' -> bool`;
-//! f) `TxOut, TapretProof, Msg, TxOut' -> bool`;
-//! g) `Tx, TapretProof, Msg -> Tx'`.
+//! d) `TweakedPublicKey, TapretProof, Msg -> bool`;
+//! e) `PubkeyScript', TapretProof, Msg -> bool`;
+//! f) `TxOut', TapretProof, Msg -> bool`;
+//! g) `Tx', TapretProof, Msg -> bool`.
 //!
 //! **Find:** `descriptor::Tr<PublicKey> + TapretTweak -> descriptor::Tapret`
 //!
@@ -81,10 +81,13 @@ pub enum Lnpbp6 {}
 use std::io::Read;
 
 use bitcoin::hashes::sha256::Midstate;
+use bitcoin::hashes::Hash;
 use bitcoin::schnorr::UntweakedPublicKey;
 use bitcoin::util::taproot::{TapBranchHash, TaprootMerkleBranch};
-use bitcoin_scripts::{IntoNodeHash, LeafScript, TapNodeHash};
+use bitcoin::Script;
+use bitcoin_scripts::{IntoNodeHash, LeafScript, PubkeyScript, TapNodeHash};
 use commit_verify::CommitmentProtocol;
+use secp256k1::SECP256K1;
 use strict_encoding::{self, StrictDecode};
 
 impl CommitmentProtocol for Lnpbp6 {
@@ -298,6 +301,16 @@ impl TapretPathProof {
             .map(TapretNodePartner::check)
             .unwrap_or(true)
     }
+
+    /// Returns original merkle root of the tree before deterministic bitcoin
+    /// commitment. If originally there was no script path spendings, returns
+    /// `None`.
+    #[inline]
+    pub fn original_merkle_root(&self) -> Option<TapNodeHash> {
+        self.partner_node
+            .as_ref()
+            .map(|partner| partner.node_hash())
+    }
 }
 
 /*
@@ -345,6 +358,20 @@ pub struct TapretProof {
     /// We need to keep this information client-side since it can't be
     /// retrieved from the mined transaction.
     pub internal_key: UntweakedPublicKey,
+}
+
+impl TapretProof {
+    /// Restores original scripPubkey before deterministic bitcoin commitment
+    /// applied.
+    #[inline]
+    pub fn original_pubkey_script(&self) -> PubkeyScript {
+        let merkle_root = self
+            .path_proof
+            .original_merkle_root()
+            .map(TapNodeHash::into_inner)
+            .map(TapBranchHash::from_inner);
+        Script::new_v1_p2tr(SECP256K1, self.internal_key, merkle_root).into()
+    }
 }
 
 /// Tapret value: a final tweak applied to the internal taproot key which

@@ -45,12 +45,12 @@ pub enum TapretTreeError {
     #[from]
     TapTree(TaprootBuilderError),
 
-    /// the tree
+    /// the taproot script tree is invalid. Details: {0}
     #[from]
     TreeBuilder(IncompleteTapTree),
 
-    /// the tapret commitment can't be performet since the taproot script
-    /// tree already has maximal depth.
+    /// the tapret commitment is impossible since the taproot script tree
+    /// already has the maximal depth.
     #[from(MaxDepthExceeded)]
     MaxDepthExceeded,
 

@@ -14,7 +14,9 @@
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
 use bitcoin::Transaction;
-use commit_verify::embed_commit::ConvolveCommitVerify;
+use commit_verify::convolve_commit::{
+    ConvolveCommitProof, ConvolveCommitVerify,
+};
 use commit_verify::multi_commit::MultiCommitment;
 
 use super::{Lnpbp6, TapretProof, TapretTreeError};
@@ -27,10 +29,26 @@ pub enum TapretError {
     #[display(inner)]
     TreeEmbedding(TapretTreeError),
 
-    /// tapret commitment can't be made in a transaction lacking any taproot
-    /// outputs.
+    /// tapret commitment in a transaction lacking any taproot outputs.
     #[display(doc_comments)]
     NoTaprootOutput,
+}
+
+impl ConvolveCommitProof<MultiCommitment, Transaction, Lnpbp6> for TapretProof {
+    type Suppl = Self;
+
+    fn restore_original(&self, commitment: &Transaction) -> Transaction {
+        let mut tx = commitment.clone();
+
+        for txout in &mut tx.output {
+            if txout.script_pubkey.is_v1_p2tr() {
+                txout.script_pubkey = self.original_pubkey_script().into();
+            }
+        }
+        tx
+    }
+
+    fn extract_supplement(&self) -> &Self::Suppl { self }
 }
 
 impl ConvolveCommitVerify<MultiCommitment, TapretProof, Lnpbp6>
@@ -43,15 +61,16 @@ impl ConvolveCommitVerify<MultiCommitment, TapretProof, Lnpbp6>
         &self,
         supplement: &TapretProof,
         msg: &MultiCommitment,
-    ) -> Result<Self::Commitment, Self::CommitError> {
+    ) -> Result<(Transaction, TapretProof), Self::CommitError> {
         let mut tx = self.clone();
 
         for txout in &mut tx.output {
             if txout.script_pubkey.is_v1_p2tr() {
-                *txout = txout
+                let (commitment, proof) = txout
                     .convolve_commit(supplement, msg)
                     .map_err(TapretError::from)?;
-                return Ok(tx);
+                *txout = commitment;
+                return Ok((tx, proof));
             }
         }
 

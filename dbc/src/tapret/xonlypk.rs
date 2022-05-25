@@ -20,14 +20,30 @@ use bitcoin::schnorr::{TapTweak, TweakedPublicKey, UntweakedPublicKey};
 use bitcoin::util::taproot::{TapBranchHash, TaprootBuilder};
 use bitcoin_scripts::taproot::{Node, TaprootScriptTree};
 use bitcoin_scripts::TapScript;
-use commit_verify::embed_commit::ConvolveCommitVerify;
+use commit_verify::convolve_commit::{
+    ConvolveCommitProof, ConvolveCommitVerify,
+};
 use commit_verify::multi_commit::MultiCommitment;
 use commit_verify::CommitVerify;
 use secp256k1::SECP256K1;
 
-use super::{Lnpbp6, TapretNodePartner, TapretPathProof, TapretTreeError};
+use super::{
+    Lnpbp6, TapretNodePartner, TapretPathProof, TapretProof, TapretTreeError,
+};
 
-impl ConvolveCommitVerify<MultiCommitment, TapretPathProof, Lnpbp6>
+impl ConvolveCommitProof<MultiCommitment, UntweakedPublicKey, Lnpbp6>
+    for TapretProof
+{
+    type Suppl = TapretPathProof;
+
+    fn restore_original(&self, _: &TweakedPublicKey) -> UntweakedPublicKey {
+        self.internal_key
+    }
+
+    fn extract_supplement(&self) -> &Self::Suppl { &self.path_proof }
+}
+
+impl ConvolveCommitVerify<MultiCommitment, TapretProof, Lnpbp6>
     for UntweakedPublicKey
 {
     type Commitment = TweakedPublicKey;
@@ -37,7 +53,7 @@ impl ConvolveCommitVerify<MultiCommitment, TapretPathProof, Lnpbp6>
         &self,
         supplement: &TapretPathProof,
         msg: &MultiCommitment,
-    ) -> Result<Self::Commitment, Self::CommitError> {
+    ) -> Result<(TweakedPublicKey, TapretProof), Self::CommitError> {
         let script_commitment = TapScript::commit(&(*msg, supplement.nonce));
 
         // TODO: Refactor without builder but with new bitcoin_scripts::taproot
@@ -88,6 +104,11 @@ impl ConvolveCommitVerify<MultiCommitment, TapretPathProof, Lnpbp6>
         let (output_key, _parity) =
             self.tap_tweak(SECP256K1, Some(merkle_root));
 
-        Ok(output_key)
+        let proof = TapretProof {
+            path_proof: supplement.clone(),
+            internal_key: *self,
+        };
+
+        Ok((output_key, proof))
     }
 }
