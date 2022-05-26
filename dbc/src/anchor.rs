@@ -19,10 +19,10 @@ use amplify::Wrapper;
 use bitcoin::hashes::{sha256, sha256t};
 use bitcoin::{Transaction, Txid};
 use commit_verify::convolve_commit::ConvolveCommitProof;
-use commit_verify::multi_commit::MultiCommitment;
+use commit_verify::multi_commit::{MultiCommitment, ProtocolId};
 use commit_verify::{
-    commit_encode, CommitVerify, ConsensusCommit, MultiCommitBlock, TaggedHash,
-    UntaggedProtocol,
+    commit_encode, CommitVerify, ConsensusCommit, Message, MultiCommitBlock,
+    TaggedHash, UntaggedProtocol,
 };
 
 use crate::tapret::{TapretError, TapretProof};
@@ -84,7 +84,7 @@ pub struct Anchor {
     pub txid: Txid,
 
     /// Structured multi-protocol LNPBP-4 data the transaction commits to.
-    pub commitment: MultiCommitBlock,
+    pub lnpbp4_block: MultiCommitBlock,
 
     /// Proof of the commitment.
     pub proof: Proof,
@@ -113,7 +113,25 @@ impl PartialOrd for Anchor {
 impl Anchor {
     /// Returns id of the anchor (commitment hash).
     #[inline]
-    pub fn anchor_id(&self) -> AnchorId { self.clone().consensus_commit() }
+    pub fn anchor_id(&self) -> AnchorId { self.consensus_commit() }
+
+    /// Verifies that the transaction commits to the anchor and the anchor
+    /// commits to the given message under the given protocol.
+    pub fn verify(
+        &self,
+        protocol_id: ProtocolId,
+        message: Message,
+        tx: Transaction,
+    ) -> Result<bool, TapretError> {
+        self.proof
+            .verify(&self.lnpbp4_block.consensus_commit(), tx)
+            .map(|res| res && self.lnpbp4_block.verify(protocol_id, message))
+    }
+
+    /// Conceals all LNPBP-4 data except specific protocol.
+    pub fn conceal_except(&mut self, protocol_id: ProtocolId) -> usize {
+        self.lnpbp4_block.conceal_except(protocol_id)
+    }
 }
 
 /// Type and type-specific proof information of a deterministic bitcoin
@@ -143,7 +161,7 @@ impl Proof {
         tx: Transaction,
     ) -> Result<bool, TapretError> {
         match self {
-            Proof::Opret1st => todo!(),
+            Proof::Opret1st => todo!("Implement opret commitment verification"),
             Proof::Tapret1st(proof) => {
                 ConvolveCommitProof::<_, Transaction, _>::verify(proof, msg, tx)
             }

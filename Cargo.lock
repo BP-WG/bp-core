@@ -325,9 +325,9 @@ dependencies = [
 
 [[package]]
 name = "commit_verify"
-version = "0.7.0-beta.1"
+version = "0.7.0-beta.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "143dce2d8b6ad01a04299672135a49307e39126ab98c8059dfbecf29cddbecd2"
+checksum = "11172bb4963cc86999a3d0aa0efb449dbb04b1a59236a629162f32e1787aa9b2"
 dependencies = [
  "amplify",
  "bitcoin_hashes",

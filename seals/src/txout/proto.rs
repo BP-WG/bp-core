@@ -47,7 +47,7 @@ trait Decompose {
 
 impl Decompose for Anchor {
     fn decompose(self) -> (MultiCommitment, Witness) {
-        let msg = self.commitment.consensus_commit();
+        let msg = self.lnpbp4_block.consensus_commit();
         let witness = Witness::from(self);
         (msg, witness)
     }
