@@ -116,6 +116,8 @@ impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for psbt::Output {
         &mut self,
         msg: &MultiCommitment,
     ) -> Result<Self::Proof, Self::CommitError> {
+        // TODO: Check TAPRET_COMMITABLE key
+
         let internal_key = if let Some(internal_key) = self.tap_internal_key {
             internal_key
         } else {

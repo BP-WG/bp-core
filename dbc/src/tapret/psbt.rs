@@ -46,6 +46,8 @@ impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for Psbt {
         &mut self,
         msg: &MultiCommitment,
     ) -> Result<Self::Proof, Self::CommitError> {
+        // TODO: Add TAPRET_MESSAGE key
+
         for output in &mut self.outputs {
             if output.script.is_v1_p2tr() {
                 return output.embed_commit(msg);

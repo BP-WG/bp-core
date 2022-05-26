@@ -13,19 +13,32 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
+//! Anchors are data structures used in deterministic bitcoin commitments for
+//! keeping information about the proof of the commitment in connection to the
+//! transaction which contains the commitment, and multi-protocol merkle tree as
+//! defined by LNPBP-4.
+
 use std::cmp::Ordering;
+use std::collections::BTreeMap;
 
 use amplify::Wrapper;
 use bitcoin::hashes::{sha256, sha256t};
 use bitcoin::{Transaction, Txid};
 use commit_verify::convolve_commit::ConvolveCommitProof;
-use commit_verify::multi_commit::{MultiCommitment, ProtocolId};
+use commit_verify::multi_commit::{MultiCommitment, MultiSource, ProtocolId};
 use commit_verify::{
-    commit_encode, CommitVerify, ConsensusCommit, Message, MultiCommitBlock,
-    TaggedHash, UntaggedProtocol,
+    commit_encode, multi_commit, CommitVerify, ConsensusCommit,
+    EmbedCommitProof, EmbedCommitVerify, Message, MultiCommitBlock, TaggedHash,
+    TryCommitVerify, UntaggedProtocol,
+};
+use psbt::Psbt;
+
+use crate::tapret::{
+    Lnpbp6, PsbtCommitError, PsbtVerifyError, TapretError, TapretProof,
 };
 
-use crate::tapret::{TapretError, TapretProof};
+/// Default number of LNPBP slots
+pub const ANCHOR_MIN_COMMITMENTS: u16 = 16;
 
 static MIDSTATE_ANCHOR_ID: [u8; 32] = [
     148, 72, 59, 59, 150, 173, 163, 140, 159, 237, 69, 118, 104, 132, 194, 110,
@@ -67,6 +80,19 @@ where
 
 impl strict_encoding::Strategy for AnchorId {
     type Strategy = strict_encoding::strategies::Wrapped;
+}
+
+/// Errors working with anchors.
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
+#[display(inner)]
+pub enum Error {
+    /// Errors embedding LNPBP-4 commitment into PSBT
+    #[from]
+    EmbedCommit(PsbtCommitError),
+
+    /// Errors constructing LNPBP-4 commitment
+    #[from]
+    Lnpbp4(multi_commit::Error),
 }
 
 /// Anchor is a data structure used in deterministic bitcoin commitments for
@@ -115,6 +141,19 @@ impl Anchor {
     #[inline]
     pub fn anchor_id(&self) -> AnchorId { self.consensus_commit() }
 
+    /// Constructs anchor and embeds LNPBP4 commitment into PSBT.
+    pub fn commit(
+        psbt: &mut Psbt,
+        messages: BTreeMap<ProtocolId, Message>,
+    ) -> Result<Anchor, Error> {
+        let multi_source = MultiSource {
+            min_length: ANCHOR_MIN_COMMITMENTS,
+            messages,
+        };
+        let lnpbp4_block = MultiCommitBlock::try_commit(&multi_source)?;
+        psbt.embed_commit(&lnpbp4_block).map_err(Error::from)
+    }
+
     /// Verifies that the transaction commits to the anchor and the anchor
     /// commits to the given message under the given protocol.
     pub fn verify(
@@ -131,6 +170,46 @@ impl Anchor {
     /// Conceals all LNPBP-4 data except specific protocol.
     pub fn conceal_except(&mut self, protocol_id: ProtocolId) -> usize {
         self.lnpbp4_block.conceal_except(protocol_id)
+    }
+}
+
+impl EmbedCommitProof<MultiCommitBlock, Psbt, Lnpbp6> for Anchor {
+    fn restore_original_container(
+        &self,
+        psbt: &Psbt,
+    ) -> Result<Psbt, PsbtVerifyError> {
+        match self.proof {
+            Proof::Opret1st => todo!("Implement OpRet"),
+            Proof::Tapret1st(ref proof) => {
+                proof.restore_original_container(psbt)
+            }
+        }
+    }
+}
+
+impl EmbedCommitVerify<MultiCommitBlock, Lnpbp6> for Psbt {
+    type Proof = Anchor;
+    type CommitError = PsbtCommitError;
+    type VerifyError = PsbtVerifyError;
+
+    fn embed_commit(
+        &mut self,
+        msg: &MultiCommitBlock,
+    ) -> Result<Self::Proof, Self::CommitError> {
+        let lnpbp4_block = msg.clone();
+
+        // TODO: Implement OpRet
+        let proof = self.embed_commit(&lnpbp4_block.consensus_commit())?;
+
+        let anchor = Anchor {
+            txid: self.to_txid(),
+            lnpbp4_block,
+            proof: Proof::Tapret1st(proof),
+        };
+
+        // TODO: Update PSBT
+
+        Ok(anchor)
     }
 }
 

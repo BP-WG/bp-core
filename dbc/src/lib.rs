@@ -35,7 +35,7 @@ extern crate serde_crate as serde;
 #[macro_use]
 extern crate strict_encoding;
 
-mod anchor;
+pub mod anchor;
 pub mod keytweak;
 pub mod opret;
 pub mod sigtweak;
