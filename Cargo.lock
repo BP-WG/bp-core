@@ -195,7 +195,7 @@ dependencies = [
 
 [[package]]
 name = "bp-dbc"
-version = "0.7.0-beta.3"
+version = "0.7.0-beta.4"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -325,9 +325,9 @@ dependencies = [
 
 [[package]]
 name = "commit_verify"
-version = "0.7.0-beta.2"
+version = "0.7.0-beta.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "11172bb4963cc86999a3d0aa0efb449dbb04b1a59236a629162f32e1787aa9b2"
+checksum = "9433b3c0db3b1da631c07e72ddc084ef09548e47e4653bd20a64c9c5cc448e3d"
 dependencies = [
  "amplify",
  "bitcoin_hashes",

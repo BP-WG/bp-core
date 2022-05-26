@@ -28,7 +28,9 @@ use bitcoin::{Transaction, Txid};
 use commit_verify::convolve_commit::ConvolveCommitProof;
 #[cfg(feature = "wallet")]
 use commit_verify::multi_commit::{self, MultiSource};
-use commit_verify::multi_commit::{MultiCommitment, ProtocolId};
+use commit_verify::multi_commit::{
+    BlocksMismatch, MultiCommitment, ProtocolId,
+};
 use commit_verify::{
     commit_encode, CommitVerify, ConsensusCommit, Message, MultiCommitBlock,
     TaggedHash, UntaggedProtocol,
@@ -142,6 +144,25 @@ impl PartialOrd for Anchor {
     }
 }
 
+/// Error merging two [`Anchor`]s.
+#[derive(
+    Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, Error,
+    From
+)]
+#[display(doc_comments)]
+pub enum MergeError {
+    /// Error merging two [`MultiCommitBlock`]s.
+    #[display(inner)]
+    #[from]
+    Lnpbp4Mismatch(BlocksMismatch),
+
+    /// anchors can't be merged since they have different witness transactions
+    TxidMismatch,
+
+    /// anchors can't be merged since they have different proofs
+    ProofMismatch,
+}
+
 impl Anchor {
     /// Returns id of the anchor (commitment hash).
     #[inline]
@@ -169,14 +190,40 @@ impl Anchor {
         message: Message,
         tx: Transaction,
     ) -> Result<bool, TapretError> {
-        self.proof
-            .verify(&self.lnpbp4_block.consensus_commit(), tx)
-            .map(|res| res && self.lnpbp4_block.verify(protocol_id, message))
+        self.verify_dbc(tx)
+            .map(|res| res && self.verify_lnpbp4(protocol_id, message))
+    }
+
+    /// Verifies that the transaction commits to the anchor.
+    pub fn verify_dbc(&self, tx: Transaction) -> Result<bool, TapretError> {
+        self.proof.verify(&self.lnpbp4_block.consensus_commit(), tx)
+    }
+
+    /// Verifies that the anchor commits to the given message under the given
+    /// protocol.
+    pub fn verify_lnpbp4(
+        &self,
+        protocol_id: ProtocolId,
+        message: Message,
+    ) -> bool {
+        self.lnpbp4_block.verify(protocol_id, message)
     }
 
     /// Conceals all LNPBP-4 data except specific protocol.
-    pub fn conceal_except(&mut self, protocol_id: ProtocolId) -> usize {
-        self.lnpbp4_block.conceal_except(protocol_id)
+    pub fn conceal_except(&mut self, protocols: &[ProtocolId]) -> usize {
+        self.lnpbp4_block.conceal_except(protocols)
+    }
+
+    /// Merges two blocks keeping revealed data.
+    pub fn merge(mut self, other: Self) -> Result<Self, MergeError> {
+        if self.txid != other.txid {
+            return Err(MergeError::TxidMismatch);
+        }
+        if self.proof != other.proof {
+            return Err(MergeError::ProofMismatch);
+        }
+        self.lnpbp4_block = self.lnpbp4_block.merge(other.lnpbp4_block)?;
+        Ok(self)
     }
 }
 
