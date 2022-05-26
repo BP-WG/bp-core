@@ -19,23 +19,28 @@
 //! defined by LNPBP-4.
 
 use std::cmp::Ordering;
+#[cfg(feature = "wallet")]
 use std::collections::BTreeMap;
 
 use amplify::Wrapper;
 use bitcoin::hashes::{sha256, sha256t};
 use bitcoin::{Transaction, Txid};
 use commit_verify::convolve_commit::ConvolveCommitProof;
-use commit_verify::multi_commit::{MultiCommitment, MultiSource, ProtocolId};
+#[cfg(feature = "wallet")]
+use commit_verify::multi_commit::{self, MultiSource};
+use commit_verify::multi_commit::{MultiCommitment, ProtocolId};
 use commit_verify::{
-    commit_encode, multi_commit, CommitVerify, ConsensusCommit,
-    EmbedCommitProof, EmbedCommitVerify, Message, MultiCommitBlock, TaggedHash,
-    TryCommitVerify, UntaggedProtocol,
+    commit_encode, CommitVerify, ConsensusCommit, Message, MultiCommitBlock,
+    TaggedHash, UntaggedProtocol,
 };
+#[cfg(feature = "wallet")]
+use commit_verify::{EmbedCommitProof, EmbedCommitVerify, TryCommitVerify};
+#[cfg(feature = "wallet")]
 use psbt::Psbt;
 
-use crate::tapret::{
-    Lnpbp6, PsbtCommitError, PsbtVerifyError, TapretError, TapretProof,
-};
+#[cfg(feature = "wallet")]
+use crate::tapret::{Lnpbp6, PsbtCommitError, PsbtVerifyError};
+use crate::tapret::{TapretError, TapretProof};
 
 /// Default number of LNPBP slots
 pub const ANCHOR_MIN_COMMITMENTS: u16 = 16;
@@ -82,6 +87,7 @@ impl strict_encoding::Strategy for AnchorId {
     type Strategy = strict_encoding::strategies::Wrapped;
 }
 
+#[cfg(feature = "wallet")]
 /// Errors working with anchors.
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
 #[display(inner)]
@@ -142,6 +148,7 @@ impl Anchor {
     pub fn anchor_id(&self) -> AnchorId { self.consensus_commit() }
 
     /// Constructs anchor and embeds LNPBP4 commitment into PSBT.
+    #[cfg(feature = "wallet")]
     pub fn commit(
         psbt: &mut Psbt,
         messages: BTreeMap<ProtocolId, Message>,
@@ -173,6 +180,7 @@ impl Anchor {
     }
 }
 
+#[cfg(feature = "wallet")]
 impl EmbedCommitProof<MultiCommitBlock, Psbt, Lnpbp6> for Anchor {
     fn restore_original_container(
         &self,
@@ -187,6 +195,7 @@ impl EmbedCommitProof<MultiCommitBlock, Psbt, Lnpbp6> for Anchor {
     }
 }
 
+#[cfg(feature = "wallet")]
 impl EmbedCommitVerify<MultiCommitBlock, Lnpbp6> for Psbt {
     type Proof = Anchor;
     type CommitError = PsbtCommitError;

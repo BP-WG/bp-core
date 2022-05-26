@@ -176,7 +176,7 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "bp-core"
-version = "0.7.0-beta.1"
+version = "0.7.0-beta.3"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -195,7 +195,7 @@ dependencies = [
 
 [[package]]
 name = "bp-dbc"
-version = "0.7.0-beta.2"
+version = "0.7.0-beta.3"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -212,7 +212,7 @@ dependencies = [
 
 [[package]]
 name = "bp-seals"
-version = "0.7.0-beta.2"
+version = "0.7.0-beta.3"
 dependencies = [
  "amplify",
  "async-trait",
