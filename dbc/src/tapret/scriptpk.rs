@@ -18,11 +18,11 @@ use bitcoin_scripts::PubkeyScript;
 use commit_verify::convolve_commit::{
     ConvolveCommitProof, ConvolveCommitVerify,
 };
-use commit_verify::multi_commit::MultiCommitment;
+use commit_verify::lnpbp4;
 
 use super::{Lnpbp6, TapretProof, TapretTreeError};
 
-impl ConvolveCommitProof<MultiCommitment, PubkeyScript, Lnpbp6>
+impl ConvolveCommitProof<lnpbp4::CommitmentHash, PubkeyScript, Lnpbp6>
     for TapretProof
 {
     type Suppl = Self;
@@ -34,7 +34,7 @@ impl ConvolveCommitProof<MultiCommitment, PubkeyScript, Lnpbp6>
     fn extract_supplement(&self) -> &Self::Suppl { self }
 }
 
-impl ConvolveCommitVerify<MultiCommitment, TapretProof, Lnpbp6>
+impl ConvolveCommitVerify<lnpbp4::CommitmentHash, TapretProof, Lnpbp6>
     for PubkeyScript
 {
     type Commitment = PubkeyScript;
@@ -43,7 +43,7 @@ impl ConvolveCommitVerify<MultiCommitment, TapretProof, Lnpbp6>
     fn convolve_commit(
         &self,
         supplement: &TapretProof,
-        msg: &MultiCommitment,
+        msg: &lnpbp4::CommitmentHash,
     ) -> Result<(PubkeyScript, TapretProof), Self::CommitError> {
         let (output_key, proof) = supplement
             .internal_key

@@ -20,8 +20,9 @@ use bitcoin::util::taproot::TapBranchHash;
 use bitcoin::Script;
 use bitcoin_scripts::taproot::{Node, TaprootScriptTree, TreeNode};
 use bitcoin_scripts::{TapNodeHash, TapScript};
-use commit_verify::multi_commit::MultiCommitment;
-use commit_verify::{CommitVerify, EmbedCommitProof, EmbedCommitVerify};
+use commit_verify::{
+    lnpbp4, CommitVerify, EmbedCommitProof, EmbedCommitVerify,
+};
 use psbt::commit::tapret::DfsPathEncodeError;
 use secp256k1::SECP256K1;
 
@@ -74,7 +75,9 @@ pub enum PsbtVerifyError {
     Proof(TapretProofError),
 }
 
-impl EmbedCommitProof<MultiCommitment, psbt::Output, Lnpbp6> for TapretProof {
+impl EmbedCommitProof<lnpbp4::CommitmentHash, psbt::Output, Lnpbp6>
+    for TapretProof
+{
     fn restore_original_container(
         &self,
         commit_container: &psbt::Output,
@@ -107,14 +110,14 @@ impl EmbedCommitProof<MultiCommitment, psbt::Output, Lnpbp6> for TapretProof {
     }
 }
 
-impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for psbt::Output {
+impl EmbedCommitVerify<lnpbp4::CommitmentHash, Lnpbp6> for psbt::Output {
     type Proof = TapretProof;
     type CommitError = PsbtCommitError;
     type VerifyError = PsbtVerifyError;
 
     fn embed_commit(
         &mut self,
-        msg: &MultiCommitment,
+        msg: &lnpbp4::CommitmentHash,
     ) -> Result<Self::Proof, Self::CommitError> {
         // TODO: Check TAPRET_COMMITABLE key
 

@@ -13,13 +13,12 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use commit_verify::multi_commit::MultiCommitment;
-use commit_verify::{EmbedCommitProof, EmbedCommitVerify};
+use commit_verify::{lnpbp4, EmbedCommitProof, EmbedCommitVerify};
 use psbt::Psbt;
 
 use super::{Lnpbp6, PsbtCommitError, PsbtVerifyError, TapretProof};
 
-impl EmbedCommitProof<MultiCommitment, Psbt, Lnpbp6> for TapretProof {
+impl EmbedCommitProof<lnpbp4::CommitmentHash, Psbt, Lnpbp6> for TapretProof {
     fn restore_original_container(
         &self,
         commit_container: &Psbt,
@@ -37,14 +36,14 @@ impl EmbedCommitProof<MultiCommitment, Psbt, Lnpbp6> for TapretProof {
     }
 }
 
-impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for Psbt {
+impl EmbedCommitVerify<lnpbp4::CommitmentHash, Lnpbp6> for Psbt {
     type Proof = TapretProof;
     type CommitError = PsbtCommitError;
     type VerifyError = PsbtVerifyError;
 
     fn embed_commit(
         &mut self,
-        msg: &MultiCommitment,
+        msg: &lnpbp4::CommitmentHash,
     ) -> Result<Self::Proof, Self::CommitError> {
         // TODO: Add TAPRET_MESSAGE key
 

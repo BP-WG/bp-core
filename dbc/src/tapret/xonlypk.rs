@@ -23,15 +23,14 @@ use bitcoin_scripts::TapScript;
 use commit_verify::convolve_commit::{
     ConvolveCommitProof, ConvolveCommitVerify,
 };
-use commit_verify::multi_commit::MultiCommitment;
-use commit_verify::CommitVerify;
+use commit_verify::{lnpbp4, CommitVerify};
 use secp256k1::SECP256K1;
 
 use super::{
     Lnpbp6, TapretNodePartner, TapretPathProof, TapretProof, TapretTreeError,
 };
 
-impl ConvolveCommitProof<MultiCommitment, UntweakedPublicKey, Lnpbp6>
+impl ConvolveCommitProof<lnpbp4::CommitmentHash, UntweakedPublicKey, Lnpbp6>
     for TapretProof
 {
     type Suppl = TapretPathProof;
@@ -43,7 +42,7 @@ impl ConvolveCommitProof<MultiCommitment, UntweakedPublicKey, Lnpbp6>
     fn extract_supplement(&self) -> &Self::Suppl { &self.path_proof }
 }
 
-impl ConvolveCommitVerify<MultiCommitment, TapretProof, Lnpbp6>
+impl ConvolveCommitVerify<lnpbp4::CommitmentHash, TapretProof, Lnpbp6>
     for UntweakedPublicKey
 {
     type Commitment = TweakedPublicKey;
@@ -52,7 +51,7 @@ impl ConvolveCommitVerify<MultiCommitment, TapretProof, Lnpbp6>
     fn convolve_commit(
         &self,
         supplement: &TapretPathProof,
-        msg: &MultiCommitment,
+        msg: &lnpbp4::CommitmentHash,
     ) -> Result<(TweakedPublicKey, TapretProof), Self::CommitError> {
         let script_commitment = TapScript::commit(&(*msg, supplement.nonce));
 

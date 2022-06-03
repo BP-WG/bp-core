@@ -26,8 +26,9 @@ use bitcoin_scripts::taproot::{
     UnsplittableTree,
 };
 use bitcoin_scripts::{LeafScript, TapNodeHash, TapScript};
-use commit_verify::multi_commit::MultiCommitment;
-use commit_verify::{CommitVerify, EmbedCommitProof, EmbedCommitVerify};
+use commit_verify::{
+    lnpbp4, CommitVerify, EmbedCommitProof, EmbedCommitVerify,
+};
 
 use super::{Lnpbp6, TapretNodePartner, TapretPathProof};
 use crate::tapret::TapretPathError;
@@ -243,7 +244,7 @@ impl From<TapretSourceInfo<TaprootScriptTree>> for TapretSourceInfo<TapTree> {
 
 impl
     EmbedCommitProof<
-        MultiCommitment,
+        lnpbp4::CommitmentHash,
         TapretSourceInfo<TaprootScriptTree>,
         Lnpbp6,
     > for TapretPathProof
@@ -270,7 +271,7 @@ impl
     }
 }
 
-impl EmbedCommitVerify<MultiCommitment, Lnpbp6>
+impl EmbedCommitVerify<lnpbp4::CommitmentHash, Lnpbp6>
     for TapretSourceInfo<TaprootScriptTree>
 {
     type Proof = TapretPathProof;
@@ -279,7 +280,7 @@ impl EmbedCommitVerify<MultiCommitment, Lnpbp6>
 
     fn embed_commit(
         &mut self,
-        msg: &MultiCommitment,
+        msg: &lnpbp4::CommitmentHash,
     ) -> Result<Self::Proof, Self::CommitError> {
         for nonce in 0..=u8::MAX {
             let commitment_script = TapScript::commit(&(*msg, nonce));
@@ -337,7 +338,7 @@ impl EmbedCommitVerify<MultiCommitment, Lnpbp6>
     }
 }
 
-impl EmbedCommitProof<MultiCommitment, TapretSourceInfo<TapTree>, Lnpbp6>
+impl EmbedCommitProof<lnpbp4::CommitmentHash, TapretSourceInfo<TapTree>, Lnpbp6>
     for TapretPathProof
 {
     fn restore_original_container(
@@ -354,14 +355,16 @@ impl EmbedCommitProof<MultiCommitment, TapretSourceInfo<TapTree>, Lnpbp6>
     }
 }
 
-impl EmbedCommitVerify<MultiCommitment, Lnpbp6> for TapretSourceInfo<TapTree> {
+impl EmbedCommitVerify<lnpbp4::CommitmentHash, Lnpbp6>
+    for TapretSourceInfo<TapTree>
+{
     type Proof = TapretPathProof;
     type CommitError = TapretSourceError;
     type VerifyError = TapretProofError;
 
     fn embed_commit(
         &mut self,
-        msg: &MultiCommitment,
+        msg: &lnpbp4::CommitmentHash,
     ) -> Result<Self::Proof, Self::CommitError> {
         let mut source = TapretSourceInfo::<TaprootScriptTree>::from(
             self as &TapretSourceInfo<_>,

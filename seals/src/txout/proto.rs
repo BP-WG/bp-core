@@ -15,8 +15,7 @@
 
 use bitcoin::Txid;
 use bitcoin_onchain::ResolveTx;
-use commit_verify::multi_commit::MultiCommitment;
-use commit_verify::ConsensusCommit;
+use commit_verify::lnpbp4;
 use dbc::{Anchor, Proof};
 use single_use_seals::{SealProtocol, SealStatus, SealVerify};
 
@@ -32,24 +31,15 @@ pub struct Witness {
     pub proof: Proof,
 }
 
-impl From<Anchor> for Witness {
-    fn from(anchor: Anchor) -> Self {
+impl<L> From<Anchor<L>> for Witness
+where
+    L: lnpbp4::Proof,
+{
+    fn from(anchor: Anchor<L>) -> Self {
         Witness {
             txid: anchor.txid,
-            proof: anchor.proof,
+            proof: anchor.dbc_proof,
         }
-    }
-}
-
-trait Decompose {
-    fn decompose(self) -> (MultiCommitment, Witness);
-}
-
-impl Decompose for Anchor {
-    fn decompose(self) -> (MultiCommitment, Witness) {
-        let msg = self.lnpbp4_block.consensus_commit();
-        let witness = Witness::from(self);
-        (msg, witness)
     }
 }
 
@@ -64,7 +54,7 @@ where
     Resolver: ResolveTx,
 {
     type Witness = Witness;
-    type Message = MultiCommitment;
+    type Message = lnpbp4::CommitmentHash;
     type PublicationId = Txid;
     type Error = VerifyError;
 
@@ -142,21 +132,5 @@ where
 
         // 4. Verify DBC with the giving closing method
         witness.proof.verify(&msg, tx).map_err(VerifyError::from)
-    }
-}
-
-impl<Resolver> TxoProtocol<Resolver>
-where
-    Resolver: ResolveTx,
-{
-    /// Verifies the fact that a given anchor is a valid witness for closing the
-    /// provided set of single-use-seals.
-    pub fn verify_anchor<'seal, Seal: TxoSeal + 'seal>(
-        &self,
-        seals: impl IntoIterator<Item = &'seal Seal>,
-        anchor: Anchor,
-    ) -> Result<bool, VerifyError> {
-        let (msg, witness) = anchor.decompose();
-        self.verify_batch(seals, &msg, &witness)
     }
 }

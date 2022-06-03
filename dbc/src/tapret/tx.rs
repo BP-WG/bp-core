@@ -17,7 +17,7 @@ use bitcoin::Transaction;
 use commit_verify::convolve_commit::{
     ConvolveCommitProof, ConvolveCommitVerify,
 };
-use commit_verify::multi_commit::MultiCommitment;
+use commit_verify::lnpbp4;
 
 use super::{Lnpbp6, TapretProof, TapretTreeError};
 
@@ -34,7 +34,9 @@ pub enum TapretError {
     NoTaprootOutput,
 }
 
-impl ConvolveCommitProof<MultiCommitment, Transaction, Lnpbp6> for TapretProof {
+impl ConvolveCommitProof<lnpbp4::CommitmentHash, Transaction, Lnpbp6>
+    for TapretProof
+{
     type Suppl = Self;
 
     fn restore_original(&self, commitment: &Transaction) -> Transaction {
@@ -51,7 +53,7 @@ impl ConvolveCommitProof<MultiCommitment, Transaction, Lnpbp6> for TapretProof {
     fn extract_supplement(&self) -> &Self::Suppl { self }
 }
 
-impl ConvolveCommitVerify<MultiCommitment, TapretProof, Lnpbp6>
+impl ConvolveCommitVerify<lnpbp4::CommitmentHash, TapretProof, Lnpbp6>
     for Transaction
 {
     type Commitment = Transaction;
@@ -60,7 +62,7 @@ impl ConvolveCommitVerify<MultiCommitment, TapretProof, Lnpbp6>
     fn convolve_commit(
         &self,
         supplement: &TapretProof,
-        msg: &MultiCommitment,
+        msg: &lnpbp4::CommitmentHash,
     ) -> Result<(Transaction, TapretProof), Self::CommitError> {
         let mut tx = self.clone();
 

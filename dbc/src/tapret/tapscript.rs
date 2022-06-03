@@ -16,8 +16,7 @@
 use bitcoin::blockdata::opcodes::all;
 use bitcoin::blockdata::script;
 use bitcoin_scripts::TapScript;
-use commit_verify::multi_commit::MultiCommitment;
-use commit_verify::{CommitEncode, CommitVerify};
+use commit_verify::{lnpbp4, CommitEncode, CommitVerify};
 
 use super::Lnpbp6;
 
@@ -29,8 +28,8 @@ pub const TAPRET_SCRIPT_COMMITMENT_PREFIX: [u8; 32] = [
     0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x6a, 0x20,
 ];
 
-impl CommitVerify<(MultiCommitment, u8), Lnpbp6> for TapScript {
-    fn commit(msg: &(MultiCommitment, u8)) -> Self {
+impl CommitVerify<(lnpbp4::CommitmentHash, u8), Lnpbp6> for TapScript {
+    fn commit(msg: &(lnpbp4::CommitmentHash, u8)) -> Self {
         let (msg, nonce) = msg;
         let mut builder = script::Builder::new();
         for _ in 0..30 {

@@ -19,33 +19,28 @@
 //! defined by LNPBP-4.
 
 use std::cmp::Ordering;
-#[cfg(feature = "wallet")]
-use std::collections::BTreeMap;
+use std::io::Write;
 
 use amplify::Wrapper;
 use bitcoin::hashes::{sha256, sha256t};
 use bitcoin::{Transaction, Txid};
 use commit_verify::convolve_commit::ConvolveCommitProof;
-#[cfg(feature = "wallet")]
-use commit_verify::multi_commit::{self, MultiSource};
-use commit_verify::multi_commit::{
-    BlocksMismatch, MultiCommitment, ProtocolId,
-};
+use commit_verify::lnpbp4::{self, Message, ProtocolId};
 use commit_verify::{
-    commit_encode, CommitVerify, ConsensusCommit, Message, MultiCommitBlock,
-    TaggedHash, UntaggedProtocol,
+    CommitEncode, CommitVerify, ConsensusCommit, PrehashedProtocol, TaggedHash,
 };
 #[cfg(feature = "wallet")]
 use commit_verify::{EmbedCommitProof, EmbedCommitVerify, TryCommitVerify};
 #[cfg(feature = "wallet")]
 use psbt::Psbt;
+use strict_encoding::StrictEncode;
 
 #[cfg(feature = "wallet")]
 use crate::tapret::{Lnpbp6, PsbtCommitError, PsbtVerifyError};
 use crate::tapret::{TapretError, TapretProof};
 
-/// Default number of LNPBP slots
-pub const ANCHOR_MIN_COMMITMENTS: u16 = 16;
+/// Default depth of LNPBP-4 commitment tree
+pub const ANCHOR_MIN_LNPBP4_DEPTH: u8 = 3;
 
 static MIDSTATE_ANCHOR_ID: [u8; 32] = [
     148, 72, 59, 59, 150, 173, 163, 140, 159, 237, 69, 118, 104, 132, 194, 110,
@@ -77,7 +72,7 @@ impl sha256t::Tag for AnchorIdTag {
 )]
 pub struct AnchorId(sha256t::Hash<AnchorIdTag>);
 
-impl<Msg> CommitVerify<Msg, UntaggedProtocol> for AnchorId
+impl<Msg> CommitVerify<Msg, PrehashedProtocol> for AnchorId
 where
     Msg: AsRef<[u8]>,
 {
@@ -100,7 +95,20 @@ pub enum Error {
 
     /// Errors constructing LNPBP-4 commitment
     #[from]
-    Lnpbp4(multi_commit::Error),
+    Lnpbp4(lnpbp4::Error),
+}
+
+/// Errors verifying anchors.
+#[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
+#[display(inner)]
+pub enum VerifyError {
+    /// Tapret commitment verification failure.
+    #[from]
+    Tapret(TapretError),
+
+    /// LNPBP-4 invalid proof.
+    #[from(lnpbp4::UnrelatedProof)]
+    Lnpbp4UnrelatedProtocol,
 }
 
 /// Anchor is a data structure used in deterministic bitcoin commitments for
@@ -113,32 +121,42 @@ pub enum Error {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate")
 )]
-pub struct Anchor {
+pub struct Anchor<L: lnpbp4::Proof> {
     /// Transaction containing deterministic bitcoin commitment.
     pub txid: Txid,
 
     /// Structured multi-protocol LNPBP-4 data the transaction commits to.
-    pub lnpbp4_block: MultiCommitBlock,
+    pub lnpbp4_proof: L,
 
-    /// Proof of the commitment.
-    pub proof: Proof,
+    /// Proof of the DBC commitment.
+    pub dbc_proof: Proof,
 }
 
-impl commit_encode::Strategy for Anchor {
-    type Strategy = commit_encode::strategies::UsingStrict;
+impl CommitEncode for Anchor<lnpbp4::MerkleBlock> {
+    fn commit_encode<E: Write>(&self, mut e: E) -> usize {
+        let mut len = self
+            .txid
+            .strict_encode(&mut e)
+            .expect("memory encoders do not fail");
+        len += self
+            .dbc_proof
+            .strict_encode(&mut e)
+            .expect("memory encoders do not fail");
+        len + self.lnpbp4_proof.commit_encode(e)
+    }
 }
 
-impl ConsensusCommit for Anchor {
+impl ConsensusCommit for Anchor<lnpbp4::MerkleBlock> {
     type Commitment = AnchorId;
 }
 
-impl Ord for Anchor {
+impl Ord for Anchor<lnpbp4::MerkleBlock> {
     fn cmp(&self, other: &Self) -> Ordering {
         self.anchor_id().cmp(&other.anchor_id())
     }
 }
 
-impl PartialOrd for Anchor {
+impl PartialOrd for Anchor<lnpbp4::MerkleBlock> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
@@ -153,8 +171,8 @@ impl PartialOrd for Anchor {
 pub enum MergeError {
     /// Error merging two [`MultiCommitBlock`]s.
     #[display(inner)]
-    #[from]
-    Lnpbp4Mismatch(BlocksMismatch),
+    #[from(lnpbp4::UnrelatedProof)]
+    Lnpbp4Mismatch,
 
     /// anchors can't be merged since they have different witness transactions
     TxidMismatch,
@@ -163,7 +181,7 @@ pub enum MergeError {
     ProofMismatch,
 }
 
-impl Anchor {
+impl Anchor<lnpbp4::MerkleBlock> {
     /// Returns id of the anchor (commitment hash).
     #[inline]
     pub fn anchor_id(&self) -> AnchorId { self.consensus_commit() }
@@ -172,16 +190,23 @@ impl Anchor {
     #[cfg(feature = "wallet")]
     pub fn commit(
         psbt: &mut Psbt,
-        messages: BTreeMap<ProtocolId, Message>,
-    ) -> Result<Anchor, Error> {
-        let multi_source = MultiSource {
-            min_length: ANCHOR_MIN_COMMITMENTS,
+        messages: lnpbp4::MessageMap,
+    ) -> Result<Anchor<lnpbp4::MerkleBlock>, Error> {
+        let multi_source = lnpbp4::MultiSource {
+            min_depth: ANCHOR_MIN_LNPBP4_DEPTH,
             messages,
         };
-        let lnpbp4_block = MultiCommitBlock::try_commit(&multi_source)?;
-        psbt.embed_commit(&lnpbp4_block).map_err(Error::from)
+        let lnpbp4_block = lnpbp4::MerkleTree::try_commit(&multi_source)?;
+        let anchor = psbt.embed_commit(&lnpbp4_block)?;
+        Ok(Anchor {
+            txid: anchor.txid,
+            lnpbp4_proof: lnpbp4::MerkleBlock::from(anchor.lnpbp4_proof),
+            dbc_proof: anchor.dbc_proof,
+        })
     }
+}
 
+impl Anchor<lnpbp4::MerkleProof> {
     /// Verifies that the transaction commits to the anchor and the anchor
     /// commits to the given message under the given protocol.
     pub fn verify(
@@ -189,51 +214,54 @@ impl Anchor {
         protocol_id: ProtocolId,
         message: Message,
         tx: Transaction,
-    ) -> Result<bool, TapretError> {
-        self.verify_dbc(tx)
-            .map(|res| res && self.verify_lnpbp4(protocol_id, message))
-    }
-
-    /// Verifies that the transaction commits to the anchor.
-    pub fn verify_dbc(&self, tx: Transaction) -> Result<bool, TapretError> {
-        self.proof.verify(&self.lnpbp4_block.consensus_commit(), tx)
+    ) -> Result<bool, VerifyError> {
+        self.dbc_proof
+            .verify(&self.lnpbp4_proof.convolve(protocol_id, message)?, tx)
+            .map_err(VerifyError::from)
     }
 
     /// Verifies that the anchor commits to the given message under the given
     /// protocol.
-    pub fn verify_lnpbp4(
+    pub fn convolve(
         &self,
         protocol_id: ProtocolId,
         message: Message,
-    ) -> bool {
-        self.lnpbp4_block.verify(protocol_id, message)
+    ) -> Result<lnpbp4::CommitmentHash, lnpbp4::UnrelatedProof> {
+        self.lnpbp4_proof.convolve(protocol_id, message)
     }
+}
 
+impl Anchor<lnpbp4::MerkleBlock> {
     /// Conceals all LNPBP-4 data except specific protocol.
-    pub fn conceal_except(&mut self, protocols: &[ProtocolId]) -> usize {
-        self.lnpbp4_block.conceal_except(protocols)
+    pub fn conceal_except(
+        &mut self,
+        protocol_id: ProtocolId,
+    ) -> Result<usize, lnpbp4::LeafNotKnown> {
+        self.lnpbp4_proof.conceal_except(protocol_id)
     }
 
-    /// Merges two blocks keeping revealed data.
-    pub fn merge(mut self, other: Self) -> Result<Self, MergeError> {
+    /// Merges two anchors keeping revealed data.
+    pub fn merge_reveal(mut self, other: Self) -> Result<Self, MergeError> {
         if self.txid != other.txid {
             return Err(MergeError::TxidMismatch);
         }
-        if self.proof != other.proof {
+        if self.dbc_proof != other.dbc_proof {
             return Err(MergeError::ProofMismatch);
         }
-        self.lnpbp4_block = self.lnpbp4_block.merge(other.lnpbp4_block)?;
+        self.lnpbp4_proof.merge_reveal(other.lnpbp4_proof)?;
         Ok(self)
     }
 }
 
 #[cfg(feature = "wallet")]
-impl EmbedCommitProof<MultiCommitBlock, Psbt, Lnpbp6> for Anchor {
+impl EmbedCommitProof<lnpbp4::MerkleTree, Psbt, Lnpbp6>
+    for Anchor<lnpbp4::MerkleTree>
+{
     fn restore_original_container(
         &self,
         psbt: &Psbt,
     ) -> Result<Psbt, PsbtVerifyError> {
-        match self.proof {
+        match self.dbc_proof {
             Proof::Opret1st => todo!("Implement OpRet"),
             Proof::Tapret1st(ref proof) => {
                 proof.restore_original_container(psbt)
@@ -243,14 +271,14 @@ impl EmbedCommitProof<MultiCommitBlock, Psbt, Lnpbp6> for Anchor {
 }
 
 #[cfg(feature = "wallet")]
-impl EmbedCommitVerify<MultiCommitBlock, Lnpbp6> for Psbt {
-    type Proof = Anchor;
+impl EmbedCommitVerify<lnpbp4::MerkleTree, Lnpbp6> for Psbt {
+    type Proof = Anchor<lnpbp4::MerkleTree>;
     type CommitError = PsbtCommitError;
     type VerifyError = PsbtVerifyError;
 
     fn embed_commit(
         &mut self,
-        msg: &MultiCommitBlock,
+        msg: &lnpbp4::MerkleTree,
     ) -> Result<Self::Proof, Self::CommitError> {
         let lnpbp4_block = msg.clone();
 
@@ -259,8 +287,8 @@ impl EmbedCommitVerify<MultiCommitBlock, Lnpbp6> for Psbt {
 
         let anchor = Anchor {
             txid: self.to_txid(),
-            lnpbp4_block,
-            proof: Proof::Tapret1st(proof),
+            lnpbp4_proof: lnpbp4_block,
+            dbc_proof: Proof::Tapret1st(proof),
         };
 
         // TODO: Update PSBT
@@ -292,7 +320,7 @@ impl Proof {
     /// Verifies validity of the proof.
     pub fn verify(
         &self,
-        msg: &MultiCommitment,
+        msg: &lnpbp4::CommitmentHash,
         tx: Transaction,
     ) -> Result<bool, TapretError> {
         match self {
