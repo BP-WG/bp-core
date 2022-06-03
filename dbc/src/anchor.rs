@@ -235,9 +235,9 @@ impl Anchor<lnpbp4::MerkleBlock> {
     /// Conceals all LNPBP-4 data except specific protocol.
     pub fn conceal_except(
         &mut self,
-        protocol_id: ProtocolId,
+        protocols: impl AsRef<[ProtocolId]>,
     ) -> Result<usize, lnpbp4::LeafNotKnown> {
-        self.lnpbp4_proof.conceal_except(protocol_id)
+        self.lnpbp4_proof.conceal_except(protocols)
     }
 
     /// Merges two anchors keeping revealed data.
