@@ -207,16 +207,56 @@ impl Anchor<lnpbp4::MerkleBlock> {
 }
 
 impl Anchor<lnpbp4::MerkleProof> {
+    /// Returns id of the anchor (commitment hash).
+    #[inline]
+    pub fn anchor_id(
+        &self,
+        protocol_id: impl Into<ProtocolId>,
+        message: Message,
+    ) -> Result<AnchorId, lnpbp4::UnrelatedProof> {
+        Ok(self.to_merkle_block(protocol_id, message)?.anchor_id())
+    }
+
+    /// Reconstructs anchor containing merkle block
+    pub fn into_merkle_block(
+        self,
+        protocol_id: impl Into<ProtocolId>,
+        message: Message,
+    ) -> Result<Anchor<lnpbp4::MerkleBlock>, lnpbp4::UnrelatedProof> {
+        let lnpbp4_proof = lnpbp4::MerkleBlock::with(
+            &self.lnpbp4_proof,
+            protocol_id.into(),
+            message,
+        )?;
+        Ok(Anchor {
+            txid: self.txid,
+            lnpbp4_proof,
+            dbc_proof: self.dbc_proof,
+        })
+    }
+
+    /// Reconstructs anchor containing merkle block
+    pub fn to_merkle_block(
+        &self,
+        protocol_id: impl Into<ProtocolId>,
+        message: Message,
+    ) -> Result<Anchor<lnpbp4::MerkleBlock>, lnpbp4::UnrelatedProof> {
+        self.clone().into_merkle_block(protocol_id, message)
+    }
+
     /// Verifies that the transaction commits to the anchor and the anchor
     /// commits to the given message under the given protocol.
     pub fn verify(
         &self,
-        protocol_id: ProtocolId,
+        protocol_id: impl Into<ProtocolId>,
         message: Message,
         tx: Transaction,
     ) -> Result<bool, VerifyError> {
         self.dbc_proof
-            .verify(&self.lnpbp4_proof.convolve(protocol_id, message)?, tx)
+            .verify(
+                &self.lnpbp4_proof.convolve(protocol_id.into(), message)?,
+                tx,
+            )
             .map_err(VerifyError::from)
     }
 
@@ -224,14 +264,23 @@ impl Anchor<lnpbp4::MerkleProof> {
     /// protocol.
     pub fn convolve(
         &self,
-        protocol_id: ProtocolId,
+        protocol_id: impl Into<ProtocolId>,
         message: Message,
     ) -> Result<lnpbp4::CommitmentHash, lnpbp4::UnrelatedProof> {
-        self.lnpbp4_proof.convolve(protocol_id, message)
+        self.lnpbp4_proof.convolve(protocol_id.into(), message)
     }
 }
 
 impl Anchor<lnpbp4::MerkleBlock> {
+    /// Conceals all LNPBP-4 data except specific protocol and produces merkle
+    /// proof anchor.
+    pub fn to_merkle_proof(
+        &self,
+        protocol: impl Into<ProtocolId>,
+    ) -> Result<Anchor<lnpbp4::MerkleProof>, lnpbp4::LeafNotKnown> {
+        self.clone().into_merkle_proof(protocol)
+    }
+
     /// Conceals all LNPBP-4 data except specific protocol and converts anchor
     /// into merkle proof anchor.
     pub fn into_merkle_proof(
