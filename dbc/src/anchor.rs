@@ -232,6 +232,21 @@ impl Anchor<lnpbp4::MerkleProof> {
 }
 
 impl Anchor<lnpbp4::MerkleBlock> {
+    /// Conceals all LNPBP-4 data except specific protocol and converts anchor
+    /// into merkle proof anchor.
+    pub fn into_merkle_proof(
+        self,
+        protocol: impl Into<ProtocolId>,
+    ) -> Result<Anchor<lnpbp4::MerkleProof>, lnpbp4::LeafNotKnown> {
+        let lnpbp4_proof =
+            self.lnpbp4_proof.to_merkle_proof(protocol.into())?;
+        Ok(Anchor {
+            txid: self.txid,
+            lnpbp4_proof,
+            dbc_proof: self.dbc_proof,
+        })
+    }
+
     /// Conceals all LNPBP-4 data except specific protocol.
     pub fn conceal_except(
         &mut self,
