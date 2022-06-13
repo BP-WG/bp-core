@@ -23,6 +23,7 @@ use std::io::Write;
 
 use amplify::Wrapper;
 use bitcoin::hashes::{sha256, sha256t};
+use bitcoin::psbt::raw::ProprietaryKey;
 use bitcoin::{Transaction, Txid};
 use commit_verify::convolve_commit::ConvolveCommitProof;
 use commit_verify::lnpbp4::{self, Message, ProtocolId};
@@ -31,6 +32,7 @@ use commit_verify::{
 };
 #[cfg(feature = "wallet")]
 use commit_verify::{EmbedCommitProof, EmbedCommitVerify, TryCommitVerify};
+use psbt::commit::tapret::ProprietaryKeyTapret;
 #[cfg(feature = "wallet")]
 use psbt::Psbt;
 use strict_encoding::StrictEncode;
@@ -349,15 +351,16 @@ impl EmbedCommitVerify<lnpbp4::MerkleTree, Lnpbp6> for Psbt {
         // TODO: Implement OpRet
         let proof = self.embed_commit(&lnpbp4_block.consensus_commit())?;
 
-        let anchor = Anchor {
+        if let Ok(psbt_proof) = proof.path_proof.strict_serialize() {
+            self.proprietary
+                .insert(ProprietaryKey::tapret_proof(), psbt_proof);
+        }
+
+        Ok(Anchor {
             txid: self.to_txid(),
             lnpbp4_proof: lnpbp4_block,
             dbc_proof: Proof::Tapret1st(proof),
-        };
-
-        // TODO: Update PSBT
-
-        Ok(anchor)
+        })
     }
 }
 
