@@ -176,7 +176,7 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "bp-core"
-version = "0.7.0-beta.5"
+version = "0.7.0"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -195,7 +195,7 @@ dependencies = [
 
 [[package]]
 name = "bp-dbc"
-version = "0.7.0-rc.2"
+version = "0.7.0"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -212,7 +212,7 @@ dependencies = [
 
 [[package]]
 name = "bp-seals"
-version = "0.7.0-beta.5"
+version = "0.7.0"
 dependencies = [
  "amplify",
  "async-trait",
@@ -325,9 +325,9 @@ dependencies = [
 
 [[package]]
 name = "commit_verify"
-version = "0.7.0-rc.5"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60d5fdef452f0c66819538dae5fe0f495c8b92049788eec22af163a42fe09222"
+checksum = "eac05c39ea303b263fff5ac3af85110e8ed306bccf4222ba11d434db3b4f78ba"
 dependencies = [
  "amplify",
  "bitcoin_hashes",
@@ -516,9 +516,9 @@ checksum = "7fb9b38af92608140b86b693604b9ffcc5824240a484d1ecd4795bacb2fe88f3"
 
 [[package]]
 name = "lnpbp_bech32"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df3dd0d4d712b845b2981058cffb359202464a6f127dd78fa24951e1df882551"
+checksum = "d4da7044659fa9c1c86335dda27686d1bc21f65517b264529cffb8bae1a0c7dc"
 dependencies = [
  "amplify",
  "bech32",
@@ -933,9 +933,9 @@ dependencies = [
 
 [[package]]
 name = "single_use_seals"
-version = "0.7.0-rc.1"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa09c03c4cc349e6767cc3cfbbc9043ddb25210fd59720390a9e23f58d838c6f"
+checksum = "e15e3bb0130780a5ffe11965dfd80a1b9ee608d13e5c1afed9817bdb560c0326"
 dependencies = [
  "amplify_derive",
  "async-trait",
@@ -980,9 +980,9 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding"
-version = "1.8.3"
+version = "1.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a13dd4e8a467f81b70dfbfde6d2e9bd38dfd5a62ad8dbd399f7017f0e2808292"
+checksum = "d1bbb5109701ede3df3e20b82a134d601036f02b8b2f259965266a6a784cc749"
 dependencies = [
  "amplify",
  "bitcoin",
