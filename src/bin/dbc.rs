@@ -99,13 +99,13 @@ impl Args {
         &self,
         psbt_path: &Path,
         output_no: u16,
-        commitment: Slice32,
-        proprietary_keys: &[ProprietaryKeyDescriptor],
+        _commitment: Slice32,
+        _proprietary_keys: &[ProprietaryKeyDescriptor],
     ) -> Result<(), Error> {
         let file = fs::File::open(psbt_path)?;
         let mut psbt = Psbt::strict_decode(&file)?;
 
-        let output: &mut psbt::Output =
+        let _output: &mut psbt::Output =
             if let Some(output) = psbt.outputs.get_mut(output_no as usize) {
                 output
             } else {

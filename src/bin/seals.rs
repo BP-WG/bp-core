@@ -40,14 +40,18 @@ pub struct Args {
 }
 
 /// Wallet command to execute
-#[allow(clippy::large_enum_variant)]
 #[derive(Subcommand)]
 #[derive(Clone, Eq, PartialEq, Debug)]
-pub enum Command {}
+pub enum Command {
+    #[clap()]
+    Noop,
+}
 
 impl Args {
     pub fn exec(&self) -> Result<(), Error> {
-        match self.command {}
+        match self.command {
+            Command::Noop => {}
+        }
         Ok(())
     }
 }
