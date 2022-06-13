@@ -79,12 +79,7 @@ where
 
         // 2. The seal must match tx inputs
         let outpoint = seal.outpoint_or(witness.txid);
-        if tx
-            .input
-            .iter()
-            .find(|txin| txin.previous_output == outpoint)
-            .is_none()
-        {
+        if !tx.input.iter().any(|txin| txin.previous_output == outpoint) {
             return Err(VerifyError::WitnessNotClosingSeal(
                 witness.txid,
                 outpoint,
@@ -92,7 +87,7 @@ where
         }
 
         // 3. Verify DBC with the giving closing method
-        witness.proof.verify(&msg, tx).map_err(VerifyError::from)
+        witness.proof.verify(msg, tx).map_err(VerifyError::from)
     }
 
     fn verify_batch(
@@ -117,12 +112,7 @@ where
 
             // 3. Each seal must match tx inputs
             let outpoint = seal.outpoint_or(witness.txid);
-            if tx
-                .input
-                .iter()
-                .find(|txin| txin.previous_output == outpoint)
-                .is_none()
-            {
+            if !tx.input.iter().any(|txin| txin.previous_output == outpoint) {
                 return Err(VerifyError::WitnessNotClosingSeal(
                     witness.txid,
                     outpoint,
@@ -131,6 +121,6 @@ where
         }
 
         // 4. Verify DBC with the giving closing method
-        witness.proof.verify(&msg, tx).map_err(VerifyError::from)
+        witness.proof.verify(msg, tx).map_err(VerifyError::from)
     }
 }

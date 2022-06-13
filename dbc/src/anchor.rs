@@ -13,6 +13,8 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
+#![allow(clippy::init_numbered_fields)]
+
 //! Anchors are data structures used in deterministic bitcoin commitments for
 //! keeping information about the proof of the commitment in connection to the
 //! transaction which contains the commitment, and multi-protocol merkle tree as
@@ -23,6 +25,7 @@ use std::io::Write;
 
 use amplify::Wrapper;
 use bitcoin::hashes::{sha256, sha256t};
+#[cfg(feature = "wallet")]
 use bitcoin::psbt::raw::ProprietaryKey;
 use bitcoin::{Transaction, Txid};
 use commit_verify::convolve_commit::ConvolveCommitProof;
@@ -32,6 +35,7 @@ use commit_verify::{
 };
 #[cfg(feature = "wallet")]
 use commit_verify::{EmbedCommitProof, EmbedCommitVerify, TryCommitVerify};
+#[cfg(feature = "wallet")]
 use psbt::commit::tapret::ProprietaryKeyTapret;
 #[cfg(feature = "wallet")]
 use psbt::Psbt;
@@ -171,7 +175,7 @@ impl PartialOrd for Anchor<lnpbp4::MerkleBlock> {
 )]
 #[display(doc_comments)]
 pub enum MergeError {
-    /// Error merging two [`MultiCommitBlock`]s.
+    /// Error merging two LNPBP-4 proofs, which are unrelated.
     #[display(inner)]
     #[from(lnpbp4::UnrelatedProof)]
     Lnpbp4Mismatch,
