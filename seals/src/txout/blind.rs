@@ -332,6 +332,7 @@ impl lnpbp_bech32::Strategy for ConcealedSealTag {
 #[display(ConcealedSeal::to_bech32_string)]
 pub struct ConcealedSeal(sha256t::Hash<ConcealedSealTag>);
 
+// TODO: Make this part of `lnpbp::bech32`
 #[cfg(feature = "serde")]
 impl serde::Serialize for ConcealedSeal {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
