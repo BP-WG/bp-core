@@ -13,8 +13,6 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-#![allow(clippy::init_numbered_fields)]
-
 //! Taproot OP_RETURN-based deterministic bitcoin commitment scheme ("tapret").
 //!
 //! **Embed-commit by constructor:**
