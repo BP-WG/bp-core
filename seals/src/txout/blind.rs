@@ -382,7 +382,7 @@ impl<'de> serde::Deserialize<'de> for ConcealedSeal {
             where
                 E: serde::de::Error,
             {
-                ConcealedSeal::from_slice(&v).map_err(|_| {
+                ConcealedSeal::from_bytes(&v).map_err(|_| {
                     serde::de::Error::invalid_length(v.len(), &"32 bytes")
                 })
             }

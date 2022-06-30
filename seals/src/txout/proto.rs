@@ -17,7 +17,7 @@ use bitcoin::Txid;
 use bitcoin_onchain::ResolveTx;
 use commit_verify::lnpbp4;
 use dbc::{Anchor, Proof};
-use single_use_seals::{SealProtocol, SealStatus, SealVerify};
+use single_use_seals::{SealProtocol, SealStatus, VerifySeal};
 
 use crate::txout::{TxoSeal, VerifyError};
 
@@ -63,12 +63,12 @@ where
     }
 }
 
-impl<'seal, Seal, Resolver> SealVerify<'seal, Seal> for TxoProtocol<Resolver>
+impl<'seal, Seal, Resolver> VerifySeal<'seal, Seal> for TxoProtocol<Resolver>
 where
     Seal: TxoSeal + 'seal,
     Resolver: ResolveTx,
 {
-    fn verify(
+    fn verify_seal(
         &self,
         seal: &'seal Seal,
         msg: &Self::Message,
@@ -90,7 +90,7 @@ where
         witness.proof.verify(msg, tx).map_err(VerifyError::from)
     }
 
-    fn verify_batch(
+    fn verify_seal_all(
         &self,
         seals: impl IntoIterator<Item = &'seal Seal>,
         msg: &Self::Message,
