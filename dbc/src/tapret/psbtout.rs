@@ -23,7 +23,7 @@ use bitcoin_scripts::{TapNodeHash, TapScript};
 use commit_verify::{
     lnpbp4, CommitVerify, EmbedCommitProof, EmbedCommitVerify,
 };
-use psbt::commit::tapret::DfsPathEncodeError;
+use psbt::commit::DfsPathEncodeError;
 use secp256k1::SECP256K1;
 
 use super::{Lnpbp6, TapretProof};

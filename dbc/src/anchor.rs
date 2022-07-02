@@ -34,7 +34,7 @@ use commit_verify::{
 #[cfg(feature = "wallet")]
 use commit_verify::{EmbedCommitProof, EmbedCommitVerify, TryCommitVerify};
 #[cfg(feature = "wallet")]
-use psbt::commit::tapret::ProprietaryKeyTapret;
+use psbt::commit::ProprietaryKeyTapret;
 #[cfg(feature = "wallet")]
 use psbt::Psbt;
 use strict_encoding::StrictEncode;
