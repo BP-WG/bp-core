@@ -18,15 +18,18 @@ extern crate clap;
 #[macro_use]
 extern crate amplify;
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::{fs, io};
 
-use amplify::{IoError, Slice32};
+use amplify::IoError;
+use bitcoin::psbt::serialize::{Deserialize, Serialize};
 use bitcoin::psbt::PsbtParseError;
 use clap::Parser;
 use colored::Colorize;
-use psbt::{ProprietaryKeyDescriptor, Psbt};
-use strict_encoding::{StrictDecode, StrictEncode};
+use commit_verify::EmbedCommitVerify;
+use dbc::anchor::PsbtEmbeddedMessage;
+use dbc::tapret::PsbtCommitError;
+use psbt::Psbt;
 
 /// Command-line arguments
 #[derive(Parser)]
@@ -55,68 +58,29 @@ pub enum Command {
     /// commitment was added, replacing it with `LNPBP_COMMITMENT` proprietary
     /// key.
     Commit {
-        /// Number of `LNPBP_CAN_HOST_COMMITMENT`-flagged output to add
-        /// commitment data to.
-        #[clap(short, long, default_value = "0")]
-        output_no: u16,
+        /// Input file containing PSBT of the transfer witness transaction.
+        psbt_in: PathBuf,
 
-        /// Commitment value.
-        ///
-        /// Saved into `LNPBP_COMMITMENT` proprietary key.
-        commitment: Slice32,
-
-        /// Additional proprietary keys which will be added to the constructed
-        /// PSBT.
-        ///
-        /// These keys may contain information specific to the used commitment
-        /// scheme.
-        #[clap(short = 'k', long = "proprietary-key")]
-        proprietary_keys: Vec<ProprietaryKeyDescriptor>,
-
-        /// File containing PSBT.
-        psbt_file: PathBuf,
+        /// Output file to save the PSBT updated with state transition(s)
+        /// information. If not given, the source PSBT file is overwritten.
+        psbt_out: Option<PathBuf>,
     },
 }
 
 impl Args {
-    pub fn exec(&self) -> Result<(), Error> {
-        match &self.command {
-            Command::Commit {
-                output_no,
-                commitment,
-                proprietary_keys,
-                psbt_file,
-            } => self.commit(
-                psbt_file,
-                *output_no,
-                *commitment,
-                proprietary_keys,
-            ),
+    pub fn exec(self) -> Result<(), Error> {
+        match self.command {
+            Command::Commit { psbt_in, psbt_out } => {
+                let psbt_bytes = fs::read(&psbt_in)?;
+                let mut psbt = Psbt::deserialize(&psbt_bytes)?;
+
+                let anchor = psbt.embed_commit(&PsbtEmbeddedMessage)?;
+                eprintln!("Anchor: {:?}", anchor);
+
+                let psbt_bytes = psbt.serialize();
+                fs::write(psbt_out.unwrap_or(psbt_in), psbt_bytes)?;
+            }
         }
-    }
-
-    fn commit(
-        &self,
-        psbt_path: &Path,
-        output_no: u16,
-        _commitment: Slice32,
-        _proprietary_keys: &[ProprietaryKeyDescriptor],
-    ) -> Result<(), Error> {
-        let file = fs::File::open(psbt_path)?;
-        let mut psbt = Psbt::strict_decode(&file)?;
-
-        let _output: &mut psbt::Output =
-            if let Some(output) = psbt.outputs.get_mut(output_no as usize) {
-                output
-            } else {
-                return Err(Error::NoOutput {
-                    requested: output_no,
-                    total: psbt.outputs.len(),
-                });
-            };
-
-        let file = fs::File::create(psbt_path)?;
-        psbt.strict_encode(file)?;
 
         Ok(())
     }
@@ -129,15 +93,17 @@ pub enum Error {
     Io(IoError),
 
     #[from]
+    BitcoinEncoding(bitcoin::consensus::encode::Error),
+
+    #[from]
     StrictEncoding(strict_encoding::Error),
 
     #[from]
     PsbtBase58(PsbtParseError),
 
-    /// output no {requested} exceeds total number of outputs in the
-    /// transaction ({total}).
-    #[display(doc_comments)]
-    NoOutput { requested: u16, total: usize },
+    #[from]
+    #[display(inner)]
+    Commitment(PsbtCommitError),
 }
 
 fn main() {
