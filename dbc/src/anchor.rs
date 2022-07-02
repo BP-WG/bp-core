@@ -192,7 +192,8 @@ impl Anchor<lnpbp4::MerkleBlock> {
     #[inline]
     pub fn anchor_id(&self) -> AnchorId { self.consensus_commit() }
 
-    /// Constructs anchor and embeds LNPBP4 commitment into PSBT.
+    /// Convenience constructor for anchor, which also does embedding of LNPBP4
+    /// commitment into PSBT.
     #[cfg(feature = "wallet")]
     pub fn commit(
         psbt: &mut Psbt,
@@ -337,7 +338,16 @@ impl EmbedCommitProof<PsbtEmbeddedMessage, Psbt, Lnpbp6>
         match self.dbc_proof {
             Proof::OpretFirst => Ok(psbt.clone()),
             Proof::TapretFirst(ref proof) => {
-                proof.restore_original_container(psbt)
+                let mut psbt = psbt.clone();
+                for output in &mut psbt.outputs {
+                    if output.is_tapret_host() {
+                        *output = EmbedCommitProof::<_, psbt::Output, Lnpbp6>::restore_original_container(proof, output)?;
+                        return Ok(psbt);
+                    }
+                }
+                return Err(PsbtVerifyError::Commit(
+                    PsbtCommitError::CommitmentImpossible,
+                ));
             }
         }
     }

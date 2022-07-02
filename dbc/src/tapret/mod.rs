@@ -56,8 +56,6 @@
 //! b) `XOnlyPublicKey` / `TapretProof`
 
 #[cfg(feature = "wallet")]
-mod psbt;
-#[cfg(feature = "wallet")]
 mod psbtout;
 mod scriptpk;
 mod tapscript;
