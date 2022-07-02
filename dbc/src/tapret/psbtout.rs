@@ -23,7 +23,9 @@ use bitcoin_scripts::{TapNodeHash, TapScript};
 use commit_verify::{
     lnpbp4, CommitVerify, EmbedCommitProof, EmbedCommitVerify,
 };
-use psbt::commit::DfsPathEncodeError;
+use psbt::commit::{
+    DfsPathEncodeError, Lnpbp4KeyError, OpretKeyError, TapretKeyError,
+};
 use secp256k1::SECP256K1;
 
 use super::{Lnpbp6, TapretProof};
@@ -33,15 +35,39 @@ use crate::tapret::taptree::{
 
 /// Errors during tapret PSBT commitment process.
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
+#[display(doc_comments)]
 pub enum PsbtCommitError {
     /// Invalid taproot script tree source information.
     #[from]
     #[display(inner)]
     SourceError(TapretSourceError),
 
+    /// it is impossible to create neither Tapret nor Opret commitment for the
+    /// given PSBT file.
+    CommitmentImpossible,
+
+    /// Error in LNPBP4 PBST data
+    #[from]
+    #[display(inner)]
+    PsbtLnpbp4(Lnpbp4KeyError),
+
+    /// Error in LNPBP4 PBST data
+    #[from]
+    #[display(inner)]
+    TapretLnpbp4(TapretKeyError),
+
+    /// Error in LNPBP4 PBST data
+    #[from]
+    #[display(inner)]
+    OpretLnpbp4(OpretKeyError),
+
+    /// LNPBP4 commitment creation error
+    #[from]
+    #[display(inner)]
+    Lnpbp4(lnpbp4::Error),
+
     /// tapret commitment can't be made in a transaction lacking any taproot
     /// outputs.
-    #[display(doc_comments)]
     NoTaprootOutput,
 
     /// tapret commitment can't be made due to an absent taproot internal key

@@ -22,10 +22,10 @@ use std::cmp::Ordering;
 use std::io::Write;
 
 use amplify::Wrapper;
-use bitcoin::hashes::{sha256, sha256t};
+use bitcoin::hashes::{sha256, sha256t, Hash};
 #[cfg(feature = "wallet")]
 use bitcoin::psbt::raw::ProprietaryKey;
-use bitcoin::{Transaction, Txid};
+use bitcoin::{Script, Transaction, Txid};
 use commit_verify::convolve_commit::ConvolveCommitProof;
 use commit_verify::lnpbp4::{self, Message, ProtocolId};
 use commit_verify::{
@@ -33,10 +33,12 @@ use commit_verify::{
 };
 #[cfg(feature = "wallet")]
 use commit_verify::{EmbedCommitProof, EmbedCommitVerify, TryCommitVerify};
+use psbt::commit::Lnpbp4KeyError;
 #[cfg(feature = "wallet")]
 use psbt::commit::ProprietaryKeyTapret;
 #[cfg(feature = "wallet")]
 use psbt::Psbt;
+use psbt::{PSBT_LNPBP4_PREFIX, PSBT_OUT_LNPBP4_MESSAGE};
 use strict_encoding::StrictEncode;
 
 #[cfg(feature = "wallet")]
@@ -194,14 +196,8 @@ impl Anchor<lnpbp4::MerkleBlock> {
     #[cfg(feature = "wallet")]
     pub fn commit(
         psbt: &mut Psbt,
-        messages: lnpbp4::MessageMap,
     ) -> Result<Anchor<lnpbp4::MerkleBlock>, Error> {
-        let multi_source = lnpbp4::MultiSource {
-            min_depth: ANCHOR_MIN_LNPBP4_DEPTH,
-            messages,
-        };
-        let lnpbp4_block = lnpbp4::MerkleTree::try_commit(&multi_source)?;
-        let anchor = psbt.embed_commit(&lnpbp4_block)?;
+        let anchor = psbt.embed_commit(&PsbtEmbeddedMessage)?;
         Ok(Anchor {
             txid: anchor.txid,
             lnpbp4_proof: lnpbp4::MerkleBlock::from(anchor.lnpbp4_proof),
@@ -321,8 +317,17 @@ impl Anchor<lnpbp4::MerkleBlock> {
     }
 }
 
+/// Empty type indicating that the message has to be taken from PSBT proprietary
+/// keys
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+pub struct PsbtEmbeddedMessage;
+
+impl CommitEncode for PsbtEmbeddedMessage {
+    fn commit_encode<E: Write>(&self, _: E) -> usize { 0 }
+}
+
 #[cfg(feature = "wallet")]
-impl EmbedCommitProof<lnpbp4::MerkleTree, Psbt, Lnpbp6>
+impl EmbedCommitProof<PsbtEmbeddedMessage, Psbt, Lnpbp6>
     for Anchor<lnpbp4::MerkleTree>
 {
     fn restore_original_container(
@@ -330,8 +335,8 @@ impl EmbedCommitProof<lnpbp4::MerkleTree, Psbt, Lnpbp6>
         psbt: &Psbt,
     ) -> Result<Psbt, PsbtVerifyError> {
         match self.dbc_proof {
-            Proof::Opret1st => todo!("Implement OpRet"),
-            Proof::Tapret1st(ref proof) => {
+            Proof::OpretFirst => Ok(psbt.clone()),
+            Proof::TapretFirst(ref proof) => {
                 proof.restore_original_container(psbt)
             }
         }
@@ -339,29 +344,77 @@ impl EmbedCommitProof<lnpbp4::MerkleTree, Psbt, Lnpbp6>
 }
 
 #[cfg(feature = "wallet")]
-impl EmbedCommitVerify<lnpbp4::MerkleTree, Lnpbp6> for Psbt {
+impl EmbedCommitVerify<PsbtEmbeddedMessage, Lnpbp6> for Psbt {
     type Proof = Anchor<lnpbp4::MerkleTree>;
     type CommitError = PsbtCommitError;
     type VerifyError = PsbtVerifyError;
 
     fn embed_commit(
         &mut self,
-        msg: &lnpbp4::MerkleTree,
+        _: &PsbtEmbeddedMessage,
     ) -> Result<Self::Proof, Self::CommitError> {
-        let lnpbp4_block = msg.clone();
+        let messages = self
+            .proprietary
+            .iter()
+            .filter(|(key, _)| {
+                key.prefix == PSBT_LNPBP4_PREFIX
+                    && key.subtype == PSBT_OUT_LNPBP4_MESSAGE
+            })
+            .map(|(key, val)| {
+                Ok((
+                    ProtocolId::from_slice(&key.key)
+                        .ok_or(Lnpbp4KeyError::InvalidKeyValue)?,
+                    Message::from_slice(val)
+                        .map_err(|_| Lnpbp4KeyError::InvalidKeyValue)?,
+                ))
+            })
+            .collect::<Result<_, PsbtCommitError>>()?;
 
-        // TODO: Implement OpRet
-        let proof = self.embed_commit(&lnpbp4_block.consensus_commit())?;
+        let lnpbp4_tree =
+            |output: &mut psbt::Output| -> Result<_, PsbtCommitError> {
+                let multi_source = lnpbp4::MultiSource {
+                    min_depth: output
+                        .lnpbp4_min_tree_depth()?
+                        .unwrap_or(ANCHOR_MIN_LNPBP4_DEPTH),
+                    messages,
+                };
+                Ok(lnpbp4::MerkleTree::try_commit(&multi_source)?)
+            };
 
-        if let Ok(psbt_proof) = proof.path_proof.strict_serialize() {
-            self.proprietary
-                .insert(ProprietaryKey::tapret_proof(), psbt_proof);
-        }
+        let (dbc_proof, lnpbp4_proof) = if let Some(output) =
+            self.outputs.iter_mut().find(|o| o.is_tapret_host())
+        {
+            let tree = lnpbp4_tree(output)?;
+            let commitment = tree.consensus_commit();
+            let proof = output.embed_commit(&commitment)?;
+            output.set_tapret_commitment(commitment.into_array())?;
+            // TODO: Use correct API once it will be fixed in descriptor-wallet
+            let path_proof = proof
+                .path_proof
+                .strict_serialize()
+                .expect("memory serialization");
+            output
+                .proprietary
+                .insert(ProprietaryKey::tapret_proof(), path_proof);
+            output.set_lnpbp4_entropy(tree.entropy())?;
+            (Proof::TapretFirst(proof), tree)
+        } else if let Some(output) =
+            self.outputs.iter_mut().find(|o| o.is_opret_host())
+        {
+            let tree = lnpbp4_tree(output)?;
+            let commitment = tree.consensus_commit();
+            output.script = Script::new_op_return(commitment.as_slice());
+            output.set_opret_commitment(commitment.into_array())?;
+            output.set_lnpbp4_entropy(tree.entropy())?;
+            (Proof::OpretFirst, tree)
+        } else {
+            return Err(PsbtCommitError::CommitmentImpossible);
+        };
 
         Ok(Anchor {
             txid: self.to_txid(),
-            lnpbp4_proof: lnpbp4_block,
-            dbc_proof: Proof::Tapret1st(proof),
+            lnpbp4_proof,
+            dbc_proof,
         })
     }
 }
@@ -379,10 +432,10 @@ impl EmbedCommitVerify<lnpbp4::MerkleTree, Lnpbp6> for Psbt {
 #[non_exhaustive]
 pub enum Proof {
     /// Opret commitment (no extra-transaction proof is required).
-    Opret1st,
+    OpretFirst,
 
     /// Tapret commitment and a proof of it.
-    Tapret1st(TapretProof),
+    TapretFirst(TapretProof),
 }
 
 impl Proof {
@@ -393,8 +446,10 @@ impl Proof {
         tx: Transaction,
     ) -> Result<bool, TapretError> {
         match self {
-            Proof::Opret1st => todo!("Implement opret commitment verification"),
-            Proof::Tapret1st(proof) => {
+            Proof::OpretFirst => {
+                todo!("Implement opret commitment verification")
+            }
+            Proof::TapretFirst(proof) => {
                 ConvolveCommitProof::<_, Transaction, _>::verify(proof, msg, tx)
             }
         }
