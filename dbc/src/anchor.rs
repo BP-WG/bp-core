@@ -22,10 +22,10 @@ use std::cmp::Ordering;
 use std::io::Write;
 
 use amplify::Wrapper;
-use bitcoin::hashes::{sha256, sha256t, Hash};
+use bitcoin::hashes::{sha256, sha256t};
 #[cfg(feature = "wallet")]
 use bitcoin::psbt::raw::ProprietaryKey;
-use bitcoin::{Script, Transaction, Txid};
+use bitcoin::{Transaction, Txid};
 use commit_verify::convolve_commit::ConvolveCommitProof;
 use commit_verify::lnpbp4::{self, Message, ProtocolId};
 use commit_verify::{
@@ -33,12 +33,10 @@ use commit_verify::{
 };
 #[cfg(feature = "wallet")]
 use commit_verify::{EmbedCommitProof, EmbedCommitVerify, TryCommitVerify};
-use psbt::commit::Lnpbp4KeyError;
 #[cfg(feature = "wallet")]
-use psbt::commit::ProprietaryKeyTapret;
+use psbt::commit::{Lnpbp4KeyError, ProprietaryKeyTapret};
 #[cfg(feature = "wallet")]
-use psbt::Psbt;
-use psbt::{PSBT_LNPBP4_PREFIX, PSBT_OUT_LNPBP4_MESSAGE};
+use psbt::{Psbt, PSBT_LNPBP4_PREFIX, PSBT_OUT_LNPBP4_MESSAGE};
 use strict_encoding::StrictEncode;
 
 #[cfg(feature = "wallet")]
@@ -363,25 +361,28 @@ impl EmbedCommitVerify<PsbtEmbeddedMessage, Lnpbp6> for Psbt {
         &mut self,
         _: &PsbtEmbeddedMessage,
     ) -> Result<Self::Proof, Self::CommitError> {
-        let messages = self
-            .proprietary
-            .iter()
-            .filter(|(key, _)| {
-                key.prefix == PSBT_LNPBP4_PREFIX
-                    && key.subtype == PSBT_OUT_LNPBP4_MESSAGE
-            })
-            .map(|(key, val)| {
-                Ok((
-                    ProtocolId::from_slice(&key.key)
-                        .ok_or(Lnpbp4KeyError::InvalidKeyValue)?,
-                    Message::from_slice(val)
-                        .map_err(|_| Lnpbp4KeyError::InvalidKeyValue)?,
-                ))
-            })
-            .collect::<Result<_, PsbtCommitError>>()?;
+        use bitcoin::hashes::Hash;
+        use bitcoin::Script;
 
         let lnpbp4_tree =
             |output: &mut psbt::Output| -> Result<_, PsbtCommitError> {
+                let messages = output
+                    .proprietary
+                    .iter()
+                    .filter(|(key, _)| {
+                        key.prefix == PSBT_LNPBP4_PREFIX
+                            && key.subtype == PSBT_OUT_LNPBP4_MESSAGE
+                    })
+                    .map(|(key, val)| {
+                        Ok((
+                            ProtocolId::from_slice(&key.key)
+                                .ok_or(Lnpbp4KeyError::InvalidKeyValue)?,
+                            Message::from_slice(val)
+                                .map_err(|_| Lnpbp4KeyError::InvalidKeyValue)?,
+                        ))
+                    })
+                    .collect::<Result<_, PsbtCommitError>>()?;
+
                 let multi_source = lnpbp4::MultiSource {
                     min_depth: output
                         .lnpbp4_min_tree_depth()?
