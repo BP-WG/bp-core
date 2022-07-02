@@ -23,9 +23,7 @@ use std::io::Write;
 
 use amplify::Wrapper;
 use bitcoin::hashes::{sha256, sha256t};
-#[cfg(feature = "wallet")]
-use bitcoin::psbt::raw::ProprietaryKey;
-use bitcoin::{Transaction, Txid};
+use bitcoin::{Script, Transaction, Txid};
 use commit_verify::convolve_commit::ConvolveCommitProof;
 use commit_verify::lnpbp4::{self, Message, ProtocolId};
 use commit_verify::{
@@ -34,9 +32,7 @@ use commit_verify::{
 #[cfg(feature = "wallet")]
 use commit_verify::{EmbedCommitProof, EmbedCommitVerify, TryCommitVerify};
 #[cfg(feature = "wallet")]
-use psbt::commit::{Lnpbp4KeyError, ProprietaryKeyTapret};
-#[cfg(feature = "wallet")]
-use psbt::{Psbt, PSBT_LNPBP4_PREFIX, PSBT_OUT_LNPBP4_MESSAGE};
+use psbt::Psbt;
 use strict_encoding::StrictEncode;
 
 #[cfg(feature = "wallet")]
@@ -361,32 +357,14 @@ impl EmbedCommitVerify<PsbtEmbeddedMessage, Lnpbp6> for Psbt {
         &mut self,
         _: &PsbtEmbeddedMessage,
     ) -> Result<Self::Proof, Self::CommitError> {
-        use bitcoin::hashes::Hash;
-        use bitcoin::Script;
-
         let lnpbp4_tree =
             |output: &mut psbt::Output| -> Result<_, PsbtCommitError> {
-                let messages = output
-                    .proprietary
-                    .iter()
-                    .filter(|(key, _)| {
-                        key.prefix == PSBT_LNPBP4_PREFIX
-                            && key.subtype == PSBT_OUT_LNPBP4_MESSAGE
-                    })
-                    .map(|(key, val)| {
-                        Ok((
-                            ProtocolId::from_slice(&key.key)
-                                .ok_or(Lnpbp4KeyError::InvalidKeyValue)?,
-                            Message::from_slice(val)
-                                .map_err(|_| Lnpbp4KeyError::InvalidKeyValue)?,
-                        ))
-                    })
-                    .collect::<Result<_, PsbtCommitError>>()?;
-
+                let messages = output.lnpbp4_message_map()?;
+                let min_depth = output
+                    .lnpbp4_min_tree_depth()?
+                    .unwrap_or(ANCHOR_MIN_LNPBP4_DEPTH);
                 let multi_source = lnpbp4::MultiSource {
-                    min_depth: output
-                        .lnpbp4_min_tree_depth()?
-                        .unwrap_or(ANCHOR_MIN_LNPBP4_DEPTH),
+                    min_depth,
                     messages,
                 };
                 Ok(lnpbp4::MerkleTree::try_commit(&multi_source)?)
@@ -398,15 +376,7 @@ impl EmbedCommitVerify<PsbtEmbeddedMessage, Lnpbp6> for Psbt {
             let tree = lnpbp4_tree(output)?;
             let commitment = tree.consensus_commit();
             let proof = output.embed_commit(&commitment)?;
-            output.set_tapret_commitment(commitment.into_array())?;
-            // TODO: Use correct API once it will be fixed in descriptor-wallet
-            let path_proof = proof
-                .path_proof
-                .strict_serialize()
-                .expect("memory serialization");
-            output
-                .proprietary
-                .insert(ProprietaryKey::tapret_proof(), path_proof);
+            output.set_tapret_commitment(commitment.into_array(), &proof)?;
             output.set_lnpbp4_entropy(tree.entropy())?;
             (Proof::TapretFirst(proof), tree)
         } else if let Some(output) =
@@ -458,7 +428,13 @@ impl Proof {
     ) -> Result<bool, TapretError> {
         match self {
             Proof::OpretFirst => {
-                todo!("Implement opret commitment verification")
+                for txout in &tx.output {
+                    if txout.script_pubkey.is_op_return() {
+                        return Ok(txout.script_pubkey
+                            == Script::new_op_return(msg.as_slice()));
+                    }
+                }
+                Ok(false)
             }
             Proof::TapretFirst(proof) => {
                 ConvolveCommitProof::<_, Transaction, _>::verify(proof, msg, tx)
