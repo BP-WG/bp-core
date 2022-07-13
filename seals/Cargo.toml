@@ -9,7 +9,8 @@ homepage = "https://github.com/LNP-BP"
 keywords = ["lnp-bp", "bitcoin", "cryptography", "smart-contracts", "single-use-seals"]
 categories = ["cryptography::cryptocurrencies", "encoding"]
 readme = "../README.md"
-edition = "2018"
+edition = "2021"
+rust-version = "1.59.0"
 
 [lib]
 name = "seals"

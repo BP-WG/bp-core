@@ -339,9 +339,9 @@ impl EmbedCommitProof<PsbtEmbeddedMessage, Psbt, Lnpbp6>
                         return Ok(psbt);
                     }
                 }
-                return Err(PsbtVerifyError::Commit(
+                Err(PsbtVerifyError::Commit(
                     PsbtCommitError::CommitmentImpossible,
-                ));
+                ))
             }
         }
     }
