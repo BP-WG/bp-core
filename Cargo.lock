@@ -4,9 +4,9 @@ version = 3
 
 [[package]]
 name = "amplify"
-version = "3.12.1"
+version = "3.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e45c604e86700ffea68a7d90c3ffb1508dad1120902f31dbb08afc942cf8acf3"
+checksum = "116019a174e912931d5b19ca7ab6a22596d12cdb1320358fad3368f0aba135a9"
 dependencies = [
  "amplify_derive",
  "amplify_num",
@@ -183,7 +183,7 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "bp-core"
-version = "0.8.0-rc.1"
+version = "0.8.0"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -202,7 +202,7 @@ dependencies = [
 
 [[package]]
 name = "bp-dbc"
-version = "0.8.0-rc.1"
+version = "0.8.0"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -219,7 +219,7 @@ dependencies = [
 
 [[package]]
 name = "bp-seals"
-version = "0.8.0-rc.1"
+version = "0.8.0"
 dependencies = [
  "amplify",
  "async-trait",
@@ -988,9 +988,9 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding"
-version = "0.8.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a0cffbeaff0c2b9981412ac471b7d99cb4adcff75a6967114ea36cd8faae930"
+checksum = "5a5fa61708f858144b37d2c10bafe95724dbc917f7ea491456d0069789f8f5f3"
 dependencies = [
  "amplify",
  "bitcoin",
