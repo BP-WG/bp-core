@@ -10,8 +10,9 @@
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 [![Apache-2 licensed](https://img.shields.io/crates/l/bp-core)](./LICENSE)
 
-The library implements components necessary for [client-side-validation] in bitcoin 
+The library implements components necessary for [client-side-validation] in bitcoin
 protocol, specifically
+
 - deterministic bitcoin commitments API (LNPBP-14, 6 standards)
 - bitcoin-based single-use-seal API (LNPBP-10 and LNPBP-39 standards)
 
@@ -21,11 +22,10 @@ or other type of distributed consensus system.
 
 The development of the library is supported by [LNP/BP Standards Association](https://lnp-bp.org).
 
-
 ## Usage
 
-To use libraries, you just need latest version of libraries, published to 
-[crates.io](https://crates.io) into `[dependencies]` section of your project 
+To use libraries, you just need latest version of libraries, published to
+[crates.io](https://crates.io) into `[dependencies]` section of your project
 `Cargo.toml`. Here is the full list of available libraries from this repository:
 
 ```toml
@@ -37,20 +37,58 @@ bp-core = "0.5" # Library including both of the previous crates
 `bp-core` crate is an "umbrella" library containing both deterministic bitcoin
 commitments and bitcoin seals crates inside.
 
+## Command-line utilities
+
+One may install command-line utilities with the following command (requires
+rust compiler and `rustup` tools to be already installed on a system):
+
+```console
+$ rustup default stable
+$ rustup update
+$ git clone https://github.com/BP-WG/bp-core
+$ cd bp-core
+$ cargo install --path . --bins --locked --all-features
+```
+
+This will add `seals` and `dbc` commands to the system.
+
+### Install with Docker
+
+#### Build
+
+Clone the repository and checkout to the desired version (here `v0.8.0`):
+
+```console
+$ git clone https://github.com/BP-WG/bp-core
+$ cd bp-core
+$ git checkout v0.8.0
+```
+
+Build and tag the Docker image:
+
+```console
+$ docker build -t bp-core:v0.8.0 .
+```
+
+#### Usage
+
+```console
+$ docker run bp-core:v0.8.0 seals --help
+$ docker run bp-core:v0.8.0 dbc --help
+```
 
 ## Known applications
 
 The current list of the projects based on the library include:
-* [RGB](https://github.com/LNP-BP/rgb-node): Confidential & scalable smart
-  contracts for Bitcoin & Lightning
-* [Bitcoin-based decentralized identity](https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2021-February/018381.html) 
-  proposal uses single-use-seals
 
+- [RGB](https://github.com/LNP-BP/rgb-node): Confidential & scalable smart
+  contracts for Bitcoin & Lightning
+- [Bitcoin-based decentralized identity](https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2021-February/018381.html)
+  proposal uses single-use-seals
 
 ## Contributing
 
 Contribution guidelines can be found in [CONTRIBUTING](CONTRIBUTING.md)
-
 
 ## More information
 
@@ -60,14 +98,13 @@ This library requires minimum rust compiler version (MSRV) 1.41.1.
 
 ### Policy on altcoins
 
-Altcoins and "blockchains" other than Bitcoin blockchain/Bitcoin protocols are 
-not supported and not planned to be supported; pull requests targeting them will 
+Altcoins and "blockchains" other than Bitcoin blockchain/Bitcoin protocols are
+not supported and not planned to be supported; pull requests targeting them will
 be declined.
 
 ### Licensing
 
 See [LICENCE](LICENSE) file.
-
 
 [rust-bitcoin]: https://github.com/rust-bitcoin/rust-bitcoin
 [descriptor-wallet]: https://github.com/LNP-BP/descriptor-wallet
