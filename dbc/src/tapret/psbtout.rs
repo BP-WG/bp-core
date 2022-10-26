@@ -14,11 +14,13 @@
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
 use amplify::Wrapper;
+use bitcoin::blockdata::opcodes;
 use bitcoin::hashes::Hash;
 use bitcoin::psbt::TapTree;
-use bitcoin::util::taproot::TapBranchHash;
+use bitcoin::util::address::WitnessVersion;
+use bitcoin::util::taproot::{self, TapBranchHash};
 use bitcoin::Script;
-use bitcoin_scripts::taproot::{Node, TaprootScriptTree, TreeNode};
+use bitcoin_scripts::taproot::{DfsOrder, Node, TaprootScriptTree, TreeNode};
 use bitcoin_scripts::{TapNodeHash, TapScript};
 use commit_verify::{
     lnpbp4, CommitVerify, EmbedCommitProof, EmbedCommitVerify,
@@ -32,6 +34,7 @@ use super::{Lnpbp6, TapretProof};
 use crate::tapret::taptree::{
     TapretProofError, TapretSourceError, TapretSourceInfo,
 };
+use crate::tapret::{TapretNodePartner, TapretPathProof};
 
 /// Errors during tapret PSBT commitment process.
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
@@ -146,24 +149,75 @@ impl EmbedCommitVerify<lnpbp4::CommitmentHash, Lnpbp6> for psbt::Output {
         msg: &lnpbp4::CommitmentHash,
     ) -> Result<Self::Proof, Self::CommitError> {
         // TODO: Check TAPRET_COMMITABLE key
-
         let internal_key = if let Some(internal_key) = self.tap_internal_key {
             internal_key
         } else {
             return Err(PsbtCommitError::InternalKeyMissed);
         };
 
-        let mut source =
-            TapretSourceInfo::<TapTree>::with(self.tap_tree.clone())?;
+        let (script, proof) = if self.tap_tree.clone().is_some() {
+            let mut source =
+                TapretSourceInfo::<TapTree>::with(self.tap_tree.clone())?;
 
-        let path_proof = source.embed_commit(msg)?;
+            let path_proof = source.embed_commit(msg)?;
 
-        self.script = TapScript::commit(&(*msg, path_proof.nonce)).into_inner();
+            let final_script =
+                TapScript::commit(&(*msg, path_proof.nonce)).into_inner();
 
-        let proof = TapretProof {
-            path_proof,
-            internal_key,
+            let proof = TapretProof {
+                path_proof,
+                internal_key,
+            };
+
+            (final_script, proof)
+        } else {
+            // TODO: Move checksig script to descriptor wallet->psbt::construct
+            // with --allow-tapret-path
+            let builder = bitcoin::blockdata::script::Builder::new();
+            let checksig_script = builder
+                .push_slice(&internal_key.serialize())
+                .push_opcode(opcodes::all::OP_CHECKSIG)
+                .into_script();
+            let commitment_script = TapScript::commit(&(*msg, 1));
+
+            let builder = taproot::TaprootBuilder::new();
+            let builder = builder.add_leaf(1, checksig_script).unwrap();
+            let builder = builder
+                .add_leaf(1, commitment_script.into())
+                .unwrap();
+
+            // TODO: Move to TaprootScriptTree::embed_commit
+            let taptree = TapTree::from_builder(builder.clone())
+                .expect("builder is incomplete");
+            let taptree_script = Some(taptree)
+                .map(TaprootScriptTree::from)
+                .expect("taptree is broken");
+            let branch = taptree_script
+                .as_root_node()
+                .as_branch()
+                .expect("taptree root is broken");
+            let partner = branch.as_dfs_child_node(DfsOrder::First);
+            let taproot_spend = builder
+                .finalize(SECP256K1, internal_key)
+                .expect("taptree is incomplete");
+
+            let proof = TapretProof {
+                path_proof: TapretPathProof::with(
+                    TapretNodePartner::LeftNode(partner.node_hash()),
+                    1,
+                )
+                .unwrap(),
+                internal_key: taproot_spend.internal_key(),
+            };
+
+            let final_script = Script::new_witness_program(
+                WitnessVersion::V1,
+                &taproot_spend.output_key().serialize(),
+            );
+            (final_script, proof)
         };
+
+        self.script = script;
 
         Ok(proof)
     }
