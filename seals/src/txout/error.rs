@@ -52,7 +52,7 @@ pub enum VerifyError {
 #[display("witness txid is unknown; unable to reconstruct full outpoint data")]
 pub struct WitnessVoutError;
 
-/// wrong transaction ouput-based single-use-seal closing method id '{0}'.
+/// wrong transaction output-based single-use-seal closing method id '{0}'.
 #[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]
 #[display(doc_comments)]
 pub struct MethodParseError(pub String);
