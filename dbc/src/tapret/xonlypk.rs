@@ -14,11 +14,8 @@
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
 use amplify::Wrapper;
-use bitcoin::hashes::Hash;
-use bitcoin::psbt::TapTree;
-use bitcoin::schnorr::{TapTweak, TweakedPublicKey, UntweakedPublicKey};
-use bitcoin::util::taproot::{TapBranchHash, TaprootBuilder};
-use bitcoin_scripts::taproot::{Node, TaprootScriptTree};
+use bitcoin::schnorr::{TweakedPublicKey, UntweakedPublicKey};
+use bitcoin::util::taproot::{TaprootBuilder, TaprootBuilderError};
 use bitcoin_scripts::TapScript;
 use commit_verify::convolve_commit::{
     ConvolveCommitProof, ConvolveCommitVerify,
@@ -93,15 +90,12 @@ impl ConvolveCommitVerify<lnpbp4::CommitmentHash, TapretProof, Lnpbp6>
             }
         }
 
-        let commit_node =
-            TaprootScriptTree::from(TapTree::from_builder(builder)?)
-                .into_root_node();
-        let merkle_root =
-            TapBranchHash::from_inner(commit_node.node_hash().into_inner());
-
         // TODO: Use secp instance from Lnpbp6
-        let (output_key, _parity) =
-            self.tap_tweak(SECP256K1, Some(merkle_root));
+        let spend_info = builder
+            .finalize(SECP256K1, *self)
+            .map_err(|_| TaprootBuilderError::IncompleteTree)?;
+
+        let output_key = spend_info.output_key();
 
         let proof = TapretProof {
             path_proof: supplement.clone(),
