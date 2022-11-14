@@ -287,14 +287,23 @@ impl EmbedCommitVerify<lnpbp4::CommitmentHash, Lnpbp6>
 
             let commitment_node =
                 TreeNode::with_tap_script(commitment_script, 0);
-            let commitment_subtree = TaprootScriptTree::with(commitment_node)
-                .expect("invalid commitment node construction");
+            let commitment_subtree =
+                TaprootScriptTree::with(commitment_node.clone())
+                    .expect("invalid commitment node construction");
 
             let tap_tree = if let Some(ref mut tap_tree) = self.0 {
                 tap_tree
             } else {
-                self.0 = Some(commitment_subtree);
-                return Ok(TapretPathProof::new());
+                let tree = commitment_subtree
+                    .clone()
+                    .join(commitment_subtree, DfsOrder::Last)
+                    .expect("instill algorithm is broken");
+                self.0 = Some(tree);
+
+                let left =
+                    TapretNodePartner::LeftNode(commitment_node.node_hash());
+                let proof = TapretPathProof::with(left, nonce)?;
+                return Ok(proof);
             };
 
             let original_tree = tap_tree.clone();
