@@ -13,9 +13,7 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use amplify::Wrapper;
-use bitcoin::TxOut;
-use bitcoin_scripts::PubkeyScript;
+use bitcoin::{Script, TxOut};
 use commit_verify::convolve_commit::{
     ConvolveCommitProof, ConvolveCommitVerify,
 };
@@ -49,14 +47,17 @@ impl ConvolveCommitVerify<lnpbp4::CommitmentHash, TapretProof, Lnpbp6>
         supplement: &TapretProof,
         msg: &lnpbp4::CommitmentHash,
     ) -> Result<(TxOut, TapretProof), Self::CommitError> {
-        let (script_pubkey, proof) =
-            PubkeyScript::from_inner(self.script_pubkey.clone())
-                .convolve_commit(supplement, msg)?;
+        let (output_key, _) = supplement
+            .internal_key
+            .convolve_commit(&supplement.path_proof, msg)?;
+
+        let script_pubkey = Script::new_v1_p2tr_tweaked(output_key);
+
         let commitment = TxOut {
             value: self.value,
-            script_pubkey: script_pubkey.into_inner(),
+            script_pubkey,
         };
 
-        Ok((commitment, proof))
+        Ok((commitment, supplement.clone()))
     }
 }

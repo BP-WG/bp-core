@@ -57,7 +57,6 @@
 
 #[cfg(feature = "wallet")]
 mod psbtout;
-mod scriptpk;
 mod tapscript;
 mod taptree;
 mod tx;
