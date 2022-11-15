@@ -56,37 +56,36 @@ impl ConvolveCommitVerify<lnpbp4::CommitmentHash, TapretProof, Lnpbp6>
         //       APIs
         let mut builder = TaprootBuilder::new();
 
-        for (depth, partner) in supplement.partner_node.iter().enumerate() {
-            let depth = depth as u8 + 1;
-
+        if let Some(ref partner) = supplement.partner_node {
             if !partner.check() {
-                return Err(TapretTreeError::InvalidPartnerProof(
-                    depth,
+                return Err(TapretTreeError::AlternativeCommitment(
                     partner.clone(),
                 ));
             }
+        }
 
-            match partner {
-                TapretNodePartner::LeftNode(left_node) => {
-                    builder = builder.add_hidden_node(depth, *left_node)?;
-                    builder = builder
-                        .add_leaf(depth, script_commitment.to_inner())?;
-                }
-                TapretNodePartner::RightLeaf(leaf_script) => {
-                    builder = builder
-                        .add_leaf(depth, script_commitment.to_inner())?;
-                    builder = builder.add_leaf_with_ver(
+        match &supplement.partner_node {
+            None => {
+                builder = builder.add_leaf(0, script_commitment.to_inner())?;
+            }
+            Some(TapretNodePartner::LeftNode(left_node)) => {
+                builder = builder
+                    .add_hidden_node(1, *left_node)?
+                    .add_leaf(1, script_commitment.to_inner())?;
+            }
+            Some(TapretNodePartner::RightLeaf(leaf_script)) => {
+                builder = builder
+                    .add_leaf(1, script_commitment.to_inner())?
+                    .add_leaf_with_ver(
                         1,
                         leaf_script.script.to_inner(),
                         leaf_script.version,
                     )?;
-                }
-                TapretNodePartner::RightBranch(partner_branch) => {
-                    builder = builder
-                        .add_leaf(depth, script_commitment.to_inner())?;
-                    builder = builder
-                        .add_hidden_node(depth, partner_branch.node_hash())?;
-                }
+            }
+            Some(TapretNodePartner::RightBranch(partner_branch)) => {
+                builder = builder
+                    .add_leaf(1, script_commitment.to_inner())?
+                    .add_hidden_node(1, partner_branch.node_hash())?;
             }
         }
 

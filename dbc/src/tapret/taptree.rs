@@ -59,9 +59,8 @@ pub enum TapretTreeError {
     /// commitment.
     IncompleteTree(TaprootScriptTree),
 
-    /// unable to add an invalid tapret node partner information {1} to the
-    /// merkle path proof at the level {0}.
-    InvalidPartnerProof(u8, TapretNodePartner),
+    /// tapret node partner {0} contains alternative commitment
+    AlternativeCommitment(TapretNodePartner),
 }
 
 /// Errors during taproot script tree tapret commitment verification and
