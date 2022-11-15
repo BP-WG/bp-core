@@ -87,8 +87,12 @@ use secp256k1::SECP256K1;
 use strict_encoding::{self, StrictDecode};
 
 impl CommitmentProtocol for Lnpbp6 {
-    // TODO: Set up proper midstate value for LNPBP6
-    const HASH_TAG_MIDSTATE: Option<Midstate> = None;
+    // TaggedHash("LNPBP6")
+    const HASH_TAG_MIDSTATE: Option<Midstate> = Some(Midstate([
+        38, 117, 83, 113, 201, 197, 124, 94, 152, 111, 62, 165, 154, 239, 157,
+        166, 10, 195, 217, 29, 15, 182, 55, 211, 190, 230, 184, 41, 241, 198,
+        65, 54,
+    ]));
 }
 
 /// Errors in constructing tapret path proof [`TapretPathProof`].
@@ -408,3 +412,20 @@ impl TapretProof {
 #[derive(Wrapper, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[derive(StrictEncode, StrictDecode)]
 pub struct TapretTweak(TaprootMerkleBranch);
+
+#[cfg(test)]
+mod test {
+    use amplify::Wrapper;
+    use commit_verify::tagged_hash;
+
+    use super::*;
+
+    #[test]
+    fn test_lnpbp6_midstate() {
+        let midstate = tagged_hash::Midstate::with(b"LNPBP6");
+        assert_eq!(
+            midstate.into_inner().into_inner(),
+            Lnpbp6::HASH_TAG_MIDSTATE.unwrap().into_inner()
+        );
+    }
+}
