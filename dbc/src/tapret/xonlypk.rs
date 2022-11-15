@@ -24,9 +24,7 @@ use commit_verify::convolve_commit::{
 use commit_verify::{lnpbp4, CommitVerify};
 use secp256k1::SECP256K1;
 
-use super::{
-    Lnpbp6, TapretNodePartner, TapretPathProof, TapretProof, TapretTreeError,
-};
+use super::{Lnpbp6, TapretPathProof, TapretProof, TapretTreeError};
 
 impl ConvolveCommitProof<lnpbp4::CommitmentHash, UntweakedPublicKey, Lnpbp6>
     for TapretProof
@@ -54,7 +52,7 @@ impl ConvolveCommitVerify<lnpbp4::CommitmentHash, TapretProof, Lnpbp6>
         let script_commitment = TapScript::commit(&(*msg, supplement.nonce));
 
         let root = if let Some(ref partner) = supplement.partner_node {
-            if !partner.check() {
+            if !partner.check_no_commitment() {
                 return Err(TapretTreeError::AlternativeCommitment(
                     partner.clone(),
                 ));
@@ -62,18 +60,15 @@ impl ConvolveCommitVerify<lnpbp4::CommitmentHash, TapretProof, Lnpbp6>
 
             let commitment_node =
                 TreeNode::with_tap_script(script_commitment, 1);
-            let partner_node = match partner {
-                TapretNodePartner::LeftNode(left_node) => {
-                    TreeNode::Hidden(*left_node, 1)
-                }
-                TapretNodePartner::RightLeaf(leaf_script) => {
-                    TreeNode::Leaf(leaf_script.clone(), 0)
-                }
-                TapretNodePartner::RightBranch(partner_branch) => {
-                    TreeNode::Hidden(partner_branch.node_hash(), 1)
-                }
-            };
-            TreeNode::with_branch(commitment_node, partner_node, 0)
+
+            if !partner.check_ordering(commitment_node.node_hash()) {
+                return Err(TapretTreeError::IncorrectOrdering(
+                    partner.clone(),
+                    commitment_node,
+                ));
+            }
+
+            TreeNode::with_branch(commitment_node, partner.to_tree_node(), 0)
         } else {
             TreeNode::with_tap_script(script_commitment, 0)
         };
@@ -109,6 +104,7 @@ mod test {
     use secp256k1::XOnlyPublicKey;
 
     use super::*;
+    use crate::tapret::TapretNodePartner;
 
     #[test]
     fn key_path() {
@@ -154,6 +150,36 @@ mod test {
         let path_proof = TapretPathProof::with(
             TapretNodePartner::RightLeaf(LeafScript::tapscript(default!())),
             88,
+        )
+        .unwrap();
+
+        let (outer_key, proof) =
+            internal_key.convolve_commit(&path_proof, &msg).unwrap();
+
+        assert_eq!(proof, TapretProof {
+            path_proof,
+            internal_key
+        });
+
+        assert!(ConvolveCommitProof::<
+            CommitmentHash,
+            UntweakedPublicKey,
+            Lnpbp6,
+        >::verify(&proof, &msg, outer_key)
+        .unwrap());
+    }
+
+    #[test]
+    #[should_panic(expected = "IncorrectOrdering")]
+    fn invalid_partner_ordering() {
+        let internal_key = XOnlyPublicKey::from_str(
+            "c5f93479093e2b8f724a79844cc10928dd44e9a390b539843fb83fbf842723f3",
+        )
+        .unwrap();
+        let msg = CommitmentHash::from_inner(Hash::hash(b""));
+        let path_proof = TapretPathProof::with(
+            TapretNodePartner::RightLeaf(LeafScript::tapscript(default!())),
+            1,
         )
         .unwrap();
 

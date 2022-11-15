@@ -81,6 +81,7 @@ use bitcoin::hashes::Hash;
 use bitcoin::schnorr::UntweakedPublicKey;
 use bitcoin::util::taproot::{TapBranchHash, TaprootMerkleBranch};
 use bitcoin::Script;
+use bitcoin_scripts::taproot::TreeNode;
 use bitcoin_scripts::{IntoNodeHash, LeafScript, PubkeyScript, TapNodeHash};
 use commit_verify::CommitmentProtocol;
 use secp256k1::SECP256K1;
@@ -216,10 +217,9 @@ impl TapretNodePartner {
     /// bytes are not equal to [`TAPRET_SCRIPT_COMMITMENT_PREFIX`], and if
     /// the sibling is another node, the hash of its first child in the proof
     /// is smaller than the hash of the other.
-    pub fn check(&self) -> bool {
+    pub fn check_no_commitment(&self) -> bool {
         match self {
             TapretNodePartner::LeftNode(_) => true,
-            // TODO: Check node ordering
             TapretNodePartner::RightLeaf(LeafScript { script, .. })
                 if script.len() < 32 =>
             {
@@ -235,6 +235,22 @@ impl TapretNodePartner {
         }
     }
 
+    /// Checks that the sibling has a correct ordering regarding some other
+    /// node.
+    pub fn check_ordering(&self, other_node: TapNodeHash) -> bool {
+        match self {
+            TapretNodePartner::LeftNode(left_node) => *left_node <= other_node,
+            TapretNodePartner::RightLeaf(leaf_script) => {
+                let right_node = leaf_script.tap_leaf_hash().into_node_hash();
+                other_node <= right_node
+            }
+            TapretNodePartner::RightBranch(right_branch) => {
+                let right_node = right_branch.node_hash();
+                other_node <= right_node
+            }
+        }
+    }
+
     /// Computes node hash of the partner node defined by this proof.
     pub fn node_hash(&self) -> TapNodeHash {
         match self {
@@ -244,6 +260,21 @@ impl TapretNodePartner {
             }
             TapretNodePartner::RightBranch(right_branch) => {
                 right_branch.node_hash()
+            }
+        }
+    }
+
+    /// Constructs [`TreeNode`] for the node partner.
+    pub fn to_tree_node(&self) -> TreeNode {
+        match self {
+            TapretNodePartner::LeftNode(left_node) => {
+                TreeNode::Hidden(*left_node, 1)
+            }
+            TapretNodePartner::RightLeaf(leaf_script) => {
+                TreeNode::Leaf(leaf_script.clone(), 0)
+            }
+            TapretNodePartner::RightBranch(partner_branch) => {
+                TreeNode::Hidden(partner_branch.node_hash(), 1)
             }
         }
     }
@@ -280,7 +311,7 @@ impl TapretPathProof {
         elem: TapretNodePartner,
         nonce: u8,
     ) -> Result<TapretPathProof, TapretPathError> {
-        if !elem.check() {
+        if !elem.check_no_commitment() {
             return Err(TapretPathError::InvalidNodePartner(elem));
         }
         Ok(TapretPathProof {
@@ -292,10 +323,10 @@ impl TapretPathProof {
     /// Checks that the sibling data does not contain another tapret commitment
     /// for any step of the mekrle path.
     #[inline]
-    pub fn check(&self) -> bool {
+    pub fn check_no_commitment(&self) -> bool {
         self.partner_node
             .as_ref()
-            .map(TapretNodePartner::check)
+            .map(TapretNodePartner::check_no_commitment)
             .unwrap_or(true)
     }
 

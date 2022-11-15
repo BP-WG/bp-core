@@ -61,6 +61,10 @@ pub enum TapretTreeError {
 
     /// tapret node partner {0} contains alternative commitment
     AlternativeCommitment(TapretNodePartner),
+
+    /// tapret node partner {0} has an invalid order with the commitment node
+    /// {1}
+    IncorrectOrdering(TapretNodePartner, TreeNode),
 }
 
 /// Errors during taproot script tree tapret commitment verification and
