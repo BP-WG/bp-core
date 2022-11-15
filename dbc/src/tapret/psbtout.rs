@@ -165,7 +165,7 @@ impl EmbedCommitVerify<lnpbp4::CommitmentHash, Lnpbp6> for psbt::Output {
             .convolve_commit(&path_proof, msg)
             .map_err(|_| PsbtCommitError::TapTreeError)?;
 
-        self.script = Script::new_v1_p2tr_tweaked(output_key).into();
+        self.script = Script::new_v1_p2tr_tweaked(output_key);
 
         let proof = TapretProof {
             path_proof,
