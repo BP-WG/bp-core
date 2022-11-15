@@ -13,9 +13,10 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use amplify::Wrapper;
-use bitcoin::schnorr::{TweakedPublicKey, UntweakedPublicKey};
-use bitcoin::util::taproot::{TaprootBuilder, TaprootBuilderError};
+use bitcoin::hashes::Hash;
+use bitcoin::schnorr::{TapTweak, TweakedPublicKey, UntweakedPublicKey};
+use bitcoin::util::taproot::TapBranchHash;
+use bitcoin_scripts::taproot::{Node, TreeNode};
 use bitcoin_scripts::TapScript;
 use commit_verify::convolve_commit::{
     ConvolveCommitProof, ConvolveCommitVerify,
@@ -52,49 +53,37 @@ impl ConvolveCommitVerify<lnpbp4::CommitmentHash, TapretProof, Lnpbp6>
     ) -> Result<(TweakedPublicKey, TapretProof), Self::CommitError> {
         let script_commitment = TapScript::commit(&(*msg, supplement.nonce));
 
-        // TODO: Refactor without builder but with new bitcoin_scripts::taproot
-        //       APIs
-        let mut builder = TaprootBuilder::new();
-
-        if let Some(ref partner) = supplement.partner_node {
+        let root = if let Some(ref partner) = supplement.partner_node {
             if !partner.check() {
                 return Err(TapretTreeError::AlternativeCommitment(
                     partner.clone(),
                 ));
             }
-        }
 
-        match &supplement.partner_node {
-            None => {
-                builder = builder.add_leaf(0, script_commitment.to_inner())?;
-            }
-            Some(TapretNodePartner::LeftNode(left_node)) => {
-                builder = builder
-                    .add_hidden_node(1, *left_node)?
-                    .add_leaf(1, script_commitment.to_inner())?;
-            }
-            Some(TapretNodePartner::RightLeaf(leaf_script)) => {
-                builder = builder
-                    .add_leaf(1, script_commitment.to_inner())?
-                    .add_leaf_with_ver(
-                        1,
-                        leaf_script.script.to_inner(),
-                        leaf_script.version,
-                    )?;
-            }
-            Some(TapretNodePartner::RightBranch(partner_branch)) => {
-                builder = builder
-                    .add_leaf(1, script_commitment.to_inner())?
-                    .add_hidden_node(1, partner_branch.node_hash())?;
-            }
-        }
+            let commitment_node =
+                TreeNode::with_tap_script(script_commitment, 1);
+            let partner_node = match partner {
+                TapretNodePartner::LeftNode(left_node) => {
+                    TreeNode::Hidden(*left_node, 1)
+                }
+                TapretNodePartner::RightLeaf(leaf_script) => {
+                    TreeNode::Leaf(leaf_script.clone(), 0)
+                }
+                TapretNodePartner::RightBranch(partner_branch) => {
+                    TreeNode::Hidden(partner_branch.node_hash(), 1)
+                }
+            };
+            TreeNode::with_branch(commitment_node, partner_node, 0)
+        } else {
+            TreeNode::with_tap_script(script_commitment, 0)
+        };
 
+        // TODO: Check with <https://github.com/rust-bitcoin/rust-bitcoin/issues/1393>
+        let merkle_root =
+            TapBranchHash::from_inner(root.node_hash().into_inner());
         // TODO: Use secp instance from Lnpbp6
-        let spend_info = builder
-            .finalize(SECP256K1, *self)
-            .map_err(|_| TaprootBuilderError::IncompleteTree)?;
-
-        let output_key = spend_info.output_key();
+        let (output_key, _parity_not_used) =
+            self.tap_tweak(SECP256K1, Some(merkle_root));
 
         let proof = TapretProof {
             path_proof: supplement.clone(),

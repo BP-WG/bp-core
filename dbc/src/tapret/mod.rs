@@ -219,6 +219,7 @@ impl TapretNodePartner {
     pub fn check(&self) -> bool {
         match self {
             TapretNodePartner::LeftNode(_) => true,
+            // TODO: Check node ordering
             TapretNodePartner::RightLeaf(LeafScript { script, .. })
                 if script.len() < 32 =>
             {
