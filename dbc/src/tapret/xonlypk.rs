@@ -18,9 +18,7 @@ use bitcoin::schnorr::{TapTweak, TweakedPublicKey, UntweakedPublicKey};
 use bitcoin::util::taproot::TapBranchHash;
 use bitcoin_scripts::taproot::{Node, TreeNode};
 use bitcoin_scripts::TapScript;
-use commit_verify::convolve_commit::{
-    ConvolveCommitProof, ConvolveCommitVerify,
-};
+use commit_verify::convolve_commit::{ConvolveCommit, ConvolveCommitProof};
 use commit_verify::{lnpbp4, CommitVerify};
 use secp256k1::SECP256K1;
 
@@ -38,7 +36,7 @@ impl ConvolveCommitProof<lnpbp4::CommitmentHash, UntweakedPublicKey, Lnpbp6>
     fn extract_supplement(&self) -> &Self::Suppl { &self.path_proof }
 }
 
-impl ConvolveCommitVerify<lnpbp4::CommitmentHash, TapretProof, Lnpbp6>
+impl ConvolveCommit<lnpbp4::CommitmentHash, TapretProof, Lnpbp6>
     for UntweakedPublicKey
 {
     type Commitment = TweakedPublicKey;

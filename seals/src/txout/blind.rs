@@ -35,7 +35,7 @@ use crate::txout::{ExplicitSeal, TxoSeal};
 /// Revealed seal means that the seal definition containing explicit information
 /// about the bitcoin transaction output.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-#[derive(StrictEncode, StrictDecode)]
+#[derive(ConfinedEncode, ConfinedDecode)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -411,6 +411,10 @@ impl From<OutPoint> for ConcealedSeal {
     }
 }
 
+impl confined_encoding::Strategy for ConcealedSeal {
+    type Strategy = confined_encoding::strategies::Wrapped;
+}
+
 impl strict_encoding::Strategy for ConcealedSeal {
     type Strategy = strict_encoding::strategies::Wrapped;
 }
@@ -423,7 +427,8 @@ impl CommitVerify<RevealedSeal, Lnpbp6> for ConcealedSeal {
     fn commit(reveal: &RevealedSeal) -> Self {
         let mut engine = sha256t::Hash::<ConcealedSealTag>::engine();
         engine.input(&[reveal.method as u8]);
-        engine.input(&reveal.txid.unwrap_or_default()[..]);
+        engine
+            .input(&reveal.txid.map(Txid::into_inner).unwrap_or_default()[..]);
         engine.input(&reveal.vout.to_le_bytes()[..]);
         engine.input(&reveal.blinding.to_le_bytes()[..]);
         let inner = sha256t::Hash::<ConcealedSealTag>::from_engine(engine);

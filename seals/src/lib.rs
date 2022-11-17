@@ -22,7 +22,7 @@
 #[macro_use]
 extern crate amplify;
 #[macro_use]
-extern crate strict_encoding;
+extern crate confined_encoding;
 #[cfg(feature = "async")]
 // #[macro_use]
 extern crate async_trait;

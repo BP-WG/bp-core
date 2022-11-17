@@ -83,8 +83,8 @@ use bitcoin::Script;
 use bitcoin_scripts::taproot::TreeNode;
 use bitcoin_scripts::{IntoNodeHash, LeafScript, PubkeyScript, TapNodeHash};
 use commit_verify::CommitmentProtocol;
+use confined_encoding::{self, ConfinedDecode};
 use secp256k1::SECP256K1;
-use strict_encoding::{self, StrictDecode};
 
 impl CommitmentProtocol for Lnpbp6 {
     // TaggedHash("LNPBP6")
@@ -117,7 +117,7 @@ pub enum TapretPathError {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate")
 )]
-#[derive(StrictEncode)]
+#[derive(ConfinedEncode)]
 #[display("{left_node_hash}:{right_node_hash}")]
 pub struct TapretRightBranch {
     left_node_hash: TapNodeHash,
@@ -155,14 +155,14 @@ impl TapretRightBranch {
     }
 }
 
-impl StrictDecode for TapretRightBranch {
-    fn strict_decode<D: Read>(
+impl ConfinedDecode for TapretRightBranch {
+    fn confined_decode<D: Read>(
         mut d: D,
-    ) -> Result<Self, strict_encoding::Error> {
-        let left_node_hash = StrictDecode::strict_decode(&mut d)?;
-        let right_node_hash = StrictDecode::strict_decode(d)?;
+    ) -> Result<Self, confined_encoding::Error> {
+        let left_node_hash = ConfinedDecode::confined_decode(&mut d)?;
+        let right_node_hash = ConfinedDecode::confined_decode(d)?;
         if left_node_hash > right_node_hash {
-            Err(strict_encoding::Error::DataIntegrityError(s!(
+            Err(confined_encoding::Error::DataIntegrityError(s!(
                 "non-cosensus ordering of hashes in TapretRightBranch"
             )))
         } else {
@@ -180,7 +180,7 @@ impl StrictDecode for TapretRightBranch {
 /// The structure hosts proofs that the right-side partner at the taproot script
 /// tree node does not contain an alternative OP-RETURN commitment script.
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, From)]
-#[derive(StrictEncode, StrictDecode)]
+#[derive(ConfinedEncode, ConfinedDecode)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -294,7 +294,7 @@ impl TapretNodePartner {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate")
 )]
-#[derive(StrictEncode, StrictDecode)]
+#[derive(ConfinedEncode, ConfinedDecode)]
 pub struct TapretPathProof {
     /// Information about the sibling at level 1 of the tree
     partner_node: Option<TapretNodePartner>,
@@ -377,7 +377,7 @@ impl<'data> IntoIterator for &'data TapretPathProof {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate")
 )]
-#[derive(StrictEncode, StrictDecode)]
+#[derive(ConfinedEncode, ConfinedDecode)]
 pub struct TapretProof {
     /// A merkle path to the commitment inside the taproot script tree. For
     /// each node it also must hold information about the sibling in form of
@@ -410,7 +410,7 @@ impl TapretProof {
 /// commitment branch. Represents the taptree merkle root of the modified
 /// taptree.
 #[derive(Wrapper, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
-#[derive(StrictEncode, StrictDecode)]
+#[derive(ConfinedEncode, ConfinedDecode)]
 pub struct TapretTweak(TaprootMerkleBranch);
 
 #[cfg(test)]

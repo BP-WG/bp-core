@@ -14,9 +14,7 @@
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
 use bitcoin::Transaction;
-use commit_verify::convolve_commit::{
-    ConvolveCommitProof, ConvolveCommitVerify,
-};
+use commit_verify::convolve_commit::{ConvolveCommit, ConvolveCommitProof};
 use commit_verify::lnpbp4;
 
 use super::{Lnpbp6, TapretProof, TapretTreeError};
@@ -53,7 +51,7 @@ impl ConvolveCommitProof<lnpbp4::CommitmentHash, Transaction, Lnpbp6>
     fn extract_supplement(&self) -> &Self::Suppl { self }
 }
 
-impl ConvolveCommitVerify<lnpbp4::CommitmentHash, TapretProof, Lnpbp6>
+impl ConvolveCommit<lnpbp4::CommitmentHash, TapretProof, Lnpbp6>
     for Transaction
 {
     type Commitment = Transaction;

@@ -13,9 +13,10 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use crate::Error;
 use amplify::{Slice32, Wrapper};
 use bitcoin::hashes::sha256;
+
+use crate::Error;
 
 /// Extra-transaction proof of a deterministic bitcoin commitment.
 ///
@@ -28,7 +29,7 @@ use bitcoin::hashes::sha256;
 /// deserialized (client-side-validated data may contain many thousands of
 /// proofs and such validation may significantly reduce performance).
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Display)]
-#[derive(StrictEncode, StrictDecode)]
+#[derive(ConfinedEncode, ConfinedDecode)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),

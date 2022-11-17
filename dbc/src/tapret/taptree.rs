@@ -40,7 +40,7 @@ use crate::tapret::TapretPathError;
 pub enum TapretTreeError {
     /// the provided commitment data can't be strict encoded. Details: {0}
     #[from]
-    StrictEncoding(strict_encoding::Error),
+    Encoding(confined_encoding::Error),
 
     /// unable to update tap tree with the commitment. Details: {0}
     #[from]

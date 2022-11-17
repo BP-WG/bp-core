@@ -25,6 +25,8 @@ pub mod taproot;
 #[cfg(feature = "miniscript")]
 pub mod txout;
 
+use bitcoin::hashes::sha256;
+use bitcoin_scripts::LockScript;
 #[cfg(feature = "miniscript")]
 pub use keyset::{KeysetCommitment, KeysetContainer};
 #[cfg(feature = "miniscript")]
@@ -38,14 +40,11 @@ pub use taproot::{TaprootCommitment, TaprootContainer};
 #[cfg(feature = "miniscript")]
 pub use txout::{TxoutCommitment, TxoutContainer};
 
-use bitcoin::hashes::sha256;
-use bitcoin_scripts::LockScript;
-
 /// Structure keeping the minimum of information (bytewise) required to verify
 /// deterministic bitcoin commitment given only the transaction source, its
 /// fee and protocol-specific constants. It is a part of the [`Proof`] data.
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Display)]
-#[derive(StrictEncode, StrictDecode)]
+#[derive(ConfinedEncode, ConfinedDecode)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),

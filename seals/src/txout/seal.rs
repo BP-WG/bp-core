@@ -49,8 +49,8 @@ pub trait TxoSeal {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate")
 )]
-#[derive(StrictEncode, StrictDecode)]
-#[strict_encoding(by_value)]
+#[derive(ConfinedEncode, ConfinedDecode)]
+#[confined_encoding(by_value)]
 #[repr(u8)]
 #[non_exhaustive]
 pub enum CloseMethod {

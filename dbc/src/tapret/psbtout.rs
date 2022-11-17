@@ -19,7 +19,7 @@ use bitcoin::util::taproot::TapBranchHash;
 use bitcoin::Script;
 use bitcoin_scripts::taproot::{Node, TaprootScriptTree, TreeNode};
 use bitcoin_scripts::TapNodeHash;
-use commit_verify::convolve_commit::ConvolveCommitVerify;
+use commit_verify::convolve_commit::ConvolveCommit;
 use commit_verify::{lnpbp4, EmbedCommitProof, EmbedCommitVerify};
 use psbt::commit::{
     DfsPathEncodeError, Lnpbp4KeyError, OpretKeyError, TapretKeyError,
@@ -129,7 +129,8 @@ impl EmbedCommitProof<lnpbp4::CommitmentHash, psbt::Output, Lnpbp6>
             .map(TapNodeHash::into_inner)
             .map(TapBranchHash::from_inner);
         original_container.script =
-            Script::new_v1_p2tr(SECP256K1, self.internal_key, merkle_root);
+            Script::new_v1_p2tr(SECP256K1, self.internal_key, merkle_root)
+                .into();
 
         original_container.tap_tree = source.into_tap_tree();
 
@@ -165,7 +166,7 @@ impl EmbedCommitVerify<lnpbp4::CommitmentHash, Lnpbp6> for psbt::Output {
             .convolve_commit(&path_proof, msg)
             .map_err(|_| PsbtCommitError::TapTreeError)?;
 
-        self.script = Script::new_v1_p2tr_tweaked(output_key);
+        self.script = Script::new_v1_p2tr_tweaked(output_key).into();
 
         let proof = TapretProof {
             path_proof,

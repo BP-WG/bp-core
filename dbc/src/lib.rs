@@ -33,7 +33,7 @@ extern crate miniscript_crate as miniscript;
 #[macro_use]
 extern crate serde_crate as serde;
 #[macro_use]
-extern crate strict_encoding;
+extern crate confined_encoding;
 
 pub mod anchor;
 pub mod keytweak;

@@ -31,9 +31,9 @@ use commit_verify::{
 };
 #[cfg(feature = "wallet")]
 use commit_verify::{EmbedCommitProof, EmbedCommitVerify, TryCommitVerify};
+use confined_encoding::ConfinedEncode;
 #[cfg(feature = "wallet")]
 use psbt::Psbt;
-use strict_encoding::StrictEncode;
 
 #[cfg(feature = "wallet")]
 use crate::tapret::{Lnpbp6, PsbtCommitError, PsbtVerifyError};
@@ -80,8 +80,8 @@ where
     fn commit(msg: &Msg) -> AnchorId { AnchorId::hash(msg) }
 }
 
-impl strict_encoding::Strategy for AnchorId {
-    type Strategy = strict_encoding::strategies::Wrapped;
+impl confined_encoding::Strategy for AnchorId {
+    type Strategy = confined_encoding::strategies::Wrapped;
 }
 
 #[cfg(feature = "wallet")]
@@ -115,7 +115,7 @@ pub enum VerifyError {
 /// keeping information about the proof of the commitment in connection to the
 /// transaction which contains the commitment, and multi-protocol merkle tree as
 /// defined by LNPBP-4.
-#[derive(Clone, PartialEq, Eq, Debug, StrictEncode, StrictDecode)]
+#[derive(Clone, PartialEq, Eq, Debug, ConfinedEncode, ConfinedDecode)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -136,11 +136,11 @@ impl CommitEncode for Anchor<lnpbp4::MerkleBlock> {
     fn commit_encode<E: Write>(&self, mut e: E) -> usize {
         let mut len = self
             .txid
-            .strict_encode(&mut e)
+            .confined_encode(&mut e)
             .expect("memory encoders do not fail");
         len += self
             .dbc_proof
-            .strict_encode(&mut e)
+            .confined_encode(&mut e)
             .expect("memory encoders do not fail");
         len + self.lnpbp4_proof.commit_encode(e)
     }
@@ -384,7 +384,7 @@ impl EmbedCommitVerify<PsbtEmbeddedMessage, Lnpbp6> for Psbt {
         {
             let tree = lnpbp4_tree(output)?;
             let commitment = tree.consensus_commit();
-            output.script = Script::new_op_return(commitment.as_slice());
+            output.script = Script::new_op_return(commitment.as_slice()).into();
             output.set_opret_commitment(commitment.into_array())?;
             output.set_lnpbp4_entropy(tree.entropy())?;
             (Proof::OpretFirst, tree)
@@ -408,8 +408,8 @@ impl EmbedCommitVerify<PsbtEmbeddedMessage, Lnpbp6> for Psbt {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate")
 )]
-#[derive(StrictEncode, StrictDecode)]
-#[strict_encoding(by_order)]
+#[derive(ConfinedEncode, ConfinedDecode)]
+#[confined_encoding(by_order)]
 #[non_exhaustive]
 pub enum Proof {
     /// Opret commitment (no extra-transaction proof is required).
