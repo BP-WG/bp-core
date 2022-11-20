@@ -13,16 +13,14 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use amplify::Wrapper;
 use bitcoin::hashes::Hash;
 use bitcoin::psbt::TapTree;
 use bitcoin::util::taproot::TapBranchHash;
 use bitcoin::Script;
 use bitcoin_scripts::taproot::{Node, TaprootScriptTree, TreeNode};
-use bitcoin_scripts::{TapNodeHash, TapScript};
-use commit_verify::{
-    lnpbp4, CommitVerify, EmbedCommitProof, EmbedCommitVerify,
-};
+use bitcoin_scripts::TapNodeHash;
+use commit_verify::convolve_commit::ConvolveCommitVerify;
+use commit_verify::{lnpbp4, EmbedCommitProof, EmbedCommitVerify};
 use psbt::commit::{
     DfsPathEncodeError, Lnpbp4KeyError, OpretKeyError, TapretKeyError,
 };
@@ -84,6 +82,9 @@ pub enum PsbtCommitError {
 
     /// PSBT output misses tapret path information.
     TapretPathMissed,
+
+    /// producing taptree structure
+    TapTreeError,
 }
 
 /// Errors during tapret PSBT commitment process.
@@ -158,7 +159,13 @@ impl EmbedCommitVerify<lnpbp4::CommitmentHash, Lnpbp6> for psbt::Output {
 
         let path_proof = source.embed_commit(msg)?;
 
-        self.script = TapScript::commit(&(*msg, path_proof.nonce)).into_inner();
+        self.tap_tree = source.into_tap_tree();
+
+        let (output_key, _) = internal_key
+            .convolve_commit(&path_proof, msg)
+            .map_err(|_| PsbtCommitError::TapTreeError)?;
+
+        self.script = Script::new_v1_p2tr_tweaked(output_key);
 
         let proof = TapretProof {
             path_proof,
