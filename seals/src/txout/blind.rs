@@ -423,7 +423,11 @@ impl CommitVerify<RevealedSeal, Lnpbp6> for ConcealedSeal {
     fn commit(reveal: &RevealedSeal) -> Self {
         let mut engine = sha256t::Hash::<ConcealedSealTag>::engine();
         engine.input(&[reveal.method as u8]);
-        engine.input(&reveal.txid.unwrap_or_default()[..]);
+        engine.input(
+            &reveal.txid.unwrap_or_else(|| {
+                Txid::from_slice(&[0u8; 32]).expect("hardcoded")
+            })[..],
+        );
         engine.input(&reveal.vout.to_le_bytes()[..]);
         engine.input(&reveal.blinding.to_le_bytes()[..]);
         let inner = sha256t::Hash::<ConcealedSealTag>::from_engine(engine);
