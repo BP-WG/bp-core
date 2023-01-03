@@ -61,7 +61,7 @@ impl TryFrom<&ExplicitSeal> for OutPoint {
     fn try_from(reveal: &ExplicitSeal) -> Result<Self, Self::Error> {
         reveal
             .txid
-            .map(|txid| OutPoint::new(txid, reveal.vout as u32))
+            .map(|txid| OutPoint::new(txid, reveal.vout))
             .ok_or(WitnessVoutError)
     }
 }
@@ -81,7 +81,7 @@ impl From<&OutPoint> for ExplicitSeal {
         Self {
             method: CloseMethod::TapretFirst,
             txid: Some(outpoint.txid),
-            vout: outpoint.vout as u32,
+            vout: outpoint.vout,
         }
     }
 }
@@ -115,7 +115,7 @@ impl TxoSeal for ExplicitSeal {
 
     #[inline]
     fn outpoint_or(&self, default_txid: Txid) -> OutPoint {
-        OutPoint::new(self.txid.unwrap_or(default_txid), self.vout as u32)
+        OutPoint::new(self.txid.unwrap_or(default_txid), self.vout)
     }
 }
 
@@ -126,7 +126,7 @@ impl ExplicitSeal {
         Self {
             method,
             txid: Some(outpoint.txid),
-            vout: outpoint.vout as u32,
+            vout: outpoint.vout,
         }
     }
 

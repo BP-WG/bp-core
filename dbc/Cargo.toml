@@ -1,6 +1,6 @@
 [package]
 name = "bp-dbc"
-version = "0.8.0"
+version = "0.9.0-rc.1"
 license = "Apache-2.0"
 authors = ["Dr. Maxim Orlovsky <orlovsky@pandoracore.com>"]
 description = "Deterministic bitcoin commitments library"
@@ -18,20 +18,17 @@ path = "src/lib.rs"
 
 [dependencies]
 amplify = "3.13.0"
-bitcoin = "0.28.1"
-secp256k1 = { version = "0.22.1", features = ["global-context", "rand-std"] }
-bitcoin_scripts = "0.8.0"
-descriptors = { version = "0.8.0", optional = true }
-psbt = { version = "0.8.4", default-features = false, optional = true }
-strict_encoding = "0.8.1"
-commit_verify = { version = "0.8.0", features = ["rand"] }
-miniscript_crate = { package = "miniscript", version = "7.0.0", optional = true }
+bitcoin = "0.29.2"
+secp256k1 = { version = "0.24.2", features = ["global-context", "rand-std"] }
+bitcoin_scripts = "0.9.0-rc.1"
+psbt = { version = "0.9.0-rc.1", default-features = false, optional = true }
+strict_encoding = "0.9.0-rc.1"
+commit_verify = { version = "0.9.0-rc.1", features = ["rand"] }
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
-serde_with = { version = "1.8", optional = true }
+serde_with = { version = "1.14", optional = true }
 
 [features]
 default = []
-all = ["serde", "miniscript", "wallet"]
+all = ["serde", "wallet"]
 wallet = ["psbt"]
-miniscript = ["miniscript_crate", "bitcoin_scripts/miniscript", "psbt/miniscript", "descriptors"]
-serde = ["amplify/serde", "bitcoin/use-serde", "bitcoin_scripts/serde", "commit_verify/serde", "serde_crate", "serde_with"]
+serde = ["amplify/serde", "bitcoin/serde", "bitcoin_scripts/serde", "commit_verify/serde", "serde_crate", "serde_with"]

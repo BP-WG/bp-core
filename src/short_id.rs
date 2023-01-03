@@ -668,6 +668,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(codecov))]
     #[should_panic(expected = "attempt to subtract with overflow")]
     fn short_id_get_descriptor_block_height_overflow() {
         let sid = ShortId(0x0000_0000_1000_0000);

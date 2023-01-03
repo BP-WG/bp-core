@@ -13,9 +13,10 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use crate::Error;
 use amplify::{Slice32, Wrapper};
 use bitcoin::hashes::sha256;
+
+use crate::Error;
 
 /// Extra-transaction proof of a deterministic bitcoin commitment.
 ///

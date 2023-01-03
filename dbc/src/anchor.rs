@@ -384,7 +384,7 @@ impl EmbedCommitVerify<PsbtEmbeddedMessage, Lnpbp6> for Psbt {
         {
             let tree = lnpbp4_tree(output)?;
             let commitment = tree.consensus_commit();
-            output.script = Script::new_op_return(commitment.as_slice());
+            output.script = Script::new_op_return(commitment.as_slice()).into();
             output.set_opret_commitment(commitment.into_array())?;
             output.set_lnpbp4_entropy(tree.entropy())?;
             (Proof::OpretFirst, tree)
