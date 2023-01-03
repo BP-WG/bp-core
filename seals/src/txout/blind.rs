@@ -70,7 +70,7 @@ impl TryFrom<&RevealedSeal> for OutPoint {
     fn try_from(reveal: &RevealedSeal) -> Result<Self, Self::Error> {
         reveal
             .txid
-            .map(|txid| OutPoint::new(txid, reveal.vout as u32))
+            .map(|txid| OutPoint::new(txid, reveal.vout))
             .ok_or(WitnessVoutError)
     }
 }
@@ -91,7 +91,7 @@ impl From<&OutPoint> for RevealedSeal {
             method: CloseMethod::TapretFirst,
             blinding: thread_rng().next_u64(),
             txid: Some(outpoint.txid),
-            vout: outpoint.vout as u32,
+            vout: outpoint.vout,
         }
     }
 }
@@ -151,7 +151,7 @@ impl TxoSeal for RevealedSeal {
 
     #[inline]
     fn outpoint_or(&self, default_txid: Txid) -> OutPoint {
-        OutPoint::new(self.txid.unwrap_or(default_txid), self.vout as u32)
+        OutPoint::new(self.txid.unwrap_or(default_txid), self.vout)
     }
 }
 
@@ -164,7 +164,7 @@ impl RevealedSeal {
             method,
             blinding: thread_rng().next_u64(),
             txid: Some(outpoint.txid),
-            vout: outpoint.vout as u32,
+            vout: outpoint.vout,
         }
     }
 
