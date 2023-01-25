@@ -1,6 +1,6 @@
 [package]
 name = "bp-dbc"
-version = "0.9.0-rc.1"
+version = "0.9.0"
 license = "Apache-2.0"
 authors = ["Dr. Maxim Orlovsky <orlovsky@pandoracore.com>"]
 description = "Deterministic bitcoin commitments library"
@@ -20,10 +20,10 @@ path = "src/lib.rs"
 amplify = "3.13.0"
 bitcoin = "0.29.2"
 secp256k1 = { version = "0.24.2", features = ["global-context", "rand-std"] }
-bitcoin_scripts = "0.9.0-rc.1"
-psbt = { version = "0.9.0-rc.1", default-features = false, optional = true }
-strict_encoding = "0.9.0-rc.1"
-commit_verify = { version = "0.9.0-rc.1", features = ["rand"] }
+bitcoin_scripts = "0.9.0"
+psbt = { version = "0.9.0", default-features = false, optional = true }
+strict_encoding = "0.9.0"
+commit_verify = { version = "0.9.0", features = ["rand"] }
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
 serde_with = { version = "1.14", optional = true }
 
