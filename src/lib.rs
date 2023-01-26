@@ -30,14 +30,5 @@
 //! standardizing typical workflow processes in a form of interfaces that
 //! will be nearly impossible to use in the wrong form.
 
-#[macro_use]
-extern crate amplify;
-#[macro_use]
-extern crate strict_encoding;
-
 pub extern crate dbc;
 pub extern crate seals;
-
-/// pub short_id module
-/// allows efficient representation of protocol entities
-pub mod short_id;
