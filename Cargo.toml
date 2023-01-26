@@ -53,4 +53,3 @@ serde = ["amplify/serde", "bitcoin/serde",
 [workspace]
 members = [".", "dbc", "seals"]
 default-members = [".", "dbc", "seals"]
-exclude = ["dbc-legacy"]
