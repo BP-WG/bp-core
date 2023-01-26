@@ -36,5 +36,5 @@ serde = ["amplify/serde", "bitcoin/serde",
          "serde_crate", "serde_with"]
 
 [workspace]
-members = [".", "dbc", "seals"]
-default-members = [".", "dbc", "seals"]
+members = [".", "raw", "dbc", "seals"]
+default-members = [".", "raw", "dbc", "seals"]
