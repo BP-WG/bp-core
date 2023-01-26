@@ -63,6 +63,12 @@ impl Default for Sha256 {
 }
 
 impl Sha256 {
+    pub fn digest(inp: &[u8]) -> [u8; 32] {
+        let mut engine = Self::default();
+        engine.input(inp);
+        engine.finish()
+    }
+
     /// Create a new [`Sha256`] from a midstate
     ///
     /// # Panics
