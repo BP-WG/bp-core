@@ -24,7 +24,7 @@ version = "4.0.0-beta.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1cc8da6203c5311cc0d74155341a5577564b8360976988eeb5ce7ab6903757f1"
 dependencies = [
- "amplify_derive 4.0.0-alpha.2",
+ "amplify_derive 4.0.0-alpha.3",
  "amplify_num",
  "ascii",
  "wasm-bindgen",
@@ -44,9 +44,9 @@ dependencies = [
 
 [[package]]
 name = "amplify_derive"
-version = "4.0.0-alpha.2"
+version = "4.0.0-alpha.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a258501c851f9dec1549e046d551b645b8b970e30aca85dbec2d6e36cda8e91"
+checksum = "633f53abfbce074d0334ba0d23e0f8f6d6ca9daf1c8a3219c58aead289bc405c"
 dependencies = [
  "amplify_syn",
  "proc-macro2",
@@ -185,6 +185,7 @@ dependencies = [
  "amplify 3.13.0",
  "bitcoin",
  "bitcoin_scripts",
+ "bp-raw",
  "commit_verify",
  "secp256k1",
  "serde",

@@ -18,9 +18,11 @@ extern crate amplify;
 
 mod serialize;
 mod sha256;
+mod taproot;
 mod tx;
 
 pub use sha256::Sha256;
+pub use taproot::*;
 pub use tx::{
     LockTime, Sats, ScriptPubkey, SeqNo, SigScript, Tx, TxIn, TxOut, TxVer,
     Txid,
