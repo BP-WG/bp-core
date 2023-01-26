@@ -16,6 +16,8 @@
 #[macro_use]
 extern crate amplify;
 
+pub extern crate secp256k1;
+
 mod serialize;
 mod sha256;
 mod taproot;
@@ -41,8 +43,8 @@ mod types {
         Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash,
         Default, Debug, From
     )]
-    #[wrapper(RangeOps, BorrowSlice)]
-    #[wrapper_mut(RangeMut, BorrowSliceMut)]
+    #[wrapper(Deref, RangeOps, BorrowSlice)]
+    #[wrapper_mut(DerefMut, RangeMut, BorrowSliceMut)]
     pub struct VarIntBytes(VarIntArray<u8>);
 
     impl From<Vec<u8>> for VarIntBytes {
