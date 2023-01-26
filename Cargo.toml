@@ -42,10 +42,9 @@ colored = { version = "2", optional = true }
 
 [features]
 default = []
-all = ["async", "serde", "cli", "wallet"]
+all = ["serde", "cli", "wallet"]
 cli = ["clap", "colored", "electrum-client", "wallet"]
 wallet = ["psbt", "bp-dbc/wallet"]
-async = ["bp-seals/async"]
 serde = ["amplify/serde", "bitcoin/serde",
          "commit_verify/serde", "bp-dbc/serde", "bp-seals/serde",
          "serde_crate", "serde_with"]

@@ -21,11 +21,6 @@ use single_use_seals::{SealProtocol, SealStatus, VerifySeal};
 
 use crate::txout::{TxoSeal, VerifyError};
 
-// TODO: #8 Implement proper operations with SealMedium
-// TODO: #9 Do asynchronous version
-// #[cfg(feature = "async")]
-// use single_use_seals::SealMediumAsync;
-
 pub struct Witness {
     pub txid: Txid,
     pub proof: Proof,

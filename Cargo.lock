@@ -60,17 +60,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "async-trait"
-version = "0.1.63"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eff18d764974428cf3a9328e23fc5c986f5fbed46e6cd4cdf42544df5d297ec1"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -218,7 +207,6 @@ name = "bp-seals"
 version = "0.9.0"
 dependencies = [
  "amplify",
- "async-trait",
  "bitcoin",
  "bitcoin_onchain",
  "bp-dbc",
@@ -891,7 +879,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e092f1d5411486816ec67cd7d0280acb0e05a1bd509721bc3dde3b1ffa5bfa0e"
 dependencies = [
  "amplify_derive",
- "async-trait",
 ]
 
 [[package]]

@@ -16,7 +16,6 @@ jobs:
       fail-fast: false
       matrix:
         feature:
-          - async
           - serde
     steps:
       - uses: actions/checkout@v2
