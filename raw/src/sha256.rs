@@ -69,18 +69,7 @@ impl Sha256 {
         engine.finish()
     }
 
-    /// Create a new [`Sha256`] from a midstate
-    ///
-    /// # Panics
-    ///
-    /// If `length` is not a multiple of the block size.
-    pub fn from_midstate(midstate: [u8; 32], length: usize) -> Self {
-        assert_eq!(
-            length % BLOCK_SIZE,
-            0,
-            "length is no multiple of the block size"
-        );
-
+    pub fn from_tag(midstate: [u8; 32]) -> Self {
         let mut ret = [0; 8];
         for (ret_val, midstate_bytes) in
             ret.iter_mut().zip(midstate[..].chunks_exact(4))
@@ -93,7 +82,7 @@ impl Sha256 {
         Self {
             buffer: [0; BLOCK_SIZE],
             h: ret,
-            length,
+            length: 64,
         }
     }
 
