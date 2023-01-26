@@ -17,9 +17,11 @@
 extern crate amplify;
 
 mod serialize;
+mod sha256;
 mod tx;
 
 use amplify::confinement::Confined;
+pub use sha256::Sha256;
 pub use tx::{
     LockTime, Sats, ScriptPubkey, SeqNo, SigScript, Tx, TxIn, TxOut, TxVer,
     Txid,
