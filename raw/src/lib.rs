@@ -12,3 +12,14 @@
 // You should have received a copy of the Apache 2.0 License
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
+
+mod tx;
+
+use amplify::confinement::Confined;
+pub use tx::{
+    LockTime, Sats, ScriptPubkey, SeqNo, SigScript, Tx, TxIn, TxOut, TxVer,
+    Txid,
+};
+
+pub type VarIntArray<T> = Confined<Vec<T>, 0, { u64::MAX as usize }>;
+pub type VarIntBytes = VarIntArray<u8>;
