@@ -3,5 +3,9 @@ name = "bp-raw"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "bp"
+
 [dependencies]
 amplify = "4.0.0-beta.7"
+secp256k1 = "0.26.0"

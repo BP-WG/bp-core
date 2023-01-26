@@ -13,9 +13,16 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use amplify::Bytes32;
+use std::borrow::Borrow;
+use std::cmp;
+use std::fmt::{self, Formatter, LowerHex, UpperHex};
 
-use crate::VarIntBytes;
+use amplify::confinement::TinyVec;
+use amplify::{Bytes32, Wrapper};
+use secp256k1::XOnlyPublicKey;
+
+use crate::serialize::Serialize;
+use crate::{ScriptPubkey, Sha256, VarIntBytes};
 
 /// The SHA-256 midstate value for the TapLeaf hash.
 pub const MIDSTATE_TAPLEAF: [u8; 32] = [
@@ -56,6 +63,16 @@ pub struct TapLeafHash(
     Bytes32,
 );
 
+impl TapLeafHash {
+    pub fn with_tap_script(tap_script: TapScript) -> Self {
+        let mut engine = Sha256::from_tag(MIDSTATE_TAPLEAF);
+        LeafScript::from(tap_script)
+            .serialize_into(&mut engine)
+            .expect("fixed size");
+        Self(engine.finish().into())
+    }
+}
+
 #[derive(
     Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From
 )]
@@ -66,6 +83,15 @@ pub struct TapBranchHash(
     Bytes32,
 );
 
+impl TapBranchHash {
+    pub fn with_nodes(node1: TapNodeHash, node2: TapNodeHash) -> Self {
+        let mut engine = Sha256::from_tag(MIDSTATE_TAPBRANCH);
+        engine.input(cmp::min(&node1, &node2).borrow());
+        engine.input(cmp::max(&node1, &node2).borrow());
+        Self(engine.finish().into())
+    }
+}
+
 #[derive(
     Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From
 )]
@@ -73,8 +99,136 @@ pub struct TapBranchHash(
 pub struct TapNodeHash(
     #[from]
     #[from([u8; 32])]
+    #[from(TapLeafHash)]
+    #[from(TapBranchHash)]
     Bytes32,
 );
+
+#[derive(Wrapper, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
+#[wrapper(Deref)]
+pub struct TapMerklePath(TinyVec<TapBranchHash>);
+
+/// Taproot annex prefix.
+pub const TAPROOT_ANNEX_PREFIX: u8 = 0x50;
+
+/// Tapscript leaf version.
+// https://github.com/bitcoin/bitcoin/blob/e826b22da252e0599c61d21c98ff89f366b3120f/src/script/interpreter.h#L226
+pub const TAPROOT_LEAF_TAPSCRIPT: u8 = 0xc0;
+
+/// Tapleaf mask for getting the leaf version from first byte of control block.
+// https://github.com/bitcoin/bitcoin/blob/e826b22da252e0599c61d21c98ff89f366b3120f/src/script/interpreter.h#L225
+pub const TAPROOT_LEAF_MASK: u8 = 0xfe;
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Debug, Display, Error)]
+#[display(doc_comments)]
+/// invalid taproot leaf version {0}.
+pub struct InvalidLeafVer(u8);
+
+/// The leaf version for tapleafs.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum LeafVer {
+    /// BIP-342 tapscript.
+    TapScript,
+
+    /// Future leaf version.
+    Future(FutureLeafVer),
+}
+
+impl LeafVer {
+    /// Creates a [`LeafVer`] from consensus byte representation.
+    ///
+    /// # Errors
+    ///
+    /// - If the last bit of the `version` is odd.
+    /// - If the `version` is 0x50 ([`TAPROOT_ANNEX_PREFIX`]).
+    pub fn from_consensus(version: u8) -> Result<Self, InvalidLeafVer> {
+        match version {
+            TAPROOT_LEAF_TAPSCRIPT => Ok(LeafVer::TapScript),
+            TAPROOT_ANNEX_PREFIX => Err(InvalidLeafVer(TAPROOT_ANNEX_PREFIX)),
+            future => {
+                FutureLeafVer::from_consensus(future).map(LeafVer::Future)
+            }
+        }
+    }
+
+    /// Returns the consensus representation of this [`LeafVer`].
+    pub fn to_consensus(self) -> u8 {
+        match self {
+            LeafVer::TapScript => TAPROOT_LEAF_TAPSCRIPT,
+            LeafVer::Future(version) => version.to_consensus(),
+        }
+    }
+}
+
+impl LowerHex for LeafVer {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        LowerHex::fmt(&self.to_consensus(), f)
+    }
+}
+
+impl UpperHex for LeafVer {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        UpperHex::fmt(&self.to_consensus(), f)
+    }
+}
+
+/// Inner type representing future (non-tapscript) leaf versions. See
+/// [`LeafVer::Future`].
+///
+/// NB: NO PUBLIC CONSTRUCTOR!
+/// The only way to construct this is by converting `u8` to [`LeafVer`] and then
+/// extracting it.
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
+pub struct FutureLeafVer(u8);
+
+impl FutureLeafVer {
+    pub(self) fn from_consensus(
+        version: u8,
+    ) -> Result<FutureLeafVer, InvalidLeafVer> {
+        match version {
+            TAPROOT_LEAF_TAPSCRIPT => unreachable!(
+                "FutureLeafVersion::from_consensus should be never called for \
+                 0xC0 value"
+            ),
+            TAPROOT_ANNEX_PREFIX => Err(InvalidLeafVer(TAPROOT_ANNEX_PREFIX)),
+            odd if odd & 0xFE != odd => Err(InvalidLeafVer(odd)),
+            even => Ok(FutureLeafVer(even)),
+        }
+    }
+
+    /// Returns the consensus representation of this [`FutureLeafVer`].
+    #[inline]
+    pub fn to_consensus(self) -> u8 { self.0 }
+}
+
+impl LowerHex for FutureLeafVer {
+    #[inline]
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        LowerHex::fmt(&self.0, f)
+    }
+}
+
+impl UpperHex for FutureLeafVer {
+    #[inline]
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        UpperHex::fmt(&self.0, f)
+    }
+}
+
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+pub struct LeafScript {
+    pub version: LeafVer,
+    pub script: VarIntBytes,
+}
+
+impl From<TapScript> for LeafScript {
+    fn from(tap_script: TapScript) -> Self {
+        LeafScript {
+            version: LeafVer::TapScript,
+            script: tap_script.into_inner(),
+        }
+    }
+}
 
 #[derive(
     Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug,
@@ -88,3 +242,12 @@ pub struct TapScript(
     VarIntBytes,
 );
 // TODO: impl Display/FromStr for TapScript providing opcodes
+
+impl ScriptPubkey {
+    pub fn p2tr(
+        internal_key: XOnlyPublicKey,
+        merkle_root: Option<TapNodeHash>,
+    ) -> Self {
+        todo!()
+    }
+}
