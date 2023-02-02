@@ -250,4 +250,6 @@ impl ScriptPubkey {
     ) -> Self {
         todo!()
     }
+
+    pub fn p2tr_tweaked(output_key: XOnlyPublicKey) -> Self { todo!() }
 }

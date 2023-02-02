@@ -15,6 +15,11 @@
 
 #[macro_use]
 extern crate amplify;
+#[macro_use]
+extern crate strict_encoding;
+#[cfg(feature = "serde")]
+#[macro_use]
+extern crate serde_crate as serde;
 
 pub extern crate secp256k1;
 
@@ -42,6 +47,11 @@ mod types {
     #[derive(
         Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash,
         Default, Debug, From
+    )]
+    #[cfg_attr(
+        feature = "serde",
+        derive(Serialize, Deserialize),
+        serde(crate = "serde_crate", transparent)
     )]
     #[wrapper(Deref, RangeOps, BorrowSlice)]
     #[wrapper_mut(DerefMut, RangeMut, BorrowSliceMut)]
