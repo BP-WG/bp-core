@@ -36,11 +36,15 @@ pub use tx::{
 };
 pub use types::{VarIntArray, VarIntBytes};
 
+pub const LIB_NAME_BP: &str = "Bp";
+
 mod types {
     use std::fmt::{Formatter, LowerHex, UpperHex};
 
     use amplify::confinement::Confined;
     use amplify::hex::ToHex;
+
+    use super::LIB_NAME_BP;
 
     pub type VarIntArray<T> = Confined<Vec<T>, 0, { u64::MAX as usize }>;
 
@@ -48,6 +52,8 @@ mod types {
         Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash,
         Default, Debug, From
     )]
+    #[derive(StrictType, StrictEncode, StrictDecode)]
+    #[strict_type(lib = LIB_NAME_BP)]
     #[cfg_attr(
         feature = "serde",
         derive(Serialize, Deserialize),

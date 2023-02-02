@@ -15,9 +15,11 @@
 
 use amplify::Bytes32;
 
-use super::{VarIntArray, VarIntBytes};
+use super::{VarIntArray, VarIntBytes, LIB_NAME_BP};
 
 #[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug, From)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -25,13 +27,11 @@ use super::{VarIntArray, VarIntBytes};
 )]
 #[wrapper(RangeOps, BorrowSlice, Hex, Display, FromStr)]
 // all-zeros used in coinbase
-pub struct Txid(
-    #[from]
-    #[from([u8; 32])]
-    Bytes32,
-);
+pub struct Txid(#[from] Bytes32);
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -41,6 +41,8 @@ pub struct Txid(
 pub struct Vout(u32);
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -52,6 +54,8 @@ pub struct Outpoint {
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -60,6 +64,8 @@ pub struct Outpoint {
 pub struct SeqNo(u32);
 
 #[derive(Clone, Eq, PartialEq, Debug)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -68,6 +74,8 @@ pub struct SeqNo(u32);
 pub struct SigScript(VarIntBytes);
 
 #[derive(Clone, Eq, PartialEq, Debug)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -80,6 +88,8 @@ pub struct TxIn {
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -88,6 +98,8 @@ pub struct TxIn {
 pub struct Sats(u64);
 
 #[derive(Clone, Eq, PartialEq, Debug)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -96,6 +108,8 @@ pub struct Sats(u64);
 pub struct ScriptPubkey(VarIntBytes);
 
 #[derive(Clone, Eq, PartialEq, Debug)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -107,17 +121,23 @@ pub struct TxOut {
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP, tags = repr, into_u8, try_from_u8)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate")
 )]
+#[repr(u8)]
 pub enum TxVer {
-    V1,
-    V2,
+    #[strict_type(dumb)]
+    V1 = 1,
+    V2 = 2,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -126,6 +146,8 @@ pub enum TxVer {
 pub struct LockTime(u32);
 
 #[derive(Clone, Eq, PartialEq, Debug)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
