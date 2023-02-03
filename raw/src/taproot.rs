@@ -14,15 +14,20 @@
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
 use std::borrow::Borrow;
-use std::cmp;
 use std::fmt::{self, Formatter, LowerHex, UpperHex};
+use std::{cmp, io};
 
 use amplify::confinement::{Confined, TinyVec};
 use amplify::{Bytes32, Wrapper};
 use secp256k1::XOnlyPublicKey;
+use strict_encoding::{
+    DecodeError, ReadTuple, StrictDecode, StrictEncode, StrictProduct,
+    StrictSum, StrictTuple, StrictType, TypeName, TypedRead, TypedWrite,
+    WriteTuple,
+};
 
 use crate::opcodes::*;
-use crate::serialize::Serialize;
+use crate::serialize::{ConsensusWrite, Serialize};
 use crate::{ScriptBytes, ScriptPubkey, Sha256, LIB_NAME_BP};
 
 /// The SHA-256 midstate value for the TapLeaf hash.
@@ -55,9 +60,46 @@ pub const MIDSTATE_TAPSIGHASH: [u8; 32] = [
 // f504a425d7f8783b1363868ae3e556586eee945dbc7888dd02a6e2c31873fe9f
 
 #[derive(
+    Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash,
+    Debug, From
+)]
+#[wrapper(Deref, LowerHex, Display, FromStr)]
+#[wrapper_mut(DerefMut)]
+#[derive(StrictType, StrictDumb)]
+#[strict_type(lib = LIB_NAME_BP, dumb = { Self(XOnlyPublicKey::from_slice(&[1u8; 32]).unwrap()) })]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
+pub struct InternalPk(XOnlyPublicKey);
+
+impl StrictEncode for InternalPk {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        let bytes = Bytes32::from(self.0.serialize());
+        writer.write_newtype::<Self>(&bytes)
+    }
+}
+
+impl StrictDecode for InternalPk {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        reader.read_tuple(|r| {
+            let bytes: Bytes32 = r.read_field()?;
+            XOnlyPublicKey::from_slice(bytes.as_slice())
+                .map(Self)
+                .map_err(|_| {
+                    DecodeError::DataIntegrityError(format!(
+                        "invalid x-only public key value '{bytes:x}'"
+                    ))
+                })
+        })
+    }
+}
+
+#[derive(
     Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From
 )]
-#[wrapper(RangeOps, BorrowSlice, Hex, Display, FromStr)]
+#[wrapper(Index, RangeOps, BorrowSlice, Hex, Display, FromStr)]
 pub struct TapLeafHash(
     #[from]
     #[from([u8; 32])]
@@ -65,19 +107,26 @@ pub struct TapLeafHash(
 );
 
 impl TapLeafHash {
-    pub fn with_tap_script(tap_script: TapScript) -> Self {
+    pub fn with_leaf_script(leaf_script: &LeafScript) -> Self {
         let mut engine = Sha256::from_tag(MIDSTATE_TAPLEAF);
-        LeafScript::from(tap_script)
-            .serialize_into(&mut engine)
-            .expect("fixed size");
+        leaf_script.serialize_into(&mut engine).ok();
         Self(engine.finish().into())
     }
+
+    pub fn with_tap_script(tap_script: &TapScript) -> Self {
+        let mut engine = Sha256::from_tag(MIDSTATE_TAPLEAF);
+        engine.write_u8(TAPROOT_LEAF_TAPSCRIPT).ok();
+        tap_script.serialize_into(&mut engine).ok();
+        Self(engine.finish().into())
+    }
+
+    pub fn into_node_hash(self) -> TapNodeHash { TapNodeHash(self.0) }
 }
 
 #[derive(
     Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From
 )]
-#[wrapper(RangeOps, BorrowSlice, Hex, Display, FromStr)]
+#[wrapper(Index, RangeOps, BorrowSlice, Hex, Display, FromStr)]
 pub struct TapBranchHash(
     #[from]
     #[from([u8; 32])]
@@ -91,12 +140,21 @@ impl TapBranchHash {
         engine.input(cmp::max(&node1, &node2).borrow());
         Self(engine.finish().into())
     }
+
+    pub fn into_node_hash(self) -> TapNodeHash { TapNodeHash(self.0) }
 }
 
 #[derive(
     Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From
 )]
-#[wrapper(RangeOps, BorrowSlice, Hex, Display, FromStr)]
+#[wrapper(Index, RangeOps, BorrowSlice, Hex, Display, FromStr)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 pub struct TapNodeHash(
     #[from]
     #[from([u8; 32])]
@@ -126,13 +184,44 @@ pub const TAPROOT_LEAF_MASK: u8 = 0xfe;
 pub struct InvalidLeafVer(u8);
 
 /// The leaf version for tapleafs.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 pub enum LeafVer {
     /// BIP-342 tapscript.
+    #[default]
     TapScript,
 
     /// Future leaf version.
     Future(FutureLeafVer),
+}
+
+impl StrictType for LeafVer {
+    const STRICT_LIB_NAME: &'static str = LIB_NAME_BP;
+    fn strict_name() -> Option<TypeName> { Some(tn!("LeafVer")) }
+}
+impl StrictProduct for LeafVer {}
+impl StrictTuple for LeafVer {
+    const FIELD_COUNT: u8 = 1;
+}
+impl StrictEncode for LeafVer {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> std::io::Result<W> {
+        writer.write_tuple::<Self>(|w| {
+            Ok(w.write_field(&self.to_consensus())?.complete())
+        })
+    }
+}
+impl StrictDecode for LeafVer {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        reader.read_tuple(|r| {
+            let version = r.read_field()?;
+            Self::from_consensus(version)
+                .map_err(|err| DecodeError::DataIntegrityError(err.to_string()))
+        })
+    }
 }
 
 impl LeafVer {
@@ -180,6 +269,13 @@ impl UpperHex for LeafVer {
 /// The only way to construct this is by converting `u8` to [`LeafVer`] and then
 /// extracting it.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP, dumb = { Self(0x51) })]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
 pub struct FutureLeafVer(u8);
 
 impl FutureLeafVer {
@@ -216,11 +312,21 @@ impl UpperHex for FutureLeafVer {
     }
 }
 
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default, Display)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
+#[display("{version:04x} {script:x}")]
 pub struct LeafScript {
     pub version: LeafVer,
     pub script: ScriptBytes,
 }
+
+// TODO: Impl Hex and FromStr for LeafScript
 
 impl From<TapScript> for LeafScript {
     fn from(tap_script: TapScript) -> Self {
@@ -228,6 +334,12 @@ impl From<TapScript> for LeafScript {
             version: LeafVer::TapScript,
             script: tap_script.into_inner(),
         }
+    }
+}
+
+impl LeafScript {
+    pub fn tap_leaf_hash(&self) -> TapLeafHash {
+        TapLeafHash::with_leaf_script(self)
     }
 }
 
@@ -266,8 +378,8 @@ pub enum TapCode {
     Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug,
     From, Default
 )]
-#[wrapper(RangeOps, BorrowSlice, LowerHex, UpperHex)]
-#[wrapper_mut(RangeMut, BorrowSliceMut)]
+#[wrapper(Deref, Index, RangeOps, BorrowSlice, LowerHex, UpperHex)]
+#[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
@@ -293,11 +405,13 @@ impl TapScript {
 
 impl ScriptPubkey {
     pub fn p2tr(
-        internal_key: XOnlyPublicKey,
+        internal_key: InternalPk,
         merkle_root: Option<TapNodeHash>,
     ) -> Self {
         todo!()
     }
 
     pub fn p2tr_tweaked(output_key: XOnlyPublicKey) -> Self { todo!() }
+
+    pub fn is_p2tr(&self) -> bool { todo!() }
 }

@@ -60,8 +60,8 @@ mod types {
         derive(Serialize, Deserialize),
         serde(crate = "serde_crate", transparent)
     )]
-    #[wrapper(Deref, RangeOps, BorrowSlice)]
-    #[wrapper_mut(DerefMut, RangeMut, BorrowSliceMut)]
+    #[wrapper(Deref, Index, RangeOps, BorrowSlice)]
+    #[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
     pub struct ScriptBytes(VarIntArray<u8>);
 
     impl From<Vec<u8>> for ScriptBytes {

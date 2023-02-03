@@ -38,7 +38,7 @@ impl ConvolveCommitProof<mpc::Commitment, Tx, Lnpbp12> for TapretProof {
         let mut tx = commitment.clone();
 
         for txout in &mut tx.outputs {
-            if txout.script_pubkey.is_v1_p2tr() {
+            if txout.script_pubkey.is_p2tr() {
                 txout.script_pubkey = self.original_pubkey_script().into();
             }
         }

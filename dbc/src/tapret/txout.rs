@@ -41,7 +41,7 @@ impl ConvolveCommit<mpc::Commitment, TapretProof, Lnpbp12> for TxOut {
         msg: &mpc::Commitment,
     ) -> Result<(TxOut, TapretProof), Self::CommitError> {
         let (output_key, _) = supplement
-            .internal_key
+            .internal_pk
             .convolve_commit(&supplement.path_proof, msg)?;
 
         let script_pubkey = ScriptPubkey::p2tr_tweaked(output_key);

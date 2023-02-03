@@ -24,21 +24,20 @@ use std::io::Write;
 use amplify::{Bytes32, Wrapper};
 use bp::{ScriptPubkey, Tx, Txid, LIB_NAME_BP};
 use commit_verify::mpc::{self, Message, ProtocolId};
-use commit_verify::{
-    CommitEncode, CommitVerify, CommitmentId, ConvolveCommitProof,
-};
-use strict_encoding::StrictEncode;
+use commit_verify::{CommitEncode, CommitmentId, ConvolveCommitProof};
+use strict_encoding::{StrictDumb, StrictEncode, StrictWriter};
 
 use crate::tapret::{TapretError, TapretProof};
 
 /// Default depth of LNPBP-4 commitment tree
 pub const ANCHOR_MIN_LNPBP4_DEPTH: u8 = 3;
 
+/// Anchor identifier - a commitment to the anchor data.
 #[derive(
     Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From,
     Default
 )]
-#[wrapper(Deref, BorrowSlice, Display, FromStr, Hex, RangeOps)]
+#[wrapper(Deref, BorrowSlice, Display, FromStr, Hex, Index, RangeOps)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
@@ -76,12 +75,14 @@ pub enum VerifyError {
 /// transaction which contains the commitment, and multi-protocol merkle tree as
 /// defined by LNPBP-4.
 #[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate")
 )]
-pub struct Anchor<L: mpc::Proof> {
+pub struct Anchor<L: mpc::Proof + StrictDumb> {
     /// Transaction containing deterministic bitcoin commitment.
     pub txid: Txid,
 
@@ -92,17 +93,11 @@ pub struct Anchor<L: mpc::Proof> {
     pub dbc_proof: Proof,
 }
 
+// TODO: Replace with strategy
 impl CommitEncode for Anchor<mpc::MerkleBlock> {
-    fn commit_encode(&self, e: &mut impl Write) -> usize {
-        let mut len = self
-            .txid
-            .strict_encode(e)
-            .expect("memory encoders do not fail");
-        len += self
-            .dbc_proof
-            .strict_encode(e)
-            .expect("memory encoders do not fail");
-        len + self.mpc_proof.commit_encode(e)
+    fn commit_encode(&self, e: &mut impl Write) {
+        let w = StrictWriter::with(u32::MAX as usize, e);
+        self.strict_encode(w).ok();
     }
 }
 
@@ -145,7 +140,7 @@ pub enum MergeError {
 impl Anchor<mpc::MerkleBlock> {
     /// Returns id of the anchor (commitment hash).
     #[inline]
-    pub fn anchor_id(&self) -> AnchorId { self.consensus_commit() }
+    pub fn anchor_id(&self) -> AnchorId { self.commitment_id() }
 }
 
 impl Anchor<mpc::MerkleProof> {
@@ -258,6 +253,8 @@ impl Anchor<mpc::MerkleBlock> {
 /// Type and type-specific proof information of a deterministic bitcoin
 /// commitment.
 #[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP, tags = order)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -266,6 +263,7 @@ impl Anchor<mpc::MerkleBlock> {
 #[non_exhaustive]
 pub enum Proof {
     /// Opret commitment (no extra-transaction proof is required).
+    #[strict_type(dumb)]
     OpretFirst,
 
     /// Tapret commitment and a proof of it.

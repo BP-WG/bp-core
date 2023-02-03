@@ -60,6 +60,7 @@ mod tx;
 mod txout;
 mod xonlypk;
 
+pub use bp::LIB_NAME_BP;
 pub use tx::TapretError;
 pub use xonlypk::TapretKeyError;
 
@@ -67,9 +68,8 @@ pub use xonlypk::TapretKeyError;
 /// protocol.
 pub enum Lnpbp12 {}
 
-use bp::{LeafScript, ScriptPubkey, TapBranchHash, TapNodeHash};
+use bp::{InternalPk, LeafScript, ScriptPubkey, TapBranchHash, TapNodeHash};
 use commit_verify::CommitmentProtocol;
-use secp256k1::XOnlyPublicKey;
 
 pub use self::tapscript::TAPRET_SCRIPT_COMMITMENT_PREFIX;
 
@@ -95,6 +95,8 @@ pub enum TapretPathError {
 /// [`TapretNodePartner::RightBranch`] to ensure correct consensus ordering of
 /// the child elements.
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -129,11 +131,8 @@ impl TapretRightBranch {
 
     /// Computes node hash of the partner node defined by this proof.
     pub fn node_hash(&self) -> TapNodeHash {
-        TapBranchHash::from_node_hashes(
-            self.left_node_hash,
-            self.right_node_hash,
-        )
-        .into_node_hash()
+        TapBranchHash::with_nodes(self.left_node_hash, self.right_node_hash)
+            .into_node_hash()
     }
 }
 
@@ -164,6 +163,8 @@ impl StrictDecode for TapretRightBranch {
 /// The structure hosts proofs that the right-side partner at the taproot script
 /// tree node does not contain an alternative OP-RETURN commitment script.
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, From)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP, tags = order, dumb = Self::RightLeaf(default!()))]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -257,6 +258,8 @@ impl TapretNodePartner {
 /// Holds information about the sibling at level 1 of the tree in form of
 /// [`TapretNodePartner`].
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -339,6 +342,8 @@ impl<'data> IntoIterator for &'data TapretPathProof {
 /// Used both in the commitment procedure for PSBTs and in
 /// client-side-validation of the commitment.
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -354,7 +359,7 @@ pub struct TapretProof {
     ///
     /// We need to keep this information client-side since it can't be
     /// retrieved from the mined transaction.
-    pub internal_key: XOnlyPublicKey,
+    pub internal_pk: InternalPk,
 }
 
 impl TapretProof {
@@ -363,6 +368,6 @@ impl TapretProof {
     #[inline]
     pub fn original_pubkey_script(&self) -> ScriptPubkey {
         let merkle_root = self.path_proof.original_merkle_root();
-        ScriptPubkey::p2tr(self.internal_key, merkle_root)
+        ScriptPubkey::p2tr(self.internal_pk, merkle_root)
     }
 }

@@ -49,8 +49,13 @@ pub enum OpCode {
     PushData4 = OP_PUSHDATA4,
 }
 
-#[derive(Clone, Eq, PartialEq, Debug)]
-#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[derive(
+    Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug,
+    From, Default
+)]
+#[wrapper(Deref, Index, RangeOps, BorrowSlice, LowerHex, UpperHex)]
+#[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
@@ -63,8 +68,8 @@ pub struct SigScript(ScriptBytes);
     Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug,
     From, Default
 )]
-#[wrapper(RangeOps, BorrowSlice, LowerHex, UpperHex)]
-#[wrapper_mut(RangeMut, BorrowSliceMut)]
+#[wrapper(Deref, Index, RangeOps, BorrowSlice, LowerHex, UpperHex)]
+#[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
@@ -88,6 +93,8 @@ impl ScriptPubkey {
         script.0.push_slice(data);
         script
     }
+
+    pub fn is_op_return(&self) -> bool { self[0] == OpCode::Return as u8 }
 
     /// Adds a single opcode to the script.
     pub fn push_opcode(&mut self, op_code: OpCode) {

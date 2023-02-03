@@ -29,5 +29,7 @@ default = []
 all = ["serde"]
 serde = [
     "serde_crate",
-    "bp-raw/serde"
+    "bp-raw/serde",
+    "commit_verify/serde",
+    "secp256k1/serde"
 ]

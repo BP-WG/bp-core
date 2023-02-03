@@ -26,7 +26,7 @@ use crate::{ScriptPubkey, SigScript};
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-#[wrapper(RangeOps, BorrowSlice, Hex, Display, FromStr)]
+#[wrapper(Index, RangeOps, BorrowSlice, Hex, Display, FromStr)]
 // all-zeros used in coinbase
 pub struct Txid(#[from] Bytes32);
 

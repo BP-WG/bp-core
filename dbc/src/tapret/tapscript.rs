@@ -13,10 +13,11 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
+use std::io;
+use std::io::Write;
+
 use bp::{TapCode, TapScript, LIB_NAME_BP};
-use commit_verify::{
-    mpc, strategies, CommitEncode, CommitStrategy, CommitVerify,
-};
+use commit_verify::{mpc, CommitEncode, CommitVerify};
 
 use super::Lnpbp12;
 
@@ -47,8 +48,17 @@ impl TapretCommitment {
     pub fn with(mpc: mpc::Commitment, nonce: u8) -> Self { Self { mpc, nonce } }
 }
 
+// TODO: Uncomment
+/*
 impl CommitStrategy for TapretCommitment {
     type Strategy = strategies::ConcealStrict;
+}
+ */
+impl CommitEncode for TapretCommitment {
+    fn commit_encode(&self, e: &mut impl Write) {
+        e.write_all(&self.mpc.as_slice()).ok();
+        e.write_all(&[self.nonce]).ok();
+    }
 }
 
 impl CommitVerify<TapretCommitment, Lnpbp12> for TapScript {
@@ -60,9 +70,9 @@ impl CommitVerify<TapretCommitment, Lnpbp12> for TapScript {
         for _ in 0..29 {
             tapret.push_opcode(TapCode::Reserved);
         }
-        let mut data = [0u8; 33];
+        let mut data = io::Cursor::new([0u8; 33]);
         commitment.commit_encode(&mut data);
-        tapret.push_slice(&data);
+        tapret.push_slice(&data.into_inner());
         tapret
     }
 }

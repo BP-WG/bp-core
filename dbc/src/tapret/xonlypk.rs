@@ -14,7 +14,7 @@
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
 use amplify::Wrapper;
-use bp::{TapBranchHash, TapLeafHash, TapNodeHash, TapScript};
+use bp::{InternalPk, TapBranchHash, TapLeafHash, TapNodeHash, TapScript};
 use commit_verify::{mpc, CommitVerify, ConvolveCommit, ConvolveCommitProof};
 use secp256k1::{Scalar, XOnlyPublicKey, SECP256K1};
 
@@ -33,19 +33,17 @@ pub enum TapretKeyError {
     IncorrectOrdering(TapretNodePartner, TapLeafHash),
 }
 
-impl ConvolveCommitProof<mpc::Commitment, XOnlyPublicKey, Lnpbp12>
-    for TapretProof
-{
+impl ConvolveCommitProof<mpc::Commitment, InternalPk, Lnpbp12> for TapretProof {
     type Suppl = TapretPathProof;
 
-    fn restore_original(&self, _: &XOnlyPublicKey) -> XOnlyPublicKey {
-        self.internal_key
+    fn restore_original(&self, _: &XOnlyPublicKey) -> InternalPk {
+        self.internal_pk
     }
 
     fn extract_supplement(&self) -> &Self::Suppl { &self.path_proof }
 }
 
-impl ConvolveCommit<mpc::Commitment, TapretProof, Lnpbp12> for XOnlyPublicKey {
+impl ConvolveCommit<mpc::Commitment, TapretProof, Lnpbp12> for InternalPk {
     type Commitment = XOnlyPublicKey;
     type CommitError = TapretKeyError;
 
@@ -67,7 +65,7 @@ impl ConvolveCommit<mpc::Commitment, TapretProof, Lnpbp12> for XOnlyPublicKey {
             }
 
             let commitment_leaf =
-                TapLeafHash::with_tap_script(script_commitment);
+                TapLeafHash::with_tap_script(&script_commitment);
             let commitment_hash = TapNodeHash::from(commitment_leaf);
 
             if !partner.check_ordering(commitment_hash) {
@@ -80,7 +78,7 @@ impl ConvolveCommit<mpc::Commitment, TapretProof, Lnpbp12> for XOnlyPublicKey {
             TapBranchHash::with_nodes(commitment_hash, partner.tap_node_hash())
                 .into()
         } else {
-            TapLeafHash::with_tap_script(script_commitment).into()
+            TapLeafHash::with_tap_script(&script_commitment).into()
         };
 
         // TODO: Use secp instance from Lnpbp6
@@ -99,7 +97,7 @@ impl ConvolveCommit<mpc::Commitment, TapretProof, Lnpbp12> for XOnlyPublicKey {
 
         let proof = TapretProof {
             path_proof: supplement.clone(),
-            internal_key: *self,
+            internal_pk: *self,
         };
 
         Ok((output_key, proof))
@@ -141,7 +139,7 @@ mod test {
 
         assert_eq!(proof, TapretProof {
             path_proof,
-            internal_key
+            internal_pk: internal_key
         });
 
         assert!(ConvolveCommitProof::<
@@ -170,7 +168,7 @@ mod test {
 
         assert_eq!(proof, TapretProof {
             path_proof,
-            internal_key
+            internal_pk: internal_key
         });
 
         assert!(ConvolveCommitProof::<
@@ -200,7 +198,7 @@ mod test {
 
         assert_eq!(proof, TapretProof {
             path_proof,
-            internal_key
+            internal_pk: internal_key
         });
 
         assert!(ConvolveCommitProof::<
