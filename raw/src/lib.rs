@@ -23,20 +23,19 @@ extern crate serde_crate as serde;
 
 pub extern crate secp256k1;
 
+mod script;
 mod serialize;
 mod sha256;
 mod taproot;
 mod tx;
 
+pub use script::{OpCode, ScriptPubkey, SigScript};
 pub use sha256::Sha256;
 pub use taproot::*;
-pub use tx::{
-    LockTime, Sats, ScriptPubkey, SeqNo, SigScript, Tx, TxIn, TxOut, TxVer,
-    Txid,
-};
+pub use tx::{LockTime, Sats, SeqNo, Tx, TxIn, TxOut, TxVer, Txid};
 pub use types::{VarIntArray, VarIntBytes};
 
-pub const LIB_NAME_BP: &str = "Bp";
+pub const LIB_NAME_BP: &str = "BP";
 
 mod types {
     use std::fmt::{Formatter, LowerHex, UpperHex};

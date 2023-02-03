@@ -15,7 +15,8 @@
 
 use amplify::Bytes32;
 
-use super::{VarIntArray, VarIntBytes, LIB_NAME_BP};
+use super::{VarIntArray, LIB_NAME_BP};
+use crate::{ScriptPubkey, SigScript};
 
 #[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug, From)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
@@ -69,16 +70,6 @@ pub struct SeqNo(u32);
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
-pub struct SigScript(VarIntBytes);
-
-#[derive(Clone, Eq, PartialEq, Debug)]
-#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
     serde(crate = "serde_crate")
 )]
 pub struct TxIn {
@@ -96,16 +87,6 @@ pub struct TxIn {
     serde(crate = "serde_crate", transparent)
 )]
 pub struct Sats(u64);
-
-#[derive(Clone, Eq, PartialEq, Debug)]
-#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
-pub struct ScriptPubkey(VarIntBytes);
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
