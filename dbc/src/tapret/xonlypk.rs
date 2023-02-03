@@ -13,76 +13,89 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use bitcoin::hashes::Hash;
-use bitcoin::schnorr::{TapTweak, TweakedPublicKey, UntweakedPublicKey};
-use bitcoin::util::taproot::TapBranchHash;
-use bitcoin_scripts::taproot::{Node, TreeNode};
-use bitcoin_scripts::TapScript;
-use commit_verify::convolve_commit::{
-    ConvolveCommitProof, ConvolveCommitVerify,
-};
-use commit_verify::{lnpbp4, CommitVerify};
-use secp256k1::SECP256K1;
+use amplify::Wrapper;
+use bp::{TapBranchHash, TapLeafHash, TapNodeHash, TapScript};
+use commit_verify::{mpc, CommitVerify, ConvolveCommit, ConvolveCommitProof};
+use secp256k1::{Scalar, XOnlyPublicKey, SECP256K1};
 
-use super::{Lnpbp6, TapretPathProof, TapretProof, TapretTreeError};
+use super::{Lnpbp12, TapretNodePartner, TapretPathProof, TapretProof};
+use crate::tapret::tapscript::TapretCommitment;
 
-impl ConvolveCommitProof<lnpbp4::CommitmentHash, UntweakedPublicKey, Lnpbp6>
+/// Errors during tapret commitment embedding into x-only public key.
+#[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
+#[display(doc_comments)]
+pub enum TapretKeyError {
+    /// tapret node partner {0} contains alternative commitment
+    AlternativeCommitment(TapretNodePartner),
+
+    /// tapret node partner {0} has an invalid order with the commitment node
+    /// {1}
+    IncorrectOrdering(TapretNodePartner, TapLeafHash),
+}
+
+impl ConvolveCommitProof<mpc::Commitment, XOnlyPublicKey, Lnpbp12>
     for TapretProof
 {
     type Suppl = TapretPathProof;
 
-    fn restore_original(&self, _: &TweakedPublicKey) -> UntweakedPublicKey {
+    fn restore_original(&self, _: &XOnlyPublicKey) -> XOnlyPublicKey {
         self.internal_key
     }
 
     fn extract_supplement(&self) -> &Self::Suppl { &self.path_proof }
 }
 
-impl ConvolveCommitVerify<lnpbp4::CommitmentHash, TapretProof, Lnpbp6>
-    for UntweakedPublicKey
-{
-    type Commitment = TweakedPublicKey;
-    type CommitError = TapretTreeError;
+impl ConvolveCommit<mpc::Commitment, TapretProof, Lnpbp12> for XOnlyPublicKey {
+    type Commitment = XOnlyPublicKey;
+    type CommitError = TapretKeyError;
 
     fn convolve_commit(
         &self,
         supplement: &TapretPathProof,
-        msg: &lnpbp4::CommitmentHash,
-    ) -> Result<(TweakedPublicKey, TapretProof), Self::CommitError> {
-        let script_commitment = TapScript::commit(&(*msg, supplement.nonce));
+        msg: &mpc::Commitment,
+    ) -> Result<(XOnlyPublicKey, TapretProof), Self::CommitError> {
+        let tapret_commitment = TapretCommitment::with(*msg, supplement.nonce);
+        let script_commitment = TapScript::commit(&tapret_commitment);
 
-        let root = if let Some(ref partner) = supplement.partner_node {
+        let merkle_root: TapNodeHash = if let Some(ref partner) =
+            supplement.partner_node
+        {
             if !partner.check_no_commitment() {
-                return Err(TapretTreeError::AlternativeCommitment(
+                return Err(TapretKeyError::AlternativeCommitment(
                     partner.clone(),
                 ));
             }
 
-            let commitment_node =
-                TreeNode::with_tap_script(script_commitment, 1);
+            let commitment_leaf =
+                TapLeafHash::with_tap_script(script_commitment);
+            let commitment_hash = TapNodeHash::from(commitment_leaf);
 
-            if !partner.check_ordering(commitment_node.node_hash()) {
-                return Err(TapretTreeError::IncorrectOrdering(
+            if !partner.check_ordering(commitment_hash) {
+                return Err(TapretKeyError::IncorrectOrdering(
                     partner.clone(),
-                    commitment_node,
+                    commitment_leaf,
                 ));
             }
 
-            TreeNode::with_branch(commitment_node, partner.to_tree_node(), 0)
+            TapBranchHash::with_nodes(commitment_hash, partner.tap_node_hash())
+                .into()
         } else {
-            TreeNode::with_tap_script(script_commitment, 0)
+            TapLeafHash::with_tap_script(script_commitment).into()
         };
 
-        // rust-bitcoin API has this inefficiency: while `TapLeafHash` can be
-        // a valid merkle root (for script trees with a single leaf), it is not
-        // accepted by the tap_tweak API.
-        //
-        // Details: <https://github.com/rust-bitcoin/rust-bitcoin/issues/1393>
-        let merkle_root =
-            TapBranchHash::from_inner(root.node_hash().into_inner());
         // TODO: Use secp instance from Lnpbp6
-        let (output_key, _parity_not_used) =
-            self.tap_tweak(SECP256K1, Some(merkle_root));
+        let merkle_root =
+            Scalar::from_le_bytes(merkle_root.into_inner().into_inner())
+                .expect("negligible probability");
+        let (output_key, parity) = self
+            .add_tweak(SECP256K1, &merkle_root)
+            .expect("hash collision");
+        debug_assert!(self.tweak_add_check(
+            SECP256K1,
+            &output_key,
+            parity,
+            merkle_root
+        ));
 
         let proof = TapretProof {
             path_proof: supplement.clone(),
@@ -98,8 +111,7 @@ mod test {
     use std::str::FromStr;
 
     use amplify::Wrapper;
-    use bitcoin::hashes::Hash;
-    use bitcoin_scripts::LeafScript;
+    use bp::LeafScript;
     use commit_verify::lnpbp4::CommitmentHash;
     use secp256k1::XOnlyPublicKey;
 
@@ -112,7 +124,7 @@ mod test {
             "c5f93479093e2b8f724a79844cc10928dd44e9a390b539843fb83fbf842723f3",
         )
         .unwrap();
-        let msg = CommitmentHash::from_inner(Hash::hash(b""));
+        let msg = mpc::Commitment::from_inner(Hash::hash(b""));
         let path_proof = TapretPathProof::new();
 
         let (outer_key, proof) =
@@ -134,8 +146,8 @@ mod test {
 
         assert!(ConvolveCommitProof::<
             CommitmentHash,
-            UntweakedPublicKey,
-            Lnpbp6,
+            XOnlyPublicKey,
+            Lnpbp12,
         >::verify(&proof, &msg, outer_key)
         .unwrap());
     }
@@ -163,8 +175,8 @@ mod test {
 
         assert!(ConvolveCommitProof::<
             CommitmentHash,
-            UntweakedPublicKey,
-            Lnpbp6,
+            XOnlyPublicKey,
+            Lnpbp12,
         >::verify(&proof, &msg, outer_key)
         .unwrap());
     }
@@ -193,8 +205,8 @@ mod test {
 
         assert!(ConvolveCommitProof::<
             CommitmentHash,
-            UntweakedPublicKey,
-            Lnpbp6,
+            XOnlyPublicKey,
+            Lnpbp12,
         >::verify(&proof, &msg, outer_key)
         .unwrap());
     }
