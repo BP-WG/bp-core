@@ -21,13 +21,11 @@
 use std::cmp::Ordering;
 use std::io::Write;
 
-use amplify::Wrapper;
-use bitcoin::hashes::{sha256, sha256t};
-use bitcoin::{Script, Transaction, Txid};
-use commit_verify::convolve_commit::ConvolveCommitProof;
-use commit_verify::lnpbp4::{self, Message, ProtocolId};
+use amplify::{Bytes32, Wrapper};
+use bp::{ScriptPubkey, Tx, Txid, LIB_NAME_BP};
+use commit_verify::mpc::{self, Message, ProtocolId};
 use commit_verify::{
-    CommitEncode, CommitVerify, ConsensusCommit, PrehashedProtocol, TaggedHash,
+    CommitEncode, CommitVerify, CommitmentId, ConvolveCommitProof,
 };
 use strict_encoding::StrictEncode;
 
@@ -36,46 +34,28 @@ use crate::tapret::{TapretError, TapretProof};
 /// Default depth of LNPBP-4 commitment tree
 pub const ANCHOR_MIN_LNPBP4_DEPTH: u8 = 3;
 
-static MIDSTATE_ANCHOR_ID: [u8; 32] = [
-    148, 72, 59, 59, 150, 173, 163, 140, 159, 237, 69, 118, 104, 132, 194, 110,
-    250, 108, 1, 140, 74, 248, 152, 205, 70, 32, 184, 87, 20, 102, 127, 20,
-];
-
-/// Tag used for [`AnchorId`] hash type
-pub struct AnchorIdTag;
-
-impl sha256t::Tag for AnchorIdTag {
-    #[inline]
-    fn engine() -> sha256::HashEngine {
-        let midstate = sha256::Midstate::from_inner(MIDSTATE_ANCHOR_ID);
-        sha256::HashEngine::from_midstate(midstate, 64)
-    }
-}
-
-/// Unique anchor identifier equivalent to the anchor commitment hash
+#[derive(
+    Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From,
+    Default
+)]
+#[wrapper(Deref, BorrowSlice, Display, FromStr, Hex, RangeOps)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-#[derive(
-    Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, From
-)]
-#[wrapper(
-    Debug, Display, LowerHex, Index, IndexRange, IndexFrom, IndexTo, IndexFull
-)]
-pub struct AnchorId(sha256t::Hash<AnchorIdTag>);
+pub struct AnchorId(
+    #[from]
+    #[from([u8; 32])]
+    Bytes32,
+);
 
-impl<Msg> CommitVerify<Msg, PrehashedProtocol> for AnchorId
-where
-    Msg: AsRef<[u8]>,
-{
-    #[inline]
-    fn commit(msg: &Msg) -> AnchorId { AnchorId::hash(msg) }
-}
-
-impl strict_encoding::Strategy for AnchorId {
-    type Strategy = strict_encoding::strategies::Wrapped;
+impl CommitEncode for AnchorId {
+    fn commit_encode(&self, e: &mut impl Write) {
+        self.0.as_inner().commit_encode(e)
+    }
 }
 
 /// Errors verifying anchors.
@@ -87,7 +67,7 @@ pub enum VerifyError {
     Tapret(TapretError),
 
     /// LNPBP-4 invalid proof.
-    #[from(lnpbp4::UnrelatedProof)]
+    #[from(mpc::UnrelatedProof)]
     Lnpbp4UnrelatedProtocol,
 }
 
@@ -95,48 +75,49 @@ pub enum VerifyError {
 /// keeping information about the proof of the commitment in connection to the
 /// transaction which contains the commitment, and multi-protocol merkle tree as
 /// defined by LNPBP-4.
-#[derive(Clone, PartialEq, Eq, Debug, StrictEncode, StrictDecode)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate")
 )]
-pub struct Anchor<L: lnpbp4::Proof> {
+pub struct Anchor<L: mpc::Proof> {
     /// Transaction containing deterministic bitcoin commitment.
     pub txid: Txid,
 
     /// Structured multi-protocol LNPBP-4 data the transaction commits to.
-    pub lnpbp4_proof: L,
+    pub mpc_proof: L,
 
     /// Proof of the DBC commitment.
     pub dbc_proof: Proof,
 }
 
-impl CommitEncode for Anchor<lnpbp4::MerkleBlock> {
-    fn commit_encode<E: Write>(&self, mut e: E) -> usize {
+impl CommitEncode for Anchor<mpc::MerkleBlock> {
+    fn commit_encode(&self, e: &mut impl Write) -> usize {
         let mut len = self
             .txid
-            .strict_encode(&mut e)
+            .strict_encode(e)
             .expect("memory encoders do not fail");
         len += self
             .dbc_proof
-            .strict_encode(&mut e)
+            .strict_encode(e)
             .expect("memory encoders do not fail");
-        len + self.lnpbp4_proof.commit_encode(e)
+        len + self.mpc_proof.commit_encode(e)
     }
 }
 
-impl ConsensusCommit for Anchor<lnpbp4::MerkleBlock> {
-    type Commitment = AnchorId;
+impl CommitmentId for Anchor<mpc::MerkleBlock> {
+    const TAG: [u8; 32] = *b"urn:lnpbp:lnpbp0011:anchor:v01#A";
+    type Id = AnchorId;
 }
 
-impl Ord for Anchor<lnpbp4::MerkleBlock> {
+impl Ord for Anchor<mpc::MerkleBlock> {
     fn cmp(&self, other: &Self) -> Ordering {
         self.anchor_id().cmp(&other.anchor_id())
     }
 }
 
-impl PartialOrd for Anchor<lnpbp4::MerkleBlock> {
+impl PartialOrd for Anchor<mpc::MerkleBlock> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
@@ -151,7 +132,7 @@ impl PartialOrd for Anchor<lnpbp4::MerkleBlock> {
 pub enum MergeError {
     /// Error merging two LNPBP-4 proofs, which are unrelated.
     #[display(inner)]
-    #[from(lnpbp4::UnrelatedProof)]
+    #[from(mpc::UnrelatedProof)]
     Lnpbp4Mismatch,
 
     /// anchors can't be merged since they have different witness transactions
@@ -161,20 +142,20 @@ pub enum MergeError {
     ProofMismatch,
 }
 
-impl Anchor<lnpbp4::MerkleBlock> {
+impl Anchor<mpc::MerkleBlock> {
     /// Returns id of the anchor (commitment hash).
     #[inline]
     pub fn anchor_id(&self) -> AnchorId { self.consensus_commit() }
 }
 
-impl Anchor<lnpbp4::MerkleProof> {
+impl Anchor<mpc::MerkleProof> {
     /// Returns id of the anchor (commitment hash).
     #[inline]
     pub fn anchor_id(
         &self,
         protocol_id: impl Into<ProtocolId>,
         message: Message,
-    ) -> Result<AnchorId, lnpbp4::UnrelatedProof> {
+    ) -> Result<AnchorId, mpc::UnrelatedProof> {
         Ok(self.to_merkle_block(protocol_id, message)?.anchor_id())
     }
 
@@ -183,15 +164,15 @@ impl Anchor<lnpbp4::MerkleProof> {
         self,
         protocol_id: impl Into<ProtocolId>,
         message: Message,
-    ) -> Result<Anchor<lnpbp4::MerkleBlock>, lnpbp4::UnrelatedProof> {
-        let lnpbp4_proof = lnpbp4::MerkleBlock::with(
-            &self.lnpbp4_proof,
+    ) -> Result<Anchor<mpc::MerkleBlock>, mpc::UnrelatedProof> {
+        let lnpbp4_proof = mpc::MerkleBlock::with(
+            &self.mpc_proof,
             protocol_id.into(),
             message,
         )?;
         Ok(Anchor {
             txid: self.txid,
-            lnpbp4_proof,
+            mpc_proof: lnpbp4_proof,
             dbc_proof: self.dbc_proof,
         })
     }
@@ -201,7 +182,7 @@ impl Anchor<lnpbp4::MerkleProof> {
         &self,
         protocol_id: impl Into<ProtocolId>,
         message: Message,
-    ) -> Result<Anchor<lnpbp4::MerkleBlock>, lnpbp4::UnrelatedProof> {
+    ) -> Result<Anchor<mpc::MerkleBlock>, mpc::UnrelatedProof> {
         self.clone().into_merkle_block(protocol_id, message)
     }
 
@@ -211,13 +192,10 @@ impl Anchor<lnpbp4::MerkleProof> {
         &self,
         protocol_id: impl Into<ProtocolId>,
         message: Message,
-        tx: Transaction,
+        tx: Tx,
     ) -> Result<bool, VerifyError> {
         self.dbc_proof
-            .verify(
-                &self.lnpbp4_proof.convolve(protocol_id.into(), message)?,
-                tx,
-            )
+            .verify(&self.mpc_proof.convolve(protocol_id.into(), message)?, tx)
             .map_err(VerifyError::from)
     }
 
@@ -227,18 +205,18 @@ impl Anchor<lnpbp4::MerkleProof> {
         &self,
         protocol_id: impl Into<ProtocolId>,
         message: Message,
-    ) -> Result<lnpbp4::CommitmentHash, lnpbp4::UnrelatedProof> {
-        self.lnpbp4_proof.convolve(protocol_id.into(), message)
+    ) -> Result<mpc::Commitment, mpc::UnrelatedProof> {
+        self.mpc_proof.convolve(protocol_id.into(), message)
     }
 }
 
-impl Anchor<lnpbp4::MerkleBlock> {
+impl Anchor<mpc::MerkleBlock> {
     /// Conceals all LNPBP-4 data except specific protocol and produces merkle
     /// proof anchor.
     pub fn to_merkle_proof(
         &self,
         protocol: impl Into<ProtocolId>,
-    ) -> Result<Anchor<lnpbp4::MerkleProof>, lnpbp4::LeafNotKnown> {
+    ) -> Result<Anchor<mpc::MerkleProof>, mpc::LeafNotKnown> {
         self.clone().into_merkle_proof(protocol)
     }
 
@@ -247,12 +225,11 @@ impl Anchor<lnpbp4::MerkleBlock> {
     pub fn into_merkle_proof(
         self,
         protocol: impl Into<ProtocolId>,
-    ) -> Result<Anchor<lnpbp4::MerkleProof>, lnpbp4::LeafNotKnown> {
-        let lnpbp4_proof =
-            self.lnpbp4_proof.to_merkle_proof(protocol.into())?;
+    ) -> Result<Anchor<mpc::MerkleProof>, mpc::LeafNotKnown> {
+        let lnpbp4_proof = self.mpc_proof.to_merkle_proof(protocol.into())?;
         Ok(Anchor {
             txid: self.txid,
-            lnpbp4_proof,
+            mpc_proof: lnpbp4_proof,
             dbc_proof: self.dbc_proof,
         })
     }
@@ -261,8 +238,8 @@ impl Anchor<lnpbp4::MerkleBlock> {
     pub fn conceal_except(
         &mut self,
         protocols: impl AsRef<[ProtocolId]>,
-    ) -> Result<usize, lnpbp4::LeafNotKnown> {
-        self.lnpbp4_proof.conceal_except(protocols)
+    ) -> Result<usize, mpc::LeafNotKnown> {
+        self.mpc_proof.conceal_except(protocols)
     }
 
     /// Merges two anchors keeping revealed data.
@@ -273,7 +250,7 @@ impl Anchor<lnpbp4::MerkleBlock> {
         if self.dbc_proof != other.dbc_proof {
             return Err(MergeError::ProofMismatch);
         }
-        self.lnpbp4_proof.merge_reveal(other.lnpbp4_proof)?;
+        self.mpc_proof.merge_reveal(other.mpc_proof)?;
         Ok(self)
     }
 }
@@ -286,8 +263,6 @@ impl Anchor<lnpbp4::MerkleBlock> {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate")
 )]
-#[derive(StrictEncode, StrictDecode)]
-#[strict_encoding(by_order)]
 #[non_exhaustive]
 pub enum Proof {
     /// Opret commitment (no extra-transaction proof is required).
@@ -301,35 +276,22 @@ impl Proof {
     /// Verifies validity of the proof.
     pub fn verify(
         &self,
-        msg: &lnpbp4::CommitmentHash,
-        tx: Transaction,
+        msg: &mpc::Commitment,
+        tx: Tx,
     ) -> Result<bool, TapretError> {
         match self {
             Proof::OpretFirst => {
-                for txout in &tx.output {
+                for txout in &tx.outputs {
                     if txout.script_pubkey.is_op_return() {
                         return Ok(txout.script_pubkey
-                            == Script::new_op_return(msg.as_slice()));
+                            == ScriptPubkey::op_return(msg.as_slice()));
                     }
                 }
                 Ok(false)
             }
             Proof::TapretFirst(proof) => {
-                ConvolveCommitProof::<_, Transaction, _>::verify(proof, msg, tx)
+                ConvolveCommitProof::<_, Tx, _>::verify(proof, msg, tx)
             }
         }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use commit_verify::tagged_hash;
-
-    use super::*;
-
-    #[test]
-    fn test_anchor_id_midstate() {
-        let midstate = tagged_hash::Midstate::with(b"bp:dbc:anchor");
-        assert_eq!(midstate.into_inner().into_inner(), MIDSTATE_ANCHOR_ID);
     }
 }
