@@ -17,12 +17,13 @@ use std::borrow::Borrow;
 use std::cmp;
 use std::fmt::{self, Formatter, LowerHex, UpperHex};
 
-use amplify::confinement::TinyVec;
+use amplify::confinement::{Confined, TinyVec};
 use amplify::{Bytes32, Wrapper};
 use secp256k1::XOnlyPublicKey;
 
+use crate::opcodes::*;
 use crate::serialize::Serialize;
-use crate::{ScriptPubkey, Sha256, VarIntBytes};
+use crate::{ScriptBytes, ScriptPubkey, Sha256, LIB_NAME_BP};
 
 /// The SHA-256 midstate value for the TapLeaf hash.
 pub const MIDSTATE_TAPLEAF: [u8; 32] = [
@@ -218,7 +219,7 @@ impl UpperHex for FutureLeafVer {
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 pub struct LeafScript {
     pub version: LeafVer,
-    pub script: VarIntBytes,
+    pub script: ScriptBytes,
 }
 
 impl From<TapScript> for LeafScript {
@@ -230,18 +231,65 @@ impl From<TapScript> for LeafScript {
     }
 }
 
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Display)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP, tags = repr, into_u8, try_from_u8)]
+#[repr(u8)]
+pub enum TapCode {
+    /// Push the next 32 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES32")]
+    PushBytes32 = OP_PUSHBYTES_32,
+
+    /// Synonym for OP_RETURN.
+    Reserved = OP_RESERVED,
+
+    /// Fail the script immediately.
+    #[display("OP_RETURN")]
+    #[strict_type(dumb)]
+    Return = OP_RETURN,
+
+    /// Read the next byte as N; push the next N bytes as an array onto the
+    /// stack.
+    #[display("OP_PUSH_DATA1")]
+    PushData1 = OP_PUSHDATA1,
+    /// Read the next 2 bytes as N; push the next N bytes as an array onto the
+    /// stack.
+    #[display("OP_PUSH_DATA2")]
+    PushData2 = OP_PUSHDATA2,
+    /// Read the next 4 bytes as N; push the next N bytes as an array onto the
+    /// stack.
+    #[display("OP_PUSH_DATA3")]
+    PushData4 = OP_PUSHDATA4,
+}
+
 #[derive(
     Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug,
-    From
+    From, Default
 )]
 #[wrapper(RangeOps, BorrowSlice, LowerHex, UpperHex)]
 #[wrapper_mut(RangeMut, BorrowSliceMut)]
-pub struct TapScript(
-    #[from]
-    #[from(Vec<u8>)]
-    VarIntBytes,
-);
-// TODO: impl Display/FromStr for TapScript providing opcodes
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BP)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
+pub struct TapScript(ScriptBytes);
+// TODO: impl Display/FromStr for TapScript providing correct opcodes
+
+impl TapScript {
+    pub fn new() -> Self { Self::default() }
+
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self(ScriptBytes::from(Confined::with_capacity(capacity)))
+    }
+
+    /// Adds a single opcode to the script.
+    pub fn push_opcode(&mut self, op_code: TapCode) {
+        self.0.push(op_code as u8).expect("script exceeds 4GB");
+    }
+}
 
 impl ScriptPubkey {
     pub fn p2tr(

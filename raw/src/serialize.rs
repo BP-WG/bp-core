@@ -13,7 +13,7 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use super::VarIntBytes;
+use super::ScriptBytes;
 use crate::{LeafScript, Sha256};
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Display, Error)]
@@ -40,7 +40,7 @@ pub trait ConsensusRead {
     fn read_u8(&mut self) -> Result<u8, NoData>;
     fn read_u32(&mut self) -> Result<u32, NoData>;
     fn read_var_int(&mut self) -> Result<u64, NoData>;
-    fn read_bytes(&mut self, len: u64) -> Result<VarIntBytes, NoData>;
+    fn read_bytes(&mut self, len: u64) -> Result<ScriptBytes, NoData>;
 }
 
 pub trait ConsensusWrite {
@@ -55,7 +55,7 @@ impl<T: ConsensusRead> ConsensusRead for &mut T {
     fn read_u8(&mut self) -> Result<u8, NoData> { (*self).read_u8() }
     fn read_u32(&mut self) -> Result<u32, NoData> { (*self).read_u32() }
     fn read_var_int(&mut self) -> Result<u64, NoData> { (*self).read_var_int() }
-    fn read_bytes(&mut self, len: u64) -> Result<VarIntBytes, NoData> {
+    fn read_bytes(&mut self, len: u64) -> Result<ScriptBytes, NoData> {
         (*self).read_bytes(len)
     }
 }
@@ -118,7 +118,7 @@ impl ConsensusRead for MemBuf {
 
     fn read_var_int(&mut self) -> Result<u64, NoData> { todo!() }
 
-    fn read_bytes(&mut self, len: u64) -> Result<VarIntBytes, NoData> {
+    fn read_bytes(&mut self, len: u64) -> Result<ScriptBytes, NoData> {
         todo!()
     }
 }
@@ -163,7 +163,7 @@ pub trait Serialize {
     ) -> Result<(), TooLarge>;
 }
 
-impl Serialize for VarIntBytes {
+impl Serialize for ScriptBytes {
     fn serialize_into(
         &self,
         mut writer: impl ConsensusWrite,
