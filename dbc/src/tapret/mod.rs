@@ -56,39 +56,26 @@
 //! b) `XOnlyPublicKey` / `TapretProof`
 
 mod tapscript;
-mod taptree;
 mod tx;
 mod txout;
 mod xonlypk;
 
-pub use tapscript::TAPRET_SCRIPT_COMMITMENT_PREFIX;
-pub use taptree::TapretTreeError;
 pub use tx::TapretError;
+pub use xonlypk::TapretKeyError;
 
-/// Marker non-instantiable enum defining LNPBP-6 taproot OP_RETURN (`tapret`)
+/// Marker non-instantiable enum defining LNPBP-12 taproot OP_RETURN (`tapret`)
 /// protocol.
-pub enum Lnpbp6 {}
+pub enum Lnpbp12 {}
 
-use std::io::Read;
-
-use bitcoin::hashes::sha256::Midstate;
-use bitcoin::hashes::Hash;
-use bitcoin::schnorr::UntweakedPublicKey;
-use bitcoin::util::taproot::{TapBranchHash, TaprootMerkleBranch};
-use bitcoin::Script;
-use bitcoin_scripts::taproot::TreeNode;
-use bitcoin_scripts::{IntoNodeHash, LeafScript, PubkeyScript, TapNodeHash};
+use bp::{LeafScript, ScriptPubkey, TapBranchHash, TapNodeHash};
 use commit_verify::CommitmentProtocol;
-use secp256k1::SECP256K1;
-use strict_encoding::{self, StrictDecode};
+use secp256k1::XOnlyPublicKey;
 
-impl CommitmentProtocol for Lnpbp6 {
-    // TaggedHash("LNPBP6")
-    const HASH_TAG_MIDSTATE: Option<Midstate> = Some(Midstate([
-        38, 117, 83, 113, 201, 197, 124, 94, 152, 111, 62, 165, 154, 239, 157,
-        166, 10, 195, 217, 29, 15, 182, 55, 211, 190, 230, 184, 41, 241, 198,
-        65, 54,
-    ]));
+pub use self::tapscript::TAPRET_SCRIPT_COMMITMENT_PREFIX;
+
+impl CommitmentProtocol for Lnpbp12 {
+    const HASH_TAG_MIDSTATE: Option<[u8; 32]> =
+        Some(*b"urn:lnpbp:lnpbp0012:v01#20230203");
 }
 
 /// Errors in constructing tapret path proof [`TapretPathProof`].
@@ -113,7 +100,6 @@ pub enum TapretPathError {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate")
 )]
-#[derive(StrictEncode)]
 #[display("{left_node_hash}:{right_node_hash}")]
 pub struct TapretRightBranch {
     left_node_hash: TapNodeHash,
@@ -151,6 +137,7 @@ impl TapretRightBranch {
     }
 }
 
+/*
 impl StrictDecode for TapretRightBranch {
     fn strict_decode<D: Read>(
         mut d: D,
@@ -169,6 +156,7 @@ impl StrictDecode for TapretRightBranch {
         }
     }
 }
+ */
 
 /// Information proving step of a tapret path in determined way within a given
 /// original [`bitcoin::psbt::TapTree`].
@@ -176,7 +164,6 @@ impl StrictDecode for TapretRightBranch {
 /// The structure hosts proofs that the right-side partner at the taproot script
 /// tree node does not contain an alternative OP-RETURN commitment script.
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, From)]
-#[derive(StrictEncode, StrictDecode)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -212,7 +199,7 @@ impl TapretNodePartner {
 
     /// Checks that the sibling data does not contain another tapret commitment.
     ///
-    /// The check ensures that if the sibling data are present, their first 32
+    /// The check ensures that if the sibling data are present, their first 31
     /// bytes are not equal to [`TAPRET_SCRIPT_COMMITMENT_PREFIX`], and if
     /// the sibling is another node, the hash of its first child in the proof
     /// is smaller than the hash of the other.
@@ -220,15 +207,15 @@ impl TapretNodePartner {
         match self {
             TapretNodePartner::LeftNode(_) => true,
             TapretNodePartner::RightLeaf(LeafScript { script, .. })
-                if script.len() < 32 =>
+                if script.len() < 64 =>
             {
                 true
             }
             TapretNodePartner::RightLeaf(LeafScript { script, .. }) => {
-                script[0..32] != TAPRET_SCRIPT_COMMITMENT_PREFIX[..]
+                script[..31] != TAPRET_SCRIPT_COMMITMENT_PREFIX[..]
             }
             TapretNodePartner::RightBranch(right_branch) => {
-                right_branch.left_node_hash()[..]
+                right_branch.left_node_hash()[..31]
                     != TAPRET_SCRIPT_COMMITMENT_PREFIX[..]
             }
         }
@@ -251,7 +238,7 @@ impl TapretNodePartner {
     }
 
     /// Computes node hash of the partner node defined by this proof.
-    pub fn node_hash(&self) -> TapNodeHash {
+    pub fn tap_node_hash(&self) -> TapNodeHash {
         match self {
             TapretNodePartner::LeftNode(hash) => *hash,
             TapretNodePartner::RightLeaf(leaf_script) => {
@@ -259,21 +246,6 @@ impl TapretNodePartner {
             }
             TapretNodePartner::RightBranch(right_branch) => {
                 right_branch.node_hash()
-            }
-        }
-    }
-
-    /// Constructs [`TreeNode`] for the node partner.
-    pub fn to_tree_node(&self) -> TreeNode {
-        match self {
-            TapretNodePartner::LeftNode(left_node) => {
-                TreeNode::Hidden(*left_node, 1)
-            }
-            TapretNodePartner::RightLeaf(leaf_script) => {
-                TreeNode::Leaf(leaf_script.clone(), 0)
-            }
-            TapretNodePartner::RightBranch(partner_branch) => {
-                TreeNode::Hidden(partner_branch.node_hash(), 1)
             }
         }
     }
@@ -290,7 +262,6 @@ impl TapretNodePartner {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate")
 )]
-#[derive(StrictEncode, StrictDecode)]
 pub struct TapretPathProof {
     /// Information about the sibling at level 1 of the tree
     partner_node: Option<TapretNodePartner>,
@@ -336,7 +307,7 @@ impl TapretPathProof {
     pub fn original_merkle_root(&self) -> Option<TapNodeHash> {
         self.partner_node
             .as_ref()
-            .map(|partner| partner.node_hash())
+            .map(|partner| partner.tap_node_hash())
     }
 }
 
@@ -373,7 +344,6 @@ impl<'data> IntoIterator for &'data TapretPathProof {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate")
 )]
-#[derive(StrictEncode, StrictDecode)]
 pub struct TapretProof {
     /// A merkle path to the commitment inside the taproot script tree. For
     /// each node it also must hold information about the sibling in form of
@@ -384,44 +354,15 @@ pub struct TapretProof {
     ///
     /// We need to keep this information client-side since it can't be
     /// retrieved from the mined transaction.
-    pub internal_key: UntweakedPublicKey,
+    pub internal_key: XOnlyPublicKey,
 }
 
 impl TapretProof {
     /// Restores original scripPubkey before deterministic bitcoin commitment
     /// applied.
     #[inline]
-    pub fn original_pubkey_script(&self) -> PubkeyScript {
-        let merkle_root = self
-            .path_proof
-            .original_merkle_root()
-            .map(TapNodeHash::into_inner)
-            .map(TapBranchHash::from_inner);
-        Script::new_v1_p2tr(SECP256K1, self.internal_key, merkle_root).into()
-    }
-}
-
-/// Tapret value: a final tweak applied to the internal taproot key which
-/// includes commitment to both initial taptree merkle root and the OP_RETURN
-/// commitment branch. Represents the taptree merkle root of the modified
-/// taptree.
-#[derive(Wrapper, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
-#[derive(StrictEncode, StrictDecode)]
-pub struct TapretTweak(TaprootMerkleBranch);
-
-#[cfg(test)]
-mod test {
-    use amplify::Wrapper;
-    use commit_verify::tagged_hash;
-
-    use super::*;
-
-    #[test]
-    fn test_lnpbp6_midstate() {
-        let midstate = tagged_hash::Midstate::with(b"LNPBP6");
-        assert_eq!(
-            midstate.into_inner().into_inner(),
-            Lnpbp6::HASH_TAG_MIDSTATE.unwrap().into_inner()
-        );
+    pub fn original_pubkey_script(&self) -> ScriptPubkey {
+        let merkle_root = self.path_proof.original_merkle_root();
+        ScriptPubkey::p2tr(self.internal_key, merkle_root)
     }
 }
