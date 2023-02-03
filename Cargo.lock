@@ -157,7 +157,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "commit_verify"
 version = "0.10.0-beta.1"
-source = "git+https://github.com/LNP-BP/client_side_validation#d9d44eee5143420c549dfec7369fa35ab09f91aa"
+source = "git+https://github.com/LNP-BP/client_side_validation#b8fc5a73b2bc8390928c4c1a225013922e7e3133"
 dependencies = [
  "amplify",
  "bitcoin_hashes",
@@ -367,7 +367,7 @@ dependencies = [
 [[package]]
 name = "single_use_seals"
 version = "0.10.0-beta.1"
-source = "git+https://github.com/LNP-BP/client_side_validation#d9d44eee5143420c549dfec7369fa35ab09f91aa"
+source = "git+https://github.com/LNP-BP/client_side_validation#b8fc5a73b2bc8390928c4c1a225013922e7e3133"
 dependencies = [
  "amplify_derive",
 ]

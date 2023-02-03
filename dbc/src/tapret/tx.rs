@@ -13,36 +13,31 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use bitcoin::Transaction;
-use commit_verify::convolve_commit::{
-    ConvolveCommitProof, ConvolveCommitVerify,
-};
-use commit_verify::lnpbp4;
+use bp::Tx;
+use commit_verify::{mpc, ConvolveCommit, ConvolveCommitProof};
 
-use super::{Lnpbp6, TapretProof, TapretTreeError};
+use super::{Lnpbp12, TapretKeyError, TapretProof};
 
 /// Errors during tapret commitment.
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
 pub enum TapretError {
-    /// Error embedding tapret commitment into taproot script tree.
+    /// Error embedding tapret commitment into x-only key.
     #[from]
     #[display(inner)]
-    TreeEmbedding(TapretTreeError),
+    KeyEmbedding(TapretKeyError),
 
     /// tapret commitment in a transaction lacking any taproot outputs.
     #[display(doc_comments)]
     NoTaprootOutput,
 }
 
-impl ConvolveCommitProof<lnpbp4::CommitmentHash, Transaction, Lnpbp6>
-    for TapretProof
-{
+impl ConvolveCommitProof<mpc::Commitment, Tx, Lnpbp12> for TapretProof {
     type Suppl = Self;
 
-    fn restore_original(&self, commitment: &Transaction) -> Transaction {
+    fn restore_original(&self, commitment: &Tx) -> Tx {
         let mut tx = commitment.clone();
 
-        for txout in &mut tx.output {
+        for txout in &mut tx.outputs {
             if txout.script_pubkey.is_v1_p2tr() {
                 txout.script_pubkey = self.original_pubkey_script().into();
             }
@@ -53,21 +48,19 @@ impl ConvolveCommitProof<lnpbp4::CommitmentHash, Transaction, Lnpbp6>
     fn extract_supplement(&self) -> &Self::Suppl { self }
 }
 
-impl ConvolveCommitVerify<lnpbp4::CommitmentHash, TapretProof, Lnpbp6>
-    for Transaction
-{
-    type Commitment = Transaction;
+impl ConvolveCommit<mpc::Commitment, TapretProof, Lnpbp12> for Tx {
+    type Commitment = Tx;
     type CommitError = TapretError;
 
     fn convolve_commit(
         &self,
         supplement: &TapretProof,
-        msg: &lnpbp4::CommitmentHash,
-    ) -> Result<(Transaction, TapretProof), Self::CommitError> {
+        msg: &mpc::Commitment,
+    ) -> Result<(Tx, TapretProof), Self::CommitError> {
         let mut tx = self.clone();
 
-        for txout in &mut tx.output {
-            if txout.script_pubkey.is_v1_p2tr() {
+        for txout in &mut tx.outputs {
+            if txout.script_pubkey.is_p2tr() {
                 let (commitment, proof) = txout
                     .convolve_commit(supplement, msg)
                     .map_err(TapretError::from)?;
