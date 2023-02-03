@@ -33,7 +33,9 @@ mod tx;
 pub use script::{OpCode, ScriptPubkey, SigScript};
 pub use sha256::Sha256;
 pub use taproot::*;
-pub use tx::{LockTime, Sats, SeqNo, Tx, TxIn, TxOut, TxVer, Txid};
+pub use tx::{
+    LockTime, Outpoint, Sats, SeqNo, Tx, TxIn, TxOut, TxVer, Txid, Vout,
+};
 pub use types::{ScriptBytes, VarIntArray};
 
 pub const LIB_NAME_BP: &str = "BP";

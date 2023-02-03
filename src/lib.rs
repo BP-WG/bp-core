@@ -31,4 +31,4 @@
 //! will be nearly impossible to use in the wrong form.
 
 pub extern crate dbc;
-//pub extern crate seals;
+pub extern crate seals;

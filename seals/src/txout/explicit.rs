@@ -19,8 +19,7 @@ use std::convert::{TryFrom, TryInto};
 use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 
-use bitcoin::{OutPoint, Txid};
-use commit_verify::commit_encode;
+use bp::{Outpoint, Txid, Vout};
 
 use crate::txout::{CloseMethod, MethodParseError, TxoSeal, WitnessVoutError};
 
@@ -31,12 +30,13 @@ use crate::txout::{CloseMethod, MethodParseError, TxoSeal, WitnessVoutError};
 /// commitment and conceal procedures (since without knowing a blinding factor
 /// we can't perform them).
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = bp::LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate")
 )]
-#[derive(StrictEncode, StrictDecode)]
 pub struct ExplicitSeal {
     /// Commitment to the specific seal close method [`CloseMethod`] which must
     /// be used to close this seal.
@@ -51,33 +51,33 @@ pub struct ExplicitSeal {
     pub txid: Option<Txid>,
 
     /// Tx output number, which should be always known.
-    pub vout: u32,
+    pub vout: Vout,
 }
 
-impl TryFrom<&ExplicitSeal> for OutPoint {
+impl TryFrom<&ExplicitSeal> for Outpoint {
     type Error = WitnessVoutError;
 
     #[inline]
     fn try_from(reveal: &ExplicitSeal) -> Result<Self, Self::Error> {
         reveal
             .txid
-            .map(|txid| OutPoint::new(txid, reveal.vout))
+            .map(|txid| Outpoint::new(txid, reveal.vout))
             .ok_or(WitnessVoutError)
     }
 }
 
-impl TryFrom<ExplicitSeal> for OutPoint {
+impl TryFrom<ExplicitSeal> for Outpoint {
     type Error = WitnessVoutError;
 
     #[inline]
     fn try_from(reveal: ExplicitSeal) -> Result<Self, Self::Error> {
-        OutPoint::try_from(&reveal)
+        Outpoint::try_from(&reveal)
     }
 }
 
-impl From<&OutPoint> for ExplicitSeal {
+impl From<&Outpoint> for ExplicitSeal {
     #[inline]
-    fn from(outpoint: &OutPoint) -> Self {
+    fn from(outpoint: &Outpoint) -> Self {
         Self {
             method: CloseMethod::TapretFirst,
             txid: Some(outpoint.txid),
@@ -86,13 +86,9 @@ impl From<&OutPoint> for ExplicitSeal {
     }
 }
 
-impl From<OutPoint> for ExplicitSeal {
+impl From<Outpoint> for ExplicitSeal {
     #[inline]
-    fn from(outpoint: OutPoint) -> Self { ExplicitSeal::from(&outpoint) }
-}
-
-impl commit_encode::Strategy for ExplicitSeal {
-    type Strategy = commit_encode::strategies::UsingStrict;
+    fn from(outpoint: Outpoint) -> Self { ExplicitSeal::from(&outpoint) }
 }
 
 impl TxoSeal for ExplicitSeal {
@@ -103,10 +99,10 @@ impl TxoSeal for ExplicitSeal {
     fn txid(&self) -> Option<Txid> { self.txid }
 
     #[inline]
-    fn vout(&self) -> usize { self.vout as usize }
+    fn vout(&self) -> Vout { self.vout }
 
     #[inline]
-    fn outpoint(&self) -> Option<OutPoint> { self.try_into().ok() }
+    fn outpoint(&self) -> Option<Outpoint> { self.try_into().ok() }
 
     #[inline]
     fn txid_or(&self, default_txid: Txid) -> Txid {
@@ -114,15 +110,15 @@ impl TxoSeal for ExplicitSeal {
     }
 
     #[inline]
-    fn outpoint_or(&self, default_txid: Txid) -> OutPoint {
-        OutPoint::new(self.txid.unwrap_or(default_txid), self.vout)
+    fn outpoint_or(&self, default_txid: Txid) -> Outpoint {
+        Outpoint::new(self.txid.unwrap_or(default_txid), self.vout)
     }
 }
 
 impl ExplicitSeal {
     /// Constructs seal for the provided outpoint and seal closing method.
     #[inline]
-    pub fn new(method: CloseMethod, outpoint: OutPoint) -> ExplicitSeal {
+    pub fn new(method: CloseMethod, outpoint: Outpoint) -> ExplicitSeal {
         Self {
             method,
             txid: Some(outpoint.txid),
@@ -135,9 +131,13 @@ impl ExplicitSeal {
     pub fn with(
         method: CloseMethod,
         txid: Option<Txid>,
-        vout: u32,
+        vout: impl Into<Vout>,
     ) -> ExplicitSeal {
-        ExplicitSeal { method, txid, vout }
+        ExplicitSeal {
+            method,
+            txid,
+            vout: vout.into(),
+        }
     }
 }
 
@@ -167,10 +167,6 @@ pub enum ParseError {
 
     /// wrong structure of seal string representation
     WrongStructure,
-
-    /// wrong Bech32 representation of the blinded TxOut seal – {0}
-    #[from]
-    Bech32(lnpbp_bech32::Error),
 }
 
 impl FromStr for ExplicitSeal {

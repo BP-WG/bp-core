@@ -13,19 +13,18 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-//! The library provides single-use-seal implementations for bitcoin protocol.
+use bp::{ScriptPubkey, Tx, Txid};
 
-// Coding conventions
-#![recursion_limit = "256"]
-#![deny(dead_code, /* todo: missing_docs, */)]
+#[derive(Debug, Display)]
+#[display(doc_comments)]
+pub enum Error {
+    /// ... todo
+    Connection(Box<dyn std::error::Error>),
+    /// ... todo
+    UnknownTx,
+}
 
-#[macro_use]
-extern crate amplify;
-#[macro_use]
-extern crate strict_encoding;
-#[cfg(feature = "serde")]
-#[macro_use]
-extern crate serde_crate as serde;
-
-pub mod resolver;
-pub mod txout;
+pub trait Resolver {
+    fn tx_by_id(&self, txid: Txid) -> Result<Tx, Error>;
+    fn tx_by_spk(&self, spk: &ScriptPubkey) -> Result<Vec<u8>, Error>;
+}

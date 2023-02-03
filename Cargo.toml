@@ -23,7 +23,7 @@ strict_encoding = "2.0.0-beta.3"
 commit_verify = "0.10.0-beta.1"
 single_use_seals = "0.10.0-beta.1"
 bp-dbc = { version = "0.10.0-beta.1", path = "./dbc" }
-# bp-seals = { version = "0.10.0-beta.1", path = "./seals" }
+bp-seals = { version = "0.10.0-beta.1", path = "./seals" }
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
 
 [features]

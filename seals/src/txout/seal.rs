@@ -15,7 +15,7 @@
 
 use std::str::FromStr;
 
-use bitcoin::{OutPoint, Txid};
+use bp::{Outpoint, Txid, Vout};
 
 use super::MethodParseError;
 
@@ -28,10 +28,10 @@ pub trait TxoSeal {
     fn txid(&self) -> Option<Txid>;
 
     /// Returns transaction output number containing the defined seal.
-    fn vout(&self) -> usize;
+    fn vout(&self) -> Vout;
 
     /// Returns [`OutPoint`] defining the seal, if txid is known.
-    fn outpoint(&self) -> Option<OutPoint>;
+    fn outpoint(&self) -> Option<Outpoint>;
 
     /// Returns [`Txid`] part of the seal definition, if known, or the provided
     /// `default_txid`.
@@ -39,7 +39,7 @@ pub trait TxoSeal {
 
     /// Returns [`OutPoint`] defining the seal, if txid is known, or constructs
     /// one using the provided `default_txid`.
-    fn outpoint_or(&self, default_txid: Txid) -> OutPoint;
+    fn outpoint_or(&self, default_txid: Txid) -> Outpoint;
 }
 
 /// Method of single-use-seal closing.
@@ -49,14 +49,15 @@ pub trait TxoSeal {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate")
 )]
-#[derive(StrictEncode, StrictDecode)]
-#[strict_encoding(by_value)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = bp::LIB_NAME_BP, tags = repr, into_u8, try_from_u8)]
 #[repr(u8)]
 #[non_exhaustive]
 pub enum CloseMethod {
     /// Seal is closed over the message in form of OP_RETURN commitment present
     /// in the first OP_RETURN-containing transaction output.
     #[display("opret1st")]
+    #[strict_type(dumb)]
     OpretFirst = 0x00,
 
     /// Seal is closed over the message in form of Taproot-based OP_RETURN

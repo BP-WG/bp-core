@@ -110,6 +110,7 @@ version = "0.10.0-beta.1"
 dependencies = [
  "amplify",
  "bp-dbc",
+ "bp-seals",
  "commit_verify",
  "serde",
  "single_use_seals",
@@ -136,6 +137,21 @@ dependencies = [
  "commit_verify",
  "secp256k1",
  "serde",
+ "strict_encoding",
+]
+
+[[package]]
+name = "bp-seals"
+version = "0.10.0-beta.1"
+dependencies = [
+ "amplify",
+ "bitcoin_hashes",
+ "bp-dbc",
+ "bp-raw",
+ "commit_verify",
+ "rand",
+ "serde",
+ "single_use_seals",
  "strict_encoding",
 ]
 

@@ -19,12 +19,13 @@ use std::convert::{TryFrom, TryInto};
 use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 
-use bitcoin::hashes::{sha256, sha256t, Hash, HashEngine};
-use bitcoin::secp256k1::rand::{thread_rng, RngCore};
-use bitcoin::{OutPoint, Txid};
-use commit_verify::{commit_encode, CommitConceal, CommitVerify, TaggedHash};
-use dbc::tapret::Lnpbp6;
-use lnpbp_bech32::{FromBech32Str, ToBech32String};
+use amplify::hex::FromHex;
+use amplify::{hex, Bytes32};
+use bitcoin_hashes::{sha256, sha256t, Hash, HashEngine};
+use bp::{Outpoint, Txid, Vout};
+use commit_verify::{CommitVerify, Conceal};
+use dbc::tapret::Lnpbp12;
+use rand::{thread_rng, RngCore};
 
 use super::{CloseMethod, MethodParseError, WitnessVoutError};
 use crate::txout::{ExplicitSeal, TxoSeal};
@@ -35,7 +36,8 @@ use crate::txout::{ExplicitSeal, TxoSeal};
 /// Revealed seal means that the seal definition containing explicit information
 /// about the bitcoin transaction output.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-#[derive(StrictEncode, StrictDecode)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = bp::LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -55,7 +57,7 @@ pub struct RevealedSeal {
     pub txid: Option<Txid>,
 
     /// Tx output number, which should be always known.
-    pub vout: u32,
+    pub vout: Vout,
 
     /// Blinding factor providing confidentiality of the seal definition.
     /// Prevents rainbow table bruteforce attack based on the existing
@@ -63,30 +65,30 @@ pub struct RevealedSeal {
     pub blinding: u64,
 }
 
-impl TryFrom<&RevealedSeal> for OutPoint {
+impl TryFrom<&RevealedSeal> for Outpoint {
     type Error = WitnessVoutError;
 
     #[inline]
     fn try_from(reveal: &RevealedSeal) -> Result<Self, Self::Error> {
         reveal
             .txid
-            .map(|txid| OutPoint::new(txid, reveal.vout))
+            .map(|txid| Outpoint::new(txid, reveal.vout))
             .ok_or(WitnessVoutError)
     }
 }
 
-impl TryFrom<RevealedSeal> for OutPoint {
+impl TryFrom<RevealedSeal> for Outpoint {
     type Error = WitnessVoutError;
 
     #[inline]
     fn try_from(reveal: RevealedSeal) -> Result<Self, Self::Error> {
-        OutPoint::try_from(&reveal)
+        Outpoint::try_from(&reveal)
     }
 }
 
-impl From<&OutPoint> for RevealedSeal {
+impl From<&Outpoint> for RevealedSeal {
     #[inline]
-    fn from(outpoint: &OutPoint) -> Self {
+    fn from(outpoint: &Outpoint) -> Self {
         Self {
             method: CloseMethod::TapretFirst,
             blinding: thread_rng().next_u64(),
@@ -96,9 +98,9 @@ impl From<&OutPoint> for RevealedSeal {
     }
 }
 
-impl From<OutPoint> for RevealedSeal {
+impl From<Outpoint> for RevealedSeal {
     #[inline]
-    fn from(outpoint: OutPoint) -> Self { RevealedSeal::from(&outpoint) }
+    fn from(outpoint: Outpoint) -> Self { RevealedSeal::from(&outpoint) }
 }
 
 impl From<&ExplicitSeal> for RevealedSeal {
@@ -118,17 +120,11 @@ impl From<ExplicitSeal> for RevealedSeal {
     fn from(seal: ExplicitSeal) -> Self { RevealedSeal::from(&seal) }
 }
 
-impl CommitConceal for RevealedSeal {
-    type ConcealedCommitment = ConcealedSeal;
+impl Conceal for RevealedSeal {
+    type Concealed = ConcealedSeal;
 
     #[inline]
-    fn commit_conceal(&self) -> Self::ConcealedCommitment {
-        ConcealedSeal::commit(self)
-    }
-}
-
-impl commit_encode::Strategy for RevealedSeal {
-    type Strategy = commit_encode::strategies::UsingConceal;
+    fn conceal(&self) -> Self::Concealed { ConcealedSeal::commit(self) }
 }
 
 impl TxoSeal for RevealedSeal {
@@ -139,10 +135,10 @@ impl TxoSeal for RevealedSeal {
     fn txid(&self) -> Option<Txid> { self.txid }
 
     #[inline]
-    fn vout(&self) -> usize { self.vout as usize }
+    fn vout(&self) -> Vout { self.vout }
 
     #[inline]
-    fn outpoint(&self) -> Option<OutPoint> { self.try_into().ok() }
+    fn outpoint(&self) -> Option<Outpoint> { self.try_into().ok() }
 
     #[inline]
     fn txid_or(&self, default_txid: Txid) -> Txid {
@@ -150,8 +146,8 @@ impl TxoSeal for RevealedSeal {
     }
 
     #[inline]
-    fn outpoint_or(&self, default_txid: Txid) -> OutPoint {
-        OutPoint::new(self.txid.unwrap_or(default_txid), self.vout)
+    fn outpoint_or(&self, default_txid: Txid) -> Outpoint {
+        Outpoint::new(self.txid.unwrap_or(default_txid), self.vout)
     }
 }
 
@@ -159,7 +155,7 @@ impl RevealedSeal {
     /// Constructs seal for the provided outpoint and seal closing method. Uses
     /// `thread_rng` to initialize blinding factor.
     #[inline]
-    pub fn new(method: CloseMethod, outpoint: OutPoint) -> RevealedSeal {
+    pub fn new(method: CloseMethod, outpoint: Outpoint) -> RevealedSeal {
         Self {
             method,
             blinding: thread_rng().next_u64(),
@@ -174,20 +170,20 @@ impl RevealedSeal {
     pub fn with(
         method: CloseMethod,
         txid: Option<Txid>,
-        vout: u32,
+        vout: impl Into<Vout>,
         rng: &mut impl RngCore,
     ) -> RevealedSeal {
         RevealedSeal {
             method,
             txid,
-            vout,
+            vout: vout.into(),
             blinding: rng.next_u64(),
         }
     }
 
     /// Converts revealed seal into concealed.
     #[inline]
-    pub fn to_concealed_seal(&self) -> ConcealedSeal { self.commit_conceal() }
+    pub fn to_concealed_seal(&self) -> ConcealedSeal { self.conceal() }
 }
 
 /// Errors happening during parsing string representation of different forms of
@@ -228,9 +224,9 @@ pub enum ParseError {
     /// starting with `0x` and not with a decimal
     NonHexBlinding,
 
-    /// wrong Bech32 representation of the blinded TxOut seal – {0}
+    /// wrong representation of the blinded TxOut seal – {0}
     #[from]
-    Bech32(lnpbp_bech32::Error),
+    Hex(hex::Error),
 }
 
 impl FromStr for RevealedSeal {
@@ -318,126 +314,43 @@ impl sha256t::Tag for ConcealedSealTag {
     }
 }
 
-impl lnpbp_bech32::Strategy for ConcealedSealTag {
-    const HRP: &'static str = "txob";
-    type Strategy = lnpbp_bech32::strategies::UsingStrictEncoding;
-}
-
 /// Blind version of transaction outpoint-based single-use-seal
-#[derive(
-    Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default,
-    Display, From
-)]
-#[wrapper(Debug, LowerHex, Index, IndexRange, IndexFrom, IndexTo, IndexFull)]
-#[display(ConcealedSeal::to_bech32_string)]
-pub struct ConcealedSeal(sha256t::Hash<ConcealedSealTag>);
-
-// TODO: Make this part of `lnpbp::bech32`
-#[cfg(feature = "serde")]
-impl serde::Serialize for ConcealedSeal {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        if serializer.is_human_readable() {
-            serializer.serialize_str(&self.to_bech32_string())
-        } else {
-            serializer.serialize_bytes(&self[..])
-        }
-    }
-}
-
-#[cfg(feature = "serde")]
-impl<'de> serde::Deserialize<'de> for ConcealedSeal {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        struct Visitor;
-        impl serde::de::Visitor<'_> for Visitor {
-            type Value = ConcealedSeal;
-
-            fn expecting(
-                &self,
-                formatter: &mut std::fmt::Formatter,
-            ) -> std::fmt::Result {
-                formatter.write_str("Bech32 string with `txob` HRP")
-            }
-
-            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-            where
-                E: serde::de::Error,
-            {
-                ConcealedSeal::from_str(v).map_err(serde::de::Error::custom)
-            }
-
-            fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
-            where
-                E: serde::de::Error,
-            {
-                self.visit_str(&v)
-            }
-
-            fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Self::Value, E>
-            where
-                E: serde::de::Error,
-            {
-                ConcealedSeal::from_bytes(&v).map_err(|_| {
-                    serde::de::Error::invalid_length(v.len(), &"32 bytes")
-                })
-            }
-        }
-
-        if deserializer.is_human_readable() {
-            deserializer.deserialize_str(Visitor)
-        } else {
-            deserializer.deserialize_byte_buf(Visitor)
-        }
-    }
-}
+#[derive(Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
+#[wrapper(Index, RangeOps, BorrowSlice, Hex)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = bp::LIB_NAME_BP)]
+pub struct ConcealedSeal(
+    #[from]
+    #[from([u8; 32])]
+    Bytes32,
+);
 
 impl FromStr for ConcealedSeal {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(ConcealedSeal::from_bech32_str(s)?)
+        Ok(ConcealedSeal::from_hex(s)?)
     }
 }
 
-impl From<OutPoint> for ConcealedSeal {
+impl From<Outpoint> for ConcealedSeal {
     #[inline]
-    fn from(outpoint: OutPoint) -> Self {
-        RevealedSeal::from(outpoint).commit_conceal()
+    fn from(outpoint: Outpoint) -> Self {
+        RevealedSeal::from(outpoint).conceal()
     }
 }
 
-impl strict_encoding::Strategy for ConcealedSeal {
-    type Strategy = strict_encoding::strategies::Wrapped;
-}
-
-impl commit_encode::Strategy for ConcealedSeal {
-    type Strategy = commit_encode::strategies::UsingStrict;
-}
-
-impl CommitVerify<RevealedSeal, Lnpbp6> for ConcealedSeal {
+impl CommitVerify<RevealedSeal, Lnpbp12> for ConcealedSeal {
     fn commit(reveal: &RevealedSeal) -> Self {
-        let mut engine = sha256t::Hash::<ConcealedSealTag>::engine();
+        let mut engine = sha256::Hash::engine();
+        // TODO: Use tag
         engine.input(&[reveal.method as u8]);
-        engine.input(
-            &reveal.txid.unwrap_or_else(|| {
-                Txid::from_slice(&[0u8; 32]).expect("hardcoded")
-            })[..],
-        );
-        engine.input(&reveal.vout.to_le_bytes()[..]);
+        engine.input(&reveal.txid.unwrap_or_else(|| Txid::from([0u8; 32]))[..]);
+        engine.input(&reveal.vout.into_u32().to_le_bytes()[..]);
         engine.input(&reveal.blinding.to_le_bytes()[..]);
-        let inner = sha256t::Hash::<ConcealedSealTag>::from_engine(engine);
-        ConcealedSeal::from_hash(inner)
+        let hash = sha256::Hash::from_engine(engine);
+        ConcealedSeal::from(hash.into_inner())
     }
-}
-
-impl lnpbp_bech32::Strategy for ConcealedSeal {
-    const HRP: &'static str = "txob";
-    type Strategy = lnpbp_bech32::strategies::UsingStrictEncoding;
 }
 
 #[cfg(test)]

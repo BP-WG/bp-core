@@ -13,8 +13,9 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use bitcoin::{OutPoint, Txid};
-use bitcoin_onchain::TxResolverError;
+use bp::{Outpoint, Txid};
+
+use crate::resolver;
 
 /// Seal verification errors.
 #[derive(Debug, Display, From, Error)]
@@ -28,7 +29,7 @@ pub enum VerifyError {
     WitnessTxUnknown(Txid),
 
     /// the provided witness transaction {0} does not closes seal {1}.
-    WitnessNotClosingSeal(Txid, OutPoint),
+    WitnessNotClosingSeal(Txid, Outpoint),
 
     /// tapret commitment is invalid.
     ///
@@ -39,7 +40,7 @@ pub enum VerifyError {
     /// unable to access commitment publication medium.
     #[from]
     #[display(inner)]
-    TxResolverError(TxResolverError),
+    TxResolverError(resolver::Error),
 }
 
 /// Error happening if the seal data holds only witness transaction output

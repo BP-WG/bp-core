@@ -13,12 +13,13 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use bitcoin::Txid;
-use bitcoin_onchain::ResolveTx;
-use commit_verify::lnpbp4;
+use bp::Txid;
+use commit_verify::mpc;
 use dbc::{Anchor, Proof};
 use single_use_seals::{SealProtocol, SealStatus, VerifySeal};
+use strict_encoding::StrictDumb;
 
+use crate::resolver::Resolver;
 use crate::txout::{TxoSeal, VerifyError};
 
 pub struct Witness {
@@ -28,7 +29,7 @@ pub struct Witness {
 
 impl<L> From<Anchor<L>> for Witness
 where
-    L: lnpbp4::Proof,
+    L: mpc::Proof + StrictDumb,
 {
     fn from(anchor: Anchor<L>) -> Self {
         Witness {
@@ -39,17 +40,17 @@ where
 }
 
 /// Txo single-use-seal engine.
-pub struct TxoProtocol<Resolver: ResolveTx> {
-    resolver: Resolver,
+pub struct TxoProtocol<R: Resolver> {
+    resolver: R,
 }
 
-impl<Seal, Resolver> SealProtocol<Seal> for TxoProtocol<Resolver>
+impl<Seal, R> SealProtocol<Seal> for TxoProtocol<R>
 where
     Seal: TxoSeal,
-    Resolver: ResolveTx,
+    R: Resolver,
 {
     type Witness = Witness;
-    type Message = lnpbp4::CommitmentHash;
+    type Message = mpc::Commitment;
     type PublicationId = Txid;
     type Error = VerifyError;
 
@@ -58,10 +59,10 @@ where
     }
 }
 
-impl<'seal, Seal, Resolver> VerifySeal<'seal, Seal> for TxoProtocol<Resolver>
+impl<'seal, Seal, R> VerifySeal<'seal, Seal> for TxoProtocol<R>
 where
     Seal: TxoSeal + 'seal,
-    Resolver: ResolveTx,
+    R: Resolver,
 {
     fn verify_seal(
         &self,
@@ -70,11 +71,11 @@ where
         witness: &Self::Witness,
     ) -> Result<bool, Self::Error> {
         // 1. Get tx
-        let tx = self.resolver.resolve_tx(witness.txid)?;
+        let tx = self.resolver.tx_by_id(witness.txid)?;
 
         // 2. The seal must match tx inputs
         let outpoint = seal.outpoint_or(witness.txid);
-        if !tx.input.iter().any(|txin| txin.previous_output == outpoint) {
+        if !tx.inputs.iter().any(|txin| txin.prev_output == outpoint) {
             return Err(VerifyError::WitnessNotClosingSeal(
                 witness.txid,
                 outpoint,
@@ -92,7 +93,7 @@ where
         witness: &Self::Witness,
     ) -> Result<bool, Self::Error> {
         // 1. Get tx
-        let tx = self.resolver.resolve_tx(witness.txid)?;
+        let tx = self.resolver.tx_by_id(witness.txid)?;
 
         let mut method = None;
         for seal in seals {
@@ -107,7 +108,7 @@ where
 
             // 3. Each seal must match tx inputs
             let outpoint = seal.outpoint_or(witness.txid);
-            if !tx.input.iter().any(|txin| txin.previous_output == outpoint) {
+            if !tx.inputs.iter().any(|txin| txin.prev_output == outpoint) {
                 return Err(VerifyError::WitnessNotClosingSeal(
                     witness.txid,
                     outpoint,
