@@ -15,7 +15,7 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use std::cmp;
+use std::{cmp, io};
 
 const BLOCK_SIZE: usize = 64;
 
@@ -228,4 +228,13 @@ impl Sha256 {
         self.h[6] = self.h[6].wrapping_add(g);
         self.h[7] = self.h[7].wrapping_add(h);
     }
+}
+
+impl io::Write for Sha256 {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.input(buf);
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> io::Result<()> { Ok(()) }
 }

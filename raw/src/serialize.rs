@@ -13,8 +13,10 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
+use std::io::{self, Read, Write};
+
 use super::ScriptBytes;
-use crate::{LeafScript, Sha256};
+use crate::LeafScript;
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Display, Error)]
 #[display("end of data reached while parsing with bitcoin consensus rules")]
@@ -35,150 +37,232 @@ pub enum DataError {
     ExcessiveData,
 }
 
-pub trait ConsensusRead {
-    fn can_read(&self) -> bool;
-    fn read_u8(&mut self) -> Result<u8, NoData>;
-    fn read_u32(&mut self) -> Result<u32, NoData>;
-    fn read_var_int(&mut self) -> Result<u64, NoData>;
-    fn read_bytes(&mut self, len: u64) -> Result<ScriptBytes, NoData>;
+pub trait ConsensusRead: Read {
+    fn read_u8(&mut self) -> Result<u8, io::Error>;
+    fn read_u16(&mut self) -> Result<u16, io::Error>;
+    fn read_u32(&mut self) -> Result<u32, io::Error>;
+    fn read_u64(&mut self) -> Result<u64, io::Error>;
+    fn read_var_int(&mut self) -> Result<u64, io::Error>;
 }
 
-pub trait ConsensusWrite {
-    fn write_u8(&mut self, val: u8) -> Result<(), TooLarge>;
-    fn write_u32(&mut self, val: u32) -> Result<(), TooLarge>;
-    fn write_var_int(&mut self, val: u64) -> Result<(), TooLarge>;
-    fn write_bytes(&mut self, bytes: &[u8]) -> Result<(), TooLarge>;
+pub trait ConsensusWrite: Write {
+    fn write_u8(&mut self, val: u8) -> Result<(), io::Error>;
+    fn write_u16(&mut self, val: u16) -> Result<(), io::Error>;
+    fn write_u32(&mut self, val: u32) -> Result<(), io::Error>;
+    fn write_u64(&mut self, val: u64) -> Result<(), io::Error>;
+    fn write_var_int(&mut self, val: u64) -> Result<(), io::Error>;
 }
 
-impl<T: ConsensusRead> ConsensusRead for &mut T {
-    fn can_read(&self) -> bool { (*self).can_read() }
-    fn read_u8(&mut self) -> Result<u8, NoData> { (*self).read_u8() }
-    fn read_u32(&mut self) -> Result<u32, NoData> { (*self).read_u32() }
-    fn read_var_int(&mut self) -> Result<u64, NoData> { (*self).read_var_int() }
-    fn read_bytes(&mut self, len: u64) -> Result<ScriptBytes, NoData> {
-        (*self).read_bytes(len)
-    }
+// TODO: Move to amplify crate
+/// Errors with [`io::ErrorKind::UnexpectedEof`] on [`Read`] and [`Write`]
+/// operations if the `LIM` is reached.
+#[derive(Clone, Debug)]
+pub struct ConfinedIo<Io, const LIM: usize> {
+    pos: usize,
+    io: Io,
 }
 
-impl<T: ConsensusWrite> ConsensusWrite for &mut T {
-    fn write_u8(&mut self, val: u8) -> Result<(), TooLarge> {
-        (*self).write_u8(val)
-    }
-    fn write_u32(&mut self, val: u32) -> Result<(), TooLarge> {
-        (*self).write_u32(val)
-    }
-    fn write_var_int(&mut self, val: u64) -> Result<(), TooLarge> {
-        (*self).write_var_int(val)
-    }
-    fn write_bytes(&mut self, bytes: &[u8]) -> Result<(), TooLarge> {
-        (*self).write_bytes(bytes)
-    }
+impl<Io, const LIM: usize> From<Io> for ConfinedIo<Io, LIM> {
+    fn from(io: Io) -> Self { Self { pos: 0, io } }
 }
 
-#[derive(Clone, Debug, From)]
-pub struct MemBuf {
-    pos: u32, // Can't be larger than 4000000
-    #[from]
-    buf: Vec<u8>,
-}
-
-impl Default for MemBuf {
+impl<Io: Default, const LIM: usize> Default for ConfinedIo<Io, LIM> {
     fn default() -> Self { Self::new() }
 }
 
-impl MemBuf {
-    pub fn new() -> Self { MemBuf::with_capacity(u16::MAX as usize) }
+impl<Io, const LIM: usize> ConfinedIo<Io, LIM> {
+    pub fn new() -> Self
+    where
+        Io: Default,
+    {
+        Self::default()
+    }
 
-    pub fn with_capacity(capacity: usize) -> Self {
-        MemBuf {
-            pos: 0,
-            buf: Vec::with_capacity(capacity),
+    pub fn pos(&self) -> usize { self.pos }
+
+    pub fn as_io(&self) -> &Io { &self.io }
+    pub fn into_io(self) -> Io { self.io }
+    pub fn to_io(&self) -> Io
+    where
+        Io: Clone,
+    {
+        self.io.clone()
+    }
+}
+
+impl<Io: Write, const LIM: usize> Write for ConfinedIo<Io, LIM> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        if self.pos + buf.len() >= LIM {
+            return Err(io::ErrorKind::UnexpectedEof.into());
+        }
+        self.io.write(buf)
+    }
+
+    fn flush(&mut self) -> io::Result<()> { self.io.flush() }
+}
+
+impl<Io: Read, const LIM: usize> Read for ConfinedIo<Io, LIM> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        let len = buf.len();
+        if self.pos + len < LIM {
+            self.io.read(buf)
+        } else if self.pos >= LIM {
+            return Err(io::ErrorKind::UnexpectedEof.into());
+        } else {
+            self.io.read(&mut buf[..(len - (LIM - self.pos))])
         }
     }
 
-    pub fn pos(&self) -> usize { self.pos as usize }
-
-    pub fn into_vec(self) -> Vec<u8> { self.buf }
-}
-
-impl ConsensusRead for MemBuf {
-    fn can_read(&self) -> bool {
-        self.pos() < self.buf.len() && self.pos < u32::MAX
-    }
-
-    fn read_u8(&mut self) -> Result<u8, NoData> {
-        if !self.can_read() {
-            return Err(NoData);
+    fn read_exact(&mut self, buf: &mut [u8]) -> io::Result<()> {
+        let len = buf.len();
+        if self.pos + len < LIM {
+            self.io.read_exact(buf)
+        } else if self.pos >= LIM {
+            return Err(io::ErrorKind::UnexpectedEof.into());
+        } else {
+            self.io.read_exact(&mut buf[..(len - (LIM - self.pos))])
         }
-        self.pos += 1;
-        Ok(self.buf[self.pos as usize - 1])
-    }
-
-    fn read_u32(&mut self) -> Result<u32, NoData> { todo!() }
-
-    fn read_var_int(&mut self) -> Result<u64, NoData> { todo!() }
-
-    fn read_bytes(&mut self, len: u64) -> Result<ScriptBytes, NoData> {
-        todo!()
     }
 }
 
-impl ConsensusWrite for MemBuf {
-    fn write_u8(&mut self, val: u8) -> Result<(), TooLarge> { todo!() }
-
-    fn write_u32(&mut self, val: u32) -> Result<(), TooLarge> { todo!() }
-
-    fn write_var_int(&mut self, val: u64) -> Result<(), TooLarge> { todo!() }
-
-    fn write_bytes(&mut self, bytes: &[u8]) -> Result<(), TooLarge> { todo!() }
+impl<Io, const LIM: usize> ConfinedIo<Io, LIM> {
+    pub fn is_eof(&self) -> bool { self.pos >= LIM }
 }
 
-impl ConsensusWrite for Sha256 {
-    fn write_u8(&mut self, val: u8) -> Result<(), TooLarge> { todo!() }
+/// Consensus data can't be larger than 4000000
+pub type ConsensusIo<Io> = ConfinedIo<Io, 4_000_000>;
 
-    fn write_u32(&mut self, val: u32) -> Result<(), TooLarge> { todo!() }
+impl<R: Read> ConsensusRead for R {
+    fn read_u8(&mut self) -> Result<u8, io::Error> {
+        let mut val = [0; 1];
+        self.read_exact(&mut val)?;
+        Ok(val[0])
+    }
+    fn read_u16(&mut self) -> Result<u16, io::Error> {
+        let mut val = [0; 2];
+        self.read_exact(&mut val)?;
+        Ok(u16::from_le_bytes(val))
+    }
+    fn read_u32(&mut self) -> Result<u32, io::Error> {
+        let mut val = [0; 4];
+        self.read_exact(&mut val)?;
+        Ok(u32::from_le_bytes(val))
+    }
+    fn read_u64(&mut self) -> Result<u64, io::Error> {
+        let mut val = [0; 8];
+        self.read_exact(&mut val)?;
+        Ok(u64::from_le_bytes(val))
+    }
 
-    fn write_var_int(&mut self, val: u64) -> Result<(), TooLarge> { todo!() }
+    fn read_var_int(&mut self) -> Result<u64, io::Error> {
+        let n = self.read_u8()?;
+        match n {
+            0xFF => {
+                let x = self.read_u64()?;
+                if x < 0x100000000 {
+                    Err(io::ErrorKind::InvalidInput.into())
+                } else {
+                    Ok(x)
+                }
+            }
+            0xFE => {
+                let x = self.read_u32()?;
+                if x < 0x10000 {
+                    Err(io::ErrorKind::InvalidInput.into())
+                } else {
+                    Ok(x as u64)
+                }
+            }
+            0xFD => {
+                let x = self.read_u16()?;
+                if x < 0xFD {
+                    Err(io::ErrorKind::InvalidInput.into())
+                } else {
+                    Ok(x as u64)
+                }
+            }
+            n => Ok(n as u64),
+        }
+    }
+}
 
-    fn write_bytes(&mut self, bytes: &[u8]) -> Result<(), TooLarge> { todo!() }
+impl<W: Write> ConsensusWrite for W {
+    fn write_u8(&mut self, val: u8) -> Result<(), io::Error> {
+        self.write_all(&[val])
+    }
+
+    fn write_u16(&mut self, val: u16) -> Result<(), io::Error> {
+        self.write_all(&val.to_le_bytes())
+    }
+
+    fn write_u32(&mut self, val: u32) -> Result<(), io::Error> {
+        self.write_all(&val.to_le_bytes())
+    }
+
+    fn write_u64(&mut self, val: u64) -> Result<(), io::Error> {
+        self.write_all(&val.to_le_bytes())
+    }
+
+    fn write_var_int(&mut self, val: u64) -> Result<(), io::Error> {
+        match val {
+            0..=0xFC => {
+                self.write_u8(val as u8)?;
+            }
+            0xFD..=0xFFFF => {
+                self.write_u8(0xFD)?;
+                self.write_u16(val as u16)?;
+            }
+            0x10000..=0xFFFFFFFF => {
+                self.write_u8(0xFE)?;
+                self.write_u32(val as u32)?;
+            }
+            _ => {
+                self.write_u8(0xFF)?;
+                self.write_u64(val as u64)?;
+            }
+        }
+        Ok(())
+    }
 }
 
 pub trait Deserialize: Sized {
-    fn deserialize_from(reader: impl ConsensusRead) -> Result<Self, DataError>;
+    fn deserialize_from(reader: impl ConsensusRead) -> Result<Self, io::Error>;
+    /*
     fn deserialize_all(
-        mut reader: impl ConsensusRead,
+        reader: impl ConsensusRead,
     ) -> Result<Self, DataError> {
         let me = Self::deserialize_from(&mut reader)?;
-        if reader.can_read() {
+        if !reader.is_eof() {
             return Err(DataError::ExcessiveData);
         }
         Ok(me)
     }
+     */
 }
 
-pub trait Serialize {
-    fn serialize_into(
+pub trait ConsensusEncode {
+    fn consensus_encode(
         &self,
         writer: impl ConsensusWrite,
-    ) -> Result<(), TooLarge>;
+    ) -> Result<(), io::Error>;
 }
 
-impl Serialize for ScriptBytes {
-    fn serialize_into(
+impl ConsensusEncode for ScriptBytes {
+    fn consensus_encode(
         &self,
         mut writer: impl ConsensusWrite,
-    ) -> Result<(), TooLarge> {
+    ) -> Result<(), io::Error> {
         writer.write_var_int(self.len() as u64)?;
-        writer.write_bytes(self.as_ref())
+        writer.write_all(self.as_ref())
     }
 }
 
-impl Serialize for LeafScript {
-    fn serialize_into(
+impl ConsensusEncode for LeafScript {
+    fn consensus_encode(
         &self,
         mut writer: impl ConsensusWrite,
-    ) -> Result<(), TooLarge> {
+    ) -> Result<(), io::Error> {
         writer.write_u8(self.version.to_consensus())?;
-        self.script.serialize_into(writer)
+        self.script.consensus_encode(writer)
     }
 }

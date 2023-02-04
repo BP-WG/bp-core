@@ -28,7 +28,7 @@ use strict_encoding::{
 };
 
 use crate::opcodes::*;
-use crate::serialize::{ConsensusWrite, Serialize};
+use crate::serialize::{ConsensusEncode, ConsensusWrite};
 use crate::{ScriptBytes, ScriptPubkey, Sha256, WitnessVer, LIB_NAME_BP};
 
 /// The SHA-256 midstate value for the TapLeaf hash.
@@ -141,14 +141,14 @@ pub struct TapLeafHash(
 impl TapLeafHash {
     pub fn with_leaf_script(leaf_script: &LeafScript) -> Self {
         let mut engine = Sha256::from_tag(MIDSTATE_TAPLEAF);
-        leaf_script.serialize_into(&mut engine).ok();
+        leaf_script.consensus_encode(&mut engine).ok();
         Self(engine.finish().into())
     }
 
     pub fn with_tap_script(tap_script: &TapScript) -> Self {
         let mut engine = Sha256::from_tag(MIDSTATE_TAPLEAF);
         engine.write_u8(TAPROOT_LEAF_TAPSCRIPT).ok();
-        tap_script.serialize_into(&mut engine).ok();
+        tap_script.consensus_encode(&mut engine).ok();
         Self(engine.finish().into())
     }
 }
