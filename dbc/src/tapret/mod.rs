@@ -260,8 +260,8 @@ impl TapretNodePartner {
 ///
 /// Holds information about the sibling at level 1 of the tree in form of
 /// [`TapretNodePartner`].
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
-#[derive(StrictType, StrictEncode, StrictDecode)]
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
@@ -280,7 +280,12 @@ pub struct TapretPathProof {
 impl TapretPathProof {
     /// Construct new empty path proof.
     #[inline]
-    pub fn new() -> TapretPathProof { TapretPathProof::default() }
+    pub fn root() -> TapretPathProof {
+        TapretPathProof {
+            partner_node: None,
+            nonce: 0,
+        }
+    }
 
     /// Adds element to the path proof.
     pub fn with(

@@ -13,10 +13,9 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use amplify::Wrapper;
 use bc::{InternalPk, TapBranchHash, TapLeafHash, TapNodeHash, TapScript};
 use commit_verify::{mpc, CommitVerify, ConvolveCommit, ConvolveCommitProof};
-use secp256k1::{Scalar, XOnlyPublicKey, SECP256K1};
+use secp256k1::XOnlyPublicKey;
 
 use super::{Lnpbp12, TapretNodePartner, TapretPathProof, TapretProof};
 use crate::tapret::tapscript::TapretCommitment;
@@ -81,19 +80,7 @@ impl ConvolveCommit<mpc::Commitment, TapretProof, Lnpbp12> for InternalPk {
             TapLeafHash::with_tap_script(&script_commitment).into()
         };
 
-        // TODO: Use secp instance from Lnpbp6
-        let merkle_root =
-            Scalar::from_le_bytes(merkle_root.into_inner().into_inner())
-                .expect("negligible probability");
-        let (output_key, parity) = self
-            .add_tweak(SECP256K1, &merkle_root)
-            .expect("hash collision");
-        debug_assert!(self.tweak_add_check(
-            SECP256K1,
-            &output_key,
-            parity,
-            merkle_root
-        ));
+        let output_key = self.to_output_key(Some(merkle_root));
 
         let proof = TapretProof {
             path_proof: supplement.clone(),
@@ -108,7 +95,7 @@ impl ConvolveCommit<mpc::Commitment, TapretProof, Lnpbp12> for InternalPk {
 mod test {
     use std::str::FromStr;
 
-    use bc::{IntoTapHash, LeafScript};
+    use bc::LeafScript;
     use commit_verify::mpc::Commitment;
 
     use super::*;
@@ -121,16 +108,17 @@ mod test {
         )
         .unwrap();
         let msg = mpc::Commitment::from([8u8; 32]);
-        let path_proof = TapretPathProof::new();
+        let path_proof = TapretPathProof::root();
 
+        // Do via API
         let (outer_key, proof) =
             internal_pk.convolve_commit(&path_proof, &msg).unwrap();
 
-        let tapret_commitment = TapretCommitment::with(msg, 0);
+        // Do manually
+        let tapret_commitment = TapretCommitment::with(msg, path_proof.nonce);
         let script_commitment = TapScript::commit(&tapret_commitment);
         let script_leaf = TapLeafHash::with_tap_script(&script_commitment);
-        let merkle_root = script_leaf.into_tap_hash();
-        let real_key = internal_pk.to_output_key(Some(merkle_root));
+        let real_key = internal_pk.to_output_key(Some(script_leaf));
 
         assert_eq!(outer_key, real_key);
 
@@ -158,7 +146,7 @@ mod test {
             TapretNodePartner::RightLeaf(LeafScript::from_tap_script(
                 default!(),
             )),
-            88,
+            22,
         )
         .unwrap();
 
@@ -190,7 +178,7 @@ mod test {
             TapretNodePartner::RightLeaf(LeafScript::from_tap_script(
                 default!(),
             )),
-            1,
+            11,
         )
         .unwrap();
 
