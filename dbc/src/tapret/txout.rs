@@ -24,7 +24,7 @@ impl ConvolveCommitProof<mpc::Commitment, TxOut, Lnpbp12> for TapretProof {
     fn restore_original(&self, commitment: &TxOut) -> TxOut {
         TxOut {
             value: commitment.value,
-            script_pubkey: self.original_pubkey_script().into(),
+            script_pubkey: self.original_pubkey_script(),
         }
     }
 

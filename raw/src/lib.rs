@@ -98,16 +98,16 @@ mod types {
                     self.push(n as u8);
                 }
                 n if n < 0x100 => {
-                    self.push(OP_PUSHDATA1 as u8);
+                    self.push(OP_PUSHDATA1);
                     self.push(n as u8);
                 }
                 n if n < 0x10000 => {
-                    self.push(OP_PUSHDATA2 as u8);
+                    self.push(OP_PUSHDATA2);
                     self.push((n % 0x100) as u8);
                     self.push((n / 0x100) as u8);
                 }
                 n if n < 0x100000000 => {
-                    self.push(OP_PUSHDATA4 as u8);
+                    self.push(OP_PUSHDATA4);
                     self.push((n % 0x100) as u8);
                     self.push(((n / 0x100) % 0x100) as u8);
                     self.push(((n / 0x10000) % 0x100) as u8);
