@@ -21,7 +21,7 @@ use std::{cmp, io};
 
 use amplify::confinement::{Confined, TinyVec};
 use amplify::{Bytes32, Wrapper};
-use secp256k1::XOnlyPublicKey;
+use secp256k1::{Scalar, XOnlyPublicKey};
 use strict_encoding::{
     DecodeError, ReadTuple, StrictDecode, StrictEncode, StrictProduct,
     StrictTuple, StrictType, TypeName, TypedRead, TypedWrite, WriteTuple,
@@ -75,6 +75,33 @@ pub const MIDSTATE_TAPSIGHASH: [u8; 32] = [
 )]
 pub struct InternalPk(XOnlyPublicKey);
 
+impl InternalPk {
+    pub fn to_output_key(
+        &self,
+        merkle_root: Option<impl IntoTapHash>,
+    ) -> XOnlyPublicKey {
+        let mut engine = Sha256::from_tag(MIDSTATE_TAPTWEAK);
+        // always hash the key
+        engine.input(&self.0.serialize());
+        if let Some(merkle_root) = merkle_root {
+            engine.input(merkle_root.into_tap_hash().as_slice());
+        }
+        let tweak = Scalar::from_be_bytes(engine.finish())
+            .expect("hash value greater than curve order");
+        let (output_key, tweaked_parity) = self
+            .0
+            .add_tweak(secp256k1::SECP256K1, &tweak)
+            .expect("hash collision");
+        debug_assert!(self.tweak_add_check(
+            secp256k1::SECP256K1,
+            &output_key,
+            tweaked_parity,
+            tweak
+        ));
+        output_key
+    }
+}
+
 impl StrictEncode for InternalPk {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         let bytes = Bytes32::from(self.0.serialize());
@@ -95,6 +122,10 @@ impl StrictDecode for InternalPk {
                 })
         })
     }
+}
+
+pub trait IntoTapHash {
+    fn into_tap_hash(self) -> TapNodeHash;
 }
 
 #[derive(
@@ -120,8 +151,10 @@ impl TapLeafHash {
         tap_script.serialize_into(&mut engine).ok();
         Self(engine.finish().into())
     }
+}
 
-    pub fn into_node_hash(self) -> TapNodeHash { TapNodeHash(self.0) }
+impl IntoTapHash for TapLeafHash {
+    fn into_tap_hash(self) -> TapNodeHash { TapNodeHash(self.0) }
 }
 
 #[derive(
@@ -141,14 +174,16 @@ impl TapBranchHash {
         engine.input(cmp::max(&node1, &node2).borrow());
         Self(engine.finish().into())
     }
+}
 
-    pub fn into_node_hash(self) -> TapNodeHash { TapNodeHash(self.0) }
+impl IntoTapHash for TapBranchHash {
+    fn into_tap_hash(self) -> TapNodeHash { TapNodeHash(self.0) }
 }
 
 #[derive(
     Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From
 )]
-#[wrapper(Index, RangeOps, BorrowSlice, Hex, Display, FromStr)]
+#[wrapper(Deref, Index, RangeOps, BorrowSlice, Hex, Display, FromStr)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BP)]
 #[cfg_attr(
@@ -163,6 +198,10 @@ pub struct TapNodeHash(
     #[from(TapBranchHash)]
     Bytes32,
 );
+
+impl IntoTapHash for TapNodeHash {
+    fn into_tap_hash(self) -> TapNodeHash { self }
+}
 
 #[derive(Wrapper, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref)]
@@ -339,6 +378,9 @@ impl From<TapScript> for LeafScript {
 }
 
 impl LeafScript {
+    pub fn from_tap_script(tap_script: TapScript) -> Self {
+        Self::from(tap_script)
+    }
     pub fn tap_leaf_hash(&self) -> TapLeafHash {
         TapLeafHash::with_leaf_script(self)
     }

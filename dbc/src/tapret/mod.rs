@@ -68,7 +68,10 @@ pub use xonlypk::TapretKeyError;
 /// protocol.
 pub enum Lnpbp12 {}
 
-use bp::{InternalPk, LeafScript, ScriptPubkey, TapBranchHash, TapNodeHash};
+use bp::{
+    InternalPk, IntoTapHash, LeafScript, ScriptPubkey, TapBranchHash,
+    TapNodeHash,
+};
 use commit_verify::CommitmentProtocol;
 
 pub use self::tapscript::TAPRET_SCRIPT_COMMITMENT_PREFIX;
@@ -132,7 +135,7 @@ impl TapretRightBranch {
     /// Computes node hash of the partner node defined by this proof.
     pub fn node_hash(&self) -> TapNodeHash {
         TapBranchHash::with_nodes(self.left_node_hash, self.right_node_hash)
-            .into_node_hash()
+            .into_tap_hash()
     }
 }
 
@@ -228,7 +231,7 @@ impl TapretNodePartner {
         match self {
             TapretNodePartner::LeftNode(left_node) => *left_node <= other_node,
             TapretNodePartner::RightLeaf(leaf_script) => {
-                let right_node = leaf_script.tap_leaf_hash().into_node_hash();
+                let right_node = leaf_script.tap_leaf_hash().into_tap_hash();
                 other_node <= right_node
             }
             TapretNodePartner::RightBranch(right_branch) => {
@@ -243,7 +246,7 @@ impl TapretNodePartner {
         match self {
             TapretNodePartner::LeftNode(hash) => *hash,
             TapretNodePartner::RightLeaf(leaf_script) => {
-                leaf_script.tap_leaf_hash().into_node_hash()
+                leaf_script.tap_leaf_hash().into_tap_hash()
             }
             TapretNodePartner::RightBranch(right_branch) => {
                 right_branch.node_hash()
