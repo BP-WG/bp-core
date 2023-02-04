@@ -12,19 +12,27 @@ default-members = [
     "."
 ]
 
+[workspace.package]
+authors = ["Dr Maxim Orlovsky <orlovsky@lnp-bp.org>"]
+homepage = "https://github.com/BP-WG"
+repository = "https://github.com/BP-WG/bp-core"
+rust-version = "1.66" # Due to strict encoding library (caused by GAD)
+edition = "2021"
+license = "Apache-2.0"
+
 [package]
 name = "bp-core"
 version = "0.10.0-beta.1"
-license = "Apache-2.0"
-authors = ["Dr. Maxim Orlovsky <orlovsky@pandoracore.com>"]
 description = "Bitcoin protocol core library (BP Core Lib)"
-repository = "https://github.com/LNP-BP/bp-core"
-homepage = "https://github.com/LNP-BP"
-keywords = ["lnp-bp", "cryptocurrency", "smart-contracts", "bitcoin"]
-categories = ["cryptography::cryptocurrencies", "encoding", "parsing"]
+keywords = ["lnp-bp", "smart-contracts", "bitcoin", "blockchain"]
+categories = ["cryptography"]
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
 readme = "README.md"
-edition = "2021"
-rust-version = "1.66.0"
 exclude = [".github", "primitives", "dbc", "seals"]
 
 [lib]

@@ -1,16 +1,16 @@
 [package]
 name = "bp-seals"
 version = "0.10.0-beta.1"
-license = "Apache-2.0"
-authors = ["Dr. Maxim Orlovsky <orlovsky@pandoracore.com>"]
 description = "Bitcoin protocol single-use-seals library"
-repository = "https://github.com/LNP-BP/bp-core"
-homepage = "https://github.com/LNP-BP"
-keywords = ["lnp-bp", "bitcoin", "cryptography", "smart-contracts", "single-use-seals"]
-categories = ["cryptography::cryptocurrencies", "encoding"]
+keywords = ["lnp-bp", "bitcoin", "blockchain", "smart-contracts", "single-use-seals"]
+categories = ["cryptography", "encoding"]
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
 readme = "../README.md"
-edition = "2021"
-rust-version = "1.66.0"
 
 [lib]
 name = "seals"

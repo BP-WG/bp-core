@@ -1,8 +1,16 @@
 [package]
 name = "bp-primitives"
-description = "Bitcoin protocol primitives library"
 version = "0.10.0-beta.1"
-edition = "2021"
+description = "Bitcoin protocol primitives library"
+keywords = ["lnp-bp", "smart-contracts", "bitcoin", "blockchain"]
+categories = ["cryptography"]
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+readme = "../README.md"
 
 [lib]
 name = "bc"
