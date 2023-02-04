@@ -1,17 +1,23 @@
-// BP Core Library implementing LNP/BP specifications & standards related to
-// bitcoin protocol
+// Bitcoin protocol single-use-seals library.
 //
-// Written in 2020-2022 by
-//     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
+// SPDX-License-Identifier: Apache-2.0
 //
-// To the extent possible under law, the author(s) have dedicated all
-// copyright and related and neighboring rights to this software to
-// the public domain worldwide. This software is distributed without
-// any warranty.
+// Written in 2019-2023 by
+//     Dr. Maxim Orlovsky <orlovsky@lnp-bp.org>
 //
-// You should have received a copy of the Apache 2.0 License
-// along with this software.
-// If not, see <https://opensource.org/licenses/Apache-2.0>.
+// Copyright (C) 2019-2023 LNP/BP Standards Association. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 //! TxOut single-use-seals.
 
@@ -19,8 +25,7 @@ use std::convert::{TryFrom, TryInto};
 use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 
-use bitcoin::{OutPoint, Txid};
-use commit_verify::commit_encode;
+use bc::{Outpoint, Txid, Vout};
 
 use crate::txout::{CloseMethod, MethodParseError, TxoSeal, WitnessVoutError};
 
@@ -31,12 +36,9 @@ use crate::txout::{CloseMethod, MethodParseError, TxoSeal, WitnessVoutError};
 /// commitment and conceal procedures (since without knowing a blinding factor
 /// we can't perform them).
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate")
-)]
-#[derive(StrictEncode, StrictDecode)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = bc::LIB_NAME_BP)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct ExplicitSeal {
     /// Commitment to the specific seal close method [`CloseMethod`] which must
     /// be used to close this seal.
@@ -51,33 +53,31 @@ pub struct ExplicitSeal {
     pub txid: Option<Txid>,
 
     /// Tx output number, which should be always known.
-    pub vout: u32,
+    pub vout: Vout,
 }
 
-impl TryFrom<&ExplicitSeal> for OutPoint {
+impl TryFrom<&ExplicitSeal> for Outpoint {
     type Error = WitnessVoutError;
 
     #[inline]
     fn try_from(reveal: &ExplicitSeal) -> Result<Self, Self::Error> {
         reveal
             .txid
-            .map(|txid| OutPoint::new(txid, reveal.vout))
+            .map(|txid| Outpoint::new(txid, reveal.vout))
             .ok_or(WitnessVoutError)
     }
 }
 
-impl TryFrom<ExplicitSeal> for OutPoint {
+impl TryFrom<ExplicitSeal> for Outpoint {
     type Error = WitnessVoutError;
 
     #[inline]
-    fn try_from(reveal: ExplicitSeal) -> Result<Self, Self::Error> {
-        OutPoint::try_from(&reveal)
-    }
+    fn try_from(reveal: ExplicitSeal) -> Result<Self, Self::Error> { Outpoint::try_from(&reveal) }
 }
 
-impl From<&OutPoint> for ExplicitSeal {
+impl From<&Outpoint> for ExplicitSeal {
     #[inline]
-    fn from(outpoint: &OutPoint) -> Self {
+    fn from(outpoint: &Outpoint) -> Self {
         Self {
             method: CloseMethod::TapretFirst,
             txid: Some(outpoint.txid),
@@ -86,13 +86,9 @@ impl From<&OutPoint> for ExplicitSeal {
     }
 }
 
-impl From<OutPoint> for ExplicitSeal {
+impl From<Outpoint> for ExplicitSeal {
     #[inline]
-    fn from(outpoint: OutPoint) -> Self { ExplicitSeal::from(&outpoint) }
-}
-
-impl commit_encode::Strategy for ExplicitSeal {
-    type Strategy = commit_encode::strategies::UsingStrict;
+    fn from(outpoint: Outpoint) -> Self { ExplicitSeal::from(&outpoint) }
 }
 
 impl TxoSeal for ExplicitSeal {
@@ -103,26 +99,24 @@ impl TxoSeal for ExplicitSeal {
     fn txid(&self) -> Option<Txid> { self.txid }
 
     #[inline]
-    fn vout(&self) -> usize { self.vout as usize }
+    fn vout(&self) -> Vout { self.vout }
 
     #[inline]
-    fn outpoint(&self) -> Option<OutPoint> { self.try_into().ok() }
+    fn outpoint(&self) -> Option<Outpoint> { self.try_into().ok() }
 
     #[inline]
-    fn txid_or(&self, default_txid: Txid) -> Txid {
-        self.txid.unwrap_or(default_txid)
-    }
+    fn txid_or(&self, default_txid: Txid) -> Txid { self.txid.unwrap_or(default_txid) }
 
     #[inline]
-    fn outpoint_or(&self, default_txid: Txid) -> OutPoint {
-        OutPoint::new(self.txid.unwrap_or(default_txid), self.vout)
+    fn outpoint_or(&self, default_txid: Txid) -> Outpoint {
+        Outpoint::new(self.txid.unwrap_or(default_txid), self.vout)
     }
 }
 
 impl ExplicitSeal {
     /// Constructs seal for the provided outpoint and seal closing method.
     #[inline]
-    pub fn new(method: CloseMethod, outpoint: OutPoint) -> ExplicitSeal {
+    pub fn new(method: CloseMethod, outpoint: Outpoint) -> ExplicitSeal {
         Self {
             method,
             txid: Some(outpoint.txid),
@@ -132,12 +126,12 @@ impl ExplicitSeal {
 
     /// Constructs seal.
     #[inline]
-    pub fn with(
-        method: CloseMethod,
-        txid: Option<Txid>,
-        vout: u32,
-    ) -> ExplicitSeal {
-        ExplicitSeal { method, txid, vout }
+    pub fn with(method: CloseMethod, txid: Option<Txid>, vout: impl Into<Vout>) -> ExplicitSeal {
+        ExplicitSeal {
+            method,
+            txid,
+            vout: vout.into(),
+        }
     }
 }
 
@@ -167,10 +161,6 @@ pub enum ParseError {
 
     /// wrong structure of seal string representation
     WrongStructure,
-
-    /// wrong Bech32 representation of the blinded TxOut seal – {0}
-    #[from]
-    Bech32(lnpbp_bech32::Error),
 }
 
 impl FromStr for ExplicitSeal {

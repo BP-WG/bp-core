@@ -1,5 +1,0 @@
-# This is an add-on that must be added to any dependency using this library
-
-bp-core = { path = "../bp-core" }
-
-[workspace]

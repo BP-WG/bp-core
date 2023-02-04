@@ -19,31 +19,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Coding conventions
-#![deny(
-    non_upper_case_globals,
-    non_camel_case_types,
-    non_snake_case,
-    unused_mut,
-    unused_imports,
-    dead_code,
-    missing_docs
-)]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+//! API for resolving single-use-seals.
 
-//! The library provides single-use-seal implementations for bitcoin protocol.
+use bc::{Tx, Txid};
 
-// Coding conventions
-#![recursion_limit = "256"]
-#![deny(dead_code, /* todo: missing_docs, */)]
+/// Error resolving single-use-seal
+#[derive(Debug, Display)]
+#[display(doc_comments)]
+pub enum Error {
+    /// Resolver implementation-specific error.
+    #[display(inner)]
+    Connection(Box<dyn std::error::Error>),
 
-#[macro_use]
-extern crate amplify;
-#[macro_use]
-extern crate strict_encoding;
-#[cfg(feature = "serde")]
-#[macro_use]
-extern crate serde_crate as serde;
+    /// transaction with id {0} is not known to the resolver.
+    UnknownTx(Txid),
+}
 
-pub mod resolver;
-pub mod txout;
+/// API which must be provided by a resolver to operate with single-use-seal.
+pub trait Resolver {
+    /// Return transaction data for a given transaction id.
+    fn tx_by_id(&self, txid: Txid) -> Result<Tx, Error>;
+}

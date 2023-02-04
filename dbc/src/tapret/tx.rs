@@ -1,50 +1,51 @@
-// Deterministic bitcoin commitments library, implementing LNPBP standards
-// Part of bitcoin protocol core library (BP Core Lib)
+// Deterministic bitcoin commitments library.
 //
-// Written in 2020-2022 by
-//     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
+// SPDX-License-Identifier: Apache-2.0
 //
-// To the extent possible under law, the author(s) have dedicated all
-// copyright and related and neighboring rights to this software to
-// the public domain worldwide. This software is distributed without
-// any warranty.
+// Written in 2019-2023 by
+//     Dr. Maxim Orlovsky <orlovsky@lnp-bp.org>
 //
-// You should have received a copy of the Apache 2.0 License
-// along with this software.
-// If not, see <https://opensource.org/licenses/Apache-2.0>.
+// Copyright (C) 2019-2023 LNP/BP Standards Association. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-use bitcoin::Transaction;
-use commit_verify::convolve_commit::{
-    ConvolveCommitProof, ConvolveCommitVerify,
-};
-use commit_verify::lnpbp4;
+use bc::Tx;
+use commit_verify::{mpc, ConvolveCommit, ConvolveCommitProof};
 
-use super::{Lnpbp6, TapretProof, TapretTreeError};
+use super::{Lnpbp12, TapretKeyError, TapretProof};
 
 /// Errors during tapret commitment.
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
 pub enum TapretError {
-    /// Error embedding tapret commitment into taproot script tree.
+    /// Error embedding tapret commitment into x-only key.
     #[from]
     #[display(inner)]
-    TreeEmbedding(TapretTreeError),
+    KeyEmbedding(TapretKeyError),
 
     /// tapret commitment in a transaction lacking any taproot outputs.
     #[display(doc_comments)]
     NoTaprootOutput,
 }
 
-impl ConvolveCommitProof<lnpbp4::CommitmentHash, Transaction, Lnpbp6>
-    for TapretProof
-{
+impl ConvolveCommitProof<mpc::Commitment, Tx, Lnpbp12> for TapretProof {
     type Suppl = Self;
 
-    fn restore_original(&self, commitment: &Transaction) -> Transaction {
+    fn restore_original(&self, commitment: &Tx) -> Tx {
         let mut tx = commitment.clone();
 
-        for txout in &mut tx.output {
-            if txout.script_pubkey.is_v1_p2tr() {
-                txout.script_pubkey = self.original_pubkey_script().into();
+        for txout in &mut tx.outputs {
+            if txout.script_pubkey.is_p2tr() {
+                txout.script_pubkey = self.original_pubkey_script();
             }
         }
         tx
@@ -53,21 +54,19 @@ impl ConvolveCommitProof<lnpbp4::CommitmentHash, Transaction, Lnpbp6>
     fn extract_supplement(&self) -> &Self::Suppl { self }
 }
 
-impl ConvolveCommitVerify<lnpbp4::CommitmentHash, TapretProof, Lnpbp6>
-    for Transaction
-{
-    type Commitment = Transaction;
+impl ConvolveCommit<mpc::Commitment, TapretProof, Lnpbp12> for Tx {
+    type Commitment = Tx;
     type CommitError = TapretError;
 
     fn convolve_commit(
         &self,
         supplement: &TapretProof,
-        msg: &lnpbp4::CommitmentHash,
-    ) -> Result<(Transaction, TapretProof), Self::CommitError> {
+        msg: &mpc::Commitment,
+    ) -> Result<(Tx, TapretProof), Self::CommitError> {
         let mut tx = self.clone();
 
-        for txout in &mut tx.output {
-            if txout.script_pubkey.is_v1_p2tr() {
+        for txout in &mut tx.outputs {
+            if txout.script_pubkey.is_p2tr() {
                 let (commitment, proof) = txout
                     .convolve_commit(supplement, msg)
                     .map_err(TapretError::from)?;

@@ -1,9 +1,9 @@
 [package]
-name = "bp-dbc"
+name = "bp-primitives"
 version = "0.10.0-beta.1"
-description = "Deterministic bitcoin commitments library"
-keywords = ["lnp-bp", "bitcoin", "blockchain", "smart-contracts", "single-use-seals"]
-categories = ["cryptography", "encoding"]
+description = "Bitcoin protocol primitives library"
+keywords = ["lnp-bp", "smart-contracts", "bitcoin", "blockchain"]
+categories = ["cryptography"]
 authors = { workspace = true }
 repository = { workspace = true }
 homepage = { workspace = true }
@@ -13,24 +13,19 @@ rust-version = { workspace = true }
 readme = "../README.md"
 
 [lib]
-name = "dbc"
-path = "src/lib.rs"
+name = "bc"
 
 [dependencies]
 amplify = "4.0.0-beta.10"
-bp-primitives = { version = "0.10.0-beta.1", path = "../primitives" }
-secp256k1 = { version = "0.26.0", features = ["global-context", "rand-std"] }
+secp256k1 = { version = "0.26.0", features = ["global-context"] }
 strict_encoding = "2.0.0-beta.5"
-commit_verify = { version = "0.10.0-beta.1", features = ["rand"] }
+commit_verify = "0.10.0-beta.1"
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
 
 [features]
-default = []
-all = ["serde"]
 serde = [
     "serde_crate",
-    "bp-primitives/serde",
-    "commit_verify/serde",
+    "amplify/serde",
     "secp256k1/serde"
 ]
 
