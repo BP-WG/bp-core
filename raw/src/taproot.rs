@@ -28,7 +28,6 @@ use strict_encoding::{
 };
 
 use crate::opcodes::*;
-use crate::serialize::{ConsensusEncode, ConsensusWrite};
 use crate::{ScriptBytes, ScriptPubkey, Sha256, WitnessVer, LIB_NAME_BP};
 
 /// The SHA-256 midstate value for the TapLeaf hash.
@@ -82,9 +81,9 @@ impl InternalPk {
     ) -> XOnlyPublicKey {
         let mut engine = Sha256::from_tag(MIDSTATE_TAPTWEAK);
         // always hash the key
-        engine.input(&self.0.serialize());
+        engine.input_raw(&self.0.serialize());
         if let Some(merkle_root) = merkle_root {
-            engine.input(merkle_root.into_tap_hash().as_slice());
+            engine.input_raw(merkle_root.into_tap_hash().as_slice());
         }
         let tweak = Scalar::from_be_bytes(engine.finish())
             .expect("hash value greater than curve order");
@@ -141,14 +140,15 @@ pub struct TapLeafHash(
 impl TapLeafHash {
     pub fn with_leaf_script(leaf_script: &LeafScript) -> Self {
         let mut engine = Sha256::from_tag(MIDSTATE_TAPLEAF);
-        leaf_script.consensus_encode(&mut engine).ok();
+        engine.input_raw(&[leaf_script.version.to_consensus()]);
+        engine.input_with_len(leaf_script.script.as_slice());
         Self(engine.finish().into())
     }
 
     pub fn with_tap_script(tap_script: &TapScript) -> Self {
         let mut engine = Sha256::from_tag(MIDSTATE_TAPLEAF);
-        engine.write_u8(TAPROOT_LEAF_TAPSCRIPT).ok();
-        tap_script.consensus_encode(&mut engine).ok();
+        engine.input_raw(&[TAPROOT_LEAF_TAPSCRIPT]);
+        engine.input_with_len(tap_script.as_slice());
         Self(engine.finish().into())
     }
 }
@@ -170,8 +170,8 @@ pub struct TapBranchHash(
 impl TapBranchHash {
     pub fn with_nodes(node1: TapNodeHash, node2: TapNodeHash) -> Self {
         let mut engine = Sha256::from_tag(MIDSTATE_TAPBRANCH);
-        engine.input(cmp::min(&node1, &node2).borrow());
-        engine.input(cmp::max(&node1, &node2).borrow());
+        engine.input_raw(cmp::min(&node1, &node2).borrow());
+        engine.input_raw(cmp::max(&node1, &node2).borrow());
         Self(engine.finish().into())
     }
 }

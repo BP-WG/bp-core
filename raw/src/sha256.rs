@@ -65,7 +65,7 @@ impl Default for Sha256 {
 impl Sha256 {
     pub fn digest(inp: &[u8]) -> [u8; 32] {
         let mut engine = Self::default();
-        engine.input(inp);
+        engine.input_raw(inp);
         engine.finish()
     }
 
@@ -94,7 +94,7 @@ impl Sha256 {
         ret
     }
 
-    pub fn input(&mut self, mut inp: &[u8]) {
+    pub fn input_raw(&mut self, mut inp: &[u8]) {
         while !inp.is_empty() {
             let buf_idx = self.length % BLOCK_SIZE;
             let rem_len = BLOCK_SIZE - buf_idx;
@@ -110,21 +110,43 @@ impl Sha256 {
         }
     }
 
+    pub fn input_with_len(&mut self, inp: &[u8]) {
+        let len = inp.len();
+        match len {
+            0..=0xFC => {
+                self.input_raw(&[len as u8]);
+            }
+            0xFD..=0xFFFF => {
+                self.input_raw(&[0xFD]);
+                self.input_raw(&(len as u16).to_le_bytes());
+            }
+            0x10000..=0xFFFFFFFF => {
+                self.input_raw(&[0xFE]);
+                self.input_raw(&(len as u32).to_le_bytes());
+            }
+            _ => {
+                self.input_raw(&[0xFF]);
+                self.input_raw(&(len as u64).to_le_bytes());
+            }
+        };
+        self.input_raw(inp)
+    }
+
     pub fn finish(mut self) -> [u8; 32] {
         // pad buffer with a single 1-bit then all 0s, until there are exactly 8
         // bytes remaining
         let data_len = self.length as u64;
 
         let zeroes = [0; BLOCK_SIZE - 8];
-        self.input(&[0x80]);
+        self.input_raw(&[0x80]);
         if self.length % BLOCK_SIZE > zeroes.len() {
-            self.input(&zeroes);
+            self.input_raw(&zeroes);
         }
         let pad_length = zeroes.len() - (self.length % BLOCK_SIZE);
-        self.input(&zeroes[..pad_length]);
+        self.input_raw(&zeroes[..pad_length]);
         debug_assert_eq!(self.length % BLOCK_SIZE, zeroes.len());
 
-        self.input(&(8 * data_len).to_be_bytes());
+        self.input_raw(&(8 * data_len).to_be_bytes());
         debug_assert_eq!(self.length % BLOCK_SIZE, 0);
 
         self.midstate()
@@ -232,7 +254,7 @@ impl Sha256 {
 
 impl io::Write for Sha256 {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.input(buf);
+        self.input_raw(buf);
         Ok(buf.len())
     }
 

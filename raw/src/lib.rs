@@ -26,7 +26,6 @@ pub extern crate secp256k1;
 pub mod opcodes;
 mod script;
 mod segwit;
-pub mod serialize;
 mod sha256;
 mod taproot;
 mod tx;

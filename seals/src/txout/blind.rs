@@ -331,10 +331,12 @@ impl From<Outpoint> for ConcealedSeal {
 impl CommitVerify<RevealedSeal, Lnpbp12> for ConcealedSeal {
     fn commit(reveal: &RevealedSeal) -> Self {
         let mut engine = Sha256::from_tag(MIDSTATE_CONCEALED_SEAL);
-        engine.input(&[reveal.method as u8]);
-        engine.input(&reveal.txid.unwrap_or_else(|| Txid::from([0u8; 32]))[..]);
-        engine.input(&reveal.vout.into_u32().to_le_bytes()[..]);
-        engine.input(&reveal.blinding.to_le_bytes()[..]);
+        engine.input_raw(&[reveal.method as u8]);
+        engine.input_raw(
+            &reveal.txid.unwrap_or_else(|| Txid::from([0u8; 32]))[..],
+        );
+        engine.input_raw(&reveal.vout.into_u32().to_le_bytes()[..]);
+        engine.input_raw(&reveal.blinding.to_le_bytes()[..]);
         ConcealedSeal::from_inner(engine.finish().into())
     }
 }
@@ -355,10 +357,10 @@ mod test {
         };
         let outpoint_hash = reveal.to_concealed_seal();
         let mut engine = Sha256::from_tag(MIDSTATE_CONCEALED_SEAL);
-        engine.input(&[reveal.method as u8]);
-        engine.input(&reveal.txid.unwrap()[..]);
-        engine.input(&reveal.vout.into_u32().to_le_bytes()[..]);
-        engine.input(&reveal.blinding.to_le_bytes()[..]);
+        engine.input_raw(&[reveal.method as u8]);
+        engine.input_raw(&reveal.txid.unwrap()[..]);
+        engine.input_raw(&reveal.vout.into_u32().to_le_bytes()[..]);
+        engine.input_raw(&reveal.blinding.to_le_bytes()[..]);
         assert_eq!(outpoint_hash.as_inner().as_slice(), &engine.finish())
     }
 
