@@ -33,3 +33,6 @@ serde = [
     "commit_verify/serde",
     "secp256k1/serde"
 ]
+
+[package.metadata.docs.rs]
+features = [ "all" ]

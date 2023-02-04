@@ -50,6 +50,9 @@ serde = [
     #"bp-seals/serde",
 ]
 
+[package.metadata.docs.rs]
+features = [ "all" ]
+
 [patch.crates-io]
 commit_verify = { git = "https://github.com/LNP-BP/client_side_validation" }
 single_use_seals = { git = "https://github.com/LNP-BP/client_side_validation" }

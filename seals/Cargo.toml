@@ -30,3 +30,6 @@ serde_crate = { package = "serde", version = "1", features = ["derive"], optiona
 default = []
 all = ["serde"]
 serde = ["amplify/serde", "commit_verify/serde", "bp-dbc/serde", "serde_crate"]
+
+[package.metadata.docs.rs]
+features = [ "all" ]

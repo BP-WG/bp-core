@@ -19,18 +19,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use bc::{ScriptPubkey, Tx, Txid};
+//! API for resolving single-use-seals.
 
+use bc::{Tx, Txid};
+
+/// Error resolving single-use-seal
 #[derive(Debug, Display)]
 #[display(doc_comments)]
 pub enum Error {
-    /// ... todo
+    /// Resolver implementation-specific error.
+    #[display(inner)]
     Connection(Box<dyn std::error::Error>),
-    /// ... todo
-    UnknownTx,
+
+    /// transaction with id {0} is not known to the resolver.
+    UnknownTx(Txid),
 }
 
+/// API which must be provided by a resolver to operate with single-use-seal.
 pub trait Resolver {
+    /// Return transaction data for a given transaction id.
     fn tx_by_id(&self, txid: Txid) -> Result<Tx, Error>;
-    fn tx_by_spk(&self, spk: &ScriptPubkey) -> Result<Vec<u8>, Error>;
 }

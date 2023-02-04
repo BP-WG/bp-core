@@ -92,7 +92,7 @@ mod test {
     pub fn commiment_serialization() {
         let commitment = commitment();
         let script = TapScript::commit(&commitment);
-        eprintln!("{:x}", script);
+        eprintln!("{script:x}");
         assert_eq!(script[63], commitment.nonce);
         assert_eq!(&script[31..63], commitment.mpc.as_slice());
     }
