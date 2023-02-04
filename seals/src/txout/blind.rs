@@ -27,6 +27,7 @@ use std::str::FromStr;
 
 use amplify::hex::FromHex;
 use amplify::{hex, Bytes32, Wrapper};
+use baid58::ToBaid58;
 use bc::{Outpoint, Sha256, Txid, Vout};
 use commit_verify::{CommitVerify, Conceal};
 use dbc::tapret::Lnpbp12;
@@ -279,19 +280,27 @@ static MIDSTATE_CONCEALED_SEAL: [u8; 32] = [
 ];
 
 /// Blind version of transaction outpoint-based single-use-seal
-#[derive(Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
+#[derive(Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display, From)]
 #[wrapper(Index, RangeOps, BorrowSlice, Hex)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = bc::LIB_NAME_BP)]
+#[display(Self::to_baid58)]
 pub struct ConcealedSeal(
     #[from]
     #[from([u8; 32])]
     Bytes32,
 );
 
+impl ToBaid58<32> for ConcealedSeal {
+    const HRP: &'static str = "utxob";
+
+    fn to_baid58_payload(&self) -> [u8; 32] { self.0.into_inner() }
+}
+
 impl FromStr for ConcealedSeal {
     type Err = ParseError;
 
+    // TODO: Use Baid58 format
     fn from_str(s: &str) -> Result<Self, Self::Err> { Ok(ConcealedSeal::from_hex(s)?) }
 }
 
@@ -337,24 +346,27 @@ mod test {
         assert_eq!(outpoint_hash.as_inner().as_slice(), &engine.finish())
     }
 
-    /* TODO: replace with Baid58 test
     #[test]
     fn outpoint_hash_bech32() {
         let outpoint_hash = RevealedSeal {
             method: CloseMethod::TapretFirst,
             blinding: 54683213134637,
-            txid: Some(Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839").unwrap()),
+            txid: Some(
+                Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839")
+                    .unwrap(),
+            ),
             vout: Vout::from(2),
-        }.to_concealed_seal();
+        }
+        .to_concealed_seal();
 
-        let bech32 =
-            "txob1a9peq6yx9x6ajt584qp5ge4jk9v7tmtgs3x2gntk2nf425cvpdgszt65je";
-        assert_eq!(bech32, outpoint_hash.to_string());
-        assert_eq!(outpoint_hash.to_string(), outpoint_hash.to_bech32_string());
-        let reconstructed = ConcealedSeal::from_str(bech32).unwrap();
-        assert_eq!(reconstructed, outpoint_hash);
+        let baid58 = "9PWpM7PxnNKQznyUgZD2Zt2FTpUQY8vLRPiKsaPLmBk3";
+        assert_eq!(baid58, outpoint_hash.to_string());
+        assert_eq!(outpoint_hash.to_string(), outpoint_hash.to_baid58().to_string());
+        /* TODO: uncomment when Baid58::from_str would work
+           let reconstructed = ConcealedSeal::from_str(bech32).unwrap();
+           assert_eq!(reconstructed, outpoint_hash);
+        */
     }
-     */
 
     #[test]
     fn outpoint_reveal_str() {
