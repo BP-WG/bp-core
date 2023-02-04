@@ -83,7 +83,7 @@ where
         }
 
         // 3. Verify DBC with the giving closing method
-        witness.proof.verify(msg, tx).map_err(VerifyError::from)
+        witness.proof.verify(msg, &tx).map_err(VerifyError::from)
     }
 
     fn verify_seal_all(
@@ -114,6 +114,6 @@ where
         }
 
         // 4. Verify DBC with the giving closing method
-        witness.proof.verify(msg, tx).map_err(VerifyError::from)
+        witness.proof.verify(msg, &tx).map_err(VerifyError::from)
     }
 }

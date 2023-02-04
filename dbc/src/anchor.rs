@@ -168,7 +168,7 @@ impl Anchor<mpc::MerkleProof> {
         &self,
         protocol_id: impl Into<ProtocolId>,
         message: Message,
-        tx: Tx,
+        tx: &Tx,
     ) -> Result<bool, VerifyError> {
         self.dbc_proof
             .verify(&self.mpc_proof.convolve(protocol_id.into(), message)?, tx)
@@ -249,7 +249,7 @@ pub enum Proof {
 
 impl Proof {
     /// Verifies validity of the proof.
-    pub fn verify(&self, msg: &mpc::Commitment, tx: Tx) -> Result<bool, TapretError> {
+    pub fn verify(&self, msg: &mpc::Commitment, tx: &Tx) -> Result<bool, TapretError> {
         match self {
             Proof::OpretFirst => {
                 for txout in &tx.outputs {

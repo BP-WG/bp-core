@@ -122,8 +122,10 @@ mod test {
         });
 
         assert!(
-            ConvolveCommitProof::<Commitment, InternalPk, Lnpbp12>::verify(&proof, &msg, outer_key)
-                .unwrap()
+            ConvolveCommitProof::<Commitment, InternalPk, Lnpbp12>::verify(
+                &proof, &msg, &outer_key
+            )
+            .unwrap()
         );
     }
 
@@ -148,8 +150,10 @@ mod test {
         });
 
         assert!(
-            ConvolveCommitProof::<Commitment, InternalPk, Lnpbp12>::verify(&proof, &msg, outer_key)
-                .unwrap()
+            ConvolveCommitProof::<Commitment, InternalPk, Lnpbp12>::verify(
+                &proof, &msg, &outer_key
+            )
+            .unwrap()
         );
     }
 
@@ -175,8 +179,10 @@ mod test {
         });
 
         assert!(
-            ConvolveCommitProof::<Commitment, InternalPk, Lnpbp12>::verify(&proof, &msg, outer_key)
-                .unwrap()
+            ConvolveCommitProof::<Commitment, InternalPk, Lnpbp12>::verify(
+                &proof, &msg, &outer_key
+            )
+            .unwrap()
         );
     }
 }
