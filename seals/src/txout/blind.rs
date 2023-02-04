@@ -20,9 +20,8 @@ use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 
 use amplify::hex::FromHex;
-use amplify::{hex, Bytes32};
-use bitcoin_hashes::{sha256, sha256t, Hash, HashEngine};
-use bp::{Outpoint, Txid, Vout};
+use amplify::{hex, Bytes32, Wrapper};
+use bp::{Outpoint, Sha256, Txid, Vout};
 use commit_verify::{CommitVerify, Conceal};
 use dbc::tapret::Lnpbp12;
 use rand::{thread_rng, RngCore};
@@ -303,17 +302,6 @@ static MIDSTATE_CONCEALED_SEAL: [u8; 32] = [
     147, 236, 172, 33, 17, 167, 176, 30, 70, 99, 185, 129, 217, 110, 183, 27,
 ];
 
-/// Tag used for [`ConcealedSeal`] hash type
-pub struct ConcealedSealTag;
-
-impl sha256t::Tag for ConcealedSealTag {
-    #[inline]
-    fn engine() -> sha256::HashEngine {
-        let midstate = sha256::Midstate::from_inner(MIDSTATE_CONCEALED_SEAL);
-        sha256::HashEngine::from_midstate(midstate, 64)
-    }
-}
-
 /// Blind version of transaction outpoint-based single-use-seal
 #[derive(Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
 #[wrapper(Index, RangeOps, BorrowSlice, Hex)]
@@ -342,14 +330,13 @@ impl From<Outpoint> for ConcealedSeal {
 
 impl CommitVerify<RevealedSeal, Lnpbp12> for ConcealedSeal {
     fn commit(reveal: &RevealedSeal) -> Self {
-        let mut engine = sha256::Hash::engine();
+        let mut engine = Sha256::from_tag(MIDSTATE_CONCEALED_SEAL);
         // TODO: Use tag
         engine.input(&[reveal.method as u8]);
         engine.input(&reveal.txid.unwrap_or_else(|| Txid::from([0u8; 32]))[..]);
         engine.input(&reveal.vout.into_u32().to_le_bytes()[..]);
         engine.input(&reveal.blinding.to_le_bytes()[..]);
-        let hash = sha256::Hash::from_engine(engine);
-        ConcealedSeal::from(hash.into_inner())
+        ConcealedSeal::from_inner(engine.finish().into())
     }
 }
 
@@ -368,15 +355,12 @@ mod test {
             vout: Vout::from(2),
         };
         let outpoint_hash = reveal.to_concealed_seal();
-        let mut engine = sha256t::Hash::<ConcealedSealTag>::engine();
+        let mut engine = Sha256::from_tag(MIDSTATE_CONCEALED_SEAL);
         engine.input(&[reveal.method as u8]);
         engine.input(&reveal.txid.unwrap()[..]);
         engine.input(&reveal.vout.into_u32().to_le_bytes()[..]);
         engine.input(&reveal.blinding.to_le_bytes()[..]);
-        assert_eq!(
-            outpoint_hash.as_inner().as_slice(),
-            &*sha256::Hash::from_engine(engine)
-        )
+        assert_eq!(outpoint_hash.as_inner().as_slice(), &engine.finish())
     }
 
     /* TODO: replace with Baid58 test

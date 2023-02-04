@@ -21,7 +21,6 @@ amplify = "4.0.0-beta.10"
 single_use_seals = "0.10.0-beta.1"
 commit_verify = "0.10.0-beta.1"
 strict_encoding = "2.0.0-beta.5"
-bitcoin_hashes = "0.11.0"
 bp-raw = { version = "0.1.0", path = "../raw" }
 bp-dbc = { version = "0.10.0-beta.1", path = "../dbc" }
 rand = "0.8.5"

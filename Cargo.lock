@@ -145,7 +145,6 @@ name = "bp-seals"
 version = "0.10.0-beta.1"
 dependencies = [
  "amplify",
- "bitcoin_hashes",
  "bp-dbc",
  "bp-raw",
  "commit_verify",
