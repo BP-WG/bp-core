@@ -19,13 +19,14 @@
 //! defined by LNPBP-4.
 
 use std::cmp::Ordering;
-use std::io::Write;
 
 use amplify::{Bytes32, Wrapper};
 use bp::{ScriptPubkey, Tx, Txid, LIB_NAME_BP};
 use commit_verify::mpc::{self, Message, ProtocolId};
-use commit_verify::{CommitEncode, CommitmentId, ConvolveCommitProof};
-use strict_encoding::{StrictDumb, StrictEncode, StrictWriter};
+use commit_verify::{
+    strategies, CommitStrategy, CommitmentId, ConvolveCommitProof,
+};
+use strict_encoding::{StrictDumb, StrictEncode};
 
 use crate::tapret::{TapretError, TapretProof};
 
@@ -51,10 +52,8 @@ pub struct AnchorId(
     Bytes32,
 );
 
-impl CommitEncode for AnchorId {
-    fn commit_encode(&self, e: &mut impl Write) {
-        self.0.as_inner().commit_encode(e)
-    }
+impl CommitStrategy for AnchorId {
+    type Strategy = strategies::Strict;
 }
 
 /// Errors verifying anchors.
@@ -93,12 +92,8 @@ pub struct Anchor<L: mpc::Proof + StrictDumb> {
     pub dbc_proof: Proof,
 }
 
-// TODO: Replace with strategy
-impl CommitEncode for Anchor<mpc::MerkleBlock> {
-    fn commit_encode(&self, e: &mut impl Write) {
-        let w = StrictWriter::with(u32::MAX as usize, e);
-        self.strict_encode(w).ok();
-    }
+impl CommitStrategy for Anchor<mpc::MerkleBlock> {
+    type Strategy = strategies::Strict;
 }
 
 impl CommitmentId for Anchor<mpc::MerkleBlock> {

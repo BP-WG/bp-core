@@ -13,6 +13,8 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
+#![allow(unused_braces)] // required due to strict dumb derivation and compiler bug
+
 use std::borrow::Borrow;
 use std::fmt::{self, Formatter, LowerHex, UpperHex};
 use std::{cmp, io};
@@ -22,8 +24,7 @@ use amplify::{Bytes32, Wrapper};
 use secp256k1::XOnlyPublicKey;
 use strict_encoding::{
     DecodeError, ReadTuple, StrictDecode, StrictEncode, StrictProduct,
-    StrictSum, StrictTuple, StrictType, TypeName, TypedRead, TypedWrite,
-    WriteTuple,
+    StrictTuple, StrictType, TypeName, TypedRead, TypedWrite, WriteTuple,
 };
 
 use crate::opcodes::*;

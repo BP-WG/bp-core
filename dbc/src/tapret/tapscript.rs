@@ -14,10 +14,11 @@
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
 use std::io;
-use std::io::Write;
 
 use bp::{TapCode, TapScript, LIB_NAME_BP};
-use commit_verify::{mpc, CommitEncode, CommitVerify};
+use commit_verify::{
+    mpc, strategies, CommitEncode, CommitStrategy, CommitVerify,
+};
 
 use super::Lnpbp12;
 
@@ -48,17 +49,8 @@ impl TapretCommitment {
     pub fn with(mpc: mpc::Commitment, nonce: u8) -> Self { Self { mpc, nonce } }
 }
 
-// TODO: Uncomment
-/*
 impl CommitStrategy for TapretCommitment {
-    type Strategy = strategies::ConcealStrict;
-}
- */
-impl CommitEncode for TapretCommitment {
-    fn commit_encode(&self, e: &mut impl Write) {
-        e.write_all(&self.mpc.as_slice()).ok();
-        e.write_all(&[self.nonce]).ok();
-    }
+    type Strategy = strategies::Strict;
 }
 
 impl CommitVerify<TapretCommitment, Lnpbp12> for TapScript {
