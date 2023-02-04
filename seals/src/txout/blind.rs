@@ -356,16 +356,8 @@ impl CommitVerify<RevealedSeal, Lnpbp12> for ConcealedSeal {
 #[cfg(test)]
 mod test {
     use amplify::Wrapper;
-    use bitcoin::hashes::hex::FromHex;
-    use commit_verify::tagged_hash;
 
     use super::*;
-
-    #[test]
-    fn outpoint_hash_midstate() {
-        let midstate = tagged_hash::Midstate::with(b"bp:txout:concealed");
-        assert_eq!(midstate.into_inner().into_inner(), MIDSTATE_CONCEALED_SEAL);
-    }
 
     #[test]
     fn outpoint_hash_is_sha256d() {
@@ -373,28 +365,30 @@ mod test {
             method: CloseMethod::TapretFirst,
             blinding: 54683213134637,
             txid: Some(Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839").unwrap()),
-            vout: 2,
+            vout: Vout::from(2),
         };
         let outpoint_hash = reveal.to_concealed_seal();
         let mut engine = sha256t::Hash::<ConcealedSealTag>::engine();
         engine.input(&[reveal.method as u8]);
         engine.input(&reveal.txid.unwrap()[..]);
-        engine.input(&reveal.vout.to_le_bytes()[..]);
+        engine.input(&reveal.vout.into_u32().to_le_bytes()[..]);
         engine.input(&reveal.blinding.to_le_bytes()[..]);
         assert_eq!(
-            **outpoint_hash,
-            *sha256t::Hash::<ConcealedSealTag>::from_engine(engine)
+            outpoint_hash.as_inner().as_slice(),
+            &*sha256::Hash::from_engine(engine)
         )
     }
 
+    /* TODO: replace with Baid58 test
     #[test]
     fn outpoint_hash_bech32() {
         let outpoint_hash = RevealedSeal {
             method: CloseMethod::TapretFirst,
             blinding: 54683213134637,
             txid: Some(Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839").unwrap()),
-            vout: 2,
+            vout: Vout::from(2),
         }.to_concealed_seal();
+
         let bech32 =
             "txob1a9peq6yx9x6ajt584qp5ge4jk9v7tmtgs3x2gntk2nf425cvpdgszt65je";
         assert_eq!(bech32, outpoint_hash.to_string());
@@ -402,6 +396,7 @@ mod test {
         let reconstructed = ConcealedSeal::from_str(bech32).unwrap();
         assert_eq!(reconstructed, outpoint_hash);
     }
+     */
 
     #[test]
     fn outpoint_reveal_str() {
@@ -409,7 +404,7 @@ mod test {
             method: CloseMethod::TapretFirst,
             blinding: 54683213134637,
             txid: Some(Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839").unwrap()),
-            vout: 21,
+            vout: Vout::from(21),
         };
 
         let s = outpoint_reveal.to_string();

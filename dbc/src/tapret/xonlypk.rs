@@ -108,104 +108,105 @@ impl ConvolveCommit<mpc::Commitment, TapretProof, Lnpbp12> for InternalPk {
 mod test {
     use std::str::FromStr;
 
-    use amplify::Wrapper;
-    use bp::LeafScript;
-    use commit_verify::lnpbp4::CommitmentHash;
-    use secp256k1::XOnlyPublicKey;
+    use bp::{IntoTapHash, LeafScript};
+    use commit_verify::mpc::Commitment;
 
     use super::*;
     use crate::tapret::TapretNodePartner;
 
     #[test]
     fn key_path() {
-        let internal_key = XOnlyPublicKey::from_str(
+        let internal_pk = InternalPk::from_str(
             "c5f93479093e2b8f724a79844cc10928dd44e9a390b539843fb83fbf842723f3",
         )
         .unwrap();
-        let msg = mpc::Commitment::from_inner(Hash::hash(b""));
+        let msg = mpc::Commitment::from([8u8; 32]);
         let path_proof = TapretPathProof::new();
 
         let (outer_key, proof) =
-            internal_key.convolve_commit(&path_proof, &msg).unwrap();
+            internal_pk.convolve_commit(&path_proof, &msg).unwrap();
 
-        let script_commitment = TapScript::commit(&(msg, 0));
-        let root = TreeNode::with_tap_script(script_commitment, 0);
-        let merkle_root =
-            TapBranchHash::from_inner(root.node_hash().into_inner());
-        let (real_key, _) =
-            internal_key.tap_tweak(SECP256K1, Some(merkle_root));
+        let tapret_commitment = TapretCommitment::with(msg, 0);
+        let script_commitment = TapScript::commit(&tapret_commitment);
+        let script_leaf = TapLeafHash::with_tap_script(&script_commitment);
+        let merkle_root = script_leaf.into_tap_hash();
+        let real_key = internal_pk.to_output_key(Some(merkle_root));
 
         assert_eq!(outer_key, real_key);
 
         assert_eq!(proof, TapretProof {
             path_proof,
-            internal_pk: internal_key
+            internal_pk
         });
 
-        assert!(ConvolveCommitProof::<
-            CommitmentHash,
-            XOnlyPublicKey,
-            Lnpbp12,
-        >::verify(&proof, &msg, outer_key)
-        .unwrap());
+        assert!(
+            ConvolveCommitProof::<Commitment, InternalPk, Lnpbp12>::verify(
+                &proof, &msg, outer_key
+            )
+            .unwrap()
+        );
     }
 
     #[test]
     fn single_script() {
-        let internal_key = XOnlyPublicKey::from_str(
+        let internal_pk = InternalPk::from_str(
             "c5f93479093e2b8f724a79844cc10928dd44e9a390b539843fb83fbf842723f3",
         )
         .unwrap();
-        let msg = CommitmentHash::from_inner(Hash::hash(b""));
+        let msg = mpc::Commitment::from([8u8; 32]);
         let path_proof = TapretPathProof::with(
-            TapretNodePartner::RightLeaf(LeafScript::tapscript(default!())),
+            TapretNodePartner::RightLeaf(LeafScript::from_tap_script(
+                default!(),
+            )),
             88,
         )
         .unwrap();
 
         let (outer_key, proof) =
-            internal_key.convolve_commit(&path_proof, &msg).unwrap();
+            internal_pk.convolve_commit(&path_proof, &msg).unwrap();
 
         assert_eq!(proof, TapretProof {
             path_proof,
-            internal_pk: internal_key
+            internal_pk
         });
 
-        assert!(ConvolveCommitProof::<
-            CommitmentHash,
-            XOnlyPublicKey,
-            Lnpbp12,
-        >::verify(&proof, &msg, outer_key)
-        .unwrap());
+        assert!(
+            ConvolveCommitProof::<Commitment, InternalPk, Lnpbp12>::verify(
+                &proof, &msg, outer_key
+            )
+            .unwrap()
+        );
     }
 
     #[test]
     #[should_panic(expected = "IncorrectOrdering")]
     fn invalid_partner_ordering() {
-        let internal_key = XOnlyPublicKey::from_str(
+        let internal_pk = InternalPk::from_str(
             "c5f93479093e2b8f724a79844cc10928dd44e9a390b539843fb83fbf842723f3",
         )
         .unwrap();
-        let msg = CommitmentHash::from_inner(Hash::hash(b""));
+        let msg = mpc::Commitment::from([8u8; 32]);
         let path_proof = TapretPathProof::with(
-            TapretNodePartner::RightLeaf(LeafScript::tapscript(default!())),
+            TapretNodePartner::RightLeaf(LeafScript::from_tap_script(
+                default!(),
+            )),
             1,
         )
         .unwrap();
 
         let (outer_key, proof) =
-            internal_key.convolve_commit(&path_proof, &msg).unwrap();
+            internal_pk.convolve_commit(&path_proof, &msg).unwrap();
 
         assert_eq!(proof, TapretProof {
             path_proof,
-            internal_pk: internal_key
+            internal_pk
         });
 
-        assert!(ConvolveCommitProof::<
-            CommitmentHash,
-            XOnlyPublicKey,
-            Lnpbp12,
-        >::verify(&proof, &msg, outer_key)
-        .unwrap());
+        assert!(
+            ConvolveCommitProof::<Commitment, InternalPk, Lnpbp12>::verify(
+                &proof, &msg, outer_key
+            )
+            .unwrap()
+        );
     }
 }

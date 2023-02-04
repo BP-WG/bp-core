@@ -93,6 +93,6 @@ mod test {
         let commitment = commitment();
         let script = TapScript::commit(&commitment);
         assert_eq!(script[32], commitment.nonce);
-        assert_eq!(script[..32], commitment.mpc.as_slice());
+        assert_eq!(&script[..32], commitment.mpc.as_slice());
     }
 }
