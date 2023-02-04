@@ -20,6 +20,7 @@ use crate::{ScriptBytes, LIB_NAME_BP};
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Display)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+// TODO: Replace `try_from` with `from` since opcodes cover whole range of u8
 #[strict_type(lib = LIB_NAME_BP, tags = repr, into_u8, try_from_u8)]
 #[repr(u8)]
 pub enum OpCode {

@@ -29,7 +29,7 @@ use strict_encoding::{
 
 use crate::opcodes::*;
 use crate::serialize::{ConsensusWrite, Serialize};
-use crate::{ScriptBytes, ScriptPubkey, Sha256, LIB_NAME_BP};
+use crate::{ScriptBytes, ScriptPubkey, Sha256, WitnessVer, LIB_NAME_BP};
 
 /// The SHA-256 midstate value for the TapLeaf hash.
 pub const MIDSTATE_TAPLEAF: [u8; 32] = [
@@ -449,12 +449,21 @@ impl TapScript {
 impl ScriptPubkey {
     pub fn p2tr(
         internal_key: InternalPk,
-        merkle_root: Option<TapNodeHash>,
+        merkle_root: Option<impl IntoTapHash>,
     ) -> Self {
-        todo!()
+        let output_key = internal_key.to_output_key(merkle_root);
+        Self::p2tr_tweaked(output_key)
     }
 
-    pub fn p2tr_tweaked(output_key: XOnlyPublicKey) -> Self { todo!() }
+    pub fn p2tr_tweaked(output_key: XOnlyPublicKey) -> Self {
+        // output key is 32 bytes long, so it's safe to use
+        // `new_witness_program_unchecked` (Segwitv1)
+        Self::with_segwit_unchecked(WitnessVer::V1, &output_key.serialize())
+    }
 
-    pub fn is_p2tr(&self) -> bool { todo!() }
+    pub fn is_p2tr(&self) -> bool {
+        self.len() == 34
+            && self[0] == WitnessVer::V1.op_code() as u8
+            && self[1] == OP_PUSHBYTES_32
+    }
 }

@@ -16,6 +16,7 @@
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
 /// Push an empty array onto the stack.
+pub const OP_PUSHBYTES_0: u8 = 0x00;
 /// Push the next byte as an array onto the stack.
 pub const OP_PUSHBYTES_1: u8 = 0x01;
 /// Push the next 2 bytes as an array onto the stack.
