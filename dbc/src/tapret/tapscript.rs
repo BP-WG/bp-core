@@ -62,6 +62,7 @@ impl CommitVerify<TapretCommitment, Lnpbp12> for TapScript {
         for _ in 0..29 {
             tapret.push_opcode(TapCode::Reserved);
         }
+        tapret.push_opcode(TapCode::Return);
         let mut data = io::Cursor::new([0u8; 33]);
         commitment.commit_encode(&mut data);
         tapret.push_slice(&data.into_inner());
@@ -83,7 +84,7 @@ mod test {
     }
 
     #[test]
-    pub fn prefix() {
+    pub fn commitment_prefix() {
         let script = TapScript::commit(&commitment());
         assert_eq!(TAPRET_SCRIPT_COMMITMENT_PREFIX, script[0..31]);
     }
@@ -92,7 +93,8 @@ mod test {
     pub fn commiment_serialization() {
         let commitment = commitment();
         let script = TapScript::commit(&commitment);
-        assert_eq!(script[32], commitment.nonce);
-        assert_eq!(&script[..32], commitment.mpc.as_slice());
+        eprintln!("{:x}", script);
+        assert_eq!(script[63], commitment.nonce);
+        assert_eq!(&script[31..63], commitment.mpc.as_slice());
     }
 }
