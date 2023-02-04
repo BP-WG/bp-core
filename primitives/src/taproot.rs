@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Written in 2019-2023 by
-//     Dr. Maxim Orlovsky <orlovsky@lnp-bp.org>
+//     Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
 //
 // Copyright (C) 2019-2023 LNP/BP Standards Association. All rights reserved.
 //
