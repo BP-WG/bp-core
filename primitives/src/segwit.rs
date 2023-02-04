@@ -1,17 +1,23 @@
-// BP Core Library implementing LNP/BP specifications & standards related to
-// bitcoin protocol
+// Bitcoin protocol primitives library.
 //
-// Written in 2020-2022 by
-//     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
+// SPDX-License-Identifier: Apache-2.0
 //
-// To the extent possible under law, the author(s) have dedicated all
-// copyright and related and neighboring rights to this software to
-// the public domain worldwide. This software is distributed without
-// any warranty.
+// Written in 2019-2023 by
+//     Dr. Maxim Orlovsky <orlovsky@lnp-bp.org>
 //
-// You should have received a copy of the Apache 2.0 License
-// along with this software.
-// If not, see <https://opensource.org/licenses/Apache-2.0>.
+// Copyright (C) 2019-2023 LNP/BP Standards Association. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 use crate::opcodes::*;
 use crate::{OpCode, ScriptBytes, ScriptPubkey};
@@ -159,24 +165,15 @@ pub struct WitnessProgram {
 
 impl WitnessProgram {
     /// Creates a new witness program.
-    pub fn new(
-        version: WitnessVer,
-        program: Vec<u8>,
-    ) -> Result<Self, SegwitError> {
+    pub fn new(version: WitnessVer, program: Vec<u8>) -> Result<Self, SegwitError> {
         if program.len() < 2 || program.len() > 40 {
-            return Err(SegwitError::InvalidWitnessProgramLength(
-                program.len(),
-            ));
+            return Err(SegwitError::InvalidWitnessProgramLength(program.len()));
         }
 
         // Specific segwit v0 check. These addresses can never spend funds sent
         // to them.
-        if version == WitnessVer::V0
-            && (program.len() != 20 && program.len() != 32)
-        {
-            return Err(SegwitError::InvalidSegwitV0ProgramLength(
-                program.len(),
-            ));
+        if version == WitnessVer::V0 && (program.len() != 20 && program.len() != 32) {
+            return Err(SegwitError::InvalidSegwitV0ProgramLength(program.len()));
         }
 
         Ok(WitnessProgram { version, program })
@@ -192,17 +189,13 @@ impl WitnessProgram {
 impl ScriptPubkey {
     /// Generates P2WSH-type of scriptPubkey with a given [`WitnessProgram`].
     pub fn from_witness_program(witness_program: &WitnessProgram) -> Self {
-        Self::with_segwit_unchecked(
-            witness_program.version,
-            witness_program.program(),
-        )
+        Self::with_segwit_unchecked(witness_program.version, witness_program.program())
     }
 
     /// Generates P2WSH-type of scriptPubkey with a given [`WitnessVersion`] and
     /// the program bytes. Does not do any checks on version or program length.
     pub(crate) fn with_segwit_unchecked(ver: WitnessVer, prog: &[u8]) -> Self {
-        let mut script =
-            Self::with_capacity(ScriptBytes::len_for_slice(prog.len()) + 2);
+        let mut script = Self::with_capacity(ScriptBytes::len_for_slice(prog.len()) + 2);
         script.push_opcode(ver.op_code());
         script.push_slice(prog);
         script

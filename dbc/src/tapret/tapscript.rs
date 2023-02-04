@@ -1,43 +1,42 @@
-// Deterministic bitcoin commitments library, implementing LNPBP standards
-// Part of bitcoin protocol core library (BP Core Lib)
+// Deterministic bitcoin commitments library.
 //
-// Written in 2020-2022 by
-//     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
+// SPDX-License-Identifier: Apache-2.0
 //
-// To the extent possible under law, the author(s) have dedicated all
-// copyright and related and neighboring rights to this software to
-// the public domain worldwide. This software is distributed without
-// any warranty.
+// Written in 2019-2023 by
+//     Dr. Maxim Orlovsky <orlovsky@lnp-bp.org>
 //
-// You should have received a copy of the Apache 2.0 License
-// along with this software.
-// If not, see <https://opensource.org/licenses/Apache-2.0>.
+// Copyright (C) 2019-2023 LNP/BP Standards Association. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 use std::io;
 
 use bc::{TapCode, TapScript, LIB_NAME_BP};
-use commit_verify::{
-    mpc, strategies, CommitEncode, CommitStrategy, CommitVerify,
-};
+use commit_verify::{mpc, strategies, CommitEncode, CommitStrategy, CommitVerify};
 
 use super::Lnpbp12;
 
 /// Hardcoded tapret script prefix consisting of 29 `OP_RESERVED` pushes,
 /// followed by `OP_RETURN` and `OP_PUSHBYTES_33`.
 pub const TAPRET_SCRIPT_COMMITMENT_PREFIX: [u8; 31] = [
-    0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50,
-    0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50,
-    0x50, 0x50, 0x50, 0x50, 0x50, 0x6a, 0x21,
+    0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50,
+    0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x6a, 0x21,
 ];
 
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BP)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct TapretCommitment {
     /// LNPBP-4 multi-protocol commitment.
     pub mpc: mpc::Commitment,

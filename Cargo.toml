@@ -1,27 +1,42 @@
+[workspace]
+members = [
+    "primitives",
+    "dbc",
+    "seals",
+    "."
+]
+default-members = [
+    "primitives",
+    "dbc",
+    "seals",
+    "."
+]
+
 [package]
 name = "bp-core"
 version = "0.10.0-beta.1"
 license = "Apache-2.0"
 authors = ["Dr. Maxim Orlovsky <orlovsky@pandoracore.com>"]
-description = "Bitcoin Protocol Core Library (BP Core Lib)"
+description = "Bitcoin protocol core library (BP Core Lib)"
 repository = "https://github.com/LNP-BP/bp-core"
 homepage = "https://github.com/LNP-BP"
 keywords = ["lnp-bp", "cryptocurrency", "smart-contracts", "bitcoin"]
 categories = ["cryptography::cryptocurrencies", "encoding", "parsing"]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.59.0"
-exclude = [".github", "dbc", "seals", "dbc-legacy", "seals-legacy"]
+rust-version = "1.66.0"
+exclude = [".github", "primitives", "dbc", "seals"]
 
 [lib]
 name = "bp"
 path = "src/lib.rs"
 
 [dependencies]
-amplify = "4.0.0-beta.10"
+amplify = "4.0.0-beta.11"
 strict_encoding = "2.0.0-beta.3"
 commit_verify = "0.10.0-beta.1"
 single_use_seals = "0.10.0-beta.1"
+bp-primitives = { version = "0.10.0-beta.1", path = "./primitives" }
 bp-dbc = { version = "0.10.0-beta.1", path = "./dbc" }
 bp-seals = { version = "0.10.0-beta.1", path = "./seals" }
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
@@ -34,10 +49,6 @@ serde = [
     "bp-dbc/serde",
     #"bp-seals/serde",
 ]
-
-[workspace]
-members = [".", "raw", "dbc"]#, "seals"]
-default-members = [".", "raw", "dbc"]#, "seals"]
 
 [patch.crates-io]
 commit_verify = { git = "https://github.com/LNP-BP/client_side_validation" }

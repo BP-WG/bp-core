@@ -1,17 +1,23 @@
-// Deterministic bitcoin commitments library, implementing LNPBP standards
-// Part of bitcoin protocol core library (BP Core Lib)
+// Deterministic bitcoin commitments library.
 //
-// Written in 2020-2022 by
-//     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
+// SPDX-License-Identifier: Apache-2.0
 //
-// To the extent possible under law, the author(s) have dedicated all
-// copyright and related and neighboring rights to this software to
-// the public domain worldwide. This software is distributed without
-// any warranty.
+// Written in 2019-2023 by
+//     Dr. Maxim Orlovsky <orlovsky@lnp-bp.org>
 //
-// You should have received a copy of the Apache 2.0 License
-// along with this software.
-// If not, see <https://opensource.org/licenses/Apache-2.0>.
+// Copyright (C) 2019-2023 LNP/BP Standards Association. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 //! Anchors are data structures used in deterministic bitcoin commitments for
 //! keeping information about the proof of the commitment in connection to the
@@ -23,9 +29,7 @@ use std::cmp::Ordering;
 use amplify::{Bytes32, Wrapper};
 use bc::{ScriptPubkey, Tx, Txid, LIB_NAME_BP};
 use commit_verify::mpc::{self, Message, ProtocolId};
-use commit_verify::{
-    strategies, CommitStrategy, CommitmentId, ConvolveCommitProof,
-};
+use commit_verify::{strategies, CommitStrategy, CommitmentId, ConvolveCommitProof};
 use strict_encoding::{StrictDumb, StrictEncode};
 
 use crate::tapret::{TapretError, TapretProof};
@@ -34,10 +38,7 @@ use crate::tapret::{TapretError, TapretProof};
 pub const ANCHOR_MIN_LNPBP4_DEPTH: u8 = 3;
 
 /// Anchor identifier - a commitment to the anchor data.
-#[derive(
-    Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From,
-    Default
-)]
+#[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
 #[wrapper(Deref, BorrowSlice, Display, FromStr, Hex, Index, RangeOps)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BP)]
@@ -76,11 +77,7 @@ pub enum VerifyError {
 #[derive(Clone, PartialEq, Eq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BP)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct Anchor<L: mpc::Proof + StrictDumb> {
     /// Transaction containing deterministic bitcoin commitment.
     pub txid: Txid,
@@ -102,22 +99,15 @@ impl CommitmentId for Anchor<mpc::MerkleBlock> {
 }
 
 impl Ord for Anchor<mpc::MerkleBlock> {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.anchor_id().cmp(&other.anchor_id())
-    }
+    fn cmp(&self, other: &Self) -> Ordering { self.anchor_id().cmp(&other.anchor_id()) }
 }
 
 impl PartialOrd for Anchor<mpc::MerkleBlock> {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> { Some(self.cmp(other)) }
 }
 
 /// Error merging two [`Anchor`]s.
-#[derive(
-    Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, Error,
-    From
-)]
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, Error, From)]
 #[display(doc_comments)]
 pub enum MergeError {
     /// Error merging two LNPBP-4 proofs, which are unrelated.
@@ -155,11 +145,7 @@ impl Anchor<mpc::MerkleProof> {
         protocol_id: impl Into<ProtocolId>,
         message: Message,
     ) -> Result<Anchor<mpc::MerkleBlock>, mpc::UnrelatedProof> {
-        let lnpbp4_proof = mpc::MerkleBlock::with(
-            &self.mpc_proof,
-            protocol_id.into(),
-            message,
-        )?;
+        let lnpbp4_proof = mpc::MerkleBlock::with(&self.mpc_proof, protocol_id.into(), message)?;
         Ok(Anchor {
             txid: self.txid,
             mpc_proof: lnpbp4_proof,
@@ -250,11 +236,7 @@ impl Anchor<mpc::MerkleBlock> {
 #[derive(Clone, PartialEq, Eq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BP, tags = order)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 #[non_exhaustive]
 pub enum Proof {
     /// Opret commitment (no extra-transaction proof is required).
@@ -267,24 +249,17 @@ pub enum Proof {
 
 impl Proof {
     /// Verifies validity of the proof.
-    pub fn verify(
-        &self,
-        msg: &mpc::Commitment,
-        tx: Tx,
-    ) -> Result<bool, TapretError> {
+    pub fn verify(&self, msg: &mpc::Commitment, tx: Tx) -> Result<bool, TapretError> {
         match self {
             Proof::OpretFirst => {
                 for txout in &tx.outputs {
                     if txout.script_pubkey.is_op_return() {
-                        return Ok(txout.script_pubkey
-                            == ScriptPubkey::op_return(msg.as_slice()));
+                        return Ok(txout.script_pubkey == ScriptPubkey::op_return(msg.as_slice()));
                     }
                 }
                 Ok(false)
             }
-            Proof::TapretFirst(proof) => {
-                ConvolveCommitProof::<_, Tx, _>::verify(proof, msg, tx)
-            }
+            Proof::TapretFirst(proof) => ConvolveCommitProof::<_, Tx, _>::verify(proof, msg, tx),
         }
     }
 }

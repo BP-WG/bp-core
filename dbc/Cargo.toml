@@ -18,7 +18,7 @@ path = "src/lib.rs"
 
 [dependencies]
 amplify = "4.0.0-beta.10"
-bp-raw = { version = "0.1.0", path = "../raw" }
+bp-primitives = { version = "0.10.0-beta.1", path = "../primitives" }
 secp256k1 = { version = "0.26.0", features = ["global-context", "rand-std"] }
 strict_encoding = "2.0.0-beta.5"
 commit_verify = { version = "0.10.0-beta.1", features = ["rand"] }
@@ -29,7 +29,7 @@ default = []
 all = ["serde"]
 serde = [
     "serde_crate",
-    "bp-raw/serde",
+    "bp-primitives/serde",
     "commit_verify/serde",
     "secp256k1/serde"
 ]

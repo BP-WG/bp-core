@@ -1,17 +1,23 @@
-// Deterministic bitcoin commitments library, implementing LNPBP standards
-// Part of bitcoin protocol core library (BP Core Lib)
+// Deterministic bitcoin commitments library.
 //
-// Written in 2020-2022 by
-//     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
+// SPDX-License-Identifier: Apache-2.0
 //
-// To the extent possible under law, the author(s) have dedicated all
-// copyright and related and neighboring rights to this software to
-// the public domain worldwide. This software is distributed without
-// any warranty.
+// Written in 2019-2023 by
+//     Dr. Maxim Orlovsky <orlovsky@lnp-bp.org>
 //
-// You should have received a copy of the Apache 2.0 License
-// along with this software.
-// If not, see <https://opensource.org/licenses/Apache-2.0>.
+// Copyright (C) 2019-2023 LNP/BP Standards Association. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 //! Taproot OP_RETURN-based deterministic bitcoin commitment scheme ("tapret").
 //!
@@ -68,17 +74,13 @@ pub use xonlypk::TapretKeyError;
 /// protocol.
 pub enum Lnpbp12 {}
 
-use bc::{
-    InternalPk, IntoTapHash, LeafScript, ScriptPubkey, TapBranchHash,
-    TapNodeHash,
-};
+use bc::{InternalPk, IntoTapHash, LeafScript, ScriptPubkey, TapBranchHash, TapNodeHash};
 use commit_verify::CommitmentProtocol;
 
 pub use self::tapscript::TAPRET_SCRIPT_COMMITMENT_PREFIX;
 
 impl CommitmentProtocol for Lnpbp12 {
-    const HASH_TAG_MIDSTATE: Option<[u8; 32]> =
-        Some(*b"urn:lnpbp:lnpbp0012:v01#20230203");
+    const HASH_TAG_MIDSTATE: Option<[u8; 32]> = Some(*b"urn:lnpbp:lnpbp0012:v01#20230203");
 }
 
 /// Errors in constructing tapret path proof [`TapretPathProof`].
@@ -100,11 +102,7 @@ pub enum TapretPathError {
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BP)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 #[display("{left_node_hash}:{right_node_hash}")]
 pub struct TapretRightBranch {
     left_node_hash: TapNodeHash,
@@ -134,8 +132,7 @@ impl TapretRightBranch {
 
     /// Computes node hash of the partner node defined by this proof.
     pub fn node_hash(&self) -> TapNodeHash {
-        TapBranchHash::with_nodes(self.left_node_hash, self.right_node_hash)
-            .into_tap_hash()
+        TapBranchHash::with_nodes(self.left_node_hash, self.right_node_hash).into_tap_hash()
     }
 }
 
@@ -168,11 +165,7 @@ impl StrictDecode for TapretRightBranch {
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, From)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BP, tags = order, dumb = Self::RightLeaf(default!()))]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 #[display(inner)]
 pub enum TapretNodePartner {
     /// Tapret commitment is on the right side of the tree; i.e the node
@@ -210,17 +203,12 @@ impl TapretNodePartner {
     pub fn check_no_commitment(&self) -> bool {
         match self {
             TapretNodePartner::LeftNode(_) => true,
-            TapretNodePartner::RightLeaf(LeafScript { script, .. })
-                if script.len() < 64 =>
-            {
-                true
-            }
+            TapretNodePartner::RightLeaf(LeafScript { script, .. }) if script.len() < 64 => true,
             TapretNodePartner::RightLeaf(LeafScript { script, .. }) => {
                 script[..31] != TAPRET_SCRIPT_COMMITMENT_PREFIX[..]
             }
             TapretNodePartner::RightBranch(right_branch) => {
-                right_branch.left_node_hash()[..31]
-                    != TAPRET_SCRIPT_COMMITMENT_PREFIX[..]
+                right_branch.left_node_hash()[..31] != TAPRET_SCRIPT_COMMITMENT_PREFIX[..]
             }
         }
     }
@@ -248,9 +236,7 @@ impl TapretNodePartner {
             TapretNodePartner::RightLeaf(leaf_script) => {
                 leaf_script.tap_leaf_hash().into_tap_hash()
             }
-            TapretNodePartner::RightBranch(right_branch) => {
-                right_branch.node_hash()
-            }
+            TapretNodePartner::RightBranch(right_branch) => right_branch.node_hash(),
         }
     }
 }
@@ -263,11 +249,7 @@ impl TapretNodePartner {
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BP)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct TapretPathProof {
     /// Information about the sibling at level 1 of the tree
     partner_node: Option<TapretNodePartner>,
@@ -288,10 +270,7 @@ impl TapretPathProof {
     }
 
     /// Adds element to the path proof.
-    pub fn with(
-        elem: TapretNodePartner,
-        nonce: u8,
-    ) -> Result<TapretPathProof, TapretPathError> {
+    pub fn with(elem: TapretNodePartner, nonce: u8) -> Result<TapretPathProof, TapretPathError> {
         if !elem.check_no_commitment() {
             return Err(TapretPathError::InvalidNodePartner(elem));
         }
@@ -352,11 +331,7 @@ impl<'data> IntoIterator for &'data TapretPathProof {
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BP)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct TapretProof {
     /// A merkle path to the commitment inside the taproot script tree. For
     /// each node it also must hold information about the sibling in form of

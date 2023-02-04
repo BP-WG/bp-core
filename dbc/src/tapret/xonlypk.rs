@@ -1,17 +1,23 @@
-// Deterministic bitcoin commitments library, implementing LNPBP standards
-// Part of bitcoin protocol core library (BP Core Lib)
+// Deterministic bitcoin commitments library.
 //
-// Written in 2020-2022 by
-//     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
+// SPDX-License-Identifier: Apache-2.0
 //
-// To the extent possible under law, the author(s) have dedicated all
-// copyright and related and neighboring rights to this software to
-// the public domain worldwide. This software is distributed without
-// any warranty.
+// Written in 2019-2023 by
+//     Dr. Maxim Orlovsky <orlovsky@lnp-bp.org>
 //
-// You should have received a copy of the Apache 2.0 License
-// along with this software.
-// If not, see <https://opensource.org/licenses/Apache-2.0>.
+// Copyright (C) 2019-2023 LNP/BP Standards Association. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 use bc::{InternalPk, TapBranchHash, TapLeafHash, TapNodeHash, TapScript};
 use commit_verify::{mpc, CommitVerify, ConvolveCommit, ConvolveCommitProof};
@@ -35,9 +41,7 @@ pub enum TapretKeyError {
 impl ConvolveCommitProof<mpc::Commitment, InternalPk, Lnpbp12> for TapretProof {
     type Suppl = TapretPathProof;
 
-    fn restore_original(&self, _: &XOnlyPublicKey) -> InternalPk {
-        self.internal_pk
-    }
+    fn restore_original(&self, _: &XOnlyPublicKey) -> InternalPk { self.internal_pk }
 
     fn extract_supplement(&self) -> &Self::Suppl { &self.path_proof }
 }
@@ -54,28 +58,19 @@ impl ConvolveCommit<mpc::Commitment, TapretProof, Lnpbp12> for InternalPk {
         let tapret_commitment = TapretCommitment::with(*msg, supplement.nonce);
         let script_commitment = TapScript::commit(&tapret_commitment);
 
-        let merkle_root: TapNodeHash = if let Some(ref partner) =
-            supplement.partner_node
-        {
+        let merkle_root: TapNodeHash = if let Some(ref partner) = supplement.partner_node {
             if !partner.check_no_commitment() {
-                return Err(TapretKeyError::AlternativeCommitment(
-                    partner.clone(),
-                ));
+                return Err(TapretKeyError::AlternativeCommitment(partner.clone()));
             }
 
-            let commitment_leaf =
-                TapLeafHash::with_tap_script(&script_commitment);
+            let commitment_leaf = TapLeafHash::with_tap_script(&script_commitment);
             let commitment_hash = TapNodeHash::from(commitment_leaf);
 
             if !partner.check_ordering(commitment_hash) {
-                return Err(TapretKeyError::IncorrectOrdering(
-                    partner.clone(),
-                    commitment_leaf,
-                ));
+                return Err(TapretKeyError::IncorrectOrdering(partner.clone(), commitment_leaf));
             }
 
-            TapBranchHash::with_nodes(commitment_hash, partner.tap_node_hash())
-                .into()
+            TapBranchHash::with_nodes(commitment_hash, partner.tap_node_hash()).into()
         } else {
             TapLeafHash::with_tap_script(&script_commitment).into()
         };
@@ -111,8 +106,7 @@ mod test {
         let path_proof = TapretPathProof::root();
 
         // Do via API
-        let (outer_key, proof) =
-            internal_pk.convolve_commit(&path_proof, &msg).unwrap();
+        let (outer_key, proof) = internal_pk.convolve_commit(&path_proof, &msg).unwrap();
 
         // Do manually
         let tapret_commitment = TapretCommitment::with(msg, path_proof.nonce);
@@ -128,10 +122,8 @@ mod test {
         });
 
         assert!(
-            ConvolveCommitProof::<Commitment, InternalPk, Lnpbp12>::verify(
-                &proof, &msg, outer_key
-            )
-            .unwrap()
+            ConvolveCommitProof::<Commitment, InternalPk, Lnpbp12>::verify(&proof, &msg, outer_key)
+                .unwrap()
         );
     }
 
@@ -143,15 +135,12 @@ mod test {
         .unwrap();
         let msg = mpc::Commitment::from([8u8; 32]);
         let path_proof = TapretPathProof::with(
-            TapretNodePartner::RightLeaf(LeafScript::from_tap_script(
-                default!(),
-            )),
+            TapretNodePartner::RightLeaf(LeafScript::from_tap_script(default!())),
             22,
         )
         .unwrap();
 
-        let (outer_key, proof) =
-            internal_pk.convolve_commit(&path_proof, &msg).unwrap();
+        let (outer_key, proof) = internal_pk.convolve_commit(&path_proof, &msg).unwrap();
 
         assert_eq!(proof, TapretProof {
             path_proof,
@@ -159,10 +148,8 @@ mod test {
         });
 
         assert!(
-            ConvolveCommitProof::<Commitment, InternalPk, Lnpbp12>::verify(
-                &proof, &msg, outer_key
-            )
-            .unwrap()
+            ConvolveCommitProof::<Commitment, InternalPk, Lnpbp12>::verify(&proof, &msg, outer_key)
+                .unwrap()
         );
     }
 
@@ -175,15 +162,12 @@ mod test {
         .unwrap();
         let msg = mpc::Commitment::from([8u8; 32]);
         let path_proof = TapretPathProof::with(
-            TapretNodePartner::RightLeaf(LeafScript::from_tap_script(
-                default!(),
-            )),
+            TapretNodePartner::RightLeaf(LeafScript::from_tap_script(default!())),
             11,
         )
         .unwrap();
 
-        let (outer_key, proof) =
-            internal_pk.convolve_commit(&path_proof, &msg).unwrap();
+        let (outer_key, proof) = internal_pk.convolve_commit(&path_proof, &msg).unwrap();
 
         assert_eq!(proof, TapretProof {
             path_proof,
@@ -191,10 +175,8 @@ mod test {
         });
 
         assert!(
-            ConvolveCommitProof::<Commitment, InternalPk, Lnpbp12>::verify(
-                &proof, &msg, outer_key
-            )
-            .unwrap()
+            ConvolveCommitProof::<Commitment, InternalPk, Lnpbp12>::verify(&proof, &msg, outer_key)
+                .unwrap()
         );
     }
 }

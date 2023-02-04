@@ -1,17 +1,23 @@
-// BP Core Library implementing LNP/BP specifications & standards related to
-// bitcoin protocol
+// Bitcoin protocol primitives library.
 //
-// Written in 2020-2022 by
-//     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
+// SPDX-License-Identifier: Apache-2.0
 //
-// To the extent possible under law, the author(s) have dedicated all
-// copyright and related and neighboring rights to this software to
-// the public domain worldwide. This software is distributed without
-// any warranty.
+// Written in 2019-2023 by
+//     Dr. Maxim Orlovsky <orlovsky@lnp-bp.org>
 //
-// You should have received a copy of the Apache 2.0 License
-// along with this software.
-// If not, see <https://opensource.org/licenses/Apache-2.0>.
+// Copyright (C) 2019-2023 LNP/BP Standards Association. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #![allow(unused_braces)] // required due to strict dumb derivation and compiler bug
 
@@ -23,8 +29,8 @@ use amplify::confinement::{Confined, TinyVec};
 use amplify::{Bytes32, Wrapper};
 use secp256k1::{Scalar, XOnlyPublicKey};
 use strict_encoding::{
-    DecodeError, ReadTuple, StrictDecode, StrictEncode, StrictProduct,
-    StrictTuple, StrictType, TypeName, TypedRead, TypedWrite, WriteTuple,
+    DecodeError, ReadTuple, StrictDecode, StrictEncode, StrictProduct, StrictTuple, StrictType,
+    TypeName, TypedRead, TypedWrite, WriteTuple,
 };
 
 use crate::opcodes::*;
@@ -32,37 +38,33 @@ use crate::{ScriptBytes, ScriptPubkey, Sha256, WitnessVer, LIB_NAME_BP};
 
 /// The SHA-256 midstate value for the TapLeaf hash.
 pub const MIDSTATE_TAPLEAF: [u8; 32] = [
-    156, 224, 228, 230, 124, 17, 108, 57, 56, 179, 202, 242, 195, 15, 80, 137,
-    211, 243, 147, 108, 71, 99, 110, 96, 125, 179, 62, 234, 221, 198, 240, 201,
+    156, 224, 228, 230, 124, 17, 108, 57, 56, 179, 202, 242, 195, 15, 80, 137, 211, 243, 147, 108,
+    71, 99, 110, 96, 125, 179, 62, 234, 221, 198, 240, 201,
 ];
 // 9ce0e4e67c116c3938b3caf2c30f5089d3f3936c47636e607db33eeaddc6f0c9
 
 /// The SHA-256 midstate value for the TapBranch hash.
 pub const MIDSTATE_TAPBRANCH: [u8; 32] = [
-    35, 168, 101, 169, 184, 164, 13, 167, 151, 124, 30, 4, 196, 158, 36, 111,
-    181, 190, 19, 118, 157, 36, 201, 183, 181, 131, 181, 212, 168, 210, 38,
-    210,
+    35, 168, 101, 169, 184, 164, 13, 167, 151, 124, 30, 4, 196, 158, 36, 111, 181, 190, 19, 118,
+    157, 36, 201, 183, 181, 131, 181, 212, 168, 210, 38, 210,
 ];
 // 23a865a9b8a40da7977c1e04c49e246fb5be13769d24c9b7b583b5d4a8d226d2
 
 /// The SHA-256 midstate value for the TapTweak hash.
 pub const MIDSTATE_TAPTWEAK: [u8; 32] = [
-    209, 41, 162, 243, 112, 28, 101, 93, 101, 131, 182, 195, 185, 65, 151, 39,
-    149, 244, 226, 50, 148, 253, 84, 244, 162, 174, 141, 133, 71, 202, 89, 11,
+    209, 41, 162, 243, 112, 28, 101, 93, 101, 131, 182, 195, 185, 65, 151, 39, 149, 244, 226, 50,
+    148, 253, 84, 244, 162, 174, 141, 133, 71, 202, 89, 11,
 ];
 // d129a2f3701c655d6583b6c3b941972795f4e23294fd54f4a2ae8d8547ca590b
 
 /// The SHA-256 midstate value for the TapSig hash.
 pub const MIDSTATE_TAPSIGHASH: [u8; 32] = [
-    245, 4, 164, 37, 215, 248, 120, 59, 19, 99, 134, 138, 227, 229, 86, 88,
-    110, 238, 148, 93, 188, 120, 136, 221, 2, 166, 226, 195, 24, 115, 254, 159,
+    245, 4, 164, 37, 215, 248, 120, 59, 19, 99, 134, 138, 227, 229, 86, 88, 110, 238, 148, 93, 188,
+    120, 136, 221, 2, 166, 226, 195, 24, 115, 254, 159,
 ];
 // f504a425d7f8783b1363868ae3e556586eee945dbc7888dd02a6e2c31873fe9f
 
-#[derive(
-    Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash,
-    Debug, From
-)]
+#[derive(Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, LowerHex, Display, FromStr)]
 #[wrapper_mut(DerefMut)]
 #[derive(StrictType, StrictDumb)]
@@ -75,18 +77,15 @@ pub const MIDSTATE_TAPSIGHASH: [u8; 32] = [
 pub struct InternalPk(XOnlyPublicKey);
 
 impl InternalPk {
-    pub fn to_output_key(
-        &self,
-        merkle_root: Option<impl IntoTapHash>,
-    ) -> XOnlyPublicKey {
+    pub fn to_output_key(&self, merkle_root: Option<impl IntoTapHash>) -> XOnlyPublicKey {
         let mut engine = Sha256::from_tag(MIDSTATE_TAPTWEAK);
         // always hash the key
         engine.input_raw(&self.0.serialize());
         if let Some(merkle_root) = merkle_root {
             engine.input_raw(merkle_root.into_tap_hash().as_slice());
         }
-        let tweak = Scalar::from_be_bytes(engine.finish())
-            .expect("hash value greater than curve order");
+        let tweak =
+            Scalar::from_be_bytes(engine.finish()).expect("hash value greater than curve order");
         let (output_key, tweaked_parity) = self
             .0
             .add_tweak(secp256k1::SECP256K1, &tweak)
@@ -127,9 +126,7 @@ pub trait IntoTapHash {
     fn into_tap_hash(self) -> TapNodeHash;
 }
 
-#[derive(
-    Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From
-)]
+#[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Index, RangeOps, BorrowSlice, Hex, Display, FromStr)]
 pub struct TapLeafHash(
     #[from]
@@ -157,9 +154,7 @@ impl IntoTapHash for TapLeafHash {
     fn into_tap_hash(self) -> TapNodeHash { TapNodeHash(self.0) }
 }
 
-#[derive(
-    Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From
-)]
+#[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Index, RangeOps, BorrowSlice, Hex, Display, FromStr)]
 pub struct TapBranchHash(
     #[from]
@@ -180,17 +175,11 @@ impl IntoTapHash for TapBranchHash {
     fn into_tap_hash(self) -> TapNodeHash { TapNodeHash(self.0) }
 }
 
-#[derive(
-    Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From
-)]
+#[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, Index, RangeOps, BorrowSlice, Hex, Display, FromStr)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BP)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct TapNodeHash(
     #[from]
     #[from([u8; 32])]
@@ -225,11 +214,7 @@ pub struct InvalidLeafVer(u8);
 
 /// The leaf version for tapleafs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub enum LeafVer {
     /// BIP-342 tapscript.
     #[default]
@@ -249,9 +234,7 @@ impl StrictTuple for LeafVer {
 }
 impl StrictEncode for LeafVer {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> std::io::Result<W> {
-        writer.write_tuple::<Self>(|w| {
-            Ok(w.write_field(&self.to_consensus())?.complete())
-        })
+        writer.write_tuple::<Self>(|w| Ok(w.write_field(&self.to_consensus())?.complete()))
     }
 }
 impl StrictDecode for LeafVer {
@@ -275,9 +258,7 @@ impl LeafVer {
         match version {
             TAPROOT_LEAF_TAPSCRIPT => Ok(LeafVer::TapScript),
             TAPROOT_ANNEX_PREFIX => Err(InvalidLeafVer(TAPROOT_ANNEX_PREFIX)),
-            future => {
-                FutureLeafVer::from_consensus(future).map(LeafVer::Future)
-            }
+            future => FutureLeafVer::from_consensus(future).map(LeafVer::Future),
         }
     }
 
@@ -291,15 +272,11 @@ impl LeafVer {
 }
 
 impl LowerHex for LeafVer {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        LowerHex::fmt(&self.to_consensus(), f)
-    }
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result { LowerHex::fmt(&self.to_consensus(), f) }
 }
 
 impl UpperHex for LeafVer {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        UpperHex::fmt(&self.to_consensus(), f)
-    }
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result { UpperHex::fmt(&self.to_consensus(), f) }
 }
 
 /// Inner type representing future (non-tapscript) leaf versions. See
@@ -311,21 +288,14 @@ impl UpperHex for LeafVer {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BP, dumb = { Self(0x51) })]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct FutureLeafVer(u8);
 
 impl FutureLeafVer {
-    pub(self) fn from_consensus(
-        version: u8,
-    ) -> Result<FutureLeafVer, InvalidLeafVer> {
+    pub(self) fn from_consensus(version: u8) -> Result<FutureLeafVer, InvalidLeafVer> {
         match version {
             TAPROOT_LEAF_TAPSCRIPT => unreachable!(
-                "FutureLeafVersion::from_consensus should be never called for \
-                 0xC0 value"
+                "FutureLeafVersion::from_consensus should be never called for 0xC0 value"
             ),
             TAPROOT_ANNEX_PREFIX => Err(InvalidLeafVer(TAPROOT_ANNEX_PREFIX)),
             odd if odd & 0xFE != odd => Err(InvalidLeafVer(odd)),
@@ -340,26 +310,18 @@ impl FutureLeafVer {
 
 impl LowerHex for FutureLeafVer {
     #[inline]
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        LowerHex::fmt(&self.0, f)
-    }
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result { LowerHex::fmt(&self.0, f) }
 }
 
 impl UpperHex for FutureLeafVer {
     #[inline]
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        UpperHex::fmt(&self.0, f)
-    }
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result { UpperHex::fmt(&self.0, f) }
 }
 
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default, Display)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BP)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 #[display("{version:04x} {script:x}")]
 pub struct LeafScript {
     pub version: LeafVer,
@@ -378,12 +340,8 @@ impl From<TapScript> for LeafScript {
 }
 
 impl LeafScript {
-    pub fn from_tap_script(tap_script: TapScript) -> Self {
-        Self::from(tap_script)
-    }
-    pub fn tap_leaf_hash(&self) -> TapLeafHash {
-        TapLeafHash::with_leaf_script(self)
-    }
+    pub fn from_tap_script(tap_script: TapScript) -> Self { Self::from(tap_script) }
+    pub fn tap_leaf_hash(&self) -> TapLeafHash { TapLeafHash::with_leaf_script(self) }
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Display)]
@@ -417,10 +375,7 @@ pub enum TapCode {
     PushData4 = OP_PUSHDATA4,
 }
 
-#[derive(
-    Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug,
-    From, Default
-)]
+#[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
 #[wrapper(Deref, Index, RangeOps, BorrowSlice, LowerHex, UpperHex)]
 #[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
@@ -447,10 +402,7 @@ impl TapScript {
 }
 
 impl ScriptPubkey {
-    pub fn p2tr(
-        internal_key: InternalPk,
-        merkle_root: Option<impl IntoTapHash>,
-    ) -> Self {
+    pub fn p2tr(internal_key: InternalPk, merkle_root: Option<impl IntoTapHash>) -> Self {
         let output_key = internal_key.to_output_key(merkle_root);
         Self::p2tr_tweaked(output_key)
     }
@@ -462,8 +414,6 @@ impl ScriptPubkey {
     }
 
     pub fn is_p2tr(&self) -> bool {
-        self.len() == 34
-            && self[0] == WitnessVer::V1.op_code() as u8
-            && self[1] == OP_PUSHBYTES_32
+        self.len() == 34 && self[0] == WitnessVer::V1.op_code() as u8 && self[1] == OP_PUSHBYTES_32
     }
 }
