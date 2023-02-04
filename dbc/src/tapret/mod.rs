@@ -60,7 +60,7 @@ mod tx;
 mod txout;
 mod xonlypk;
 
-pub use bp::LIB_NAME_BP;
+pub use bc::LIB_NAME_BP;
 pub use tx::TapretError;
 pub use xonlypk::TapretKeyError;
 
@@ -68,7 +68,7 @@ pub use xonlypk::TapretKeyError;
 /// protocol.
 pub enum Lnpbp12 {}
 
-use bp::{
+use bc::{
     InternalPk, IntoTapHash, LeafScript, ScriptPubkey, TapBranchHash,
     TapNodeHash,
 };
@@ -161,7 +161,7 @@ impl StrictDecode for TapretRightBranch {
  */
 
 /// Information proving step of a tapret path in determined way within a given
-/// original [`bitcoin::psbt::TapTree`].
+/// tap tree.
 ///
 /// The structure hosts proofs that the right-side partner at the taproot script
 /// tree node does not contain an alternative OP-RETURN commitment script.

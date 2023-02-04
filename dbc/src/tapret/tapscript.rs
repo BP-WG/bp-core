@@ -15,7 +15,7 @@
 
 use std::io;
 
-use bp::{TapCode, TapScript, LIB_NAME_BP};
+use bc::{TapCode, TapScript, LIB_NAME_BP};
 use commit_verify::{
     mpc, strategies, CommitEncode, CommitStrategy, CommitVerify,
 };

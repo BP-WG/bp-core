@@ -13,7 +13,7 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use bp::Tx;
+use bc::Tx;
 use commit_verify::{mpc, ConvolveCommit, ConvolveCommitProof};
 
 use super::{Lnpbp12, TapretKeyError, TapretProof};

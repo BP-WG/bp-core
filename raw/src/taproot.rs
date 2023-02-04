@@ -53,7 +53,7 @@ pub const MIDSTATE_TAPTWEAK: [u8; 32] = [
 ];
 // d129a2f3701c655d6583b6c3b941972795f4e23294fd54f4a2ae8d8547ca590b
 
-/// The SHA-256 midstate value for the [`TapSighashHash`].
+/// The SHA-256 midstate value for the TapSig hash.
 pub const MIDSTATE_TAPSIGHASH: [u8; 32] = [
     245, 4, 164, 37, 215, 248, 120, 59, 19, 99, 134, 138, 227, 229, 86, 88,
     110, 238, 148, 93, 188, 120, 136, 221, 2, 166, 226, 195, 24, 115, 254, 159,

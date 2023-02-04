@@ -21,7 +21,7 @@
 use std::cmp::Ordering;
 
 use amplify::{Bytes32, Wrapper};
-use bp::{ScriptPubkey, Tx, Txid, LIB_NAME_BP};
+use bc::{ScriptPubkey, Tx, Txid, LIB_NAME_BP};
 use commit_verify::mpc::{self, Message, ProtocolId};
 use commit_verify::{
     strategies, CommitStrategy, CommitmentId, ConvolveCommitProof,

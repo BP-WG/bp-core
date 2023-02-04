@@ -14,7 +14,7 @@
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
 use amplify::Wrapper;
-use bp::{InternalPk, TapBranchHash, TapLeafHash, TapNodeHash, TapScript};
+use bc::{InternalPk, TapBranchHash, TapLeafHash, TapNodeHash, TapScript};
 use commit_verify::{mpc, CommitVerify, ConvolveCommit, ConvolveCommitProof};
 use secp256k1::{Scalar, XOnlyPublicKey, SECP256K1};
 
@@ -108,7 +108,7 @@ impl ConvolveCommit<mpc::Commitment, TapretProof, Lnpbp12> for InternalPk {
 mod test {
     use std::str::FromStr;
 
-    use bp::{IntoTapHash, LeafScript};
+    use bc::{IntoTapHash, LeafScript};
     use commit_verify::mpc::Commitment;
 
     use super::*;

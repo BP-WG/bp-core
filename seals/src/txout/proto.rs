@@ -13,7 +13,7 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use bp::Txid;
+use bc::Txid;
 use commit_verify::mpc;
 use dbc::{Anchor, Proof};
 use single_use_seals::{SealProtocol, SealStatus, VerifySeal};

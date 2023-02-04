@@ -19,7 +19,7 @@ use std::convert::{TryFrom, TryInto};
 use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 
-use bp::{Outpoint, Txid, Vout};
+use bc::{Outpoint, Txid, Vout};
 
 use crate::txout::{CloseMethod, MethodParseError, TxoSeal, WitnessVoutError};
 
@@ -31,7 +31,7 @@ use crate::txout::{CloseMethod, MethodParseError, TxoSeal, WitnessVoutError};
 /// we can't perform them).
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = bp::LIB_NAME_BP)]
+#[strict_type(lib = bc::LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),

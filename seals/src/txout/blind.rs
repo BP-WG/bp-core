@@ -21,7 +21,7 @@ use std::str::FromStr;
 
 use amplify::hex::FromHex;
 use amplify::{hex, Bytes32, Wrapper};
-use bp::{Outpoint, Sha256, Txid, Vout};
+use bc::{Outpoint, Sha256, Txid, Vout};
 use commit_verify::{CommitVerify, Conceal};
 use dbc::tapret::Lnpbp12;
 use rand::{thread_rng, RngCore};
@@ -36,7 +36,7 @@ use crate::txout::{ExplicitSeal, TxoSeal};
 /// about the bitcoin transaction output.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = bp::LIB_NAME_BP)]
+#[strict_type(lib = bc::LIB_NAME_BP)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -306,7 +306,7 @@ static MIDSTATE_CONCEALED_SEAL: [u8; 32] = [
 #[derive(Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
 #[wrapper(Index, RangeOps, BorrowSlice, Hex)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = bp::LIB_NAME_BP)]
+#[strict_type(lib = bc::LIB_NAME_BP)]
 pub struct ConcealedSeal(
     #[from]
     #[from([u8; 32])]

@@ -13,7 +13,7 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/Apache-2.0>.
 
-use bp::{ScriptPubkey, Tx, Txid};
+use bc::{ScriptPubkey, Tx, Txid};
 
 #[derive(Debug, Display)]
 #[display(doc_comments)]

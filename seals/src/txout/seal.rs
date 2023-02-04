@@ -15,7 +15,7 @@
 
 use std::str::FromStr;
 
-use bp::{Outpoint, Txid, Vout};
+use bc::{Outpoint, Txid, Vout};
 
 use super::MethodParseError;
 
@@ -30,14 +30,14 @@ pub trait TxoSeal {
     /// Returns transaction output number containing the defined seal.
     fn vout(&self) -> Vout;
 
-    /// Returns [`OutPoint`] defining the seal, if txid is known.
+    /// Returns [`Outpoint`] defining the seal, if txid is known.
     fn outpoint(&self) -> Option<Outpoint>;
 
     /// Returns [`Txid`] part of the seal definition, if known, or the provided
     /// `default_txid`.
     fn txid_or(&self, default_txid: Txid) -> Txid;
 
-    /// Returns [`OutPoint`] defining the seal, if txid is known, or constructs
+    /// Returns [`Outpoint`] defining the seal, if txid is known, or constructs
     /// one using the provided `default_txid`.
     fn outpoint_or(&self, default_txid: Txid) -> Outpoint;
 }
@@ -50,7 +50,7 @@ pub trait TxoSeal {
     serde(crate = "serde_crate")
 )]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = bp::LIB_NAME_BP, tags = repr, into_u8, try_from_u8)]
+#[strict_type(lib = bc::LIB_NAME_BP, tags = repr, into_u8, try_from_u8)]
 #[repr(u8)]
 #[non_exhaustive]
 pub enum CloseMethod {
