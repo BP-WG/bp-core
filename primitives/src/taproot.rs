@@ -27,6 +27,7 @@ use std::{cmp, io};
 
 use amplify::confinement::{Confined, TinyVec};
 use amplify::{Bytes32, Wrapper};
+use commit_verify::Sha256;
 use secp256k1::{Scalar, XOnlyPublicKey};
 use strict_encoding::{
     DecodeError, ReadTuple, StrictDecode, StrictEncode, StrictProduct, StrictTuple, StrictType,
@@ -34,7 +35,7 @@ use strict_encoding::{
 };
 
 use crate::opcodes::*;
-use crate::{ScriptBytes, ScriptPubkey, Sha256, WitnessVer, LIB_NAME_BP};
+use crate::{ScriptBytes, ScriptPubkey, WitnessVer, LIB_NAME_BP};
 
 /// The SHA-256 midstate value for the TapLeaf hash.
 pub const MIDSTATE_TAPLEAF: [u8; 32] = [

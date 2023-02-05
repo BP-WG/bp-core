@@ -79,9 +79,7 @@ use commit_verify::CommitmentProtocol;
 
 pub use self::tapscript::TAPRET_SCRIPT_COMMITMENT_PREFIX;
 
-impl CommitmentProtocol for Lnpbp12 {
-    const HASH_TAG_MIDSTATE: Option<[u8; 32]> = Some(*b"urn:lnpbp:lnpbp0012:v01#20230203");
-}
+impl CommitmentProtocol for Lnpbp12 {}
 
 /// Errors in constructing tapret path proof [`TapretPathProof`].
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Display, Error)]

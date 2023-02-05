@@ -28,8 +28,8 @@ use std::str::FromStr;
 use amplify::hex::FromHex;
 use amplify::{hex, Bytes32, Wrapper};
 use baid58::ToBaid58;
-use bc::{Outpoint, Sha256, Txid, Vout};
-use commit_verify::{CommitVerify, Conceal};
+use bc::{Outpoint, Txid, Vout};
+use commit_verify::{CommitVerify, Conceal, Sha256};
 use dbc::tapret::Lnpbp12;
 use rand::{thread_rng, RngCore};
 
@@ -300,10 +300,7 @@ impl Display for RevealedSeal {
     }
 }
 
-static MIDSTATE_CONCEALED_SEAL: [u8; 32] = [
-    250, 13, 163, 5, 178, 220, 248, 173, 139, 222, 67, 198, 134, 127, 63, 153, 147, 236, 172, 33,
-    17, 167, 176, 30, 70, 99, 185, 129, 217, 110, 183, 27,
-];
+static MIDSTATE_CONCEALED_SEAL: [u8; 32] = *b"urn:lnpbp:lnpbp0012:v01#20230203";
 
 /// Blind version of transaction outpoint-based single-use-seal
 #[derive(Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display, From)]
@@ -390,7 +387,7 @@ mod test {
         }
         .to_concealed_seal();
 
-        let baid58 = "9PWpM7PxnNKQznyUgZD2Zt2FTpUQY8vLRPiKsaPLmBk3";
+        let baid58 = "57BvPCnpU6sFWGsoU8wUu6vekNPb998h48h6fwDqWoVY";
         assert_eq!(baid58, outpoint_hash.to_string());
         assert_eq!(outpoint_hash.to_string(), outpoint_hash.to_baid58().to_string());
         /* TODO: uncomment when Baid58::from_str would work
