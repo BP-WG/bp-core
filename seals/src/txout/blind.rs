@@ -29,7 +29,7 @@ use amplify::hex::FromHex;
 use amplify::{hex, Bytes32, Wrapper};
 use baid58::ToBaid58;
 use bc::{Outpoint, Txid, Vout};
-use commit_verify::{CommitVerify, Conceal, Sha256};
+use commit_verify::{CommitVerify, Conceal};
 use dbc::tapret::Lnpbp12;
 use rand::{thread_rng, RngCore};
 
@@ -300,8 +300,6 @@ impl Display for RevealedSeal {
     }
 }
 
-static MIDSTATE_CONCEALED_SEAL: [u8; 32] = *b"urn:lnpbp:lnpbp0012:v01#20230203";
-
 /// Blind version of transaction outpoint-based single-use-seal
 #[derive(Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display, From)]
 #[wrapper(Index, RangeOps, BorrowSlice, Hex)]
@@ -338,20 +336,11 @@ impl From<Outpoint> for ConcealedSeal {
 }
 
 impl CommitVerify<RevealedSeal, Lnpbp12> for ConcealedSeal {
-    fn commit(reveal: &RevealedSeal) -> Self {
-        let mut engine = Sha256::from_tag(MIDSTATE_CONCEALED_SEAL);
-        engine.input_raw(&[reveal.method as u8]);
-        engine.input_raw(&reveal.txid.unwrap_or_else(|| Txid::from([0u8; 32]))[..]);
-        engine.input_raw(&reveal.vout.into_u32().to_le_bytes()[..]);
-        engine.input_raw(&reveal.blinding.to_le_bytes()[..]);
-        ConcealedSeal::from_inner(engine.finish().into())
-    }
+    fn commit(reveal: &RevealedSeal) -> Self { Bytes32::commit(reveal).into() }
 }
 
 #[cfg(test)]
 mod test {
-    use amplify::Wrapper;
-
     use super::*;
 
     #[test]
@@ -365,13 +354,7 @@ mod test {
             ),
             vout: Vout::from(2),
         };
-        let outpoint_hash = reveal.to_concealed_seal();
-        let mut engine = Sha256::from_tag(MIDSTATE_CONCEALED_SEAL);
-        engine.input_raw(&[reveal.method as u8]);
-        engine.input_raw(&reveal.txid.unwrap()[..]);
-        engine.input_raw(&reveal.vout.into_u32().to_le_bytes()[..]);
-        engine.input_raw(&reveal.blinding.to_le_bytes()[..]);
-        assert_eq!(outpoint_hash.as_inner().as_slice(), &engine.finish())
+        assert_eq!(reveal.to_concealed_seal(), reveal.conceal())
     }
 
     #[test]
@@ -387,7 +370,7 @@ mod test {
         }
         .to_concealed_seal();
 
-        let baid58 = "57BvPCnpU6sFWGsoU8wUu6vekNPb998h48h6fwDqWoVY";
+        let baid58 = "AByw5sAYRGj1NHyqBfQSYpJLrN1WDCD8RxjJ1kimCUcL";
         assert_eq!(baid58, outpoint_hash.to_string());
         assert_eq!(outpoint_hash.to_string(), outpoint_hash.to_baid58().to_string());
         /* TODO: uncomment when Baid58::from_str would work
