@@ -46,12 +46,14 @@ mod script;
 mod segwit;
 mod taproot;
 mod tx;
+mod util;
 
 pub use script::{OpCode, ScriptPubkey, SigScript};
 pub use segwit::*;
 pub use taproot::*;
 pub use tx::{LockTime, Outpoint, Sats, SeqNo, Tx, TxIn, TxOut, TxVer, Txid, Vout};
 pub use types::{ScriptBytes, VarIntArray};
+pub use util::Chain;
 
 pub const LIB_NAME_BP: &str = "BP";
 
