@@ -165,17 +165,31 @@ impl RevealedSeal {
     /// Constructs seal using the provided random number generator for creating
     /// blinding factor value
     #[inline]
-    pub fn with(
+    pub fn with_txid(
         method: CloseMethod,
-        txid: Option<Txid>,
+        txid: Txid,
         vout: impl Into<Vout>,
-        rng: &mut impl RngCore,
+        blinding: Option<u64>,
     ) -> RevealedSeal {
         RevealedSeal {
             method,
-            txid,
+            txid: Some(txid),
             vout: vout.into(),
-            blinding: rng.next_u64(),
+            blinding: blinding.unwrap_or_else(|| thread_rng().next_u64()),
+        }
+    }
+
+    /// Constructs the seal pointing to a witness transaction of another seal.
+    pub fn with_vout(
+        method: CloseMethod,
+        vout: impl Into<Vout>,
+        blinding: Option<u64>,
+    ) -> RevealedSeal {
+        RevealedSeal {
+            method,
+            txid: None,
+            vout: vout.into(),
+            blinding: blinding.unwrap_or_else(|| thread_rng().next_u64()),
         }
     }
 
