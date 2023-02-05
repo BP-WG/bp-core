@@ -19,9 +19,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Coding conventions
-#![recursion_limit = "256"]
-#![deny(dead_code, missing_docs, warnings)]
+#![deny(
+    non_upper_case_globals,
+    non_camel_case_types,
+    non_snake_case,
+    unused_mut,
+    unused_imports,
+    dead_code,
+    missing_docs
+)]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 //! Primitives module defines core strict interfaces from informational LNPBP
 //! standards specifying secure and robust practices for function calls
