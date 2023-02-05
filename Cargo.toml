@@ -55,7 +55,7 @@ all = ["serde"]
 serde = [
     "serde_crate",
     "bp-dbc/serde",
-    #"bp-seals/serde",
+    "bp-seals/serde",
 ]
 
 [package.metadata.docs.rs]
