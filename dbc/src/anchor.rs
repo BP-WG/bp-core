@@ -259,7 +259,7 @@ impl Proof {
                 }
                 Ok(false)
             }
-            Proof::TapretFirst(proof) => ConvolveCommitProof::<_, Tx, _>::verify(proof, msg, &tx),
+            Proof::TapretFirst(proof) => ConvolveCommitProof::<_, Tx, _>::verify(proof, msg, tx),
         }
     }
 }
