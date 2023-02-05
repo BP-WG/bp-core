@@ -150,7 +150,7 @@ impl TxoSeal for RevealedSeal {
 }
 
 impl RevealedSeal {
-    /// Constructs seal for the provided outpoint and seal closing method. Uses
+    /// Creates new seal for the provided outpoint and seal closing method. Uses
     /// `thread_rng` to initialize blinding factor.
     #[inline]
     pub fn new(method: CloseMethod, outpoint: Outpoint) -> RevealedSeal {
@@ -162,34 +162,46 @@ impl RevealedSeal {
         }
     }
 
-    /// Constructs seal using the provided random number generator for creating
-    /// blinding factor value
+    /// Creates new seal pointing to a witness transaction of another seal.
+    /// Takes seal closing method and witness transaction output number as
+    /// arguments. Uses `thread_rng` to initialize blinding factor.
+    #[inline]
+    pub fn new_vout(method: CloseMethod, vout: impl Into<Vout>) -> RevealedSeal {
+        Self {
+            method,
+            blinding: thread_rng().next_u64(),
+            txid: None,
+            vout: vout.into(),
+        }
+    }
+
+    /// Reconstructs previously defined seal pointing to a witness transaction
+    /// of another seal with a given method, witness transaction output number
+    /// and previously generated blinding factor value..
     #[inline]
     pub fn with_txid(
         method: CloseMethod,
         txid: Txid,
         vout: impl Into<Vout>,
-        blinding: Option<u64>,
+        blinding: u64,
     ) -> RevealedSeal {
         RevealedSeal {
             method,
             txid: Some(txid),
             vout: vout.into(),
-            blinding: blinding.unwrap_or_else(|| thread_rng().next_u64()),
+            blinding,
         }
     }
 
-    /// Constructs the seal pointing to a witness transaction of another seal.
-    pub fn with_vout(
-        method: CloseMethod,
-        vout: impl Into<Vout>,
-        blinding: Option<u64>,
-    ) -> RevealedSeal {
+    /// Reconstructs previously defined seal pointing to a witness transaction
+    /// of another seal with a given method, witness transaction output number
+    /// and previously generated blinding factor value..
+    pub fn with_vout(method: CloseMethod, vout: impl Into<Vout>, blinding: u64) -> RevealedSeal {
         RevealedSeal {
             method,
             txid: None,
             vout: vout.into(),
-            blinding: blinding.unwrap_or_else(|| thread_rng().next_u64()),
+            blinding,
         }
     }
 
