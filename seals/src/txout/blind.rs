@@ -311,6 +311,11 @@ static MIDSTATE_CONCEALED_SEAL: [u8; 32] = [
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = bc::LIB_NAME_BP)]
 #[display(Self::to_baid58)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
 pub struct ConcealedSeal(
     #[from]
     #[from([u8; 32])]
