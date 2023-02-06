@@ -17,7 +17,7 @@ name = "dbc"
 path = "src/lib.rs"
 
 [dependencies]
-amplify = "4.0.0-beta.10"
+amplify = "4.0.0-beta.15"
 bp-primitives = { version = "0.10.0-beta.1", path = "../primitives" }
 secp256k1 = { version = "0.26.0", features = ["global-context", "rand-std"] }
 strict_encoding = "2.0.0-beta.5"

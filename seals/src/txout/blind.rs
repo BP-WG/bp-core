@@ -25,9 +25,8 @@ use std::convert::{TryFrom, TryInto};
 use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 
-use amplify::hex::FromHex;
 use amplify::{hex, Bytes32, Wrapper};
-use baid58::ToBaid58;
+use baid58::{Baid58ParseError, FromBaid58, ToBaid58};
 use bc::{Outpoint, Txid, Vout};
 use commit_verify::{CommitVerify, Conceal};
 use dbc::tapret::Lnpbp12;
@@ -318,16 +317,14 @@ pub struct ConcealedSeal(
 );
 
 impl ToBaid58<32> for ConcealedSeal {
-    const HRP: &'static str = "utxob";
-
+    const HRI: &'static str = "utxob";
     fn to_baid58_payload(&self) -> [u8; 32] { self.0.into_inner() }
 }
+impl FromBaid58<32> for ConcealedSeal {}
 
 impl FromStr for ConcealedSeal {
-    type Err = ParseError;
-
-    // TODO: Use Baid58 format
-    fn from_str(s: &str) -> Result<Self, Self::Err> { Ok(ConcealedSeal::from_hex(s)?) }
+    type Err = Baid58ParseError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> { ConcealedSeal::from_baid58_str(s) }
 }
 
 impl From<Outpoint> for ConcealedSeal {
@@ -341,6 +338,8 @@ impl CommitVerify<RevealedSeal, Lnpbp12> for ConcealedSeal {
 
 #[cfg(test)]
 mod test {
+    use amplify::hex::FromHex;
+
     use super::*;
 
     #[test]

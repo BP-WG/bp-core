@@ -16,7 +16,7 @@ readme = "../README.md"
 name = "bc"
 
 [dependencies]
-amplify = "4.0.0-beta.10"
+amplify = "4.0.0-beta.15"
 secp256k1 = { version = "0.26.0", features = ["global-context"] }
 strict_encoding = "2.0.0-beta.5"
 commit_verify = "0.10.0-beta.1"

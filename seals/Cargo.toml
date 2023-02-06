@@ -21,7 +21,7 @@ amplify = "4.0.0-beta.10"
 single_use_seals = "0.10.0-beta.1"
 commit_verify = "0.10.0-beta.2"
 strict_encoding = "2.0.0-beta.5"
-baid58 = "0.1.0"
+baid58 = "0.2.0"
 bp-primitives = { version = "0.10.0-beta.1", path = "../primitives" }
 bp-dbc = { version = "0.10.0-beta.1", path = "../dbc" }
 rand = "0.8.5"
