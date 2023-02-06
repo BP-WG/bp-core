@@ -103,9 +103,9 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "baid58"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "16db9f8a10cac6c74b78f8922bfb4b3eb5bbbed4734fb9fa8218af32b5e381f4"
+checksum = "2a05192bd44b6cced6d9f89b98d82fba5d1df844332e34d4888ec6ba5b28a487"
 dependencies = [
  "base58",
  "blake3",
@@ -149,7 +149,7 @@ dependencies = [
 
 [[package]]
 name = "bp-core"
-version = "0.10.0-beta.1"
+version = "0.10.0-beta.2"
 dependencies = [
  "amplify",
  "bp-dbc",
@@ -163,7 +163,7 @@ dependencies = [
 
 [[package]]
 name = "bp-dbc"
-version = "0.10.0-beta.1"
+version = "0.10.0-beta.2"
 dependencies = [
  "amplify",
  "bp-primitives",
@@ -175,7 +175,7 @@ dependencies = [
 
 [[package]]
 name = "bp-primitives"
-version = "0.10.0-beta.1"
+version = "0.10.0-beta.2"
 dependencies = [
  "amplify",
  "commit_verify",
@@ -186,7 +186,7 @@ dependencies = [
 
 [[package]]
 name = "bp-seals"
-version = "0.10.0-beta.1"
+version = "0.10.0-beta.2"
 dependencies = [
  "amplify",
  "baid58",
@@ -225,8 +225,9 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "commit_verify"
-version = "0.10.0-beta.2"
-source = "git+https://github.com/LNP-BP/client_side_validation#86821f8b727e46064cdfab07e9788db058372eef"
+version = "0.10.0-beta.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "072e9eeca63f7e23387f17f7b897042a66399f4e6965525c69559acace91b2b0"
 dependencies = [
  "amplify",
  "rand",

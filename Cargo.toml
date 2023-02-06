@@ -22,7 +22,7 @@ license = "Apache-2.0"
 
 [package]
 name = "bp-core"
-version = "0.10.0-beta.1"
+version = "0.10.0-beta.2"
 description = "Bitcoin protocol core library (BP Core Lib)"
 keywords = ["lnp-bp", "smart-contracts", "bitcoin", "blockchain"]
 categories = ["cryptography"]
@@ -40,13 +40,13 @@ name = "bp"
 path = "src/lib.rs"
 
 [dependencies]
-amplify = "4.0.0-beta.11"
-strict_encoding = "2.0.0-beta.3"
-commit_verify = "0.10.0-beta.1"
-single_use_seals = "0.10.0-beta.1"
+amplify = "4.0.0-beta.15"
+strict_encoding = "2.0.0-rc.1"
+commit_verify = "0.10.0-beta.3"
+single_use_seals = "0.10.0-beta.2"
 bp-primitives = { version = "0.10.0-beta.1", path = "./primitives" }
-bp-dbc = { version = "0.10.0-beta.1", path = "./dbc" }
-bp-seals = { version = "0.10.0-beta.1", path = "./seals" }
+bp-dbc = { version = "0.10.0-beta.2", path = "./dbc" }
+bp-seals = { version = "0.10.0-beta.2", path = "./seals" }
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
 
 [features]
@@ -60,6 +60,3 @@ serde = [
 
 [package.metadata.docs.rs]
 features = [ "all" ]
-
-[patch.crates-io]
-commit_verify = { git = "https://github.com/LNP-BP/client_side_validation" }

@@ -1,6 +1,6 @@
 [package]
 name = "bp-primitives"
-version = "0.10.0-beta.1"
+version = "0.10.0-beta.2"
 description = "Bitcoin protocol primitives library"
 keywords = ["lnp-bp", "smart-contracts", "bitcoin", "blockchain"]
 categories = ["cryptography"]
@@ -18,8 +18,8 @@ name = "bc"
 [dependencies]
 amplify = "4.0.0-beta.15"
 secp256k1 = { version = "0.26.0", features = ["global-context"] }
-strict_encoding = "2.0.0-beta.5"
-commit_verify = "0.10.0-beta.1"
+strict_encoding = "2.0.0-rc.1"
+commit_verify = "0.10.0-beta.3"
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
 
 [features]
