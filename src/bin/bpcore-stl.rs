@@ -33,28 +33,11 @@ use bp::LIB_NAME_BP;
 use commit_verify::{mpc, LIB_NAME_COMMIT_VERIFY};
 use strict_encoding::{StrictEncode, StrictWriter};
 use strict_types::typelib::LibBuilder;
-use strict_types::{Dependency, TypeLibId};
+use strict_types::{Dependency, TypeLib, TypeLibId};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn export(root: &str, lib: TypeLib) -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
-    let commit_id =
-        TypeLibId::from_str("eric_pablo_junior_6dNLcuqHACv1yYndmvNnXHuP7g3DV4qVkSf9tou6cDBm")
-            .expect("embedded id");
-    let imports = bmap! {
-        libname!(LIB_NAME_COMMIT_VERIFY) => (lib_alias!(LIB_NAME_COMMIT_VERIFY), Dependency::with(commit_id, libname!(LIB_NAME_COMMIT_VERIFY), (0,10,0))),
-    };
-
-    let lib = LibBuilder::new(libname!(LIB_NAME_BP))
-        .process::<bc::Tx>()?
-        .process::<dbc::AnchorId>()?
-        .process::<dbc::Anchor<mpc::MerkleTree>>()?
-        .process::<dbc::Anchor<mpc::MerkleBlock>>()?
-        .process::<dbc::Anchor<mpc::MerkleProof>>()?
-        .process::<seals::txout::ExplicitSeal>()?
-        .process::<seals::txout::blind::ConcealedSeal>()?
-        .process::<seals::txout::blind::RevealedSeal>()?
-        .compile(imports)?;
     let id = lib.id();
 
     let ext = match args.get(2).map(String::as_str) {
@@ -65,7 +48,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let filename = args
         .get(3)
         .cloned()
-        .unwrap_or_else(|| format!("stl/BPCore.{ext}"));
+        .unwrap_or_else(|| format!("stl/{root}.{ext}"));
     let mut file = match args.len() {
         2 => Box::new(stdout()) as Box<dyn io::Write>,
         3 | 4 => Box::new(fs::File::create(filename)?) as Box<dyn io::Write>,
@@ -95,4 +78,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let commit_id =
+        TypeLibId::from_str("eric_pablo_junior_6dNLcuqHACv1yYndmvNnXHuP7g3DV4qVkSf9tou6cDBm")
+            .expect("embedded id");
+    let imports = bmap! {
+        libname!(LIB_NAME_COMMIT_VERIFY) => (lib_alias!(LIB_NAME_COMMIT_VERIFY), Dependency::with(commit_id, libname!(LIB_NAME_COMMIT_VERIFY), (0,10,0))),
+    };
+
+    let lib = LibBuilder::new(libname!(LIB_NAME_BP))
+        .process::<bc::Tx>()?
+        .compile(none!())?;
+    export("Bitcoin", lib)?;
+
+    let lib = LibBuilder::new(libname!(LIB_NAME_BP))
+        .process::<dbc::AnchorId>()?
+        .process::<dbc::Anchor<mpc::MerkleTree>>()?
+        .process::<dbc::Anchor<mpc::MerkleBlock>>()?
+        .process::<dbc::Anchor<mpc::MerkleProof>>()?
+        .process::<seals::txout::ExplicitSeal>()?
+        .process::<seals::txout::blind::ConcealedSeal>()?
+        .process::<seals::txout::blind::RevealedSeal>()?
+        .compile(imports)?;
+    export("BPCore", lib)
 }
