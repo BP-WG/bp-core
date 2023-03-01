@@ -39,9 +39,14 @@ exclude = [".github", "primitives", "dbc", "seals"]
 name = "bp"
 path = "src/lib.rs"
 
+[[bin]]
+name = "bpcore-stl"
+required-features = ["stl"]
+
 [dependencies]
 amplify = "4.0.0-beta.18"
 strict_encoding = "2.0.0-rc.1"
+strict_types = { version = "1.0.0-beta.3", optional = true }
 commit_verify = "0.10.0-beta.3"
 single_use_seals = "0.10.0-beta.2"
 bp-primitives = { version = "0.10.0-beta.1", path = "./primitives" }
@@ -51,12 +56,13 @@ serde_crate = { package = "serde", version = "1", features = ["derive"], optiona
 
 [features]
 default = []
-all = ["serde"]
+all = ["serde", "stl"]
 serde = [
     "serde_crate",
     "bp-dbc/serde",
     "bp-seals/serde",
 ]
+stl = ["strict_types", "strict_types/base64"]
 
 [package.metadata.docs.rs]
 features = [ "all" ]
@@ -64,3 +70,4 @@ features = [ "all" ]
 [patch.crates-io]
 strict_encoding = { git = "https://github.com/strict-types/strict-encoding" }
 strict_types = { git = "https://github.com/strict-types/strict-types" }
+commit_verify = { git = "https://github.com/LNP-BP/client_side_validation" }
