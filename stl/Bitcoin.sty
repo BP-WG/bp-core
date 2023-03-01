@@ -18,8 +18,13 @@ data ScriptBytes      :: [U8 ^ ..0xffffffffffffffff]
 data ScriptPubkey     :: ScriptBytes
 data SeqNo            :: U32
 data SigScript        :: ScriptBytes
-data Tx               :: version TxVer, inputs [TxIn ^ ..0xffffffffffffffff], outputs [TxOut ^ ..0xffffffffffffffff], lockTime LockTime
-data TxIn             :: prevOutput Outpoint, sigScript SigScript, sequence SeqNo
+data Tx               :: version TxVer
+                       , inputs [TxIn ^ ..0xffffffffffffffff]
+                       , outputs [TxOut ^ ..0xffffffffffffffff]
+                       , lockTime LockTime
+data TxIn             :: prevOutput Outpoint
+                       , sigScript SigScript
+                       , sequence SeqNo
 data TxOut            :: value Sats, scriptPubkey ScriptPubkey
 data TxVer            :: v1:1 | v2:2
 data Txid             :: [U8 ^ 32]

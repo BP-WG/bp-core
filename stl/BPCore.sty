@@ -1,5 +1,5 @@
 {-
-  Id: ford_lola_silicon_4F7Jgi9L55LqH1eNkUmLRFbRJ9nhcDRHbCXpp2buuTub
+  Id: gate_garcia_robin_DsDVAwMKHjQjHHzWzJ4G1pMQ4ygkGUDezDZ5Aj7uJGta
   Name: BPCore
   Description: Consensus layer for bitcoin protocol
   Author: Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
@@ -7,22 +7,36 @@
   License: Apache-2.0
 -}
 
-typelib BPCore -- ford_lola_silicon_4F7Jgi9L55LqH1eNkUmLRFbRJ9nhcDRHbCXpp2buuTub
+typelib BPCore -- gate_garcia_robin_DsDVAwMKHjQjHHzWzJ4G1pMQ4ygkGUDezDZ5Aj7uJGta
 
 import oberon_parker_cobra_GVur9D96gWvVkXNkss6nTXn3qyLG4tvT3G7AeLwFZACo as Bitcoin
 import eric_pablo_junior_6dNLcuqHACv1yYndmvNnXHuP7g3DV4qVkSf9tou6cDBm as CommitVerify
 
 
 data AnchorId         :: [U8 ^ 32]
-data Anchor_MerkleBlock :: txid Bitcoin.Txid, mpcProof CommitVerify.MerkleBlock, dbcProof Proof
-data Anchor_MerkleProof :: txid Bitcoin.Txid, mpcProof CommitVerify.MerkleProof, dbcProof Proof
-data Anchor_MerkleTree :: txid Bitcoin.Txid, mpcProof CommitVerify.MerkleTree, dbcProof Proof
+data AnchorMerkleBlock :: txid Bitcoin.Txid
+                       , mpcProof CommitVerify.MerkleBlock
+                       , dbcProof Proof
+data AnchorMerkleProof :: txid Bitcoin.Txid
+                       , mpcProof CommitVerify.MerkleProof
+                       , dbcProof Proof
+data AnchorMerkleTree :: txid Bitcoin.Txid
+                       , mpcProof CommitVerify.MerkleTree
+                       , dbcProof Proof
 data CloseMethod      :: opretFirst:0 | tapretFirst:1
 data ConcealedSeal    :: [U8 ^ 32]
-data ExplicitSeal     :: method CloseMethod, txid Bitcoin.Txid?, vout Bitcoin.Vout
-data Proof            :: opretFirst () | tapretFirst TapretProof
-data RevealedSeal     :: method CloseMethod, txid Bitcoin.Txid?, vout Bitcoin.Vout, blinding U64
-data TapretNodePartner :: leftNode Bitcoin.TapNodeHash | rightLeaf Bitcoin.LeafScript | rightBranch TapretRightBranch
+data ExplicitSeal     :: method CloseMethod
+                       , txid Bitcoin.Txid?
+                       , vout Bitcoin.Vout
+data Proof            :: opretFirst ()
+                       | tapretFirst TapretProof
+data RevealedSeal     :: method CloseMethod
+                       , txid Bitcoin.Txid?
+                       , vout Bitcoin.Vout
+                       , blinding U64
+data TapretNodePartner :: leftNode Bitcoin.TapNodeHash
+                       | rightLeaf Bitcoin.LeafScript
+                       | rightBranch TapretRightBranch
 data TapretPathProof  :: partnerNode TapretNodePartner?, nonce U8
 data TapretProof      :: pathProof TapretPathProof, internalPk Bitcoin.InternalPk
 data TapretRightBranch :: leftNodeHash Bitcoin.TapNodeHash, rightNodeHash Bitcoin.TapNodeHash
