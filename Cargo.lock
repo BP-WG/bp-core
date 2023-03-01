@@ -4,14 +4,14 @@ version = 3
 
 [[package]]
 name = "amplify"
-version = "4.0.0-beta.15"
+version = "4.0.0-beta.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2cc2aa6bd36c9cd67fdebb50adf4ec4551ef58420a5700227e2bde5e64384d9"
+checksum = "7b52c4d735bf8fdf9d0d177ba22d0ca21f14c79bda216e3a1a6d882eb3d79112"
 dependencies = [
  "amplify_apfloat",
  "amplify_derive",
  "amplify_num",
- "amplify_syn 1.1.6",
+ "amplify_syn",
  "ascii",
  "serde",
  "serde_json",
@@ -23,9 +23,9 @@ dependencies = [
 
 [[package]]
 name = "amplify_apfloat"
-version = "0.1.4"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a958199f6993a34e74b9d22b22709e5c6e527e901d7083b24f0a532445dbfc84"
+checksum = "f5b7f29fad2a3def5dfbfed0da85b886eb927a18fe0296c06e39880b7a96db05"
 dependencies = [
  "amplify_num",
  "bitflags",
@@ -33,11 +33,11 @@ dependencies = [
 
 [[package]]
 name = "amplify_derive"
-version = "4.0.0-alpha.5"
+version = "4.0.0-alpha.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "88541432753e17756ae72f8064335d2f2c048165ff4822094334d767108762ca"
+checksum = "01c4835e964725149d7961ec5af2ca1302f6f68c8c738b4acb06185f596c3333"
 dependencies = [
- "amplify_syn 2.0.0-beta.1",
+ "amplify_syn",
  "proc-macro2",
  "quote",
  "syn",
@@ -54,20 +54,9 @@ dependencies = [
 
 [[package]]
 name = "amplify_syn"
-version = "1.1.6"
+version = "2.0.0-beta.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da24db1445cc7bc3842fa072c2d51fe5b25b812b6a572d65842a4c72e87221ac"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "amplify_syn"
-version = "2.0.0-beta.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5eba488aa4b78ca719aff57edfbe634efef62232110c35442cd9136c67cedf39"
+checksum = "2e3db5cb96f8f18a9566a975c521b77485f6f8e3e8d866d0f52369446ba31274"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -344,9 +333,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.17.0"
+version = "1.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f61fba1741ea2b3d6a1e3178721804bb716a68a6aeba1149b5d52e3d464ea66"
+checksum = "b7e5500299e16ebb147ae15a00a942af264cf3688f47923b8fc2cd5858f23ad3"
 
 [[package]]
 name = "paste"
@@ -456,9 +445,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.92"
+version = "1.0.93"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7434af0dc1cbd59268aa98b4c22c131c0584d2232f6fb166efb993e2832e896a"
+checksum = "cad406b69c91885b5107daf2c29572f6c8cdb3c66826821e286c533490c0bc76"
 dependencies = [
  "itoa",
  "ryu",
@@ -500,8 +489,7 @@ dependencies = [
 [[package]]
 name = "strict_encoding"
 version = "2.0.0-rc.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f0e6e5cd3593dc19835c8caa34db3400ac2e69a6044f1086b5802b2bd51e1067"
+source = "git+https://github.com/strict-types/strict-encoding#c88294b089e2b6c02a8fb56528a8b1a317cc9ab0"
 dependencies = [
  "amplify",
  "strict_encoding_derive",
@@ -510,10 +498,9 @@ dependencies = [
 [[package]]
 name = "strict_encoding_derive"
 version = "2.0.0-beta.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4cb9b35c9d7429212d20ae38bb86ecbc6cd3b3ccf5db6a12d1e2aafa7cedf5b0"
+source = "git+https://github.com/strict-types/strict-encoding#c88294b089e2b6c02a8fb56528a8b1a317cc9ab0"
 dependencies = [
- "amplify_syn 2.0.0-beta.1",
+ "amplify_syn",
  "heck",
  "proc-macro2",
  "quote",
@@ -538,9 +525,9 @@ checksum = "6bdef32e8150c2a081110b42772ffe7d7c9032b606bc226c8260fd97e0976601"
 
 [[package]]
 name = "syn"
-version = "1.0.107"
+version = "1.0.109"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f4064b5b16e03ae50984a5a8ed5d4f8803e6bc1fd170a3cda91a1be4b18e3f5"
+checksum = "72b64191b275b66ffe2469e8af2c1cfe3bafa67b529ead792a6d0160888b4237"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -639,3 +626,8 @@ name = "wasm-bindgen-shared"
 version = "0.2.84"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0046fef7e28c3804e5e38bfa31ea2a0f73905319b677e57ebe37e49358989b5d"
+
+[[patch.unused]]
+name = "strict_types"
+version = "1.0.0-beta.3"
+source = "git+https://github.com/strict-types/strict-types#16986e2dbd64d3e9e960f213a552784f50f929bb"
