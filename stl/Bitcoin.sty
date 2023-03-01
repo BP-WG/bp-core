@@ -1,0 +1,27 @@
+{-
+  Id: oberon_parker_cobra_GVur9D96gWvVkXNkss6nTXn3qyLG4tvT3G7AeLwFZACo
+  Name: BPCore
+  Description: Consensus layer for bitcoin protocol
+  Author: Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
+  Copyright (C) 2023 LNP/BP Standards Association. All rights reserved.
+  License: Apache-2.0
+-}
+
+typelib Bitcoin -- oberon_parker_cobra_GVur9D96gWvVkXNkss6nTXn3qyLG4tvT3G7AeLwFZACo
+
+-- no dependencies
+
+data LockTime         :: U32
+data Outpoint         :: txid Txid, vout Vout
+data Sats             :: U64
+data ScriptBytes      :: [U8 ^ ..0xffffffffffffffff]
+data ScriptPubkey     :: ScriptBytes
+data SeqNo            :: U32
+data SigScript        :: ScriptBytes
+data Tx               :: version TxVer, inputs [TxIn ^ ..0xffffffffffffffff], outputs [TxOut ^ ..0xffffffffffffffff], lockTime LockTime
+data TxIn             :: prevOutput Outpoint, sigScript SigScript, sequence SeqNo
+data TxOut            :: value Sats, scriptPubkey ScriptPubkey
+data TxVer            :: v1:1 | v2:2
+data Txid             :: [U8 ^ 32]
+data Vout             :: U32
+

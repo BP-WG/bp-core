@@ -27,12 +27,13 @@
 use std::cmp::Ordering;
 
 use amplify::{Bytes32, Wrapper};
-use bc::{ScriptPubkey, Tx, Txid, LIB_NAME_BP};
+use bc::{ScriptPubkey, Tx, Txid};
 use commit_verify::mpc::{self, Message, ProtocolId};
 use commit_verify::{strategies, CommitStrategy, CommitmentId, ConvolveCommitProof};
 use strict_encoding::{StrictDumb, StrictEncode};
 
 use crate::tapret::{TapretError, TapretProof};
+use crate::LIB_NAME_BPCORE;
 
 /// Default depth of LNPBP-4 commitment tree
 pub const ANCHOR_MIN_LNPBP4_DEPTH: u8 = 3;
@@ -41,7 +42,7 @@ pub const ANCHOR_MIN_LNPBP4_DEPTH: u8 = 3;
 #[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
 #[wrapper(Deref, BorrowSlice, Display, FromStr, Hex, Index, RangeOps)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
+#[strict_type(lib = LIB_NAME_BPCORE)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -76,7 +77,7 @@ pub enum VerifyError {
 /// defined by LNPBP-4.
 #[derive(Clone, PartialEq, Eq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
+#[strict_type(lib = LIB_NAME_BPCORE)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct Anchor<L: mpc::Proof + StrictDumb> {
     /// Transaction containing deterministic bitcoin commitment.
@@ -235,7 +236,7 @@ impl Anchor<mpc::MerkleBlock> {
 /// commitment.
 #[derive(Clone, PartialEq, Eq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP, tags = order)]
+#[strict_type(lib = LIB_NAME_BPCORE, tags = order)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 #[non_exhaustive]
 pub enum Proof {

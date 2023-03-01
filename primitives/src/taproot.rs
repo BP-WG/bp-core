@@ -35,7 +35,7 @@ use strict_encoding::{
 };
 
 use crate::opcodes::*;
-use crate::{ScriptBytes, ScriptPubkey, WitnessVer, LIB_NAME_BP};
+use crate::{ScriptBytes, ScriptPubkey, WitnessVer, LIB_NAME_BITCOIN};
 
 /// The SHA-256 midstate value for the TapLeaf hash.
 pub const MIDSTATE_TAPLEAF: [u8; 32] = [
@@ -69,7 +69,7 @@ pub const MIDSTATE_TAPSIGHASH: [u8; 32] = [
 #[wrapper(Deref, LowerHex, Display, FromStr)]
 #[wrapper_mut(DerefMut)]
 #[derive(StrictType, StrictDumb)]
-#[strict_type(lib = LIB_NAME_BP, dumb = { Self(XOnlyPublicKey::from_slice(&[1u8; 32]).unwrap()) })]
+#[strict_type(lib = LIB_NAME_BITCOIN, dumb = { Self(XOnlyPublicKey::from_slice(&[1u8; 32]).unwrap()) })]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -179,7 +179,7 @@ impl IntoTapHash for TapBranchHash {
 #[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, Index, RangeOps, BorrowSlice, Hex, Display, FromStr)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct TapNodeHash(
     #[from]
@@ -226,7 +226,7 @@ pub enum LeafVer {
 }
 
 impl StrictType for LeafVer {
-    const STRICT_LIB_NAME: &'static str = LIB_NAME_BP;
+    const STRICT_LIB_NAME: &'static str = LIB_NAME_BITCOIN;
     fn strict_name() -> Option<TypeName> { Some(tn!("LeafVer")) }
 }
 impl StrictProduct for LeafVer {}
@@ -288,7 +288,7 @@ impl UpperHex for LeafVer {
 /// extracting it.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP, dumb = { Self(0x51) })]
+#[strict_type(lib = LIB_NAME_BITCOIN, dumb = { Self(0x51) })]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct FutureLeafVer(u8);
 
@@ -321,7 +321,7 @@ impl UpperHex for FutureLeafVer {
 
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default, Display)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 #[display("{version:04x} {script:x}")]
 pub struct LeafScript {
@@ -347,7 +347,7 @@ impl LeafScript {
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Display)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP, tags = repr, into_u8, try_from_u8)]
+#[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
 #[repr(u8)]
 pub enum TapCode {
     /// Push the next 32 bytes as an array onto the stack.
@@ -380,7 +380,7 @@ pub enum TapCode {
 #[wrapper(Deref, Index, RangeOps, BorrowSlice, LowerHex, UpperHex)]
 #[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),

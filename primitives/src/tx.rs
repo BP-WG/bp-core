@@ -24,12 +24,12 @@ use std::str::FromStr;
 
 use amplify::Bytes32;
 
-use super::{VarIntArray, LIB_NAME_BP};
+use super::{VarIntArray, LIB_NAME_BITCOIN};
 use crate::{ScriptPubkey, SigScript};
 
 #[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, From)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -45,7 +45,7 @@ pub struct Txid(
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display, From)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -67,7 +67,7 @@ impl FromStr for Vout {
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Display)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 #[display("{txid}:{vout}")]
 pub struct Outpoint {
@@ -86,7 +86,7 @@ impl Outpoint {
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -96,7 +96,7 @@ pub struct SeqNo(u32);
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct TxIn {
     pub prev_output: Outpoint,
@@ -106,7 +106,7 @@ pub struct TxIn {
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -116,7 +116,7 @@ pub struct Sats(u64);
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct TxOut {
     pub value: Sats,
@@ -125,7 +125,7 @@ pub struct TxOut {
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP, tags = repr, into_u8, try_from_u8)]
+#[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 #[repr(u8)]
 pub enum TxVer {
@@ -136,7 +136,7 @@ pub enum TxVer {
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -146,7 +146,7 @@ pub struct LockTime(u32);
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct Tx {
     pub version: TxVer,

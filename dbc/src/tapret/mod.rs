@@ -66,7 +66,6 @@ mod tx;
 mod txout;
 mod xonlypk;
 
-pub use bc::LIB_NAME_BP;
 pub use tx::TapretError;
 pub use xonlypk::TapretKeyError;
 
@@ -78,6 +77,7 @@ use bc::{InternalPk, IntoTapHash, LeafScript, ScriptPubkey, TapBranchHash, TapNo
 use commit_verify::CommitmentProtocol;
 
 pub use self::tapscript::TAPRET_SCRIPT_COMMITMENT_PREFIX;
+use crate::LIB_NAME_BPCORE;
 
 impl CommitmentProtocol for Lnpbp12 {}
 
@@ -99,7 +99,7 @@ pub enum TapretPathError {
 /// the child elements.
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
+#[strict_type(lib = LIB_NAME_BPCORE)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 #[display("{left_node_hash}:{right_node_hash}")]
 pub struct TapretRightBranch {
@@ -162,7 +162,7 @@ impl StrictDecode for TapretRightBranch {
 /// tree node does not contain an alternative OP-RETURN commitment script.
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, From)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP, tags = order, dumb = Self::RightLeaf(default!()))]
+#[strict_type(lib = LIB_NAME_BPCORE, tags = order, dumb = Self::RightLeaf(default!()))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 #[display(inner)]
 pub enum TapretNodePartner {
@@ -246,7 +246,7 @@ impl TapretNodePartner {
 /// [`TapretNodePartner`].
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
+#[strict_type(lib = LIB_NAME_BPCORE)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct TapretPathProof {
     /// Information about the sibling at level 1 of the tree
@@ -328,7 +328,7 @@ impl<'data> IntoIterator for &'data TapretPathProof {
 /// client-side-validation of the commitment.
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
+#[strict_type(lib = LIB_NAME_BPCORE)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct TapretProof {
     /// A merkle path to the commitment inside the taproot script tree. For

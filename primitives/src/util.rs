@@ -19,11 +19,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::LIB_NAME_BP;
+use crate::LIB_NAME_BITCOIN;
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display, Default)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP, tags = repr, into_u8, try_from_u8)]
+#[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),

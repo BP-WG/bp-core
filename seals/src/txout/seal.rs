@@ -52,7 +52,7 @@ pub trait TxoSeal {
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = bc::LIB_NAME_BP, tags = repr, into_u8, try_from_u8)]
+#[strict_type(lib = dbc::LIB_NAME_BPCORE, tags = repr, into_u8, try_from_u8)]
 #[repr(u8)]
 #[non_exhaustive]
 pub enum CloseMethod {

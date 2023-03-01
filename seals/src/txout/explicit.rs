@@ -37,7 +37,7 @@ use crate::txout::{CloseMethod, MethodParseError, TxoSeal, WitnessVoutError};
 /// we can't perform them).
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = bc::LIB_NAME_BP)]
+#[strict_type(lib = dbc::LIB_NAME_BPCORE)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct ExplicitSeal {
     /// Commitment to the specific seal close method [`CloseMethod`] which must

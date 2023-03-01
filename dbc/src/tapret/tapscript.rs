@@ -21,10 +21,11 @@
 
 use std::io;
 
-use bc::{TapCode, TapScript, LIB_NAME_BP};
+use bc::{TapCode, TapScript};
 use commit_verify::{mpc, strategies, CommitEncode, CommitStrategy, CommitVerify};
 
 use super::Lnpbp12;
+use crate::LIB_NAME_BPCORE;
 
 /// Hardcoded tapret script prefix consisting of 29 `OP_RESERVED` pushes,
 /// followed by `OP_RETURN` and `OP_PUSHBYTES_33`.
@@ -35,7 +36,7 @@ pub const TAPRET_SCRIPT_COMMITMENT_PREFIX: [u8; 31] = [
 
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
+#[strict_type(lib = LIB_NAME_BPCORE)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct TapretCommitment {
     /// LNPBP-4 multi-protocol commitment.

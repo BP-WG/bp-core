@@ -47,6 +47,9 @@ extern crate serde_crate as serde;
 #[macro_use]
 extern crate strict_encoding;
 
+/// Name of the strict type library generated from the data types in this crate.
+pub const LIB_NAME_BPCORE: &str = "BPCore";
+
 pub mod anchor;
 pub mod keytweak;
 pub mod opret;

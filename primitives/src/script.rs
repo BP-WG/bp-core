@@ -22,12 +22,12 @@
 use amplify::confinement::Confined;
 
 use crate::opcodes::*;
-use crate::{ScriptBytes, LIB_NAME_BP};
+use crate::{ScriptBytes, LIB_NAME_BITCOIN};
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Display)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 // TODO: Replace `try_from` with `from` since opcodes cover whole range of u8
-#[strict_type(lib = LIB_NAME_BP, tags = repr, into_u8, try_from_u8)]
+#[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
 #[repr(u8)]
 pub enum OpCode {
     /// Push the next 32 bytes as an array onto the stack.
@@ -60,7 +60,7 @@ pub enum OpCode {
 #[wrapper(Deref, Index, RangeOps, BorrowSlice, LowerHex, UpperHex)]
 #[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -72,7 +72,7 @@ pub struct SigScript(ScriptBytes);
 #[wrapper(Deref, Index, RangeOps, BorrowSlice, LowerHex, UpperHex)]
 #[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BP)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),

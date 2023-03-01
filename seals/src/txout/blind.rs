@@ -42,7 +42,7 @@ use crate::txout::{ExplicitSeal, TxoSeal};
 /// about the bitcoin transaction output.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = bc::LIB_NAME_BP)]
+#[strict_type(lib = dbc::LIB_NAME_BPCORE)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct RevealedSeal {
     /// Commitment to the specific seal close method [`CloseMethod`] which must
@@ -303,7 +303,7 @@ impl Display for RevealedSeal {
 #[derive(Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display, From)]
 #[wrapper(Index, RangeOps, BorrowSlice, Hex)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = bc::LIB_NAME_BP)]
+#[strict_type(lib = dbc::LIB_NAME_BPCORE)]
 #[display(Self::to_baid58)]
 #[cfg_attr(
     feature = "serde",

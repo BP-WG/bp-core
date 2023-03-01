@@ -55,7 +55,7 @@ pub use tx::{LockTime, Outpoint, Sats, SeqNo, Tx, TxIn, TxOut, TxVer, Txid, Vout
 pub use types::{ScriptBytes, VarIntArray};
 pub use util::Chain;
 
-pub const LIB_NAME_BP: &str = "BP";
+pub const LIB_NAME_BITCOIN: &str = "Bitcoin";
 
 mod types {
     use std::fmt::{Formatter, LowerHex, UpperHex};
@@ -63,7 +63,7 @@ mod types {
     use amplify::confinement::Confined;
     use amplify::hex::ToHex;
 
-    use super::LIB_NAME_BP;
+    use super::LIB_NAME_BITCOIN;
     use crate::opcodes::*;
 
     pub type VarIntArray<T> = Confined<Vec<T>, 0, { u64::MAX as usize }>;
@@ -72,7 +72,7 @@ mod types {
         Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default, Debug, From
     )]
     #[derive(StrictType, StrictEncode, StrictDecode)]
-    #[strict_type(lib = LIB_NAME_BP)]
+    #[strict_type(lib = LIB_NAME_BITCOIN)]
     #[cfg_attr(
         feature = "serde",
         derive(Serialize, Deserialize),

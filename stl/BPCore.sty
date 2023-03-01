@@ -1,5 +1,5 @@
 {-
-  Id: archive_monaco_sound_724NqfRbe5UuRJpPbsiNPzgkHShQkPaUodeNKhiDtpcG
+  Id: ford_lola_silicon_4F7Jgi9L55LqH1eNkUmLRFbRJ9nhcDRHbCXpp2buuTub
   Name: BPCore
   Description: Consensus layer for bitcoin protocol
   Author: Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
@@ -7,39 +7,23 @@
   License: Apache-2.0
 -}
 
-typelib BP -- archive_monaco_sound_724NqfRbe5UuRJpPbsiNPzgkHShQkPaUodeNKhiDtpcG
+typelib BPCore -- ford_lola_silicon_4F7Jgi9L55LqH1eNkUmLRFbRJ9nhcDRHbCXpp2buuTub
 
+import oberon_parker_cobra_GVur9D96gWvVkXNkss6nTXn3qyLG4tvT3G7AeLwFZACo as Bitcoin
 import eric_pablo_junior_6dNLcuqHACv1yYndmvNnXHuP7g3DV4qVkSf9tou6cDBm as CommitVerify
 
 
 data AnchorId         :: [U8 ^ 32]
-data Anchor_MerkleBlock :: txid Txid, mpcProof CommitVerify.MerkleBlock, dbcProof Proof
-data Anchor_MerkleProof :: txid Txid, mpcProof CommitVerify.MerkleProof, dbcProof Proof
-data Anchor_MerkleTree :: txid Txid, mpcProof CommitVerify.MerkleTree, dbcProof Proof
+data Anchor_MerkleBlock :: txid Bitcoin.Txid, mpcProof CommitVerify.MerkleBlock, dbcProof Proof
+data Anchor_MerkleProof :: txid Bitcoin.Txid, mpcProof CommitVerify.MerkleProof, dbcProof Proof
+data Anchor_MerkleTree :: txid Bitcoin.Txid, mpcProof CommitVerify.MerkleTree, dbcProof Proof
 data CloseMethod      :: opretFirst:0 | tapretFirst:1
 data ConcealedSeal    :: [U8 ^ 32]
-data ExplicitSeal     :: method CloseMethod, txid Txid?, vout Vout
-data InternalPk       :: [U8 ^ 32]
-data LeafScript       :: version LeafVer, script ScriptBytes
-data LeafVer          :: U8
-data LockTime         :: U32
-data Outpoint         :: txid Txid, vout Vout
+data ExplicitSeal     :: method CloseMethod, txid Bitcoin.Txid?, vout Bitcoin.Vout
 data Proof            :: opretFirst () | tapretFirst TapretProof
-data RevealedSeal     :: method CloseMethod, txid Txid?, vout Vout, blinding U64
-data Sats             :: U64
-data ScriptBytes      :: [U8 ^ ..0xffffffffffffffff]
-data ScriptPubkey     :: ScriptBytes
-data SeqNo            :: U32
-data SigScript        :: ScriptBytes
-data TapNodeHash      :: [U8 ^ 32]
-data TapretNodePartner :: leftNode TapNodeHash | rightLeaf LeafScript | rightBranch TapretRightBranch
+data RevealedSeal     :: method CloseMethod, txid Bitcoin.Txid?, vout Bitcoin.Vout, blinding U64
+data TapretNodePartner :: leftNode Bitcoin.TapNodeHash | rightLeaf Bitcoin.LeafScript | rightBranch TapretRightBranch
 data TapretPathProof  :: partnerNode TapretNodePartner?, nonce U8
-data TapretProof      :: pathProof TapretPathProof, internalPk InternalPk
-data TapretRightBranch :: leftNodeHash TapNodeHash, rightNodeHash TapNodeHash
-data Tx               :: version TxVer, inputs [TxIn ^ ..0xffffffffffffffff], outputs [TxOut ^ ..0xffffffffffffffff], lockTime LockTime
-data TxIn             :: prevOutput Outpoint, sigScript SigScript, sequence SeqNo
-data TxOut            :: value Sats, scriptPubkey ScriptPubkey
-data TxVer            :: v1:1 | v2:2
-data Txid             :: [U8 ^ 32]
-data Vout             :: U32
+data TapretProof      :: pathProof TapretPathProof, internalPk Bitcoin.InternalPk
+data TapretRightBranch :: leftNodeHash Bitcoin.TapNodeHash, rightNodeHash Bitcoin.TapNodeHash
 

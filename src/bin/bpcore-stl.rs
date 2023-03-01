@@ -29,8 +29,9 @@ use std::str::FromStr;
 use std::{env, fs, io};
 
 use amplify::num::u24;
-use bp::LIB_NAME_BP;
+use bc::LIB_NAME_BITCOIN;
 use commit_verify::{mpc, LIB_NAME_COMMIT_VERIFY};
+use dbc::LIB_NAME_BPCORE;
 use strict_encoding::{StrictEncode, StrictWriter};
 use strict_types::typelib::LibBuilder;
 use strict_types::{Dependency, TypeLib, TypeLibId};
@@ -81,19 +82,21 @@ fn export(root: &str, lib: TypeLib) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let lib = LibBuilder::new(libname!(LIB_NAME_BITCOIN))
+        .process::<bc::Tx>()?
+        .compile(none!())?;
+    let bitcoin_id = lib.id();
+    export("Bitcoin", lib)?;
+
     let commit_id =
         TypeLibId::from_str("eric_pablo_junior_6dNLcuqHACv1yYndmvNnXHuP7g3DV4qVkSf9tou6cDBm")
             .expect("embedded id");
     let imports = bmap! {
         libname!(LIB_NAME_COMMIT_VERIFY) => (lib_alias!(LIB_NAME_COMMIT_VERIFY), Dependency::with(commit_id, libname!(LIB_NAME_COMMIT_VERIFY), (0,10,0))),
+        libname!(LIB_NAME_BITCOIN) => (lib_alias!(LIB_NAME_BITCOIN), Dependency::with(bitcoin_id, libname!(LIB_NAME_BITCOIN), (0,10,0))),
     };
 
-    let lib = LibBuilder::new(libname!(LIB_NAME_BP))
-        .process::<bc::Tx>()?
-        .compile(none!())?;
-    export("Bitcoin", lib)?;
-
-    let lib = LibBuilder::new(libname!(LIB_NAME_BP))
+    let lib = LibBuilder::new(libname!(LIB_NAME_BPCORE))
         .process::<dbc::AnchorId>()?
         .process::<dbc::Anchor<mpc::MerkleTree>>()?
         .process::<dbc::Anchor<mpc::MerkleBlock>>()?
