@@ -24,19 +24,25 @@ extern crate amplify;
 #[macro_use]
 extern crate strict_types;
 
+use std::io::stdout;
 use std::str::FromStr;
+use std::{env, fs, io};
 
+use amplify::num::u24;
 use bp::LIB_NAME_BP;
 use commit_verify::{mpc, LIB_NAME_COMMIT_VERIFY};
+use strict_encoding::{StrictEncode, StrictWriter};
 use strict_types::typelib::LibBuilder;
 use strict_types::{Dependency, TypeLibId};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let sty_id =
+    let args: Vec<String> = env::args().collect();
+
+    let commit_id =
         TypeLibId::from_str("eric_pablo_junior_6dNLcuqHACv1yYndmvNnXHuP7g3DV4qVkSf9tou6cDBm")
             .expect("embedded id");
     let imports = bmap! {
-        libname!(LIB_NAME_COMMIT_VERIFY) => (lib_alias!(LIB_NAME_COMMIT_VERIFY), Dependency::with(sty_id, libname!(LIB_NAME_COMMIT_VERIFY), (0,10,0))),
+        libname!(LIB_NAME_COMMIT_VERIFY) => (lib_alias!(LIB_NAME_COMMIT_VERIFY), Dependency::with(commit_id, libname!(LIB_NAME_COMMIT_VERIFY), (0,10,0))),
     };
 
     let lib = LibBuilder::new(libname!(LIB_NAME_BP))
@@ -51,8 +57,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .compile(imports)?;
     let id = lib.id();
 
-    println!(
-        "{{-
+    let ext = match args.get(2).map(String::as_str) {
+        Some("-b") => "stl",
+        Some("-h") => "asc.stl",
+        _ => "sty",
+    };
+    let filename = args
+        .get(3)
+        .cloned()
+        .unwrap_or_else(|| format!("stl/BPCore.{ext}"));
+    let mut file = match args.len() {
+        2 => Box::new(stdout()) as Box<dyn io::Write>,
+        3 | 4 => Box::new(fs::File::create(filename)?) as Box<dyn io::Write>,
+        _ => panic!("invalid argument count"),
+    };
+    match ext {
+        "stl" => {
+            lib.strict_encode(StrictWriter::with(u24::MAX.into_usize(), file))?;
+        }
+        "asc.stl" => {
+            writeln!(file, "{lib:X}")?;
+        }
+        _ => {
+            writeln!(
+                file,
+                "{{-
   Id: {id:+}
   Name: BPCore
   Description: Consensus layer for bitcoin protocol
@@ -60,9 +89,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   Copyright (C) 2023 LNP/BP Standards Association. All rights reserved.
   License: Apache-2.0
 -}}\n"
-    );
-    println!("{lib}");
-    println!("{lib:X}");
+            )?;
+            writeln!(file, "{lib}")?;
+        }
+    }
 
     Ok(())
 }
