@@ -192,7 +192,7 @@ impl ScriptPubkey {
         Self::with_segwit_unchecked(witness_program.version, witness_program.program())
     }
 
-    /// Generates P2WSH-type of scriptPubkey with a given [`WitnessVersion`] and
+    /// Generates P2WSH-type of scriptPubkey with a given [`WitnessVer`] and
     /// the program bytes. Does not do any checks on version or program length.
     pub(crate) fn with_segwit_unchecked(ver: WitnessVer, prog: &[u8]) -> Self {
         let mut script = Self::with_capacity(ScriptBytes::len_for_slice(prog.len()) + 2);
