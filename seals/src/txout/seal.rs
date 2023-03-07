@@ -96,6 +96,7 @@ pub trait SealTxid:
 impl SealTxid for Txid {}
 impl SealTxid for TxPtr {}
 
+/// Transaction pointer which can be used to construct graph of seals.
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default, Debug, Display, From)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE, tags = custom)]
@@ -105,11 +106,13 @@ impl SealTxid for TxPtr {}
     serde(crate = "serde_crate", rename_all = "camelCase")
 )]
 pub enum TxPtr {
+    /// Points to the witness transaction of some other closed seal.
     #[default]
     #[display("~")]
     #[strict_type(tag = 0x0)]
     WitnessTx,
 
+    /// Points to a transaction by the transaction id.
     #[from]
     #[display(inner)]
     #[strict_type(tag = 0x1)]
@@ -122,6 +125,7 @@ impl From<&Txid> for TxPtr {
 }
 
 impl TxPtr {
+    /// Returns transaction id, if known.
     pub fn txid(&self) -> Option<Txid> {
         match self {
             TxPtr::WitnessTx => None,
@@ -129,6 +133,7 @@ impl TxPtr {
         }
     }
 
+    /// Returns transaction id, if known, or some default value otherwise.
     pub fn txid_or(&self, default: Txid) -> Txid {
         match self {
             TxPtr::WitnessTx => default,
@@ -136,6 +141,7 @@ impl TxPtr {
         }
     }
 
+    /// Converts to outpoint, if the transaction id is known.
     pub fn map_to_outpoint(&self, vout: impl Into<Vout>) -> Option<Outpoint> {
         self.txid().map(|txid| Outpoint::new(txid, vout))
     }
