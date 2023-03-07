@@ -265,6 +265,13 @@ impl BlindSeal {
     pub fn to_concealed_seal(&self) -> SecretSeal { self.conceal() }
 }
 
+impl BlindSeal<Txid> {
+    /// Converts `BlindSeal<Txid>` into `BlindSeal<TxPtr>`.
+    pub fn transmutate(self) -> BlindSeal {
+        BlindSeal::with_blinding(self.method, self.txid, self.vout, self.blinding)
+    }
+}
+
 /// Errors happening during parsing string representation of different forms of
 /// single-use-seals
 #[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]
