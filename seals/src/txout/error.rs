@@ -28,10 +28,6 @@ pub enum VerifyError {
     /// seals provided for a batch verification have inconsistent close method.
     InconsistentCloseMethod,
 
-    /// witness transaction can't be found in the publication medium
-    /// (blockchain or channel) by the given id {0}.
-    WitnessTxUnknown(Txid),
-
     /// the provided witness transaction {0} does not closes seal {1}.
     WitnessNotClosingSeal(Txid, Outpoint),
 
