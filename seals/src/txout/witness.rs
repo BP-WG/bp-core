@@ -21,8 +21,9 @@
 
 use bc::{Tx, Txid};
 use commit_verify::mpc;
-use dbc::Proof;
+use dbc::{Anchor, Proof};
 use single_use_seals::SealWitness;
+use strict_encoding::StrictDumb;
 
 use crate::txout::{TxoSeal, VerifyError};
 
@@ -37,6 +38,18 @@ pub struct Witness {
 
     /// Multi-protocol commitment proof from MPC anchor.
     pub proof: Proof,
+}
+
+impl Witness {
+    /// Constructs witness from a witness transaction and extra-transaction
+    /// proof, taken from an anchor.
+    pub fn with<L: mpc::Proof + StrictDumb>(tx: Tx, anchor: Anchor<L>) -> Witness {
+        Witness {
+            tx,
+            txid: anchor.txid,
+            proof: anchor.dbc_proof,
+        }
+    }
 }
 
 impl<Seal: TxoSeal> SealWitness<Seal> for Witness {
