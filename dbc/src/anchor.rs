@@ -61,6 +61,11 @@ impl CommitStrategy for AnchorId {
 /// Errors verifying anchors.
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
 #[display(inner)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", rename_all = "camelCase")
+)]
 pub enum VerifyError {
     /// Tapret commitment verification failure.
     #[from]
