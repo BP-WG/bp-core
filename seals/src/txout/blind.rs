@@ -35,11 +35,11 @@ use rand::{thread_rng, RngCore};
 use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
 
 use super::{CloseMethod, MethodParseError, WitnessVoutError};
-use crate::txout::seal::SealTxid;
+use crate::txout::seal::{SealTxid, TxPtr};
 use crate::txout::{ExplicitSeal, TxoSeal};
 
 /// Seal type which can be blinded and chained with other seals.
-pub type ChainBlindSeal = BlindSeal<Option<Txid>>;
+pub type ChainBlindSeal = BlindSeal<TxPtr>;
 /// Seal type which can be blinded, but can't be chained with other seals.
 pub type SingleBlindSeal = BlindSeal<Txid>;
 
@@ -52,7 +52,7 @@ pub type SingleBlindSeal = BlindSeal<Txid>;
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
-pub struct BlindSeal<Id: SealTxid = Option<Txid>> {
+pub struct BlindSeal<Id: SealTxid = TxPtr> {
     /// Commitment to the specific seal close method [`CloseMethod`] which must
     /// be used to close this seal.
     pub method: CloseMethod,
@@ -81,7 +81,7 @@ impl TryFrom<&BlindSeal> for Outpoint {
     fn try_from(reveal: &BlindSeal) -> Result<Self, Self::Error> {
         reveal
             .txid
-            .map(|txid| Outpoint::new(txid, reveal.vout))
+            .map_to_outpoint(reveal.vout)
             .ok_or(WitnessVoutError)
     }
 }
@@ -142,7 +142,7 @@ impl TxoSeal for BlindSeal {
     fn method(&self) -> CloseMethod { self.method }
 
     #[inline]
-    fn txid(&self) -> Option<Txid> { self.txid }
+    fn txid(&self) -> Option<Txid> { self.txid.txid() }
 
     #[inline]
     fn vout(&self) -> Vout { self.vout }
@@ -151,11 +151,11 @@ impl TxoSeal for BlindSeal {
     fn outpoint(&self) -> Option<Outpoint> { self.try_into().ok() }
 
     #[inline]
-    fn txid_or(&self, default_txid: Txid) -> Txid { self.txid.unwrap_or(default_txid) }
+    fn txid_or(&self, default_txid: Txid) -> Txid { self.txid.txid_or(default_txid) }
 
     #[inline]
     fn outpoint_or(&self, default_txid: Txid) -> Outpoint {
-        Outpoint::new(self.txid.unwrap_or(default_txid), self.vout)
+        Outpoint::new(self.txid.txid_or(default_txid), self.vout)
     }
 }
 
@@ -243,7 +243,7 @@ impl BlindSeal {
         Self {
             method,
             blinding: thread_rng().next_u64(),
-            txid: None,
+            txid: TxPtr::WitnessTx,
             vout: vout.into(),
         }
     }
@@ -254,7 +254,7 @@ impl BlindSeal {
     pub fn with_vout(method: CloseMethod, vout: impl Into<Vout>, blinding: u64) -> BlindSeal {
         BlindSeal {
             method,
-            txid: None,
+            txid: TxPtr::WitnessTx,
             vout: vout.into(),
             blinding,
         }
@@ -324,14 +324,14 @@ impl FromStr for BlindSeal {
                 method: method.parse()?,
                 blinding: u64::from_str_radix(blinding.trim_start_matches("0x"), 16)
                     .map_err(|_| ParseError::WrongBlinding)?,
-                txid: None,
+                txid: TxPtr::WitnessTx,
                 vout: vout.parse().map_err(|_| ParseError::WrongVout)?,
             }),
             (Some(method), Some(txid), Some(vout), Some(blinding), None) => Ok(BlindSeal {
                 method: method.parse()?,
                 blinding: u64::from_str_radix(blinding.trim_start_matches("0x"), 16)
                     .map_err(|_| ParseError::WrongBlinding)?,
-                txid: Some(txid.parse().map_err(|_| ParseError::WrongTxid)?),
+                txid: TxPtr::Txid(txid.parse().map_err(|_| ParseError::WrongTxid)?),
                 vout: vout.parse().map_err(|_| ParseError::WrongVout)?,
             }),
             _ => Err(ParseError::WrongStructure),
@@ -343,7 +343,7 @@ impl FromStr for BlindSeal<Txid> {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let seal = BlindSeal::<Option<Txid>>::from_str(s)?;
+        let seal = BlindSeal::<TxPtr>::from_str(s)?;
         let txid = seal.txid().ok_or(ParseError::TxidRequired)?;
         Ok(Self::with_blinding(seal.method, txid, seal.vout, seal.blinding))
     }
@@ -415,7 +415,7 @@ mod test {
         let reveal = BlindSeal {
             method: CloseMethod::TapretFirst,
             blinding: 54683213134637,
-            txid: Some(
+            txid: TxPtr::Txid(
                 Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839")
                     .unwrap(),
             ),
@@ -429,7 +429,7 @@ mod test {
         let outpoint_hash = BlindSeal {
             method: CloseMethod::TapretFirst,
             blinding: 54683213134637,
-            txid: Some(
+            txid: TxPtr::Txid(
                 Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839")
                     .unwrap(),
             ),
@@ -451,7 +451,7 @@ mod test {
         let mut outpoint_reveal = BlindSeal {
             method: CloseMethod::TapretFirst,
             blinding: 54683213134637,
-            txid: Some(
+            txid: TxPtr::Txid(
                 Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839")
                     .unwrap(),
             ),
@@ -467,7 +467,7 @@ mod test {
         // round-trip
         assert_eq!(ChainBlindSeal::from_str(&s).unwrap(), outpoint_reveal);
 
-        outpoint_reveal.txid = None;
+        outpoint_reveal.txid = TxPtr::WitnessTx;
         let s = outpoint_reveal.to_string();
         assert_eq!(&s, "tapret1st:~:21#0x31bbed7e7b2d");
         // round-trip

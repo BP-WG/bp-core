@@ -27,7 +27,7 @@ use std::str::FromStr;
 
 use bc::{Outpoint, Txid, Vout};
 
-use crate::txout::seal::SealTxid;
+use crate::txout::seal::{SealTxid, TxPtr};
 use crate::txout::{CloseMethod, MethodParseError, TxoSeal, WitnessVoutError};
 
 /// Revealed seal definition which may point to a witness transactions and does
@@ -40,7 +40,7 @@ use crate::txout::{CloseMethod, MethodParseError, TxoSeal, WitnessVoutError};
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
-pub struct ExplicitSeal<Id: SealTxid = Option<Txid>> {
+pub struct ExplicitSeal<Id: SealTxid = TxPtr> {
     /// Commitment to the specific seal close method [`CloseMethod`] which must
     /// be used to close this seal.
     pub method: CloseMethod,
@@ -64,7 +64,7 @@ impl TryFrom<&ExplicitSeal> for Outpoint {
     fn try_from(reveal: &ExplicitSeal) -> Result<Self, Self::Error> {
         reveal
             .txid
-            .map(|txid| Outpoint::new(txid, reveal.vout))
+            .map_to_outpoint(reveal.vout)
             .ok_or(WitnessVoutError)
     }
 }
@@ -81,7 +81,7 @@ impl From<&Outpoint> for ExplicitSeal {
     fn from(outpoint: &Outpoint) -> Self {
         Self {
             method: CloseMethod::TapretFirst,
-            txid: Some(outpoint.txid),
+            txid: TxPtr::Txid(outpoint.txid),
             vout: outpoint.vout,
         }
     }
@@ -97,7 +97,7 @@ impl TxoSeal for ExplicitSeal {
     fn method(&self) -> CloseMethod { self.method }
 
     #[inline]
-    fn txid(&self) -> Option<Txid> { self.txid }
+    fn txid(&self) -> Option<Txid> { self.txid.txid() }
 
     #[inline]
     fn vout(&self) -> Vout { self.vout }
@@ -106,11 +106,11 @@ impl TxoSeal for ExplicitSeal {
     fn outpoint(&self) -> Option<Outpoint> { self.try_into().ok() }
 
     #[inline]
-    fn txid_or(&self, default_txid: Txid) -> Txid { self.txid.unwrap_or(default_txid) }
+    fn txid_or(&self, default_txid: Txid) -> Txid { self.txid.txid_or(default_txid) }
 
     #[inline]
     fn outpoint_or(&self, default_txid: Txid) -> Outpoint {
-        Outpoint::new(self.txid.unwrap_or(default_txid), self.vout)
+        Outpoint::new(self.txid.txid_or(default_txid), self.vout)
     }
 }
 
@@ -120,14 +120,14 @@ impl ExplicitSeal {
     pub fn new(method: CloseMethod, outpoint: Outpoint) -> ExplicitSeal {
         Self {
             method,
-            txid: Some(outpoint.txid),
+            txid: TxPtr::Txid(outpoint.txid),
             vout: outpoint.vout,
         }
     }
 
     /// Constructs seal.
     #[inline]
-    pub fn with(method: CloseMethod, txid: Option<Txid>, vout: impl Into<Vout>) -> ExplicitSeal {
+    pub fn with(method: CloseMethod, txid: TxPtr, vout: impl Into<Vout>) -> ExplicitSeal {
         ExplicitSeal {
             method,
             txid,
@@ -174,12 +174,12 @@ impl FromStr for ExplicitSeal {
             (Some(_), Some(""), ..) => Err(ParseError::TxidRequired),
             (Some(method), Some("~"), Some(vout), None) => Ok(ExplicitSeal {
                 method: method.parse()?,
-                txid: None,
+                txid: TxPtr::WitnessTx,
                 vout: vout.parse().map_err(|_| ParseError::WrongVout)?,
             }),
             (Some(method), Some(txid), Some(vout), None) => Ok(ExplicitSeal {
                 method: method.parse()?,
-                txid: Some(txid.parse().map_err(|_| ParseError::WrongTxid)?),
+                txid: TxPtr::Txid(txid.parse().map_err(|_| ParseError::WrongTxid)?),
                 vout: vout.parse().map_err(|_| ParseError::WrongVout)?,
             }),
             _ => Err(ParseError::WrongStructure),
@@ -189,15 +189,6 @@ impl FromStr for ExplicitSeal {
 
 impl Display for ExplicitSeal {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}:{}:{}",
-            self.method,
-            self.txid
-                .as_ref()
-                .map(Txid::to_string)
-                .unwrap_or_else(|| s!("~")),
-            self.vout,
-        )
+        write!(f, "{}:{}:{}", self.method, self.txid, self.vout,)
     }
 }

@@ -53,7 +53,11 @@ pub trait TxoSeal {
 
 /// Method of single-use-seal closing.
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", rename_all = "camelCase")
+)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE, tags = repr, into_u8, try_from_u8)]
 #[repr(u8)]
@@ -90,4 +94,49 @@ pub trait SealTxid:
 }
 
 impl SealTxid for Txid {}
-impl SealTxid for Option<Txid> {}
+impl SealTxid for TxPtr {}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default, Debug, Display, From)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = dbc::LIB_NAME_BPCORE, tags = custom)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", rename_all = "camelCase")
+)]
+pub enum TxPtr {
+    #[default]
+    #[display("~")]
+    #[strict_type(tag = 0x0)]
+    WitnessTx,
+
+    #[from]
+    #[display(inner)]
+    #[strict_type(tag = 0x1)]
+    Txid(Txid),
+}
+
+impl From<&Txid> for TxPtr {
+    #[inline]
+    fn from(txid: &Txid) -> Self { TxPtr::Txid(*txid) }
+}
+
+impl TxPtr {
+    pub fn txid(&self) -> Option<Txid> {
+        match self {
+            TxPtr::WitnessTx => None,
+            TxPtr::Txid(txid) => Some(*txid),
+        }
+    }
+
+    pub fn txid_or(&self, default: Txid) -> Txid {
+        match self {
+            TxPtr::WitnessTx => default,
+            TxPtr::Txid(txid) => *txid,
+        }
+    }
+
+    pub fn map_to_outpoint(&self, vout: impl Into<Vout>) -> Option<Outpoint> {
+        self.txid().map(|txid| Outpoint::new(txid, vout))
+    }
+}
