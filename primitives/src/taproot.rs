@@ -129,6 +129,11 @@ pub trait IntoTapHash {
 
 #[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Index, RangeOps, BorrowSlice, Hex, Display, FromStr)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
 pub struct TapLeafHash(
     #[from]
     #[from([u8; 32])]
@@ -157,6 +162,11 @@ impl IntoTapHash for TapLeafHash {
 
 #[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Index, RangeOps, BorrowSlice, Hex, Display, FromStr)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
 pub struct TapBranchHash(
     #[from]
     #[from([u8; 32])]
@@ -180,7 +190,11 @@ impl IntoTapHash for TapBranchHash {
 #[wrapper(Deref, Index, RangeOps, BorrowSlice, Hex, Display, FromStr)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
 pub struct TapNodeHash(
     #[from]
     #[from([u8; 32])]
@@ -195,6 +209,11 @@ impl IntoTapHash for TapNodeHash {
 
 #[derive(Wrapper, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
 pub struct TapMerklePath(TinyVec<TapBranchHash>);
 
 /// Taproot annex prefix.
@@ -215,7 +234,11 @@ pub struct InvalidLeafVer(u8);
 
 /// The leaf version for tapleafs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", rename_all = "camelCase")
+)]
 pub enum LeafVer {
     /// BIP-342 tapscript.
     #[default]

@@ -37,7 +37,11 @@ pub const TAPRET_SCRIPT_COMMITMENT_PREFIX: [u8; 31] = [
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BPCORE)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", rename_all = "camelCase")
+)]
 pub struct TapretCommitment {
     /// LNPBP-4 multi-protocol commitment.
     pub mpc: mpc::Commitment,

@@ -24,6 +24,11 @@ use bc::{Outpoint, Txid};
 /// Seal verification errors.
 #[derive(Debug, Display, From, Error)]
 #[display(doc_comments)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", rename_all = "camelCase")
+)]
 pub enum VerifyError {
     /// seals provided for a batch verification have inconsistent close method.
     InconsistentCloseMethod,
