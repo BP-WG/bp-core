@@ -21,8 +21,6 @@
 
 use bc::{Outpoint, Txid};
 
-use crate::resolver;
-
 /// Seal verification errors.
 #[derive(Debug, Display, From, Error)]
 #[display(doc_comments)]
@@ -42,11 +40,6 @@ pub enum VerifyError {
     /// Details: {0}
     #[from]
     InvalidTapretCommitment(dbc::tapret::TapretError),
-
-    /// unable to access commitment publication medium.
-    #[from]
-    #[display(inner)]
-    TxResolverError(resolver::Error),
 }
 
 /// Error happening if the seal data holds only witness transaction output

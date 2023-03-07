@@ -501,8 +501,7 @@ dependencies = [
 [[package]]
 name = "single_use_seals"
 version = "0.10.0-beta.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ea7651417b98128263b5c3d2dc836400eecd7f4fba8470d4ca17f129f9a1b4a"
+source = "git+https://github.com/LNP-BP/client_side_validation#2751efe09686e8fa71434a656b894fddc7499ef3"
 dependencies = [
  "amplify_derive",
 ]

@@ -71,3 +71,4 @@ features = [ "all" ]
 strict_encoding = { git = "https://github.com/strict-types/strict-encoding" }
 strict_types = { git = "https://github.com/strict-types/strict-types" }
 commit_verify = { git = "https://github.com/LNP-BP/client_side_validation" }
+single_use_seals = { git = "https://github.com/LNP-BP/client_side_validation" }
