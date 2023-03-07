@@ -22,7 +22,7 @@
 use bc::{Outpoint, Txid};
 
 /// Seal verification errors.
-#[derive(Debug, Display, From, Error)]
+#[derive(Clone, PartialEq, Eq, Debug, Display, From, Error)]
 #[display(doc_comments)]
 #[cfg_attr(
     feature = "serde",
