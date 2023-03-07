@@ -102,8 +102,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .process::<dbc::Anchor<mpc::MerkleBlock>>()?
         .process::<dbc::Anchor<mpc::MerkleProof>>()?
         .process::<seals::txout::ExplicitSeal>()?
-        .process::<seals::txout::blind::ConcealedSeal>()?
-        .process::<seals::txout::blind::RevealedSeal>()?
+        .process::<seals::txout::blind::SecretSeal>()?
+        .process::<seals::txout::blind::BlindSeal>()?
         .compile(imports)?;
     export("BPCore", lib)
 }

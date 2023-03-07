@@ -39,9 +39,9 @@ use crate::txout::seal::SealTxid;
 use crate::txout::{ExplicitSeal, TxoSeal};
 
 /// Seal type which can be blinded and chained with other seals.
-pub type ChainBlindSeal = RevealedSeal<Option<Txid>>;
+pub type ChainBlindSeal = BlindSeal<Option<Txid>>;
 /// Seal type which can be blinded, but can't be chained with other seals.
-pub type SingleBlindSeal = RevealedSeal<Txid>;
+pub type SingleBlindSeal = BlindSeal<Txid>;
 
 /// Revealed seal definition which may point to a witness transactions and
 /// contains blinding data.
@@ -52,7 +52,7 @@ pub type SingleBlindSeal = RevealedSeal<Txid>;
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
-pub struct RevealedSeal<Id: SealTxid = Option<Txid>> {
+pub struct BlindSeal<Id: SealTxid = Option<Txid>> {
     /// Commitment to the specific seal close method [`CloseMethod`] which must
     /// be used to close this seal.
     pub method: CloseMethod,
@@ -74,11 +74,11 @@ pub struct RevealedSeal<Id: SealTxid = Option<Txid>> {
     pub blinding: u64,
 }
 
-impl TryFrom<&RevealedSeal> for Outpoint {
+impl TryFrom<&BlindSeal> for Outpoint {
     type Error = WitnessVoutError;
 
     #[inline]
-    fn try_from(reveal: &RevealedSeal) -> Result<Self, Self::Error> {
+    fn try_from(reveal: &BlindSeal) -> Result<Self, Self::Error> {
         reveal
             .txid
             .map(|txid| Outpoint::new(txid, reveal.vout))
@@ -86,36 +86,34 @@ impl TryFrom<&RevealedSeal> for Outpoint {
     }
 }
 
-impl TryFrom<RevealedSeal> for Outpoint {
+impl TryFrom<BlindSeal> for Outpoint {
     type Error = WitnessVoutError;
 
     #[inline]
-    fn try_from(reveal: RevealedSeal) -> Result<Self, Self::Error> { Outpoint::try_from(&reveal) }
+    fn try_from(reveal: BlindSeal) -> Result<Self, Self::Error> { Outpoint::try_from(&reveal) }
 }
 
-impl From<&RevealedSeal<Txid>> for Outpoint {
+impl From<&BlindSeal<Txid>> for Outpoint {
     #[inline]
-    fn from(reveal: &RevealedSeal<Txid>) -> Self { Outpoint::new(reveal.txid, reveal.vout) }
+    fn from(reveal: &BlindSeal<Txid>) -> Self { Outpoint::new(reveal.txid, reveal.vout) }
 }
 
-impl From<RevealedSeal<Txid>> for Outpoint {
+impl From<BlindSeal<Txid>> for Outpoint {
     #[inline]
-    fn from(reveal: RevealedSeal<Txid>) -> Self { Outpoint::from(&reveal) }
+    fn from(reveal: BlindSeal<Txid>) -> Self { Outpoint::from(&reveal) }
 }
 
-impl<Id: SealTxid> From<&Outpoint> for RevealedSeal<Id> {
+impl<Id: SealTxid> From<&Outpoint> for BlindSeal<Id> {
     #[inline]
-    fn from(outpoint: &Outpoint) -> Self {
-        RevealedSeal::tapret_first(outpoint.txid, outpoint.vout)
-    }
+    fn from(outpoint: &Outpoint) -> Self { BlindSeal::tapret_first(outpoint.txid, outpoint.vout) }
 }
 
-impl<Id: SealTxid> From<Outpoint> for RevealedSeal<Id> {
+impl<Id: SealTxid> From<Outpoint> for BlindSeal<Id> {
     #[inline]
-    fn from(outpoint: Outpoint) -> Self { RevealedSeal::from(&outpoint) }
+    fn from(outpoint: Outpoint) -> Self { BlindSeal::from(&outpoint) }
 }
 
-impl<Id: SealTxid> From<&ExplicitSeal<Id>> for RevealedSeal<Id> {
+impl<Id: SealTxid> From<&ExplicitSeal<Id>> for BlindSeal<Id> {
     #[inline]
     fn from(seal: &ExplicitSeal<Id>) -> Self {
         Self {
@@ -127,19 +125,19 @@ impl<Id: SealTxid> From<&ExplicitSeal<Id>> for RevealedSeal<Id> {
     }
 }
 
-impl<Id: SealTxid> From<ExplicitSeal<Id>> for RevealedSeal<Id> {
+impl<Id: SealTxid> From<ExplicitSeal<Id>> for BlindSeal<Id> {
     #[inline]
-    fn from(seal: ExplicitSeal<Id>) -> Self { RevealedSeal::<Id>::from(&seal) }
+    fn from(seal: ExplicitSeal<Id>) -> Self { BlindSeal::<Id>::from(&seal) }
 }
 
-impl<Id: SealTxid> Conceal for RevealedSeal<Id> {
-    type Concealed = ConcealedSeal;
+impl<Id: SealTxid> Conceal for BlindSeal<Id> {
+    type Concealed = SecretSeal;
 
     #[inline]
-    fn conceal(&self) -> Self::Concealed { ConcealedSeal::commit(self) }
+    fn conceal(&self) -> Self::Concealed { SecretSeal::commit(self) }
 }
 
-impl TxoSeal for RevealedSeal {
+impl TxoSeal for BlindSeal {
     #[inline]
     fn method(&self) -> CloseMethod { self.method }
 
@@ -161,7 +159,7 @@ impl TxoSeal for RevealedSeal {
     }
 }
 
-impl TxoSeal for RevealedSeal<Txid> {
+impl TxoSeal for BlindSeal<Txid> {
     #[inline]
     fn method(&self) -> CloseMethod { self.method }
 
@@ -181,25 +179,25 @@ impl TxoSeal for RevealedSeal<Txid> {
     fn outpoint_or(&self, _default_txid: Txid) -> Outpoint { Outpoint::new(self.txid, self.vout) }
 }
 
-impl<Id: SealTxid> RevealedSeal<Id> {
+impl<Id: SealTxid> BlindSeal<Id> {
     /// Creates new seal for the provided outpoint and seal closing method. Uses
     /// `thread_rng` to initialize blinding factor.
     pub fn new(method: CloseMethod, txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
-        RevealedSeal::with_rng(method, txid, vout, &mut thread_rng())
+        BlindSeal::with_rng(method, txid, vout, &mut thread_rng())
     }
 
     /// Creates new seal using TapretFirst closing method for the provided
     /// outpoint and seal closing method. Uses `thread_rng` to initialize
     /// blinding factor.
     pub fn tapret_first(txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
-        RevealedSeal::with_rng(CloseMethod::TapretFirst, txid, vout, &mut thread_rng())
+        BlindSeal::with_rng(CloseMethod::TapretFirst, txid, vout, &mut thread_rng())
     }
 
     /// Creates new seal using OpretFirst closing method for the provided
     /// outpoint and seal closing method. Uses `thread_rng` to initialize
     /// blinding factor.
     pub fn opret_first(txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
-        RevealedSeal::with_rng(CloseMethod::OpretFirst, txid, vout, &mut thread_rng())
+        BlindSeal::with_rng(CloseMethod::OpretFirst, txid, vout, &mut thread_rng())
     }
 
     /// Creates new seal for the provided outpoint and seal closing method. Uses
@@ -210,7 +208,7 @@ impl<Id: SealTxid> RevealedSeal<Id> {
         vout: impl Into<Vout>,
         rng: &mut impl RngCore,
     ) -> Self {
-        RevealedSeal {
+        BlindSeal {
             method,
             txid: txid.into(),
             vout: vout.into(),
@@ -227,7 +225,7 @@ impl<Id: SealTxid> RevealedSeal<Id> {
         vout: impl Into<Vout>,
         blinding: u64,
     ) -> Self {
-        RevealedSeal {
+        BlindSeal {
             method,
             txid: txid.into(),
             vout: vout.into(),
@@ -236,12 +234,12 @@ impl<Id: SealTxid> RevealedSeal<Id> {
     }
 }
 
-impl RevealedSeal {
+impl BlindSeal {
     /// Creates new seal pointing to a witness transaction of another seal.
     /// Takes seal closing method and witness transaction output number as
     /// arguments. Uses `thread_rng` to initialize blinding factor.
     #[inline]
-    pub fn new_vout(method: CloseMethod, vout: impl Into<Vout>) -> RevealedSeal {
+    pub fn new_vout(method: CloseMethod, vout: impl Into<Vout>) -> BlindSeal {
         Self {
             method,
             blinding: thread_rng().next_u64(),
@@ -253,8 +251,8 @@ impl RevealedSeal {
     /// Reconstructs previously defined seal pointing to a witness transaction
     /// of another seal with a given method, witness transaction output number
     /// and previously generated blinding factor value..
-    pub fn with_vout(method: CloseMethod, vout: impl Into<Vout>, blinding: u64) -> RevealedSeal {
-        RevealedSeal {
+    pub fn with_vout(method: CloseMethod, vout: impl Into<Vout>, blinding: u64) -> BlindSeal {
+        BlindSeal {
             method,
             txid: None,
             vout: vout.into(),
@@ -264,7 +262,7 @@ impl RevealedSeal {
 
     /// Converts revealed seal into concealed.
     #[inline]
-    pub fn to_concealed_seal(&self) -> ConcealedSeal { self.conceal() }
+    pub fn to_concealed_seal(&self) -> SecretSeal { self.conceal() }
 }
 
 /// Errors happening during parsing string representation of different forms of
@@ -310,7 +308,7 @@ pub enum ParseError {
     Hex(hex::Error),
 }
 
-impl FromStr for RevealedSeal {
+impl FromStr for BlindSeal {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -322,14 +320,14 @@ impl FromStr for RevealedSeal {
             (Some(_), Some(_), Some(_), Some(blinding), None) if !blinding.starts_with("0x") => {
                 Err(ParseError::NonHexBlinding)
             }
-            (Some(method), Some("~"), Some(vout), Some(blinding), None) => Ok(RevealedSeal {
+            (Some(method), Some("~"), Some(vout), Some(blinding), None) => Ok(BlindSeal {
                 method: method.parse()?,
                 blinding: u64::from_str_radix(blinding.trim_start_matches("0x"), 16)
                     .map_err(|_| ParseError::WrongBlinding)?,
                 txid: None,
                 vout: vout.parse().map_err(|_| ParseError::WrongVout)?,
             }),
-            (Some(method), Some(txid), Some(vout), Some(blinding), None) => Ok(RevealedSeal {
+            (Some(method), Some(txid), Some(vout), Some(blinding), None) => Ok(BlindSeal {
                 method: method.parse()?,
                 blinding: u64::from_str_radix(blinding.trim_start_matches("0x"), 16)
                     .map_err(|_| ParseError::WrongBlinding)?,
@@ -341,17 +339,17 @@ impl FromStr for RevealedSeal {
     }
 }
 
-impl FromStr for RevealedSeal<Txid> {
+impl FromStr for BlindSeal<Txid> {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let seal = RevealedSeal::<Option<Txid>>::from_str(s)?;
+        let seal = BlindSeal::<Option<Txid>>::from_str(s)?;
         let txid = seal.txid().ok_or(ParseError::TxidRequired)?;
         Ok(Self::with_blinding(seal.method, txid, seal.vout, seal.blinding))
     }
 }
 
-impl<Id: SealTxid> Display for RevealedSeal<Id>
+impl<Id: SealTxid> Display for BlindSeal<Id>
 where Self: TxoSeal
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
@@ -380,30 +378,30 @@ where Self: TxoSeal
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct ConcealedSeal(
+pub struct SecretSeal(
     #[from]
     #[from([u8; 32])]
     Bytes32,
 );
 
-impl ToBaid58<32> for ConcealedSeal {
+impl ToBaid58<32> for SecretSeal {
     const HRI: &'static str = "utxob";
     fn to_baid58_payload(&self) -> [u8; 32] { self.0.into_inner() }
 }
-impl FromBaid58<32> for ConcealedSeal {}
+impl FromBaid58<32> for SecretSeal {}
 
-impl FromStr for ConcealedSeal {
+impl FromStr for SecretSeal {
     type Err = Baid58ParseError;
-    fn from_str(s: &str) -> Result<Self, Self::Err> { ConcealedSeal::from_baid58_str(s) }
+    fn from_str(s: &str) -> Result<Self, Self::Err> { SecretSeal::from_baid58_str(s) }
 }
 
-impl From<Outpoint> for ConcealedSeal {
+impl From<Outpoint> for SecretSeal {
     #[inline]
-    fn from(outpoint: Outpoint) -> Self { RevealedSeal::<Txid>::from(outpoint).conceal() }
+    fn from(outpoint: Outpoint) -> Self { BlindSeal::<Txid>::from(outpoint).conceal() }
 }
 
-impl<Id: SealTxid> CommitVerify<RevealedSeal<Id>, Lnpbp12> for ConcealedSeal {
-    fn commit(reveal: &RevealedSeal<Id>) -> Self { Bytes32::commit(reveal).into() }
+impl<Id: SealTxid> CommitVerify<BlindSeal<Id>, Lnpbp12> for SecretSeal {
+    fn commit(reveal: &BlindSeal<Id>) -> Self { Bytes32::commit(reveal).into() }
 }
 
 #[cfg(test)]
@@ -414,7 +412,7 @@ mod test {
 
     #[test]
     fn outpoint_hash_is_sha256d() {
-        let reveal = RevealedSeal {
+        let reveal = BlindSeal {
             method: CloseMethod::TapretFirst,
             blinding: 54683213134637,
             txid: Some(
@@ -428,7 +426,7 @@ mod test {
 
     #[test]
     fn outpoint_hash_bech32() {
-        let outpoint_hash = RevealedSeal {
+        let outpoint_hash = BlindSeal {
             method: CloseMethod::TapretFirst,
             blinding: 54683213134637,
             txid: Some(
@@ -450,7 +448,7 @@ mod test {
 
     #[test]
     fn outpoint_reveal_str() {
-        let mut outpoint_reveal = RevealedSeal {
+        let mut outpoint_reveal = BlindSeal {
             method: CloseMethod::TapretFirst,
             blinding: 54683213134637,
             txid: Some(
