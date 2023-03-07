@@ -24,10 +24,10 @@ use std::convert::Infallible;
 use bc::{Tx, Txid};
 use commit_verify::mpc;
 use dbc::Proof;
-use single_use_seals::{SealProtocol, SealStatus, SealWitness};
+use single_use_seals::{SealProtocol, SealStatus};
 
 use crate::resolver::Resolver;
-use crate::txout::{TxoSeal, VerifyError};
+use crate::txout::TxoSeal;
 
 pub struct Witness {
     pub tx: Tx,
@@ -52,60 +52,4 @@ where
     type Error = Infallible;
 
     fn get_seal_status(&self, _seal: &Seal) -> Result<SealStatus, Self::Error> { todo!() }
-}
-
-impl<Seal: TxoSeal> SealWitness<Seal> for Witness {
-    type Message = mpc::Commitment;
-    type Error = VerifyError;
-
-    fn verify_seal(&self, seal: &Seal, msg: &Self::Message) -> Result<bool, Self::Error> {
-        // 1. The seal must match tx inputs
-        let outpoint = seal.outpoint_or(self.txid);
-        if !self
-            .tx
-            .inputs
-            .iter()
-            .any(|txin| txin.prev_output == outpoint)
-        {
-            return Err(VerifyError::WitnessNotClosingSeal(self.txid, outpoint));
-        }
-
-        // 2. Verify DBC with the giving closing method
-        self.proof.verify(msg, &self.tx).map_err(VerifyError::from)
-    }
-
-    fn verify_many_seals<'seal>(
-        &self,
-        seals: impl IntoIterator<Item = &'seal Seal>,
-        msg: &Self::Message,
-    ) -> Result<bool, Self::Error>
-    where
-        Seal: 'seal,
-    {
-        let mut method = None;
-        for seal in seals {
-            // 1. All seals must have the same closing method
-            if let Some(method) = method {
-                if method != seal.method() {
-                    return Err(VerifyError::InconsistentCloseMethod);
-                }
-            } else {
-                method = Some(seal.method());
-            }
-
-            // 2. Each seal must match tx inputs
-            let outpoint = seal.outpoint_or(self.txid);
-            if !self
-                .tx
-                .inputs
-                .iter()
-                .any(|txin| txin.prev_output == outpoint)
-            {
-                return Err(VerifyError::WitnessNotClosingSeal(self.txid, outpoint));
-            }
-        }
-
-        // 3. Verify DBC with the giving closing method
-        self.proof.verify(msg, &self.tx).map_err(VerifyError::from)
-    }
 }

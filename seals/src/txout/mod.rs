@@ -27,8 +27,10 @@ mod error;
 pub mod explicit;
 mod proto;
 mod seal;
+mod witness;
 
 pub use error::{MethodParseError, VerifyError, WitnessVoutError};
 pub use explicit::ExplicitSeal;
 pub use proto::TxoProtocol;
 pub use seal::{CloseMethod, TxoSeal};
+pub use witness::Witness;
