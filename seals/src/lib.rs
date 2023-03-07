@@ -33,10 +33,6 @@
 
 //! The library provides single-use-seal implementations for bitcoin protocol.
 
-// Coding conventions
-#![recursion_limit = "256"]
-#![deny(dead_code, /* todo: missing_docs, */)]
-
 #[macro_use]
 extern crate amplify;
 #[macro_use]

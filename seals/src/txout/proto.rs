@@ -21,19 +21,12 @@
 
 use std::convert::Infallible;
 
-use bc::{Tx, Txid};
+use bc::Txid;
 use commit_verify::mpc;
-use dbc::Proof;
 use single_use_seals::{SealProtocol, SealStatus};
 
 use crate::resolver::Resolver;
-use crate::txout::TxoSeal;
-
-pub struct Witness {
-    pub tx: Tx,
-    pub txid: Txid,
-    pub proof: Proof,
-}
+use crate::txout::{TxoSeal, Witness};
 
 /// Txo single-use-seal engine.
 pub struct TxoProtocol<R: Resolver> {
