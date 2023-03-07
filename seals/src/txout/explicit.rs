@@ -27,6 +27,7 @@ use std::str::FromStr;
 
 use bc::{Outpoint, Txid, Vout};
 
+use crate::txout::seal::SealTxid;
 use crate::txout::{CloseMethod, MethodParseError, TxoSeal, WitnessVoutError};
 
 /// Revealed seal definition which may point to a witness transactions and does
@@ -39,7 +40,7 @@ use crate::txout::{CloseMethod, MethodParseError, TxoSeal, WitnessVoutError};
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
-pub struct ExplicitSeal {
+pub struct ExplicitSeal<Id: SealTxid = Option<Txid>> {
     /// Commitment to the specific seal close method [`CloseMethod`] which must
     /// be used to close this seal.
     pub method: CloseMethod,
@@ -50,7 +51,7 @@ pub struct ExplicitSeal {
     /// but the transaction still can be identified by some other means (for
     /// instance it is a transaction spending specific outpoint, like other
     /// seal definition).
-    pub txid: Option<Txid>,
+    pub txid: Id,
 
     /// Tx output number, which should be always known.
     pub vout: Vout,

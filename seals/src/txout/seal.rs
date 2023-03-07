@@ -19,9 +19,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::fmt::Debug;
+use std::hash::Hash;
 use std::str::FromStr;
 
 use bc::{Outpoint, Txid, Vout};
+use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
 
 use super::MethodParseError;
 
@@ -79,3 +82,12 @@ impl FromStr for CloseMethod {
         })
     }
 }
+
+/// Marker trait for variants of seal transaction id.
+pub trait SealTxid:
+    Copy + Eq + Ord + Hash + Debug + StrictDumb + StrictEncode + StrictDecode + From<Txid>
+{
+}
+
+impl SealTxid for Txid {}
+impl SealTxid for Option<Txid> {}
