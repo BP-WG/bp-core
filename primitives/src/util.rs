@@ -19,7 +19,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::str::FromStr;
+
 use crate::LIB_NAME_BITCOIN;
+
+#[derive(Clone, Eq, PartialEq, Debug, Display, Error)]
+#[display("invalid blockchain name '{0}'")]
+pub struct ChainParseError(String);
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display, Default)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
@@ -43,4 +49,19 @@ pub enum Chain {
 
     #[display("signet")]
     Signet = 0x84,
+}
+
+impl FromStr for Chain {
+    type Err = ChainParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let chain = s.to_lowercase();
+        Ok(match chain.as_str() {
+            "mainnet" | "bitcoin" => Chain::Bitcoin,
+            "testnet" | "testnet3" => Chain::Testnet3,
+            "regtest" => Chain::Regtest,
+            "signet" => Chain::Signet,
+            _ => return Err(ChainParseError(chain)),
+        })
+    }
 }
