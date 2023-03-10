@@ -21,7 +21,6 @@
 
 //! TxOut single-use-seals.
 
-use std::convert::{TryFrom, TryInto};
 use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 
@@ -57,11 +56,11 @@ pub struct ExplicitSeal<Id: SealTxid = TxPtr> {
     pub vout: Vout,
 }
 
-impl TryFrom<&ExplicitSeal> for Outpoint {
+impl TryFrom<&ExplicitSeal<TxPtr>> for Outpoint {
     type Error = WitnessVoutError;
 
     #[inline]
-    fn try_from(reveal: &ExplicitSeal) -> Result<Self, Self::Error> {
+    fn try_from(reveal: &ExplicitSeal<TxPtr>) -> Result<Self, Self::Error> {
         reveal
             .txid
             .map_to_outpoint(reveal.vout)
@@ -69,30 +68,40 @@ impl TryFrom<&ExplicitSeal> for Outpoint {
     }
 }
 
-impl TryFrom<ExplicitSeal> for Outpoint {
+impl TryFrom<ExplicitSeal<TxPtr>> for Outpoint {
     type Error = WitnessVoutError;
 
     #[inline]
-    fn try_from(reveal: ExplicitSeal) -> Result<Self, Self::Error> { Outpoint::try_from(&reveal) }
+    fn try_from(reveal: ExplicitSeal<TxPtr>) -> Result<Self, Self::Error> {
+        Outpoint::try_from(&reveal)
+    }
 }
 
-impl From<&Outpoint> for ExplicitSeal {
+impl From<&ExplicitSeal<Txid>> for Outpoint {
+    fn from(seal: &ExplicitSeal<Txid>) -> Self { Outpoint::new(seal.txid, seal.vout) }
+}
+
+impl From<ExplicitSeal<Txid>> for Outpoint {
+    fn from(seal: ExplicitSeal<Txid>) -> Self { Outpoint::from(&seal) }
+}
+
+impl<Id: SealTxid> From<&Outpoint> for ExplicitSeal<Id> {
     #[inline]
     fn from(outpoint: &Outpoint) -> Self {
         Self {
             method: CloseMethod::TapretFirst,
-            txid: TxPtr::Txid(outpoint.txid),
+            txid: outpoint.txid.into(),
             vout: outpoint.vout,
         }
     }
 }
 
-impl From<Outpoint> for ExplicitSeal {
+impl<Id: SealTxid> From<Outpoint> for ExplicitSeal<Id> {
     #[inline]
     fn from(outpoint: Outpoint) -> Self { ExplicitSeal::from(&outpoint) }
 }
 
-impl TxoSeal for ExplicitSeal {
+impl<Id: SealTxid> TxoSeal for ExplicitSeal<Id> {
     #[inline]
     fn method(&self) -> CloseMethod { self.method }
 
@@ -103,7 +112,7 @@ impl TxoSeal for ExplicitSeal {
     fn vout(&self) -> Vout { self.vout }
 
     #[inline]
-    fn outpoint(&self) -> Option<Outpoint> { self.try_into().ok() }
+    fn outpoint(&self) -> Option<Outpoint> { self.txid.map_to_outpoint(self.vout) }
 
     #[inline]
     fn txid_or(&self, default_txid: Txid) -> Txid { self.txid.txid_or(default_txid) }
@@ -114,20 +123,20 @@ impl TxoSeal for ExplicitSeal {
     }
 }
 
-impl ExplicitSeal {
+impl<Id: SealTxid> ExplicitSeal<Id> {
     /// Constructs seal for the provided outpoint and seal closing method.
     #[inline]
-    pub fn new(method: CloseMethod, outpoint: Outpoint) -> ExplicitSeal {
+    pub fn new(method: CloseMethod, outpoint: Outpoint) -> ExplicitSeal<Id> {
         Self {
             method,
-            txid: TxPtr::Txid(outpoint.txid),
+            txid: Id::from(outpoint.txid),
             vout: outpoint.vout,
         }
     }
 
     /// Constructs seal.
     #[inline]
-    pub fn with(method: CloseMethod, txid: TxPtr, vout: impl Into<Vout>) -> ExplicitSeal {
+    pub fn with(method: CloseMethod, txid: Id, vout: impl Into<Vout>) -> ExplicitSeal<Id> {
         ExplicitSeal {
             method,
             txid,
@@ -164,7 +173,7 @@ pub enum ParseError {
     WrongStructure,
 }
 
-impl FromStr for ExplicitSeal {
+impl<Id: SealTxid> FromStr for ExplicitSeal<Id> {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -172,14 +181,9 @@ impl FromStr for ExplicitSeal {
         match (split.next(), split.next(), split.next(), split.next()) {
             (Some("~"), ..) | (Some(""), ..) => Err(ParseError::MethodRequired),
             (Some(_), Some(""), ..) => Err(ParseError::TxidRequired),
-            (Some(method), Some("~"), Some(vout), None) => Ok(ExplicitSeal {
-                method: method.parse()?,
-                txid: TxPtr::WitnessTx,
-                vout: vout.parse().map_err(|_| ParseError::WrongVout)?,
-            }),
             (Some(method), Some(txid), Some(vout), None) => Ok(ExplicitSeal {
                 method: method.parse()?,
-                txid: TxPtr::Txid(txid.parse().map_err(|_| ParseError::WrongTxid)?),
+                txid: Id::from(txid.parse().map_err(|_| ParseError::WrongTxid)?),
                 vout: vout.parse().map_err(|_| ParseError::WrongVout)?,
             }),
             _ => Err(ParseError::WrongStructure),
@@ -187,7 +191,7 @@ impl FromStr for ExplicitSeal {
     }
 }
 
-impl Display for ExplicitSeal {
+impl<Id: SealTxid> Display for ExplicitSeal<Id> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}:{}:{}", self.method, self.txid, self.vout,)
     }
