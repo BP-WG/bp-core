@@ -42,18 +42,19 @@ fn export(root: &str, lib: TypeLib) -> Result<(), Box<dyn std::error::Error>> {
 
     let id = lib.id();
 
-    let ext = match args.get(2).map(String::as_str) {
-        Some("-b") => "stl",
-        Some("-h") => "asc.stl",
+    let ext = match args.get(1).map(String::as_str) {
+        Some("--stl") => "stl",
+        Some("--asc") => "asc.stl",
+        Some("--sty") => "sty",
         _ => "sty",
     };
     let filename = args
-        .get(3)
+        .get(2)
         .cloned()
         .unwrap_or_else(|| format!("stl/{root}.{ext}"));
     let mut file = match args.len() {
-        2 => Box::new(stdout()) as Box<dyn io::Write>,
-        3 | 4 => Box::new(fs::File::create(filename)?) as Box<dyn io::Write>,
+        1 => Box::new(stdout()) as Box<dyn io::Write>,
+        2 | 3 => Box::new(fs::File::create(filename)?) as Box<dyn io::Write>,
         _ => panic!("invalid argument count"),
     };
     match ext {
@@ -92,9 +93,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let commit_id =
         TypeLibId::from_str("eric_pablo_junior_6dNLcuqHACv1yYndmvNnXHuP7g3DV4qVkSf9tou6cDBm")
             .expect("embedded id");
-    let imports = bmap! {
-        libname!(LIB_NAME_COMMIT_VERIFY) => (lib_alias!(LIB_NAME_COMMIT_VERIFY), Dependency::with(commit_id, libname!(LIB_NAME_COMMIT_VERIFY), (0,10,0))),
-        libname!(LIB_NAME_BITCOIN) => (lib_alias!(LIB_NAME_BITCOIN), Dependency::with(bitcoin_id, libname!(LIB_NAME_BITCOIN), (0,10,0))),
+    let imports = bset! {
+        Dependency::with(commit_id, libname!(LIB_NAME_COMMIT_VERIFY)),
+        Dependency::with(bitcoin_id, libname!(LIB_NAME_BITCOIN)),
     };
 
     let lib = LibBuilder::new(libname!(LIB_NAME_BPCORE))
