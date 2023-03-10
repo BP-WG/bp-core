@@ -24,6 +24,7 @@
 use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 
+use amplify::hex;
 use bc::{Outpoint, Txid, Vout};
 
 use crate::txout::seal::{SealTxid, TxPtr};
@@ -39,7 +40,7 @@ use crate::txout::{CloseMethod, MethodParseError, TxoSeal, WitnessVoutError};
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
-pub struct ExplicitSeal<Id: SealTxid = TxPtr> {
+pub struct ExplicitSeal<Id: SealTxid> {
     /// Commitment to the specific seal close method [`CloseMethod`] which must
     /// be used to close this seal.
     pub method: CloseMethod,
@@ -162,8 +163,8 @@ pub enum ParseError {
     WrongMethod(MethodParseError),
 
     /// unable to parse transaction id value; it must be 64-character
-    /// hexadecimal string
-    WrongTxid,
+    /// hexadecimal string, however {0}
+    WrongTxid(hex::Error),
 
     /// unable to parse transaction vout value; it must be a decimal unsigned
     /// integer
@@ -183,7 +184,7 @@ impl<Id: SealTxid> FromStr for ExplicitSeal<Id> {
             (Some(_), Some(""), ..) => Err(ParseError::TxidRequired),
             (Some(method), Some(txid), Some(vout), None) => Ok(ExplicitSeal {
                 method: method.parse()?,
-                txid: Id::from(txid.parse().map_err(|_| ParseError::WrongTxid)?),
+                txid: Id::from_str(txid).map_err(|err| ParseError::WrongTxid(err))?,
                 vout: vout.parse().map_err(|_| ParseError::WrongVout)?,
             }),
             _ => Err(ParseError::WrongStructure),

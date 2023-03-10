@@ -23,6 +23,7 @@ use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::str::FromStr;
 
+use amplify::hex;
 use bc::{Outpoint, Txid, Vout};
 use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
 
@@ -89,7 +90,17 @@ impl FromStr for CloseMethod {
 
 /// Marker trait for variants of seal transaction id.
 pub trait SealTxid:
-    Copy + Eq + Ord + Hash + Debug + Display + StrictDumb + StrictEncode + StrictDecode + From<Txid>
+    Copy
+    + Eq
+    + Ord
+    + Hash
+    + Debug
+    + Display
+    + FromStr<Err = hex::Error>
+    + StrictDumb
+    + StrictEncode
+    + StrictDecode
+    + From<Txid>
 {
     /// Returns transaction id, if known.
     fn txid(&self) -> Option<Txid>;
@@ -152,5 +163,16 @@ impl SealTxid for TxPtr {
 
     fn map_to_outpoint(&self, vout: impl Into<Vout>) -> Option<Outpoint> {
         self.txid().map(|txid| Outpoint::new(txid, vout))
+    }
+}
+
+impl FromStr for TxPtr {
+    type Err = hex::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "~" => Ok(TxPtr::WitnessTx),
+            other => Txid::from_str(other).map(Self::from),
+        }
     }
 }

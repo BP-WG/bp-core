@@ -29,9 +29,10 @@ use std::str::FromStr;
 use std::{env, fs, io};
 
 use amplify::num::u24;
-use bc::LIB_NAME_BITCOIN;
+use bc::{Txid, LIB_NAME_BITCOIN};
 use commit_verify::{mpc, LIB_NAME_COMMIT_VERIFY};
 use dbc::LIB_NAME_BPCORE;
+use seals::txout::TxPtr;
 use strict_encoding::{StrictEncode, StrictWriter};
 use strict_types::typelib::LibBuilder;
 use strict_types::{Dependency, TypeLib, TypeLibId};
@@ -101,9 +102,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .process::<dbc::Anchor<mpc::MerkleTree>>()?
         .process::<dbc::Anchor<mpc::MerkleBlock>>()?
         .process::<dbc::Anchor<mpc::MerkleProof>>()?
-        .process::<seals::txout::ExplicitSeal>()?
+        .process::<seals::txout::ExplicitSeal<TxPtr>>()?
+        .process::<seals::txout::ExplicitSeal<Txid>>()?
         .process::<seals::txout::blind::SecretSeal>()?
-        .process::<seals::txout::blind::BlindSeal>()?
+        .process::<seals::txout::blind::BlindSeal<TxPtr>>()?
+        .process::<seals::txout::blind::BlindSeal<Txid>>()?
         .compile(imports)?;
     export("BPCore", lib)
 }
