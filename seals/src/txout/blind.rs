@@ -21,7 +21,6 @@
 
 //! TxOut seals which are blinded with additional entropy.
 
-use std::convert::{TryFrom, TryInto};
 use std::fmt::{self, Debug, Display, Formatter};
 use std::hash::Hash;
 use std::str::FromStr;
@@ -137,7 +136,7 @@ impl<Id: SealTxid> Conceal for BlindSeal<Id> {
     fn conceal(&self) -> Self::Concealed { SecretSeal::commit(self) }
 }
 
-impl TxoSeal for BlindSeal {
+impl<Id: SealTxid> TxoSeal for BlindSeal<Id> {
     #[inline]
     fn method(&self) -> CloseMethod { self.method }
 
@@ -148,7 +147,7 @@ impl TxoSeal for BlindSeal {
     fn vout(&self) -> Vout { self.vout }
 
     #[inline]
-    fn outpoint(&self) -> Option<Outpoint> { self.try_into().ok() }
+    fn outpoint(&self) -> Option<Outpoint> { self.txid.map_to_outpoint(self.vout) }
 
     #[inline]
     fn txid_or(&self, default_txid: Txid) -> Txid { self.txid.txid_or(default_txid) }
@@ -157,26 +156,6 @@ impl TxoSeal for BlindSeal {
     fn outpoint_or(&self, default_txid: Txid) -> Outpoint {
         Outpoint::new(self.txid.txid_or(default_txid), self.vout)
     }
-}
-
-impl TxoSeal for BlindSeal<Txid> {
-    #[inline]
-    fn method(&self) -> CloseMethod { self.method }
-
-    #[inline]
-    fn txid(&self) -> Option<Txid> { Some(self.txid) }
-
-    #[inline]
-    fn vout(&self) -> Vout { self.vout }
-
-    #[inline]
-    fn outpoint(&self) -> Option<Outpoint> { self.try_into().ok() }
-
-    #[inline]
-    fn txid_or(&self, _default_txid: Txid) -> Txid { self.txid }
-
-    #[inline]
-    fn outpoint_or(&self, _default_txid: Txid) -> Outpoint { Outpoint::new(self.txid, self.vout) }
 }
 
 impl<Id: SealTxid> BlindSeal<Id> {
