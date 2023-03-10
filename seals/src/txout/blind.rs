@@ -360,17 +360,7 @@ impl<Id: SealTxid> Display for BlindSeal<Id>
 where Self: TxoSeal
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}:{}:{}#{:#010x}",
-            self.method,
-            self.txid()
-                .as_ref()
-                .map(Txid::to_string)
-                .unwrap_or_else(|| s!("~")),
-            self.vout,
-            self.blinding
-        )
+        write!(f, "{}:{}:{}#{:#010x}", self.method, self.txid, self.vout, self.blinding)
     }
 }
 
