@@ -20,9 +20,15 @@ rust-version = "1.66" # Due to strict encoding library (caused by GAD)
 edition = "2021"
 license = "Apache-2.0"
 
+[workspace.dependencies]
+amplify = "4.0.0-beta.19"
+strict_encoding = "2.0.0-rc.3"
+commit_verify = "0.10.0-rc.1"
+single_use_seals = "0.10.0-rc.1"
+
 [package]
 name = "bp-core"
-version = "0.10.0-beta.2"
+version = "0.10.0-beta.3"
 description = "Bitcoin protocol core library (BP Core Lib)"
 keywords = ["lnp-bp", "smart-contracts", "bitcoin", "blockchain"]
 categories = ["cryptography"]
@@ -44,14 +50,14 @@ name = "bpcore-stl"
 required-features = ["stl"]
 
 [dependencies]
-amplify = "4.0.0-beta.18"
-strict_encoding = "2.0.0-rc.1"
-strict_types = { version = "1.0.0-beta.3", optional = true }
-commit_verify = "0.10.0-beta.3"
-single_use_seals = "0.10.0-beta.2"
-bp-primitives = { version = "0.10.0-beta.1", path = "./primitives" }
-bp-dbc = { version = "0.10.0-beta.2", path = "./dbc" }
-bp-seals = { version = "0.10.0-beta.2", path = "./seals" }
+amplify = { workspace = true }
+strict_encoding = { workspace = true }
+strict_types = { version = "1.0.0-beta.5", optional = true }
+commit_verify = { workspace = true }
+single_use_seals = { workspace = true }
+bp-primitives = { version = "0.10.0-beta.3", path = "./primitives" }
+bp-dbc = { version = "0.10.0-beta.3", path = "./dbc" }
+bp-seals = { version = "0.10.0-beta.3", path = "./seals" }
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
 
 [features]
@@ -66,9 +72,3 @@ stl = ["strict_types", "strict_types/base64"]
 
 [package.metadata.docs.rs]
 features = [ "all" ]
-
-[patch.crates-io]
-strict_encoding = { git = "https://github.com/strict-types/strict-encoding" }
-strict_types = { git = "https://github.com/strict-types/strict-types" }
-commit_verify = { git = "https://github.com/LNP-BP/client_side_validation" }
-single_use_seals = { git = "https://github.com/LNP-BP/client_side_validation" }

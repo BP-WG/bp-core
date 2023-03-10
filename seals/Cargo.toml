@@ -1,6 +1,6 @@
 [package]
 name = "bp-seals"
-version = "0.10.0-beta.2"
+version = "0.10.0-beta.3"
 description = "Bitcoin protocol single-use-seals library"
 keywords = ["lnp-bp", "bitcoin", "blockchain", "smart-contracts", "single-use-seals"]
 categories = ["cryptography", "encoding"]
@@ -17,13 +17,13 @@ name = "seals"
 path = "src/lib.rs"
 
 [dependencies]
-amplify = "4.0.0-beta.10"
-single_use_seals = "0.10.0-beta.1"
-commit_verify = "0.10.0-beta.2"
-strict_encoding = "2.0.0-beta.5"
+amplify = { workspace = true }
+single_use_seals = { workspace = true }
+commit_verify = { workspace = true }
+strict_encoding = { workspace = true }
 baid58 = "0.2.0"
-bp-primitives = { version = "0.10.0-beta.1", path = "../primitives" }
-bp-dbc = { version = "0.10.0-beta.2", path = "../dbc" }
+bp-primitives = { version = "0.10.0-beta.3", path = "../primitives" }
+bp-dbc = { version = "0.10.0-beta.3", path = "../dbc" }
 rand = "0.8.5"
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
 
