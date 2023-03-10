@@ -19,7 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::str::FromStr;
 
@@ -89,12 +89,23 @@ impl FromStr for CloseMethod {
 
 /// Marker trait for variants of seal transaction id.
 pub trait SealTxid:
-    Copy + Eq + Ord + Hash + Debug + StrictDumb + StrictEncode + StrictDecode + From<Txid>
+    Copy + Eq + Ord + Hash + Debug + Display + StrictDumb + StrictEncode + StrictDecode + From<Txid>
 {
+    /// Returns transaction id, if known.
+    fn txid(&self) -> Option<Txid>;
+    /// Returns transaction id, if known, or some default value otherwise.
+    fn txid_or(&self, default: Txid) -> Txid;
+    /// Converts to outpoint, if the transaction id is known.
+    fn map_to_outpoint(&self, vout: impl Into<Vout>) -> Option<Outpoint>;
 }
 
-impl SealTxid for Txid {}
-impl SealTxid for TxPtr {}
+impl SealTxid for Txid {
+    fn txid(&self) -> Option<Txid> { Some(*self) }
+    fn txid_or(&self, _default: Txid) -> Txid { *self }
+    fn map_to_outpoint(&self, vout: impl Into<Vout>) -> Option<Outpoint> {
+        Some(Outpoint::new(*self, vout.into()))
+    }
+}
 
 /// Transaction pointer which can be used to construct graph of seals.
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default, Debug, Display, From)]
@@ -124,25 +135,22 @@ impl From<&Txid> for TxPtr {
     fn from(txid: &Txid) -> Self { TxPtr::Txid(*txid) }
 }
 
-impl TxPtr {
-    /// Returns transaction id, if known.
-    pub fn txid(&self) -> Option<Txid> {
+impl SealTxid for TxPtr {
+    fn txid(&self) -> Option<Txid> {
         match self {
             TxPtr::WitnessTx => None,
             TxPtr::Txid(txid) => Some(*txid),
         }
     }
 
-    /// Returns transaction id, if known, or some default value otherwise.
-    pub fn txid_or(&self, default: Txid) -> Txid {
+    fn txid_or(&self, default: Txid) -> Txid {
         match self {
             TxPtr::WitnessTx => default,
             TxPtr::Txid(txid) => *txid,
         }
     }
 
-    /// Converts to outpoint, if the transaction id is known.
-    pub fn map_to_outpoint(&self, vout: impl Into<Vout>) -> Option<Outpoint> {
+    fn map_to_outpoint(&self, vout: impl Into<Vout>) -> Option<Outpoint> {
         self.txid().map(|txid| Outpoint::new(txid, vout))
     }
 }
