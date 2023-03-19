@@ -91,7 +91,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     export("Bitcoin", lib)?;
 
     let commit_id =
-        TypeLibId::from_str("eric_pablo_junior_6dNLcuqHACv1yYndmvNnXHuP7g3DV4qVkSf9tou6cDBm")
+        TypeLibId::from_str("texas_year_ethnic_CPr8tcdPqWZ3KP8dXNPYavTEkbn8PG7CoJHtfwDFKRHJ")
             .expect("embedded id");
     let imports = bset! {
         Dependency::with(commit_id, libname!(LIB_NAME_COMMIT_VERIFY)),
