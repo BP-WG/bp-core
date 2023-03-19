@@ -56,4 +56,4 @@ pub mod opret;
 pub mod sigtweak;
 pub mod tapret;
 
-pub use anchor::{Anchor, AnchorId, Proof};
+pub use anchor::{Anchor, Proof};
