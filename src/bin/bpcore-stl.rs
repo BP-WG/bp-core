@@ -99,6 +99,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let lib = LibBuilder::new(libname!(LIB_NAME_BPCORE))
+        .process::<dbc::AnchorId>()?
         .process::<dbc::Anchor<mpc::MerkleTree>>()?
         .process::<dbc::Anchor<mpc::MerkleBlock>>()?
         .process::<dbc::Anchor<mpc::MerkleProof>>()?

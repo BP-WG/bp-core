@@ -24,9 +24,12 @@
 //! transaction which contains the commitment, and multi-protocol merkle tree as
 //! defined by LNPBP-4.
 
+use std::cmp::Ordering;
+
+use amplify::{Bytes32, Wrapper};
 use bc::{ScriptPubkey, Tx, Txid};
 use commit_verify::mpc::{self, Message, ProtocolId};
-use commit_verify::ConvolveCommitProof;
+use commit_verify::{strategies, CommitStrategy, CommitmentId, ConvolveCommitProof};
 use strict_encoding::{StrictDumb, StrictEncode};
 
 use crate::tapret::{TapretError, TapretProof};
@@ -34,6 +37,26 @@ use crate::LIB_NAME_BPCORE;
 
 /// Default depth of LNPBP-4 commitment tree
 pub const ANCHOR_MIN_LNPBP4_DEPTH: u8 = 3;
+
+/// Anchor identifier - a commitment to the anchor data.
+#[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
+#[wrapper(Deref, BorrowSlice, Display, FromStr, Hex, Index, RangeOps)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BPCORE)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
+pub struct AnchorId(
+    #[from]
+    #[from([u8; 32])]
+    Bytes32,
+);
+
+impl CommitStrategy for AnchorId {
+    type Strategy = strategies::Strict;
+}
 
 /// Errors verifying anchors.
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
@@ -76,6 +99,23 @@ pub struct Anchor<L: mpc::Proof + StrictDumb> {
     pub dbc_proof: Proof,
 }
 
+impl CommitStrategy for Anchor<mpc::MerkleBlock> {
+    type Strategy = strategies::Strict;
+}
+
+impl CommitmentId for Anchor<mpc::MerkleBlock> {
+    const TAG: [u8; 32] = *b"urn:lnpbp:lnpbp0011:anchor:v01#A";
+    type Id = AnchorId;
+}
+
+impl Ord for Anchor<mpc::MerkleBlock> {
+    fn cmp(&self, other: &Self) -> Ordering { self.anchor_id().cmp(&other.anchor_id()) }
+}
+
+impl PartialOrd for Anchor<mpc::MerkleBlock> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> { Some(self.cmp(other)) }
+}
+
 /// Error merging two [`Anchor`]s.
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, Error, From)]
 #[display(doc_comments)]
@@ -92,7 +132,23 @@ pub enum MergeError {
     ProofMismatch,
 }
 
+impl Anchor<mpc::MerkleBlock> {
+    /// Returns id of the anchor (commitment hash).
+    #[inline]
+    pub fn anchor_id(&self) -> AnchorId { self.commitment_id() }
+}
+
 impl Anchor<mpc::MerkleProof> {
+    /// Returns id of the anchor (commitment hash).
+    #[inline]
+    pub fn anchor_id(
+        &self,
+        protocol_id: impl Into<ProtocolId>,
+        message: Message,
+    ) -> Result<AnchorId, mpc::UnrelatedProof> {
+        Ok(self.to_merkle_block(protocol_id, message)?.anchor_id())
+    }
+
     /// Reconstructs anchor containing merkle block
     pub fn into_merkle_block(
         self,
