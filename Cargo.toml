@@ -21,14 +21,14 @@ edition = "2021"
 license = "Apache-2.0"
 
 [workspace.dependencies]
-amplify = "4.0.0-beta.19"
+amplify = "4.0.0-beta.20"
 strict_encoding = "2.0.0-rc.3"
-commit_verify = "0.10.0-rc.1"
+commit_verify = "0.10.0-rc.2"
 single_use_seals = "0.10.0-rc.1"
 
 [package]
 name = "bp-core"
-version = "0.10.0-beta.3"
+version = "0.10.0-rc.1"
 description = "Bitcoin protocol core library (BP Core Lib)"
 keywords = ["lnp-bp", "smart-contracts", "bitcoin", "blockchain"]
 categories = ["cryptography"]
@@ -55,9 +55,9 @@ strict_encoding = { workspace = true }
 strict_types = { version = "1.0.0-beta.5", optional = true }
 commit_verify = { workspace = true }
 single_use_seals = { workspace = true }
-bp-primitives = { version = "0.10.0-beta.3", path = "./primitives" }
-bp-dbc = { version = "0.10.0-beta.3", path = "./dbc" }
-bp-seals = { version = "0.10.0-beta.3", path = "./seals" }
+bp-primitives = { version = "0.10.0-beta.4", path = "./primitives" }
+bp-dbc = { version = "0.10.0-rc.1", path = "./dbc" }
+bp-seals = { version = "0.10.0-rc.1", path = "./seals" }
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
 
 [features]
