@@ -75,6 +75,7 @@ pub enum Lnpbp12 {}
 
 use bc::{InternalPk, IntoTapHash, LeafScript, ScriptPubkey, TapBranchHash, TapNodeHash};
 use commit_verify::CommitmentProtocol;
+use strict_encoding::{StrictDeserialize, StrictSerialize};
 
 pub use self::tapscript::TAPRET_SCRIPT_COMMITMENT_PREFIX;
 use crate::LIB_NAME_BPCORE;
@@ -268,6 +269,10 @@ pub struct TapretPathProof {
     /// the tree.
     nonce: u8,
 }
+
+// Used by PSBT tapret keys
+impl StrictSerialize for TapretPathProof {}
+impl StrictDeserialize for TapretPathProof {}
 
 impl TapretPathProof {
     /// Construct new empty path proof.
