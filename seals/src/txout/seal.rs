@@ -30,7 +30,7 @@ use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
 use super::MethodParseError;
 
 /// Methods common for all transaction-output based seal types.
-pub trait TxoSeal {
+pub trait TxoSeal: From<Outpoint> {
     /// Returns method which must be used for seal closing.
     fn method(&self) -> CloseMethod;
 
