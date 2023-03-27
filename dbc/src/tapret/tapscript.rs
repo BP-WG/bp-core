@@ -34,6 +34,7 @@ pub const TAPRET_SCRIPT_COMMITMENT_PREFIX: [u8; 31] = [
     0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x6a, 0x21,
 ];
 
+/// Information about tapret commitment.
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BPCORE)]
@@ -50,6 +51,7 @@ pub struct TapretCommitment {
 }
 
 impl TapretCommitment {
+    /// Constructs information about tapret commitment.
     pub fn with(mpc: mpc::Commitment, nonce: u8) -> Self { Self { mpc, nonce } }
 }
 

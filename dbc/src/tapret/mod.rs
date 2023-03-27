@@ -66,6 +66,7 @@ mod tx;
 mod txout;
 mod xonlypk;
 
+pub use tapscript::{TapretCommitment, TAPRET_SCRIPT_COMMITMENT_PREFIX};
 pub use tx::TapretError;
 pub use xonlypk::TapretKeyError;
 
@@ -77,7 +78,6 @@ use bc::{InternalPk, IntoTapHash, LeafScript, ScriptPubkey, TapBranchHash, TapNo
 use commit_verify::CommitmentProtocol;
 use strict_encoding::{StrictDeserialize, StrictSerialize};
 
-pub use self::tapscript::TAPRET_SCRIPT_COMMITMENT_PREFIX;
 use crate::LIB_NAME_BPCORE;
 
 impl CommitmentProtocol for Lnpbp12 {}
