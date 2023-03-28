@@ -1,6 +1,6 @@
 [package]
 name = "bp-primitives"
-version = "0.10.0-beta.4"
+version = "0.10.0-rc.1"
 description = "Bitcoin protocol primitives library"
 keywords = ["lnp-bp", "smart-contracts", "bitcoin", "blockchain"]
 categories = ["cryptography"]
