@@ -19,10 +19,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::fmt::{self, Display, Formatter};
 use std::num::ParseIntError;
 use std::str::FromStr;
 
-use amplify::Bytes32;
+use amplify::hex::FromHex;
+use amplify::{hex, Bytes32, RawArray, Wrapper};
 
 use super::{VarIntArray, LIB_NAME_BITCOIN};
 use crate::{ScriptPubkey, SigScript};
@@ -35,13 +37,35 @@ use crate::{ScriptPubkey, SigScript};
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-#[wrapper(Index, RangeOps, BorrowSlice, Hex, Display, FromStr)]
+#[wrapper(Index, RangeOps, BorrowSlice, Hex)]
 // all-zeros used in coinbase
 pub struct Txid(
     #[from]
     #[from([u8; 32])]
     Bytes32,
 );
+
+/// Satoshi made all SHA245d-based hashes to be displayed as hex strings in a
+/// big endian order. Thus we need this manual implementation.
+impl Display for Txid {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let mut bytes = self.to_raw_array();
+        bytes.reverse();
+        Display::fmt(&Bytes32::from(bytes), f)
+    }
+}
+
+/// Satoshi made all SHA245d-based hashes to be displayed as hex strings in a
+/// big endian order. Thus we need this manual implementation.
+impl FromStr for Txid {
+    type Err = hex::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut bytes = <[u8; 32]>::from_hex(s)?;
+        bytes.reverse();
+        Ok(Txid::from_raw_array(bytes))
+    }
+}
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display, From)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
