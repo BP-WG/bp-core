@@ -64,6 +64,7 @@
 mod tapscript;
 mod tx;
 mod txout;
+mod spk;
 mod xonlypk;
 
 pub use tapscript::{TapretCommitment, TAPRET_SCRIPT_COMMITMENT_PREFIX};
