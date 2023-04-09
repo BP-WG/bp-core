@@ -1,6 +1,6 @@
 [package]
 name = "bp-primitives"
-version = "0.10.0-rc.2"
+version = "0.10.0"
 description = "Bitcoin protocol primitives library"
 keywords = ["lnp-bp", "smart-contracts", "bitcoin", "blockchain"]
 categories = ["cryptography"]
@@ -16,10 +16,10 @@ readme = "../README.md"
 name = "bc"
 
 [dependencies]
-amplify = "4.0.0-beta.20"
+amplify = { workspace = true }
 secp256k1 = { version = "0.27.0", features = ["global-context"] }
-strict_encoding = "2.0.0-rc.3"
-commit_verify = "0.10.0-rc.2"
+strict_encoding = { workspace = true }
+commit_verify = { workspace = true }
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
 
 [features]
