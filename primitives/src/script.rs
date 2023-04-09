@@ -66,7 +66,11 @@ pub enum OpCode {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct SigScript(ScriptBytes);
+pub struct SigScript(
+    #[from]
+    #[from(Vec<u8>)]
+    ScriptBytes,
+);
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
 #[wrapper(Deref, Index, RangeOps, BorrowSlice, LowerHex, UpperHex)]
@@ -78,7 +82,11 @@ pub struct SigScript(ScriptBytes);
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct ScriptPubkey(ScriptBytes);
+pub struct ScriptPubkey(
+    #[from]
+    #[from(Vec<u8>)]
+    ScriptBytes,
+);
 
 impl ScriptPubkey {
     pub fn new() -> Self { Self::default() }
