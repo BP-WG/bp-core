@@ -108,7 +108,7 @@ mod test {
         )
         .unwrap();
         let msg = mpc::Commitment::from([8u8; 32]);
-        let path_proof = TapretPathProof::root();
+        let path_proof = TapretPathProof::root(0);
 
         // Do via API
         let (outer_key, proof) = internal_pk.convolve_commit(&path_proof, &msg).unwrap();

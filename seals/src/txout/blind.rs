@@ -394,7 +394,7 @@ mod test {
         }
         .to_concealed_seal();
 
-        let baid58 = "AByw5sAYRGj1NHyqBfQSYpJLrN1WDCD8RxjJ1kimCUcL";
+        let baid58 = "8ikunNNrbrzCf92TDBzRruLArhwhgfDqi6LASjBRzRW8";
         assert_eq!(baid58, outpoint_hash.to_string());
         assert_eq!(outpoint_hash.to_string(), outpoint_hash.to_baid58().to_string());
         /* TODO: uncomment when Baid58::from_str would work
@@ -407,9 +407,9 @@ mod test {
     fn outpoint_reveal_str() {
         let mut outpoint_reveal = BlindSeal {
             method: CloseMethod::TapretFirst,
-            blinding: 54683213134637,
+            blinding: 0x31bbed7e7b2d,
             txid: TxPtr::Txid(
-                Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839")
+                Txid::from_str("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839")
                     .unwrap(),
             ),
             vout: Vout::from(21),
@@ -500,7 +500,7 @@ mod test {
         );
         assert_eq!(
             ChainBlindSeal::from_str("tapret1st:rvgbdg:5#0x78ca69"),
-            Err(ParseError::WrongTxid(hex::Error::InvalidChar(b'r')))
+            Err(ParseError::WrongTxid(hex::Error::InvalidChar(b'g')))
         );
         assert_eq!(
             ChainBlindSeal::from_str(

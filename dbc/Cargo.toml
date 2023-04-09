@@ -18,6 +18,7 @@ path = "src/lib.rs"
 
 [dependencies]
 amplify = { workspace = true }
+baid58 = "0.3.0"
 strict_encoding = { workspace = true }
 commit_verify = { workspace = true, features = ["rand"] }
 bp-primitives = { version = "0.10.0-rc.1", path = "../primitives" }

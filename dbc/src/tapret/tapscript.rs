@@ -20,9 +20,13 @@
 // limitations under the License.
 
 use std::io;
+use std::str::FromStr;
 
+use amplify::confinement::Confined;
+use baid58::{Baid58ParseError, FromBaid58, ToBaid58};
 use bc::{TapCode, TapScript};
 use commit_verify::{mpc, strategies, CommitEncode, CommitStrategy, CommitVerify};
+use strict_encoding::{StrictDeserialize, StrictSerialize};
 
 use super::Lnpbp12;
 use crate::LIB_NAME_BPCORE;
@@ -35,7 +39,8 @@ pub const TAPRET_SCRIPT_COMMITMENT_PREFIX: [u8; 31] = [
 ];
 
 /// Information about tapret commitment.
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
+#[display(Self::to_baid58_string)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BPCORE)]
 #[cfg_attr(
@@ -48,6 +53,37 @@ pub struct TapretCommitment {
     pub mpc: mpc::Commitment,
     /// Nonce is used to put the commitment into the correct side of the tree.
     pub nonce: u8,
+}
+
+impl StrictSerialize for TapretCommitment {}
+impl StrictDeserialize for TapretCommitment {}
+
+impl From<[u8; 33]> for TapretCommitment {
+    fn from(value: [u8; 33]) -> Self {
+        Self::from_strict_serialized::<33>(
+            Confined::try_from_iter(value).expect("exact size match"),
+        )
+        .expect("exact size match")
+    }
+}
+
+impl ToBaid58<33> for TapretCommitment {
+    const HRI: &'static str = "tapret";
+    fn to_baid58_payload(&self) -> [u8; 33] {
+        let mut data = io::Cursor::new([0u8; 33]);
+        self.commit_encode(&mut data);
+        data.into_inner()
+    }
+}
+impl FromBaid58<33> for TapretCommitment {}
+
+impl TapretCommitment {
+    fn to_baid58_string(&self) -> String { format!("{}", self.to_baid58()) }
+}
+
+impl FromStr for TapretCommitment {
+    type Err = Baid58ParseError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> { Self::from_baid58_str(s) }
 }
 
 impl TapretCommitment {

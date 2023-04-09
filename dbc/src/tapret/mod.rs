@@ -64,6 +64,7 @@
 mod tapscript;
 mod tx;
 mod txout;
+mod spk;
 mod xonlypk;
 
 pub use tapscript::{TapretCommitment, TAPRET_SCRIPT_COMMITMENT_PREFIX};
@@ -277,10 +278,10 @@ impl StrictDeserialize for TapretPathProof {}
 impl TapretPathProof {
     /// Construct new empty path proof.
     #[inline]
-    pub fn root() -> TapretPathProof {
+    pub fn root(nonce: u8) -> TapretPathProof {
         TapretPathProof {
             partner_node: None,
-            nonce: 0,
+            nonce,
         }
     }
 
