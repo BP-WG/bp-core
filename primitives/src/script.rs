@@ -28,8 +28,13 @@ use crate::{ScriptBytes, LIB_NAME_BITCOIN};
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 // TODO: Replace `try_from` with `from` since opcodes cover whole range of u8
 #[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
+#[non_exhaustive]
 #[repr(u8)]
 pub enum OpCode {
+    /// Push an empty array onto the stack.
+    #[display("OP_PUSH_BYTES0")]
+    PushBytes0 = OP_PUSHBYTES_0,
+
     /// Push the next 32 bytes as an array onto the stack.
     #[display("OP_PUSH_BYTES32")]
     PushBytes32 = OP_PUSHBYTES_32,

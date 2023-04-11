@@ -372,6 +372,7 @@ impl LeafScript {
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
 #[repr(u8)]
+#[non_exhaustive]
 pub enum TapCode {
     /// Push the next 32 bytes as an array onto the stack.
     #[display("OP_PUSH_BYTES32")]
