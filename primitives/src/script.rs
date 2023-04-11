@@ -54,6 +54,10 @@ pub enum OpCode {
     /// stack.
     #[display("OP_PUSH_DATA3")]
     PushData4 = OP_PUSHDATA4,
+
+    /// Push the array `0x01` onto the stack.
+    #[display("OP_PUSHNUM_1")]
+    PushNum1 = OP_PUSHNUM_1,
 }
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
