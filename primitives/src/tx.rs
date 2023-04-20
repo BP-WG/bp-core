@@ -165,14 +165,13 @@ pub struct TxOut {
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
-#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
-#[repr(u8)]
-pub enum TxVer {
-    #[strict_type(dumb)]
-    V1 = 1,
-    V2 = 2,
+pub struct TxVer(u32);
+
+impl Default for TxVer {
+    fn default() -> Self { TxVer(2) }
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, From)]
