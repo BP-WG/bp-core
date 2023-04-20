@@ -1,5 +1,5 @@
 {-
-  Id: salsa_peace_patron_26G1K9hm6R2BkzGJwHjLC9cB1JFJiAPCDWrJAoRCrkCg
+  Id: virus_popcorn_toyota_BhKrASuj7PaofxHqqueGrMR1hqiB1ZFUtKqAsYf5NxvC
   Name: BPCore
   Description: Consensus layer for bitcoin protocol
   Author: Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
@@ -7,7 +7,7 @@
   License: Apache-2.0
 -}
 
-typelib Bitcoin -- salsa_peace_patron_26G1K9hm6R2BkzGJwHjLC9cB1JFJiAPCDWrJAoRCrkCg
+typelib Bitcoin -- virus_popcorn_toyota_BhKrASuj7PaofxHqqueGrMR1hqiB1ZFUtKqAsYf5NxvC
 
 -- no dependencies
 
@@ -25,8 +25,10 @@ data Tx               :: version TxVer
 data TxIn             :: prevOutput Outpoint
                        , sigScript SigScript
                        , sequence SeqNo
+                       , witness Witness
 data TxOut            :: value Sats, scriptPubkey ScriptPubkey
 data TxVer            :: v1:1 | v2:2
 data Txid             :: [U8 ^ 32]
 data Vout             :: U32
+data Witness          :: [[U8 ^ ..0xffffffffffffffff] ^ ..0xffffffffffffffff]
 

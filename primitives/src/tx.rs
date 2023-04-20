@@ -127,6 +127,13 @@ impl Outpoint {
 )]
 pub struct SeqNo(u32);
 
+#[derive(Wrapper, Clone, Eq, PartialEq, Debug, From)]
+#[wrapper(Deref, Index, RangeOps)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
+pub struct Witness(VarIntArray<VarIntArray<u8>>);
+
 #[derive(Clone, Eq, PartialEq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
@@ -135,6 +142,7 @@ pub struct TxIn {
     pub prev_output: Outpoint,
     pub sig_script: SigScript,
     pub sequence: SeqNo,
+    pub witness: Witness,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, From)]
