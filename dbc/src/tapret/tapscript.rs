@@ -60,10 +60,8 @@ impl StrictDeserialize for TapretCommitment {}
 
 impl From<[u8; 33]> for TapretCommitment {
     fn from(value: [u8; 33]) -> Self {
-        Self::from_strict_serialized::<33>(
-            Confined::try_from_iter(value).expect("exact size match"),
-        )
-        .expect("exact size match")
+        let buf = Confined::try_from_iter(value).expect("exact size match");
+        Self::from_strict_serialized::<33>(buf).expect("exact size match")
     }
 }
 
@@ -135,8 +133,15 @@ mod test {
     pub fn commiment_serialization() {
         let commitment = commitment();
         let script = TapScript::commit(&commitment);
-        eprintln!("{script:x}");
         assert_eq!(script[63], commitment.nonce);
         assert_eq!(&script[31..63], commitment.mpc.as_slice());
+    }
+
+    #[test]
+    pub fn tapret_commitment_baid58() {
+        let commitment = commitment();
+        let encoded = commitment.to_baid58();
+        let decoded = TapretCommitment::from_baid58(encoded).unwrap();
+        assert_eq!(decoded, commitment);
     }
 }
