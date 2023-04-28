@@ -1,6 +1,6 @@
 [package]
 name = "bp-dbc"
-version = "0.10.0"
+version = "0.10.1"
 description = "Deterministic bitcoin commitments library"
 keywords = ["lnp-bp", "bitcoin", "blockchain", "smart-contracts", "single-use-seals"]
 categories = ["cryptography", "encoding"]
