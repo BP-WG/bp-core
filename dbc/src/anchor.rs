@@ -29,7 +29,7 @@ use std::cmp::Ordering;
 use amplify::{Bytes32, Wrapper};
 use bc::{ScriptPubkey, Tx, Txid};
 use commit_verify::mpc::{self, Message, ProtocolId};
-use commit_verify::{strategies, CommitStrategy, CommitmentId, ConvolveCommitProof};
+use commit_verify::{CommitmentId, ConvolveCommitProof};
 use strict_encoding::{StrictDumb, StrictEncode};
 
 use crate::tapret::{TapretError, TapretProof};
@@ -43,6 +43,8 @@ pub const ANCHOR_MIN_LNPBP4_DEPTH: u8 = 3;
 #[wrapper(Deref, BorrowSlice, Display, FromStr, Hex, Index, RangeOps)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BPCORE)]
+#[derive(CommitEncode)]
+#[commit_encode(strategy = strict)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -53,10 +55,6 @@ pub struct AnchorId(
     #[from([u8; 32])]
     Bytes32,
 );
-
-impl CommitStrategy for AnchorId {
-    type Strategy = strategies::Strict;
-}
 
 /// Errors verifying anchors.
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
@@ -83,6 +81,7 @@ pub enum VerifyError {
 #[derive(Clone, PartialEq, Eq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BPCORE)]
+#[derive(CommitEncode)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -97,10 +96,6 @@ pub struct Anchor<L: mpc::Proof + StrictDumb> {
 
     /// Proof of the DBC commitment.
     pub dbc_proof: Proof,
-}
-
-impl CommitStrategy for Anchor<mpc::MerkleBlock> {
-    type Strategy = strategies::Strict;
 }
 
 impl CommitmentId for Anchor<mpc::MerkleBlock> {
@@ -246,6 +241,8 @@ impl Anchor<mpc::MerkleBlock> {
 #[derive(Clone, PartialEq, Eq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BPCORE, tags = order)]
+#[derive(CommitEncode)]
+#[commit_encode(strategy = strict)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),

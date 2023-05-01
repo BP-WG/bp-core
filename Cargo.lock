@@ -233,12 +233,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
-name = "commit_verify"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a517ba2f2008e980c6cefe0553a7b56541b0a129e9e809d36770c9b1c6429c1b"
+name = "commit_encoding_derive"
+version = "0.10.0-beta.1"
+source = "git+https://github.com/LNP-BP/client_side_validation?branch=commit_encode_derive#bb1567daff74fbc243638256434a322562989fd1"
 dependencies = [
  "amplify",
+ "amplify_syn",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "commit_verify"
+version = "0.10.1"
+source = "git+https://github.com/LNP-BP/client_side_validation?branch=commit_encode_derive#bb1567daff74fbc243638256434a322562989fd1"
+dependencies = [
+ "amplify",
+ "commit_encoding_derive",
  "rand",
  "serde",
  "strict_encoding",

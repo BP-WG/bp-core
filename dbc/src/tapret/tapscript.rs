@@ -25,7 +25,7 @@ use std::str::FromStr;
 use amplify::confinement::Confined;
 use baid58::{Baid58ParseError, FromBaid58, ToBaid58};
 use bc::{TapCode, TapScript};
-use commit_verify::{mpc, strategies, CommitEncode, CommitStrategy, CommitVerify};
+use commit_verify::{mpc, CommitEncode, CommitVerify};
 use strict_encoding::{StrictDeserialize, StrictSerialize};
 
 use super::Lnpbp12;
@@ -43,6 +43,7 @@ pub const TAPRET_SCRIPT_COMMITMENT_PREFIX: [u8; 31] = [
 #[display(Self::to_baid58_string)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BPCORE)]
+#[derive(CommitEncode)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -87,10 +88,6 @@ impl FromStr for TapretCommitment {
 impl TapretCommitment {
     /// Constructs information about tapret commitment.
     pub fn with(mpc: mpc::Commitment, nonce: u8) -> Self { Self { mpc, nonce } }
-}
-
-impl CommitStrategy for TapretCommitment {
-    type Strategy = strategies::Strict;
 }
 
 impl CommitVerify<TapretCommitment, Lnpbp12> for TapScript {
