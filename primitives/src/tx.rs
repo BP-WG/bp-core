@@ -27,7 +27,7 @@ use amplify::hex::{self, FromHex, ToHex};
 use amplify::{Bytes32, RawArray, Wrapper};
 
 use super::{VarIntArray, LIB_NAME_BITCOIN};
-use crate::{ScriptPubkey, SigScript};
+use crate::{NonStandardValue, ScriptPubkey, SigScript};
 
 #[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Display, From)]
 #[display(Self::to_hex)]
@@ -166,14 +166,39 @@ pub struct TxOut {
     pub script_pubkey: ScriptPubkey,
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
-pub struct TxVer(u32);
+pub struct TxVer(i32);
 
 impl Default for TxVer {
     fn default() -> Self { TxVer(2) }
+}
+
+impl TxVer {
+    /// Pre-BIP68 version.
+    pub const V1: Self = TxVer(1);
+    /// Current version (post-BIP68).
+    pub const V2: Self = TxVer(2);
+
+    #[inline]
+    pub const fn from_consensus_i32(ver: i32) -> Self { TxVer(ver) }
+
+    pub const fn try_from_standard(ver: i32) -> Result<Self, NonStandardValue<i32>> {
+        let ver = TxVer::from_consensus_i32(ver);
+        if !ver.is_standard() {
+            return Err(NonStandardValue::with(ver.0, "TxVer"));
+        } else {
+            Ok(ver)
+        }
+    }
+
+    #[inline]
+    pub const fn is_standard(self) -> bool { self.0 <= TxVer::V2.0 }
+
+    #[inline]
+    pub const fn to_consensus_u32(&self) -> i32 { self.0 }
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, From)]

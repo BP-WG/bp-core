@@ -19,9 +19,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::fmt::{Debug, Display};
 use std::str::FromStr;
 
 use crate::LIB_NAME_BITCOIN;
+
+/// the provided value {value} for {matter} is non-standard; while it is
+/// accepted by the bitcoin consensus rules, the software prohibits from using
+/// it.
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Display, Error)]
+#[display(doc_comments)]
+pub struct NonStandardValue<T: Debug + Display> {
+    pub value: T,
+    pub matter: &'static str,
+}
+
+impl<T: Debug + Display> NonStandardValue<T> {
+    pub const fn with(value: T, matter: &'static str) -> Self { NonStandardValue { value, matter } }
+}
 
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error)]
 #[display("invalid blockchain name '{0}'")]
