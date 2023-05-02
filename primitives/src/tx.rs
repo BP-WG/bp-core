@@ -136,6 +136,17 @@ pub struct SeqNo(u32);
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct Witness(VarIntArray<VarIntArray<u8>>);
 
+impl Witness {
+    pub fn from_consensus_stack(witness: impl IntoIterator<Item = Vec<u8>>) -> Witness {
+        let iter = witness.into_iter().map(|vec| {
+            VarIntArray::try_from(vec).expect("witness stack element length exceeds 2^64 bytes")
+        });
+        let stack =
+            VarIntArray::try_from_iter(iter).expect("witness stack size exceeds 2^64 bytes");
+        Witness(stack)
+    }
+}
+
 #[derive(Clone, Eq, PartialEq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
