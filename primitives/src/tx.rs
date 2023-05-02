@@ -201,7 +201,7 @@ impl TxVer {
     pub const fn to_consensus_u32(&self) -> i32 { self.0 }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug, From)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
@@ -210,6 +210,14 @@ impl TxVer {
     serde(crate = "serde_crate", transparent)
 )]
 pub struct LockTime(u32);
+
+impl LockTime {
+    #[inline]
+    pub const fn from_consensus_i32(lock_time: u32) -> Self { LockTime(lock_time) }
+
+    #[inline]
+    pub const fn to_consensus_u32(&self) -> u32 { self.0 }
+}
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
