@@ -119,7 +119,7 @@ impl Outpoint {
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug, From)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
@@ -128,6 +128,14 @@ impl Outpoint {
     serde(crate = "serde_crate", transparent)
 )]
 pub struct SeqNo(u32);
+
+impl SeqNo {
+    #[inline]
+    pub const fn from_consensus_u32(lock_time: u32) -> Self { SeqNo(lock_time) }
+
+    #[inline]
+    pub const fn to_consensus_u32(&self) -> u32 { self.0 }
+}
 
 #[derive(Wrapper, Clone, Eq, PartialEq, Debug, From)]
 #[wrapper(Deref, Index, RangeOps)]
@@ -224,7 +232,7 @@ pub struct LockTime(u32);
 
 impl LockTime {
     #[inline]
-    pub const fn from_consensus_i32(lock_time: u32) -> Self { LockTime(lock_time) }
+    pub const fn from_consensus_u32(lock_time: u32) -> Self { LockTime(lock_time) }
 
     #[inline]
     pub const fn to_consensus_u32(&self) -> u32 { self.0 }
