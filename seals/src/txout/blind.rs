@@ -50,6 +50,8 @@ pub type SingleBlindSeal = BlindSeal<Txid>;
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
+#[derive(CommitEncode)]
+#[commit_encode(conceal, strategy = strict)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct BlindSeal<Id: SealTxid> {
     /// Commitment to the specific seal close method [`CloseMethod`] which must
@@ -329,6 +331,8 @@ where Self: TxoSeal
 #[wrapper(Index, RangeOps, BorrowSlice, Hex)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
+#[derive(CommitEncode)]
+#[commit_encode(strategy = strict)]
 #[display(Self::to_baid58)]
 #[cfg_attr(
     feature = "serde",

@@ -27,12 +27,14 @@ use amplify::hex::{self, FromHex, ToHex};
 use amplify::{Bytes32, RawArray, Wrapper};
 
 use super::{VarIntArray, LIB_NAME_BITCOIN};
-use crate::{ScriptPubkey, SigScript};
+use crate::{NonStandardValue, ScriptPubkey, SigScript};
 
 #[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Display, From)]
 #[display(Self::to_hex)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
+#[derive(CommitEncode)]
+#[commit_encode(strategy = strict)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -117,7 +119,7 @@ impl Outpoint {
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug, From)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
@@ -127,12 +129,31 @@ impl Outpoint {
 )]
 pub struct SeqNo(u32);
 
+impl SeqNo {
+    #[inline]
+    pub const fn from_consensus_u32(lock_time: u32) -> Self { SeqNo(lock_time) }
+
+    #[inline]
+    pub const fn to_consensus_u32(&self) -> u32 { self.0 }
+}
+
 #[derive(Wrapper, Clone, Eq, PartialEq, Debug, From)]
 #[wrapper(Deref, Index, RangeOps)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct Witness(VarIntArray<VarIntArray<u8>>);
+
+impl Witness {
+    pub fn from_consensus_stack(witness: impl IntoIterator<Item = Vec<u8>>) -> Witness {
+        let iter = witness.into_iter().map(|vec| {
+            VarIntArray::try_from(vec).expect("witness stack element length exceeds 2^64 bytes")
+        });
+        let stack =
+            VarIntArray::try_from_iter(iter).expect("witness stack size exceeds 2^64 bytes");
+        Witness(stack)
+    }
+}
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
@@ -164,17 +185,42 @@ pub struct TxOut {
     pub script_pubkey: ScriptPubkey,
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
-pub struct TxVer(u32);
+pub struct TxVer(i32);
 
 impl Default for TxVer {
     fn default() -> Self { TxVer(2) }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug, From)]
+impl TxVer {
+    /// Pre-BIP68 version.
+    pub const V1: Self = TxVer(1);
+    /// Current version (post-BIP68).
+    pub const V2: Self = TxVer(2);
+
+    #[inline]
+    pub const fn from_consensus_i32(ver: i32) -> Self { TxVer(ver) }
+
+    pub const fn try_from_standard(ver: i32) -> Result<Self, NonStandardValue<i32>> {
+        let ver = TxVer::from_consensus_i32(ver);
+        if !ver.is_standard() {
+            return Err(NonStandardValue::with(ver.0, "TxVer"));
+        } else {
+            Ok(ver)
+        }
+    }
+
+    #[inline]
+    pub const fn is_standard(self) -> bool { self.0 <= TxVer::V2.0 }
+
+    #[inline]
+    pub const fn to_consensus_u32(&self) -> i32 { self.0 }
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
@@ -183,6 +229,14 @@ impl Default for TxVer {
     serde(crate = "serde_crate", transparent)
 )]
 pub struct LockTime(u32);
+
+impl LockTime {
+    #[inline]
+    pub const fn from_consensus_u32(lock_time: u32) -> Self { LockTime(lock_time) }
+
+    #[inline]
+    pub const fn to_consensus_u32(&self) -> u32 { self.0 }
+}
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]

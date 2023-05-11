@@ -23,7 +23,7 @@ license = "Apache-2.0"
 [workspace.dependencies]
 amplify = "4.0.0"
 strict_encoding = "2.1.1"
-commit_verify = "0.10.0"
+commit_verify = "0.10.1"
 single_use_seals = "0.10.0"
 
 [package]
@@ -72,3 +72,6 @@ stl = ["strict_types", "strict_types/base64"]
 
 [package.metadata.docs.rs]
 features = [ "all" ]
+
+[patch.crates-io]
+commit_verify = { git = "https://github.com/LNP-BP/client_side_validation", branch = "commit_encode_derive" }

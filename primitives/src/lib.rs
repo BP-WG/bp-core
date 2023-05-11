@@ -35,6 +35,8 @@
 extern crate amplify;
 #[macro_use]
 extern crate strict_encoding;
+#[macro_use]
+extern crate commit_verify;
 #[cfg(feature = "serde")]
 #[macro_use]
 extern crate serde_crate as serde;
@@ -51,9 +53,9 @@ mod util;
 pub use script::{OpCode, ScriptPubkey, SigScript};
 pub use segwit::*;
 pub use taproot::*;
-pub use tx::{LockTime, Outpoint, Sats, SeqNo, Tx, TxIn, TxOut, TxVer, Txid, Vout};
+pub use tx::{LockTime, Outpoint, Sats, SeqNo, Tx, TxIn, TxOut, TxVer, Txid, Vout, Witness};
 pub use types::{ScriptBytes, VarIntArray};
-pub use util::Chain;
+pub use util::{Chain, NonStandardValue};
 
 pub const LIB_NAME_BITCOIN: &str = "Bitcoin";
 
