@@ -28,7 +28,7 @@ single_use_seals = "0.10.0"
 
 [package]
 name = "bp-core"
-version = "0.10.1"
+version = "0.10.2"
 description = "Bitcoin protocol core library (BP Core Lib)"
 keywords = ["lnp-bp", "smart-contracts", "bitcoin", "blockchain"]
 categories = ["cryptography"]

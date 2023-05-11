@@ -1,5 +1,5 @@
 {-
-  Id: panel_chamber_ohio_GWzzfwBqzA5BUVER6hqq3rBdDs6UUJ15w1T8ys6WrNr5
+  Id: circus_report_jeep_2bj6eDer24ZBSVq6JgQW2BrARt6vx56vMWzF35J45gzY
   Name: BPCore
   Description: Consensus layer for bitcoin protocol
   Author: Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
@@ -7,7 +7,7 @@
   License: Apache-2.0
 -}
 
-typelib Bitcoin -- panel_chamber_ohio_GWzzfwBqzA5BUVER6hqq3rBdDs6UUJ15w1T8ys6WrNr5
+typelib Bitcoin -- circus_report_jeep_2bj6eDer24ZBSVq6JgQW2BrARt6vx56vMWzF35J45gzY
 
 -- no dependencies
 
@@ -27,7 +27,7 @@ data TxIn             :: prevOutput Outpoint
                        , sequence SeqNo
                        , witness Witness
 data TxOut            :: value Sats, scriptPubkey ScriptPubkey
-data TxVer            :: U32
+data TxVer            :: I32
 data Txid             :: [U8 ^ 32]
 data Vout             :: U32
 data Witness          :: [[U8 ^ ..0xffffffffffffffff] ^ ..0xffffffffffffffff]
