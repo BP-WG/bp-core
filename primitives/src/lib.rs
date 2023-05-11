@@ -41,6 +41,7 @@ extern crate commit_verify;
 #[macro_use]
 extern crate serde_crate as serde;
 
+#[allow(missing_docs)]
 pub extern crate secp256k1;
 
 pub mod opcodes;
