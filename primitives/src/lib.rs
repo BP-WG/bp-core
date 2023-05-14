@@ -50,15 +50,16 @@ mod segwit;
 mod taproot;
 mod tx;
 mod util;
+#[cfg(feature = "stl")]
+pub mod stl;
 
 pub use script::{OpCode, ScriptPubkey, SigScript};
 pub use segwit::*;
+pub use stl::LIB_NAME_BITCOIN;
 pub use taproot::*;
 pub use tx::{LockTime, Outpoint, Sats, SeqNo, Tx, TxIn, TxOut, TxVer, Txid, Vout, Witness};
 pub use types::{ScriptBytes, VarIntArray};
 pub use util::{Chain, NonStandardValue};
-
-pub const LIB_NAME_BITCOIN: &str = "Bitcoin";
 
 mod types {
     use std::fmt::{Formatter, LowerHex, UpperHex};

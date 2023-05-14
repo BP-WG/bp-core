@@ -29,7 +29,7 @@ use std::str::FromStr;
 use std::{env, fs, io};
 
 use amplify::num::u24;
-use bc::{Txid, LIB_NAME_BITCOIN};
+use bc::{stl, Txid, LIB_NAME_BITCOIN};
 use commit_verify::{mpc, LIB_NAME_COMMIT_VERIFY};
 use dbc::LIB_NAME_BPCORE;
 use seals::txout::TxPtr;
@@ -84,9 +84,7 @@ fn export(root: &str, lib: TypeLib) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let lib = LibBuilder::new(libname!(LIB_NAME_BITCOIN))
-        .process::<bc::Tx>()?
-        .compile(none!())?;
+    let lib = stl::bitcoin_stl();
     let bitcoin_id = lib.id();
     export("Bitcoin", lib)?;
 
