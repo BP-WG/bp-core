@@ -563,8 +563,7 @@ dependencies = [
 [[package]]
 name = "strict_types"
 version = "1.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a03bb84c2de19c9f389c58fe9cb505ca3dbb4b9247209428cb3c6aa440cff87"
+source = "git+https://github.com/strict-types/strict-types?branch=fix/typesys-builder#3f581b0ad96fd87e261f7a9efa12b20f4dd8e841"
 dependencies = [
  "amplify",
  "baid58",
