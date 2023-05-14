@@ -69,10 +69,12 @@ serde = [
     "bp-dbc/serde",
     "bp-seals/serde",
 ]
-stl = ["strict_types", "strict_types/base64", "bp-primitives/stl"]
+stl = ["strict_types", "strict_types/base64", "bp-primitives/stl", "commit_verify/stl"]
 
 [package.metadata.docs.rs]
 features = [ "all" ]
 
 [patch.crates-io]
+strict_encoding = { git = "https://github.com/strict-types/strict-encoding", branch = "stl" }
 strict_types = { git = "https://github.com/strict-types/strict-types", branch = "fix/typesys-builder" }
+commit_verify = { git = "https://github.com/LNP-BP/client_side_validation", branch = "stl" }

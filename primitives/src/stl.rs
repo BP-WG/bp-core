@@ -26,7 +26,8 @@ use strict_types::TypeLib;
 use crate::Tx;
 
 pub const LIB_NAME_BITCOIN: &str = "Bitcoin";
-pub const LIB_ID_BITCOIN: &str = "circus_report_jeep_2bj6eDer24ZBSVq6JgQW2BrARt6vx56vMWzF35J45gzY";
+pub const LIB_ID_BITCOIN: &str =
+    "cubic_filter_vampire_AqBBP1ZeTXrdAePf6SBcUGbttpvxpHKG7uJLKFkVxtGi";
 
 fn _bitcoin_stl() -> Result<TypeLib, TranslateError> {
     LibBuilder::new(libname!(LIB_NAME_BITCOIN))

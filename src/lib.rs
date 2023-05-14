@@ -47,4 +47,14 @@ pub extern crate dbc;
 #[allow(missing_docs)]
 pub extern crate seals;
 
+#[cfg(feature = "stl")]
+#[macro_use]
+extern crate amplify;
+#[cfg(feature = "stl")]
+#[macro_use]
+extern crate strict_encoding;
+
+#[cfg(feature = "stl")]
+pub mod stl;
+
 pub use bc::*;

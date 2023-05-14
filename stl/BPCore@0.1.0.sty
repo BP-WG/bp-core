@@ -1,19 +1,21 @@
 {-
-  Id: harlem_null_puma_DxuLX8d9UiMyEJMRJivMFviK1B8t1QWyjywXuDC13iKR
+  Id: manila_origami_blonde_GUPDJLSfnzeYN8udLa1Z7qFLZ45oiyekN2DR8DRPHqri
   Name: BPCore
-  Description: Consensus layer for bitcoin protocol
+  Version: 0.1.0
+  Description: Bitcoin client-side-validation library
   Author: Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
   Copyright (C) 2023 LNP/BP Standards Association. All rights reserved.
   License: Apache-2.0
 -}
 
-typelib BPCore -- harlem_null_puma_DxuLX8d9UiMyEJMRJivMFviK1B8t1QWyjywXuDC13iKR
+typelib BPCore -- manila_origami_blonde_GUPDJLSfnzeYN8udLa1Z7qFLZ45oiyekN2DR8DRPHqri
 
-import circus_report_jeep_2bj6eDer24ZBSVq6JgQW2BrARt6vx56vMWzF35J45gzY as Bitcoin
-import texas_year_ethnic_CPr8tcdPqWZ3KP8dXNPYavTEkbn8PG7CoJHtfwDFKRHJ as CommitVerify
+import quota_conan_fashion_3TZmAPf8EkQZnbGS1g8uMGes6jEWPqNkFB6pLUKeoefg as Std
+import cubic_filter_vampire_AqBBP1ZeTXrdAePf6SBcUGbttpvxpHKG7uJLKFkVxtGi as Bitcoin
+import expand_vertigo_billy_HmAmKqZJ7XKDsyamyaikTq3PXzWgWcuVMXwe13Hzxfq4 as CommitVerify
 
 
-data AnchorId         :: [U8 ^ 32]
+data AnchorId         :: [Byte ^ 32]
 data AnchorMerkleBlock :: txid Bitcoin.Txid
                        , mpcProof CommitVerify.MerkleBlock
                        , dbcProof Proof
@@ -32,6 +34,7 @@ data BlindSealTxid    :: method CloseMethod
                        , vout Bitcoin.Vout
                        , blinding U64
 data CloseMethod      :: opretFirst:0 | tapretFirst:1
+
 data ExplicitSealTxPtr :: method CloseMethod
                        , txid TxPtr
                        , vout Bitcoin.Vout
@@ -40,7 +43,7 @@ data ExplicitSealTxid :: method CloseMethod
                        , vout Bitcoin.Vout
 data Proof            :: opretFirst ()
                        | tapretFirst TapretProof
-data SecretSeal       :: [U8 ^ 32]
+data SecretSeal       :: [Byte ^ 32]
 data TapretNodePartner :: leftNode Bitcoin.TapNodeHash
                        | rightLeaf Bitcoin.LeafScript
                        | rightBranch TapretRightBranch

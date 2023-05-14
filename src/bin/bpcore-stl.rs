@@ -19,93 +19,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[macro_use]
-extern crate amplify;
-#[macro_use]
-extern crate strict_types;
+use strict_types::typelib::parse_args;
 
-use std::io::stdout;
-use std::str::FromStr;
-use std::{env, fs, io};
+fn main() {
+    let (format, dir) = parse_args();
 
-use amplify::num::u24;
-use bc::{stl, Txid, LIB_NAME_BITCOIN};
-use commit_verify::{mpc, LIB_NAME_COMMIT_VERIFY};
-use dbc::LIB_NAME_BPCORE;
-use seals::txout::TxPtr;
-use strict_encoding::{StrictEncode, StrictWriter};
-use strict_types::typelib::LibBuilder;
-use strict_types::{Dependency, TypeLib, TypeLibId};
-
-fn export(root: &str, lib: TypeLib) -> Result<(), Box<dyn std::error::Error>> {
-    let args: Vec<String> = env::args().collect();
-
-    let id = lib.id();
-
-    let ext = match args.get(1).map(String::as_str) {
-        Some("--stl") => "stl",
-        Some("--asc") => "asc.stl",
-        Some("--sty") => "sty",
-        _ => "sty",
-    };
-    let filename = args
-        .get(2)
-        .cloned()
-        .unwrap_or_else(|| format!("stl/{root}.{ext}"));
-    let mut file = match args.len() {
-        1 => Box::new(stdout()) as Box<dyn io::Write>,
-        2 | 3 => Box::new(fs::File::create(filename)?) as Box<dyn io::Write>,
-        _ => panic!("invalid argument count"),
-    };
-    match ext {
-        "stl" => {
-            lib.strict_encode(StrictWriter::with(u24::MAX.into_usize(), file))?;
-        }
-        "asc.stl" => {
-            writeln!(file, "{lib:X}")?;
-        }
-        _ => {
-            writeln!(
-                file,
-                "{{-
-  Id: {id:+}
-  Name: BPCore
+    bc::stl::bitcoin_stl()
+        .serialize(
+            format,
+            dir.as_ref(),
+            "0.1.0",
+            Some(
+                "
   Description: Consensus layer for bitcoin protocol
   Author: Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
   Copyright (C) 2023 LNP/BP Standards Association. All rights reserved.
-  License: Apache-2.0
--}}\n"
-            )?;
-            writeln!(file, "{lib}")?;
-        }
-    }
+  License: Apache-2.0",
+            ),
+        )
+        .expect("unable to write to the file");
 
-    Ok(())
-}
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let lib = stl::bitcoin_stl();
-    let bitcoin_id = lib.id();
-    export("Bitcoin", lib)?;
-
-    let commit_id =
-        TypeLibId::from_str("texas_year_ethnic_CPr8tcdPqWZ3KP8dXNPYavTEkbn8PG7CoJHtfwDFKRHJ")
-            .expect("embedded id");
-    let imports = bset! {
-        Dependency::with(commit_id, libname!(LIB_NAME_COMMIT_VERIFY)),
-        Dependency::with(bitcoin_id, libname!(LIB_NAME_BITCOIN)),
-    };
-
-    let lib = LibBuilder::new(libname!(LIB_NAME_BPCORE))
-        .process::<dbc::AnchorId>()?
-        .process::<dbc::Anchor<mpc::MerkleTree>>()?
-        .process::<dbc::Anchor<mpc::MerkleBlock>>()?
-        .process::<dbc::Anchor<mpc::MerkleProof>>()?
-        .process::<seals::txout::ExplicitSeal<TxPtr>>()?
-        .process::<seals::txout::ExplicitSeal<Txid>>()?
-        .process::<seals::txout::blind::SecretSeal>()?
-        .process::<seals::txout::blind::BlindSeal<TxPtr>>()?
-        .process::<seals::txout::blind::BlindSeal<Txid>>()?
-        .compile(imports)?;
-    export("BPCore", lib)
+    bp::stl::bp_core_stl()
+        .serialize(
+            format,
+            dir,
+            "0.1.0",
+            Some(
+                "
+  Description: Bitcoin client-side-validation library
+  Author: Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
+  Copyright (C) 2023 LNP/BP Standards Association. All rights reserved.
+  License: Apache-2.0",
+            ),
+        )
+        .expect("unable to write to the file");
 }

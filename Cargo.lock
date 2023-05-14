@@ -236,8 +236,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "commit_encoding_derive"
 version = "0.10.0-beta.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9c90e218caace623ce81600c4abbf475d939068b3998d362fb6eb44172cfc1a"
+source = "git+https://github.com/LNP-BP/client_side_validation?branch=stl#72bfcfde70c5d235793dd1355f473171f40e125a"
 dependencies = [
  "amplify",
  "amplify_syn",
@@ -249,14 +248,14 @@ dependencies = [
 [[package]]
 name = "commit_verify"
 version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4909c1969590b4f3bf94e555a750f5d0a06322c358562c14ff9c1c90a6828e9e"
+source = "git+https://github.com/LNP-BP/client_side_validation?branch=stl#72bfcfde70c5d235793dd1355f473171f40e125a"
 dependencies = [
  "amplify",
  "commit_encoding_derive",
  "rand",
  "serde",
  "strict_encoding",
+ "strict_types",
 ]
 
 [[package]]
@@ -490,7 +489,7 @@ checksum = "8c805777e3930c8883389c602315a24224bcc738b63905ef87cd1420353ea93e"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.15",
+ "syn 2.0.16",
 ]
 
 [[package]]
@@ -539,8 +538,7 @@ dependencies = [
 [[package]]
 name = "strict_encoding"
 version = "2.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d8f58c66205b3eeb74ffc3c0e5b5cac77658a88ba0345018cc074ad4ddb6fef"
+source = "git+https://github.com/strict-types/strict-encoding?branch=stl#09c260290112897b913a1fe025bb9c12c73785dd"
 dependencies = [
  "amplify",
  "half",
@@ -550,8 +548,7 @@ dependencies = [
 [[package]]
 name = "strict_encoding_derive"
 version = "2.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f5adae55367464f5a229bfd539682c94f870b98a220be6e61dc43f85d612e7e"
+source = "git+https://github.com/strict-types/strict-encoding?branch=stl#09c260290112897b913a1fe025bb9c12c73785dd"
 dependencies = [
  "amplify_syn",
  "heck",
@@ -563,7 +560,7 @@ dependencies = [
 [[package]]
 name = "strict_types"
 version = "1.1.1"
-source = "git+https://github.com/strict-types/strict-types?branch=fix/typesys-builder#3f581b0ad96fd87e261f7a9efa12b20f4dd8e841"
+source = "git+https://github.com/strict-types/strict-types?branch=fix/typesys-builder#649eface5c47a117ff443bfac7ba70a73de2ba27"
 dependencies = [
  "amplify",
  "baid58",
@@ -603,9 +600,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.15"
+version = "2.0.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a34fcf3e8b60f57e6a14301a2e916d323af98b0ea63c599441eec8558660c822"
+checksum = "a6f671d4b5ffdb8eadec19c0ae67fe2639df8684bd7bc4b83d986b8db549cf01"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -672,7 +669,7 @@ dependencies = [
  "once_cell",
  "proc-macro2",
  "quote",
- "syn 2.0.15",
+ "syn 2.0.16",
  "wasm-bindgen-shared",
 ]
 
@@ -694,7 +691,7 @@ checksum = "4783ce29f09b9d93134d41297aded3a712b7b979e9c6f28c32cb88c973a94869"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.15",
+ "syn 2.0.16",
  "wasm-bindgen-backend",
  "wasm-bindgen-shared",
 ]
