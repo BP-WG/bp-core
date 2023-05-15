@@ -184,7 +184,7 @@ impl<Id: SealTxid> FromStr for ExplicitSeal<Id> {
             (Some(_), Some(""), ..) => Err(ParseError::TxidRequired),
             (Some(method), Some(txid), Some(vout), None) => Ok(ExplicitSeal {
                 method: method.parse()?,
-                txid: Id::from_str(txid).map_err(|err| ParseError::WrongTxid(err))?,
+                txid: Id::from_str(txid).map_err(ParseError::WrongTxid)?,
                 vout: vout.parse().map_err(|_| ParseError::WrongVout)?,
             }),
             _ => Err(ParseError::WrongStructure),

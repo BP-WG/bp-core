@@ -42,9 +42,24 @@
 //! standardizing typical workflow processes in a form of interfaces that
 //! will be nearly impossible to use in the wrong form.
 
-#[allow(missing_docs)]
+/// Re-export of `bp-dbc` crate.
 pub extern crate dbc;
-#[allow(missing_docs)]
+/// Re-export of `bp-seals` crate.
 pub extern crate seals;
 
-pub use bc::*;
+#[cfg(feature = "stl")]
+#[macro_use]
+extern crate amplify;
+#[cfg(feature = "stl")]
+#[macro_use]
+extern crate strict_encoding;
+
+#[cfg(feature = "stl")]
+pub mod stl;
+
+pub use ::bc::*;
+#[cfg(feature = "stl")]
+#[allow(missing_docs)]
+pub mod bc {
+    pub use bc::stl;
+}

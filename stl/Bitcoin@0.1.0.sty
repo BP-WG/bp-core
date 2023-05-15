@@ -1,20 +1,21 @@
 {-
-  Id: circus_report_jeep_2bj6eDer24ZBSVq6JgQW2BrARt6vx56vMWzF35J45gzY
-  Name: BPCore
+  Id: cubic_filter_vampire_AqBBP1ZeTXrdAePf6SBcUGbttpvxpHKG7uJLKFkVxtGi
+  Name: Bitcoin
+  Version: 0.1.0
   Description: Consensus layer for bitcoin protocol
   Author: Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
   Copyright (C) 2023 LNP/BP Standards Association. All rights reserved.
   License: Apache-2.0
 -}
 
-typelib Bitcoin -- circus_report_jeep_2bj6eDer24ZBSVq6JgQW2BrARt6vx56vMWzF35J45gzY
+typelib Bitcoin -- cubic_filter_vampire_AqBBP1ZeTXrdAePf6SBcUGbttpvxpHKG7uJLKFkVxtGi
 
 -- no dependencies
 
 data LockTime         :: U32
 data Outpoint         :: txid Txid, vout Vout
 data Sats             :: U64
-data ScriptBytes      :: [U8 ^ ..0xffffffffffffffff]
+data ScriptBytes      :: [Byte ^ ..0xffffffffffffffff]
 data ScriptPubkey     :: ScriptBytes
 data SeqNo            :: U32
 data SigScript        :: ScriptBytes
@@ -28,7 +29,7 @@ data TxIn             :: prevOutput Outpoint
                        , witness Witness
 data TxOut            :: value Sats, scriptPubkey ScriptPubkey
 data TxVer            :: I32
-data Txid             :: [U8 ^ 32]
+data Txid             :: [Byte ^ 32]
 data Vout             :: U32
-data Witness          :: [[U8 ^ ..0xffffffffffffffff] ^ ..0xffffffffffffffff]
+data Witness          :: [[Byte ^ ..0xffffffffffffffff] ^ ..0xffffffffffffffff]
 
