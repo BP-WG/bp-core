@@ -1,6 +1,6 @@
 [package]
 name = "bp-seals"
-version = "0.10.2"
+version = "0.10.3"
 description = "Bitcoin protocol single-use-seals library"
 keywords = ["lnp-bp", "bitcoin", "blockchain", "smart-contracts", "single-use-seals"]
 categories = ["cryptography", "encoding"]
