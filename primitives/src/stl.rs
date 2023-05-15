@@ -23,9 +23,8 @@
 use strict_types::typelib::{LibBuilder, TranslateError};
 use strict_types::TypeLib;
 
-use crate::Tx;
+use crate::{Tx, LIB_NAME_BITCOIN};
 
-pub const LIB_NAME_BITCOIN: &str = "Bitcoin";
 pub const LIB_ID_BITCOIN: &str =
     "cubic_filter_vampire_AqBBP1ZeTXrdAePf6SBcUGbttpvxpHKG7uJLKFkVxtGi";
 

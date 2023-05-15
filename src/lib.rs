@@ -58,6 +58,7 @@ extern crate strict_encoding;
 pub mod stl;
 
 pub use ::bc::*;
+#[cfg(feature = "stl")]
 #[allow(missing_docs)]
 pub mod bc {
     pub use bc::stl;
