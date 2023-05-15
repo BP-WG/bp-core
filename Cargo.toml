@@ -22,9 +22,8 @@ license = "Apache-2.0"
 
 [workspace.dependencies]
 amplify = "4.0.0"
-strict_encoding = "2.1.2"
-strict_types = "1.1.1"
-commit_verify = "0.10.1"
+strict_encoding = "2.2.0"
+commit_verify = "0.10.2"
 single_use_seals = "0.10.0"
 
 [package]
@@ -53,7 +52,7 @@ required-features = ["stl"]
 [dependencies]
 amplify = { workspace = true }
 strict_encoding = { workspace = true }
-strict_types = { worskpace = true, optional = true }
+strict_types = { version = "1.2.0", optional = true }
 commit_verify = { workspace = true }
 single_use_seals = { workspace = true }
 bp-primitives = { version = "0.10.1", path = "./primitives" }
@@ -73,8 +72,3 @@ stl = ["strict_types", "strict_types/base64", "bp-primitives/stl", "commit_verif
 
 [package.metadata.docs.rs]
 features = [ "all" ]
-
-[patch.crates-io]
-strict_encoding = { git = "https://github.com/strict-types/strict-encoding", branch = "stl" }
-strict_types = { git = "https://github.com/strict-types/strict-types", branch = "fix/typesys-builder" }
-commit_verify = { git = "https://github.com/LNP-BP/client_side_validation", branch = "stl" }
