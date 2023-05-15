@@ -310,7 +310,7 @@ impl<Id: SealTxid> FromStr for BlindSeal<Id> {
                 method: method.parse()?,
                 blinding: u64::from_str_radix(blinding.trim_start_matches("0x"), 16)
                     .map_err(|_| ParseError::WrongBlinding)?,
-                txid: Id::from_str(txid).map_err(|err| ParseError::WrongTxid(err))?,
+                txid: Id::from_str(txid).map_err(ParseError::WrongTxid)?,
                 vout: vout.parse().map_err(|_| ParseError::WrongVout)?,
             }),
             _ => Err(ParseError::WrongStructure),

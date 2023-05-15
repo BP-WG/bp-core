@@ -42,9 +42,9 @@
 //! standardizing typical workflow processes in a form of interfaces that
 //! will be nearly impossible to use in the wrong form.
 
-#[allow(missing_docs)]
+/// Re-export of `bp-dbc` crate.
 pub extern crate dbc;
-#[allow(missing_docs)]
+/// Re-export of `bp-seals` crate.
 pub extern crate seals;
 
 #[cfg(feature = "stl")]
