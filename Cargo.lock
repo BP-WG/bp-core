@@ -121,9 +121,9 @@ checksum = "6107fe1be6682a68940da878d9e9f5e90ca5745b3dec9fd1bb393c8777d4f581"
 
 [[package]]
 name = "base64"
-version = "0.21.1"
+version = "0.21.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f1e31e207a6b8fb791a38ea3105e6cb541f55e4d029902d3039a4ad07cc4105"
+checksum = "604178f6c5c21f02dc555784810edfb88d34ac2c73b2eae109655649ee73ce3d"
 
 [[package]]
 name = "bitflags"
@@ -236,7 +236,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "commit_encoding_derive"
 version = "0.10.0"
-source = "git+https://github.com/LNP-BP/client_side_validation#1926c140d492a55772ff2fb9a0cec2200f82fb2d"
+source = "git+https://github.com/LNP-BP/client_side_validation#913bed9d92b3720262f8440bae5378dd6a1a5975"
 dependencies = [
  "amplify",
  "amplify_syn",
@@ -248,7 +248,7 @@ dependencies = [
 [[package]]
 name = "commit_verify"
 version = "0.10.2"
-source = "git+https://github.com/LNP-BP/client_side_validation#1926c140d492a55772ff2fb9a0cec2200f82fb2d"
+source = "git+https://github.com/LNP-BP/client_side_validation#913bed9d92b3720262f8440bae5378dd6a1a5975"
 dependencies = [
  "amplify",
  "commit_encoding_derive",
@@ -583,7 +583,7 @@ dependencies = [
 [[package]]
 name = "strict_types"
 version = "1.2.0"
-source = "git+https://github.com/strict-types/strict-types#1ec42458e4a985373f967a32d43c64265472c742"
+source = "git+https://github.com/strict-types/strict-types#aefc2de00ebc599341c9dc0793811b94ec39c3d4"
 dependencies = [
  "amplify",
  "baid58",

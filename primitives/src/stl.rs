@@ -28,7 +28,7 @@ use crate::{Tx, LIB_NAME_BITCOIN};
 pub const LIB_ID_BITCOIN: &str = "taboo_menu_salmon_6aJjK3f32d4ybWgf9Fkjh18TTtboqpqApRp4Dije38eg";
 
 fn _bitcoin_stl() -> Result<TypeLib, TranslateError> {
-    LibBuilder::new(libname!(LIB_NAME_BITCOIN), none!())
+    LibBuilder::new(libname!(LIB_NAME_BITCOIN), None)
         .transpile::<Tx>()
         .compile()
 }
