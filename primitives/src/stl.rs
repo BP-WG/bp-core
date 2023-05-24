@@ -25,13 +25,12 @@ use strict_types::TypeLib;
 
 use crate::{Tx, LIB_NAME_BITCOIN};
 
-pub const LIB_ID_BITCOIN: &str =
-    "cubic_filter_vampire_AqBBP1ZeTXrdAePf6SBcUGbttpvxpHKG7uJLKFkVxtGi";
+pub const LIB_ID_BITCOIN: &str = "taboo_menu_salmon_6aJjK3f32d4ybWgf9Fkjh18TTtboqpqApRp4Dije38eg";
 
 fn _bitcoin_stl() -> Result<TypeLib, TranslateError> {
-    LibBuilder::new(libname!(LIB_NAME_BITCOIN))
+    LibBuilder::new(libname!(LIB_NAME_BITCOIN), none!())
         .transpile::<Tx>()
-        .compile(none!())
+        .compile()
 }
 
 pub fn bitcoin_stl() -> TypeLib { _bitcoin_stl().expect("invalid strict type Bitcoin library") }

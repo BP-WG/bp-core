@@ -30,25 +30,24 @@ use strict_types::TypeLib;
 
 /// Strict types id for the library providing data types from [`dbc`] and
 /// [`seals`] crates.
-pub const LIB_ID_BPCORE: &str =
-    "manila_origami_blonde_GUPDJLSfnzeYN8udLa1Z7qFLZ45oiyekN2DR8DRPHqri";
+pub const LIB_ID_BPCORE: &str = "cheese_ground_diesel_HB6wnfbtLtYshVN4EeTKavadXE8MJdHn53TMAe1Ebg9p";
 
 fn _bp_core_stl() -> Result<TypeLib, TranslateError> {
-    LibBuilder::new(libname!(LIB_NAME_BPCORE))
-        .transpile::<dbc::AnchorId>()
-        .transpile::<dbc::Anchor<mpc::MerkleTree>>()
-        .transpile::<dbc::Anchor<mpc::MerkleBlock>>()
-        .transpile::<dbc::Anchor<mpc::MerkleProof>>()
-        .transpile::<seals::txout::ExplicitSeal<TxPtr>>()
-        .transpile::<seals::txout::ExplicitSeal<Txid>>()
-        .transpile::<seals::txout::blind::SecretSeal>()
-        .transpile::<seals::txout::blind::BlindSeal<TxPtr>>()
-        .transpile::<seals::txout::blind::BlindSeal<Txid>>()
-        .compile(bset! {
-            strict_types::stl::std_stl().to_dependency(),
-            bc::stl::bitcoin_stl().to_dependency(),
-            commit_verify::stl::commit_verify_stl().to_dependency()
-        })
+    LibBuilder::new(libname!(LIB_NAME_BPCORE), tiny_bset! {
+        strict_types::stl::std_stl().to_dependency(),
+        bc::stl::bitcoin_stl().to_dependency(),
+        commit_verify::stl::commit_verify_stl().to_dependency()
+    })
+    .transpile::<dbc::AnchorId>()
+    .transpile::<dbc::Anchor<mpc::MerkleTree>>()
+    .transpile::<dbc::Anchor<mpc::MerkleBlock>>()
+    .transpile::<dbc::Anchor<mpc::MerkleProof>>()
+    .transpile::<seals::txout::ExplicitSeal<TxPtr>>()
+    .transpile::<seals::txout::ExplicitSeal<Txid>>()
+    .transpile::<seals::txout::blind::SecretSeal>()
+    .transpile::<seals::txout::blind::BlindSeal<TxPtr>>()
+    .transpile::<seals::txout::blind::BlindSeal<Txid>>()
+    .compile()
 }
 
 /// Generates strict type library providing data types from [`dbc`] and

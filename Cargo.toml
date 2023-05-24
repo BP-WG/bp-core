@@ -72,3 +72,7 @@ stl = ["strict_types", "strict_types/base64", "bp-primitives/stl", "commit_verif
 
 [package.metadata.docs.rs]
 features = [ "all" ]
+
+[patch.crates-io]
+strict_types = { git = "https://github.com/strict-types/strict-types" }
+commit_verify = { git = "https://github.com/LNP-BP/client_side_validation" }
