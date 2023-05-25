@@ -236,7 +236,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "commit_encoding_derive"
 version = "0.10.0"
-source = "git+https://github.com/LNP-BP/client_side_validation#913bed9d92b3720262f8440bae5378dd6a1a5975"
+source = "git+https://github.com/LNP-BP/client_side_validation#46cb8a78847a880f2fa89bbe9e3d65c87efc779a"
 dependencies = [
  "amplify",
  "amplify_syn",
@@ -248,7 +248,7 @@ dependencies = [
 [[package]]
 name = "commit_verify"
 version = "0.10.2"
-source = "git+https://github.com/LNP-BP/client_side_validation#913bed9d92b3720262f8440bae5378dd6a1a5975"
+source = "git+https://github.com/LNP-BP/client_side_validation#46cb8a78847a880f2fa89bbe9e3d65c87efc779a"
 dependencies = [
  "amplify",
  "commit_encoding_derive",
@@ -558,9 +558,9 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding"
-version = "2.2.0"
+version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6fff0b729ca136cddccc87481dd932a442133a12a490f349d67f5d4c20b421e5"
+checksum = "f8746f1ee0110dbf5e6e5d7cea23027dbcb36fd4070f56c6332c15f7f406b067"
 dependencies = [
  "amplify",
  "half",
@@ -583,7 +583,7 @@ dependencies = [
 [[package]]
 name = "strict_types"
 version = "1.2.0"
-source = "git+https://github.com/strict-types/strict-types#aefc2de00ebc599341c9dc0793811b94ec39c3d4"
+source = "git+https://github.com/strict-types/strict-types#284b0e62fff273404989845a42af68c1ff640d3d"
 dependencies = [
  "amplify",
  "baid58",

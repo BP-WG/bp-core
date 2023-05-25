@@ -1,5 +1,5 @@
 {-
-  Id: manila_origami_blonde_GUPDJLSfnzeYN8udLa1Z7qFLZ45oiyekN2DR8DRPHqri
+  Id: carlo_paradox_sharp_8KZV8Qf97nQfiPfrkbzk7jTPhSDQFT2JhrVjMvstS6J8
   Name: BPCore
   Version: 0.1.0
   Description: Bitcoin client-side-validation library
@@ -8,48 +8,85 @@
   License: Apache-2.0
 -}
 
-typelib BPCore -- manila_origami_blonde_GUPDJLSfnzeYN8udLa1Z7qFLZ45oiyekN2DR8DRPHqri
+typelib BPCore
 
-import quota_conan_fashion_3TZmAPf8EkQZnbGS1g8uMGes6jEWPqNkFB6pLUKeoefg as Std
-import cubic_filter_vampire_AqBBP1ZeTXrdAePf6SBcUGbttpvxpHKG7uJLKFkVxtGi as Bitcoin
-import expand_vertigo_billy_HmAmKqZJ7XKDsyamyaikTq3PXzWgWcuVMXwe13Hzxfq4 as CommitVerify
+import left_pierre_food_5cmoZctpx98FbTzWTArm3G53pMzUXuRPXmMhuCd8zyXb as Std
+-- Imports:
+-- U4 := LemonMimosaOrder0Be5p7K6Qec6irJPaXb91KNSg5S9bQRAbCaa88E1MmFTC
+
+import sensor_correct_total_6RNoZhpeu95My9KqGM7j8BcY4tcNa8rwAjXbXUGteuf9 as CommitVerify
+-- Imports:
+-- TreeNode := HavanaShipCliff0aFvg9Bye6VLt47BqHfxroxCH6kY3oMezbn6f7NxJa8i
+-- ProtocolId := IndigoBuenosFriday04GenVCt5Xq6xtnJDjT98FehgCS8rTmwEzbjwGkaUVjHz
+-- Message := LondonMagnetCake04ajqScXjJ6wQ5af2zgBFzzP7k1qzD6DXXU28taQidCcA
+-- MerkleBlock := FictionBreakIsotope05Bw4uUaoda2MeRnb37DcQ9Z6phGZUT7uwJ7Cmk3s38nZ
+-- MerkleNode := BazaarOrchidJacket06kxYeCatpncbA9UiTdsFbxbxJdU56x6MdmTRkEeGAv6R
+-- MerkleTree := OrangePabloPromo09PYVQ6i5Y3YD2C8bYqZjWgYRg5L1jZECdbP6yYsiWuo6
+-- MerkleProof := LearnHelloJordan09gX9phaxeLVgMDb7pgjzh5N2KiAPQyYA7eLDzQKStxfd
+
+import extra_rapid_armada_EXDzvefCHMLgk4KXNvsXsDr2QzgPkxFFUCSEkL3S1ZJL as Bitcoin
+-- Imports:
+-- Vout := OpusDecadeExample03HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk
+-- TapNodeHash := LicenseSnowCorrect04M8xyvABKKKJseN6Pme5eKrAuusMNMXoY5s6ifsEcreC
+-- ScriptBytes := BaronMaltaHarvest07Bk3nVFjGbpESsetWgLCcJ4Qh7cr4cMwucYYn6f6QUUQ
+-- Txid := TaxiLearnMalta0C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs
+-- LeafVer := ChessDisputeStock0DGELfUvcU62GNQRo7HaMbKDzYQwdYRMW3b91JHd4d3WY
+-- LeafScript := LuckyBonanzaYoga0Faa53VyN79gC1P6j5ud5gLSSyJjpzqNsHfbTwobRrLJb
+-- InternalPk := TeacherPearlHello0G5HFVaWwWNYSzqk548JgGZ8WKy6dQ2ftVgkJvHjgRudZ
 
 
+
+-- AlmondFantasySelect0HXreMRXsXhE6goE2JsF8g9jy4rZ7p7AEeYmxYgfPF2tN
 data AnchorId         :: [Byte ^ 32]
-data AnchorMerkleBlock :: txid Bitcoin.Txid
-                       , mpcProof CommitVerify.MerkleBlock
+-- StopFilmPasta0Cna5Y95Ta2xSM9reg8yAAqwRrAKrQQEN1Uois1zz5W7G
+data AnchorMerkleBlock :: txid Bitcoin.Txid {- TaxiLearnMalta0C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs -}
+                       , mpcProof CommitVerify.MerkleBlock {- FictionBreakIsotope05Bw4uUaoda2MeRnb37DcQ9Z6phGZUT7uwJ7Cmk3s38nZ -}
                        , dbcProof Proof
-data AnchorMerkleProof :: txid Bitcoin.Txid
-                       , mpcProof CommitVerify.MerkleProof
+-- VictorJanetDavid0HG9TQb5soJcp85VzBUeXggCv9mKUyT9GQgymATcEE5cz
+data AnchorMerkleProof :: txid Bitcoin.Txid {- TaxiLearnMalta0C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs -}
+                       , mpcProof CommitVerify.MerkleProof {- LearnHelloJordan09gX9phaxeLVgMDb7pgjzh5N2KiAPQyYA7eLDzQKStxfd -}
                        , dbcProof Proof
-data AnchorMerkleTree :: txid Bitcoin.Txid
-                       , mpcProof CommitVerify.MerkleTree
+-- ComparePlasterJargon08mCbL37LQeMNbS3LgffzkGSLQnmhWyrv1cJZSfn6MxSq
+data AnchorMerkleTree :: txid Bitcoin.Txid {- TaxiLearnMalta0C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs -}
+                       , mpcProof CommitVerify.MerkleTree {- OrangePabloPromo09PYVQ6i5Y3YD2C8bYqZjWgYRg5L1jZECdbP6yYsiWuo6 -}
                        , dbcProof Proof
+-- TargetCasinoPenguin09CaqxtyKgdyBbm5EQF2JWEQshsrgteDDjhv1sAPVNWwJ
 data BlindSealTxPtr   :: method CloseMethod
                        , txid TxPtr
-                       , vout Bitcoin.Vout
+                       , vout Bitcoin.Vout {- OpusDecadeExample03HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk -}
                        , blinding U64
+-- LolaHeavyLion06d2rxUg3JDxJFdpYQwFoqQrxSPvd9tqJ6Uy2oxbRaDqD
 data BlindSealTxid    :: method CloseMethod
-                       , txid Bitcoin.Txid
-                       , vout Bitcoin.Vout
+                       , txid Bitcoin.Txid {- TaxiLearnMalta0C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs -}
+                       , vout Bitcoin.Vout {- OpusDecadeExample03HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk -}
                        , blinding U64
+-- AlertCloudArchive0FA1JhsEFKi2LLpuAjuvLA3qiBuEJrwpKyypB9J2aPicr
 data CloseMethod      :: opretFirst:0 | tapretFirst:1
 
+-- MiamiMonoFiber0ECRgZ1GreJifMMSP4kFSGyLsGZdoaxRRwd1GSUnaMa6S
 data ExplicitSealTxPtr :: method CloseMethod
                        , txid TxPtr
-                       , vout Bitcoin.Vout
+                       , vout Bitcoin.Vout {- OpusDecadeExample03HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk -}
+-- SlangAmbientWinter045y2f3J6HbYzQLMP8HEgW6TK3m9HRomMcXMxHah8dozW
 data ExplicitSealTxid :: method CloseMethod
-                       , txid Bitcoin.Txid
-                       , vout Bitcoin.Vout
+                       , txid Bitcoin.Txid {- TaxiLearnMalta0C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs -}
+                       , vout Bitcoin.Vout {- OpusDecadeExample03HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk -}
+-- PokerBalletEconomy0Esn2xjQNUYszBEt7VTMfCigPWkdCSeTgPzYQfqNJAGNr
 data Proof            :: opretFirst ()
                        | tapretFirst TapretProof
+-- VocalWinterMango081NKrdc9pBoBjsKaGBVN9wXLG4tKjkK4f8DLj7TNMZxh
 data SecretSeal       :: [Byte ^ 32]
-data TapretNodePartner :: leftNode Bitcoin.TapNodeHash
-                       | rightLeaf Bitcoin.LeafScript
+-- AlbertNurseSource0AXGtCWh9hJz7yZ9zX7Vfu6MawpshVPcqJMuaS23SuJKq
+data TapretNodePartner :: leftNode Bitcoin.TapNodeHash {- LicenseSnowCorrect04M8xyvABKKKJseN6Pme5eKrAuusMNMXoY5s6ifsEcreC -}
+                       | rightLeaf Bitcoin.LeafScript {- LuckyBonanzaYoga0Faa53VyN79gC1P6j5ud5gLSSyJjpzqNsHfbTwobRrLJb -}
                        | rightBranch TapretRightBranch
+-- NylonUraniumRebel0BPYcTtbxvzWp8h7SMapT14FzLCnrnGzSShHTWGHCSD4C
 data TapretPathProof  :: partnerNode TapretNodePartner?, nonce U8
-data TapretProof      :: pathProof TapretPathProof, internalPk Bitcoin.InternalPk
-data TapretRightBranch :: leftNodeHash Bitcoin.TapNodeHash, rightNodeHash Bitcoin.TapNodeHash
+-- KitchenQuebecWedding07QQkknWxkJLkef2AJrPSH3q165rB8ZTAUofNwW3ia5im
+data TapretProof      :: pathProof TapretPathProof, internalPk Bitcoin.InternalPk {- TeacherPearlHello0G5HFVaWwWNYSzqk548JgGZ8WKy6dQ2ftVgkJvHjgRudZ -}
+-- LocalElementForever04nZtVVw7QJaMDHYffkHBWhxXSkLXLcJ89qTLZH4Z3xck
+data TapretRightBranch :: leftNodeHash Bitcoin.TapNodeHash {- LicenseSnowCorrect04M8xyvABKKKJseN6Pme5eKrAuusMNMXoY5s6ifsEcreC -}, rightNodeHash Bitcoin.TapNodeHash {- LicenseSnowCorrect04M8xyvABKKKJseN6Pme5eKrAuusMNMXoY5s6ifsEcreC -}
+-- FastIgorStyle0CyRtMpPJkKLX3AdhgY7ZyA7PnYAzCo7yFTeYwwGsUBhn
 data TxPtr            :: witnessTx ()
-                       | txid Bitcoin.Txid
+                       | txid Bitcoin.Txid {- TaxiLearnMalta0C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs -}
 

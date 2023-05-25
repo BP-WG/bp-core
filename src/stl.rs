@@ -25,14 +25,13 @@ use bc::Txid;
 use commit_verify::mpc;
 use dbc::LIB_NAME_BPCORE;
 use seals::txout::TxPtr;
-use strict_types::typelib::{LibBuilder, TranslateError};
-use strict_types::TypeLib;
+use strict_types::{CompileError, LibBuilder, TypeLib};
 
 /// Strict types id for the library providing data types from [`dbc`] and
 /// [`seals`] crates.
-pub const LIB_ID_BPCORE: &str = "cheese_ground_diesel_HB6wnfbtLtYshVN4EeTKavadXE8MJdHn53TMAe1Ebg9p";
+pub const LIB_ID_BPCORE: &str = "carlo_paradox_sharp_8KZV8Qf97nQfiPfrkbzk7jTPhSDQFT2JhrVjMvstS6J8";
 
-fn _bp_core_stl() -> Result<TypeLib, TranslateError> {
+fn _bp_core_stl() -> Result<TypeLib, CompileError> {
     LibBuilder::new(libname!(LIB_NAME_BPCORE), tiny_bset! {
         strict_types::stl::std_stl().to_dependency(),
         bc::stl::bitcoin_stl().to_dependency(),
