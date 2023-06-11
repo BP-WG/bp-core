@@ -255,6 +255,34 @@ impl BlindSeal<Txid> {
     }
 }
 
+/// transaction id present in the seal {present} doesn't match transaction id of
+/// the witness transaction {expected}.
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Display, Error)]
+#[display(doc_comments)]
+pub struct TxidMismatch {
+    /// Expected txid
+    pub expected: Txid,
+    /// Actual txid found in the seal
+    pub present: Txid,
+}
+
+impl BlindSeal<TxPtr> {
+    /// Converts `BlindSeal<Txid>` into `BlindSeal<TxPtr>`.
+    pub fn resolve(self, txid: Txid) -> Result<BlindSeal<Txid>, TxidMismatch> {
+        let txid = match self.txid {
+            TxPtr::WitnessTx => txid,
+            TxPtr::Txid(txid_orig) if txid_orig == txid => txid,
+            TxPtr::Txid(txid_orig) => {
+                return Err(TxidMismatch {
+                    expected: txid,
+                    present: txid_orig,
+                });
+            }
+        };
+        Ok(BlindSeal::with_blinding(self.method, txid, self.vout, self.blinding))
+    }
+}
+
 /// Errors happening during parsing string representation of different forms of
 /// single-use-seals
 #[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]
