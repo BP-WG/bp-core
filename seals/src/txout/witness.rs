@@ -19,9 +19,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use bc::{Tx, Txid};
+use bc::Tx;
 use commit_verify::mpc;
-use dbc::{Anchor, Proof};
+use dbc::Proof;
 use single_use_seals::SealWitness;
 use strict_encoding::StrictDumb;
 
@@ -33,9 +33,6 @@ pub struct Witness {
     /// message over which the seal is closed.
     pub tx: Tx,
 
-    /// Txid of the witness transaction.
-    pub txid: Txid,
-
     /// Multi-protocol commitment proof from MPC anchor.
     pub proof: Proof,
 }
@@ -43,12 +40,8 @@ pub struct Witness {
 impl Witness {
     /// Constructs witness from a witness transaction and extra-transaction
     /// proof, taken from an anchor.
-    pub fn with<L: mpc::Proof + StrictDumb>(tx: Tx, anchor: Anchor<L>) -> Witness {
-        Witness {
-            tx,
-            txid: anchor.txid,
-            proof: anchor.dbc_proof,
-        }
+    pub fn with<L: mpc::Proof + StrictDumb>(tx: Tx, proof: Proof) -> Witness {
+        Witness { tx, proof }
     }
 }
 
@@ -58,14 +51,14 @@ impl<Seal: TxoSeal> SealWitness<Seal> for Witness {
 
     fn verify_seal(&self, seal: &Seal, msg: &Self::Message) -> Result<bool, Self::Error> {
         // 1. The seal must match tx inputs
-        let outpoint = seal.outpoint_or(self.txid);
+        let outpoint = seal.outpoint().ok_or(VerifyError::NoWitnessTxid)?;
         if !self
             .tx
             .inputs
             .iter()
             .any(|txin| txin.prev_output == outpoint)
         {
-            return Err(VerifyError::WitnessNotClosingSeal(self.txid, outpoint));
+            return Err(VerifyError::WitnessNotClosingSeal(outpoint));
         }
 
         // 2. Verify DBC with the giving closing method
@@ -92,14 +85,14 @@ impl<Seal: TxoSeal> SealWitness<Seal> for Witness {
             }
 
             // 2. Each seal must match tx inputs
-            let outpoint = seal.outpoint_or(self.txid);
+            let outpoint = seal.outpoint().ok_or(VerifyError::NoWitnessTxid)?;
             if !self
                 .tx
                 .inputs
                 .iter()
                 .any(|txin| txin.prev_output == outpoint)
             {
-                return Err(VerifyError::WitnessNotClosingSeal(self.txid, outpoint));
+                return Err(VerifyError::WitnessNotClosingSeal(outpoint));
             }
         }
 
