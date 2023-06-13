@@ -19,9 +19,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use bc::Tx;
+use bc::{Tx, Txid};
 use commit_verify::mpc;
-use dbc::Proof;
+use dbc::{Anchor, Proof};
 use single_use_seals::SealWitness;
 use strict_encoding::StrictDumb;
 
@@ -33,6 +33,9 @@ pub struct Witness {
     /// message over which the seal is closed.
     pub tx: Tx,
 
+    /// Transaction id of the witness transaction above.
+    pub txid: Txid,
+
     /// Multi-protocol commitment proof from MPC anchor.
     pub proof: Proof,
 }
@@ -40,8 +43,12 @@ pub struct Witness {
 impl Witness {
     /// Constructs witness from a witness transaction and extra-transaction
     /// proof, taken from an anchor.
-    pub fn with<L: mpc::Proof + StrictDumb>(tx: Tx, proof: Proof) -> Witness {
-        Witness { tx, proof }
+    pub fn with<L: mpc::Proof + StrictDumb>(tx: Tx, anchor: Anchor<mpc::MerkleProof>) -> Witness {
+        Witness {
+            tx,
+            txid: anchor.txid,
+            proof: anchor.dbc_proof,
+        }
     }
 }
 
