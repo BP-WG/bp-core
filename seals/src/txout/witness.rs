@@ -43,7 +43,7 @@ pub struct Witness {
 impl Witness {
     /// Constructs witness from a witness transaction and extra-transaction
     /// proof, taken from an anchor.
-    pub fn with<L: mpc::Proof + StrictDumb>(tx: Tx, anchor: Anchor<mpc::MerkleProof>) -> Witness {
+    pub fn with<L: mpc::Proof + StrictDumb>(tx: Tx, anchor: Anchor<L>) -> Witness {
         Witness {
             tx,
             txid: anchor.txid,
