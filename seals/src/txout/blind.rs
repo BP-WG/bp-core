@@ -255,6 +255,13 @@ impl BlindSeal<Txid> {
     }
 }
 
+impl BlindSeal<TxPtr> {
+    /// Converts `BlindSeal<Txid>` into `BlindSeal<TxPtr>`.
+    pub fn resolve(self, txid: Txid) -> BlindSeal<Txid> {
+        BlindSeal::with_blinding(self.method, self.txid().unwrap_or(txid), self.vout, self.blinding)
+    }
+}
+
 /// Errors happening during parsing string representation of different forms of
 /// single-use-seals
 #[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]

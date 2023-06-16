@@ -33,7 +33,7 @@ pub struct Witness {
     /// message over which the seal is closed.
     pub tx: Tx,
 
-    /// Txid of the witness transaction.
+    /// Transaction id of the witness transaction above.
     pub txid: Txid,
 
     /// Multi-protocol commitment proof from MPC anchor.
@@ -58,14 +58,14 @@ impl<Seal: TxoSeal> SealWitness<Seal> for Witness {
 
     fn verify_seal(&self, seal: &Seal, msg: &Self::Message) -> Result<bool, Self::Error> {
         // 1. The seal must match tx inputs
-        let outpoint = seal.outpoint_or(self.txid);
+        let outpoint = seal.outpoint().ok_or(VerifyError::NoWitnessTxid)?;
         if !self
             .tx
             .inputs
             .iter()
             .any(|txin| txin.prev_output == outpoint)
         {
-            return Err(VerifyError::WitnessNotClosingSeal(self.txid, outpoint));
+            return Err(VerifyError::WitnessNotClosingSeal(outpoint));
         }
 
         // 2. Verify DBC with the giving closing method
@@ -92,14 +92,14 @@ impl<Seal: TxoSeal> SealWitness<Seal> for Witness {
             }
 
             // 2. Each seal must match tx inputs
-            let outpoint = seal.outpoint_or(self.txid);
+            let outpoint = seal.outpoint().ok_or(VerifyError::NoWitnessTxid)?;
             if !self
                 .tx
                 .inputs
                 .iter()
                 .any(|txin| txin.prev_output == outpoint)
             {
-                return Err(VerifyError::WitnessNotClosingSeal(self.txid, outpoint));
+                return Err(VerifyError::WitnessNotClosingSeal(outpoint));
             }
         }
 
