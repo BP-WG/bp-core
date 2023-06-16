@@ -255,6 +255,13 @@ impl BlindSeal<Txid> {
     }
 }
 
+impl BlindSeal<TxPtr> {
+    /// Converts `BlindSeal<Txid>` into `BlindSeal<TxPtr>`.
+    pub fn resolve(self, txid: Txid) -> BlindSeal<Txid> {
+        BlindSeal::with_blinding(self.method, self.txid().unwrap_or(txid), self.vout, self.blinding)
+    }
+}
+
 /// Errors happening during parsing string representation of different forms of
 /// single-use-seals
 #[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]
@@ -398,7 +405,7 @@ mod test {
         }
         .to_concealed_seal();
 
-        let baid58 = "8ikunNNrbrzCf92TDBzRruLArhwhgfDqi6LASjBRzRW8";
+        let baid58 = "FZJtr2egUEqFbTtL6BWhyTnbLbh6B46BbQHDnUuZj6cL";
         assert_eq!(baid58, outpoint_hash.to_string());
         assert_eq!(outpoint_hash.to_string(), outpoint_hash.to_baid58().to_string());
         /* TODO: uncomment when Baid58::from_str would work

@@ -25,30 +25,28 @@ use bc::Txid;
 use commit_verify::mpc;
 use dbc::LIB_NAME_BPCORE;
 use seals::txout::TxPtr;
-use strict_types::typelib::{LibBuilder, TranslateError};
-use strict_types::TypeLib;
+use strict_types::{CompileError, LibBuilder, TypeLib};
 
 /// Strict types id for the library providing data types from [`dbc`] and
 /// [`seals`] crates.
-pub const LIB_ID_BPCORE: &str =
-    "manila_origami_blonde_GUPDJLSfnzeYN8udLa1Z7qFLZ45oiyekN2DR8DRPHqri";
+pub const LIB_ID_BPCORE: &str = "carlo_paradox_sharp_8KZV8Qf97nQfiPfrkbzk7jTPhSDQFT2JhrVjMvstS6J8";
 
-fn _bp_core_stl() -> Result<TypeLib, TranslateError> {
-    LibBuilder::new(libname!(LIB_NAME_BPCORE))
-        .transpile::<dbc::AnchorId>()
-        .transpile::<dbc::Anchor<mpc::MerkleTree>>()
-        .transpile::<dbc::Anchor<mpc::MerkleBlock>>()
-        .transpile::<dbc::Anchor<mpc::MerkleProof>>()
-        .transpile::<seals::txout::ExplicitSeal<TxPtr>>()
-        .transpile::<seals::txout::ExplicitSeal<Txid>>()
-        .transpile::<seals::txout::blind::SecretSeal>()
-        .transpile::<seals::txout::blind::BlindSeal<TxPtr>>()
-        .transpile::<seals::txout::blind::BlindSeal<Txid>>()
-        .compile(bset! {
-            strict_types::stl::std_stl().to_dependency(),
-            bc::stl::bitcoin_stl().to_dependency(),
-            commit_verify::stl::commit_verify_stl().to_dependency()
-        })
+fn _bp_core_stl() -> Result<TypeLib, CompileError> {
+    LibBuilder::new(libname!(LIB_NAME_BPCORE), tiny_bset! {
+        strict_types::stl::std_stl().to_dependency(),
+        bc::stl::bitcoin_stl().to_dependency(),
+        commit_verify::stl::commit_verify_stl().to_dependency()
+    })
+    .transpile::<dbc::AnchorId>()
+    .transpile::<dbc::Anchor<mpc::MerkleTree>>()
+    .transpile::<dbc::Anchor<mpc::MerkleBlock>>()
+    .transpile::<dbc::Anchor<mpc::MerkleProof>>()
+    .transpile::<seals::txout::ExplicitSeal<TxPtr>>()
+    .transpile::<seals::txout::ExplicitSeal<Txid>>()
+    .transpile::<seals::txout::blind::SecretSeal>()
+    .transpile::<seals::txout::blind::BlindSeal<TxPtr>>()
+    .transpile::<seals::txout::blind::BlindSeal<Txid>>()
+    .compile()
 }
 
 /// Generates strict type library providing data types from [`dbc`] and

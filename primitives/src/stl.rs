@@ -20,18 +20,16 @@
 // limitations under the License.
 // Coding conventions
 
-use strict_types::typelib::{LibBuilder, TranslateError};
-use strict_types::TypeLib;
+use strict_types::{CompileError, LibBuilder, TypeLib};
 
 use crate::{Tx, LIB_NAME_BITCOIN};
 
-pub const LIB_ID_BITCOIN: &str =
-    "cubic_filter_vampire_AqBBP1ZeTXrdAePf6SBcUGbttpvxpHKG7uJLKFkVxtGi";
+pub const LIB_ID_BITCOIN: &str = "extra_rapid_armada_EXDzvefCHMLgk4KXNvsXsDr2QzgPkxFFUCSEkL3S1ZJL";
 
-fn _bitcoin_stl() -> Result<TypeLib, TranslateError> {
-    LibBuilder::new(libname!(LIB_NAME_BITCOIN))
+fn _bitcoin_stl() -> Result<TypeLib, CompileError> {
+    LibBuilder::new(libname!(LIB_NAME_BITCOIN), None)
         .transpile::<Tx>()
-        .compile(none!())
+        .compile()
 }
 
 pub fn bitcoin_stl() -> TypeLib { _bitcoin_stl().expect("invalid strict type Bitcoin library") }

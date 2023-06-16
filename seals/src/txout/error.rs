@@ -19,7 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use bc::{Outpoint, Txid};
+use bc::Outpoint;
 
 /// Seal verification errors.
 #[derive(Clone, PartialEq, Eq, Debug, Display, From, Error)]
@@ -33,8 +33,11 @@ pub enum VerifyError {
     /// seals provided for a batch verification have inconsistent close method.
     InconsistentCloseMethod,
 
-    /// the provided witness transaction {0} does not closes seal {1}.
-    WitnessNotClosingSeal(Txid, Outpoint),
+    /// the provided witness transaction does not closes seal {0}.
+    WitnessNotClosingSeal(Outpoint),
+
+    /// seal lacks witness transaction id information.
+    NoWitnessTxid,
 
     /// tapret commitment is invalid.
     ///

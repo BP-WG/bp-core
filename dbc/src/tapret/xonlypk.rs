@@ -143,7 +143,7 @@ mod test {
         let msg = mpc::Commitment::from([8u8; 32]);
         let path_proof = TapretPathProof::with(
             TapretNodePartner::RightLeaf(LeafScript::from_tap_script(default!())),
-            22,
+            13,
         )
         .unwrap();
 

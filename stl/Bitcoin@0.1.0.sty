@@ -1,5 +1,5 @@
 {-
-  Id: cubic_filter_vampire_AqBBP1ZeTXrdAePf6SBcUGbttpvxpHKG7uJLKFkVxtGi
+  Id: extra_rapid_armada_EXDzvefCHMLgk4KXNvsXsDr2QzgPkxFFUCSEkL3S1ZJL
   Name: Bitcoin
   Version: 0.1.0
   Description: Consensus layer for bitcoin protocol
@@ -8,28 +8,42 @@
   License: Apache-2.0
 -}
 
-typelib Bitcoin -- cubic_filter_vampire_AqBBP1ZeTXrdAePf6SBcUGbttpvxpHKG7uJLKFkVxtGi
+typelib Bitcoin
 
 -- no dependencies
 
+-- ZodiacJupiterAirline04dDWWU4afiPN3q4AgCMuFRFhL4UDta2u5SrqrBzPvjby
 data LockTime         :: U32
+-- BillyLeonidHeroic0FWt2MSo8A4nsYgYbuBqMRNLiKgtzvLBgUn774iKzTcuf
 data Outpoint         :: txid Txid, vout Vout
+-- TomatoMixerAnita0BEBz6h7AGjYSDRCxVHnjYkkkxzBsjN3EvyNiD4ZrzmRL
 data Sats             :: U64
+-- BaronMaltaHarvest07Bk3nVFjGbpESsetWgLCcJ4Qh7cr4cMwucYYn6f6QUUQ
 data ScriptBytes      :: [Byte ^ ..0xffffffffffffffff]
+-- GolfAgathaTonight02ZAYpWKB2BQxeXXjpQDpYGZ7eXFM9qQxN9TcdTiQqeB8
 data ScriptPubkey     :: ScriptBytes
+-- MeaningAladdinSaturn05HtymNhYBhjqPkLLw9QVWZ62cLm57cZxgQTDUBBXtmL
 data SeqNo            :: U32
+-- OscarHopeCeltic02gTMqAC393rBSGtBhDn8sJq3F3HtDosbqKDQTw9bHFyT
 data SigScript        :: ScriptBytes
+-- BeyondDanielDispute04WmoLn9K9HwxJ2zuYHe9mmxT3SkRHUFGvh7baBjSEsUy
 data Tx               :: version TxVer
                        , inputs [TxIn ^ ..0xffffffffffffffff]
                        , outputs [TxOut ^ ..0xffffffffffffffff]
                        , lockTime LockTime
+-- TrinityClientInside09Nf4Vvt3im8tFQSGzPWKfjfhsrkB8bf2XsLWfzywiFSv
 data TxIn             :: prevOutput Outpoint
                        , sigScript SigScript
                        , sequence SeqNo
                        , witness Witness
+-- StoreDetailRussian0HutVbeKmYYrNun96Pi4T7YfYww7SeWxRFPZGDiZwoGZV
 data TxOut            :: value Sats, scriptPubkey ScriptPubkey
+-- NirvanaTahitiReport0CLhr1zatQBSkCz9SiVrNoKB5igCZfF3hqRizfrviM6NR
 data TxVer            :: I32
+-- TaxiLearnMalta0C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs
 data Txid             :: [Byte ^ 32]
+-- OpusDecadeExample03HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk
 data Vout             :: U32
+-- DemoRetroSoda0H8KvsRjBS4XbQoA1bRYmJR4S6bX6mBjKGw3Nfj7dMS5S
 data Witness          :: [[Byte ^ ..0xffffffffffffffff] ^ ..0xffffffffffffffff]
 
