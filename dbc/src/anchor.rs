@@ -69,9 +69,9 @@ pub enum VerifyError {
     #[from]
     Tapret(TapretError),
 
-    /// LNPBP-4 invalid proof.
-    #[from(mpc::UnrelatedProof)]
-    Lnpbp4UnrelatedProtocol,
+    /// LNPBP-4 invalid proof. Details: {0}
+    #[from]
+    Lnpbp4InvalidProof(mpc::InvalidProof),
 }
 
 /// Anchor is a data structure used in deterministic bitcoin commitments for
@@ -112,13 +112,13 @@ impl PartialOrd for Anchor<mpc::MerkleBlock> {
 }
 
 /// Error merging two [`Anchor`]s.
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, Error, From)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
 #[display(doc_comments)]
 pub enum MergeError {
     /// Error merging two LNPBP-4 proofs, which are unrelated.
     #[display(inner)]
-    #[from(mpc::UnrelatedProof)]
-    Lnpbp4Mismatch,
+    #[from]
+    Lnpbp4Mismatch(mpc::MergeError),
 
     /// anchors can't be merged since they have different witness transactions
     TxidMismatch,
@@ -140,7 +140,7 @@ impl Anchor<mpc::MerkleProof> {
         &self,
         protocol_id: impl Into<ProtocolId>,
         message: Message,
-    ) -> Result<AnchorId, mpc::UnrelatedProof> {
+    ) -> Result<AnchorId, mpc::InvalidProof> {
         Ok(self.to_merkle_block(protocol_id, message)?.anchor_id())
     }
 
@@ -149,7 +149,7 @@ impl Anchor<mpc::MerkleProof> {
         self,
         protocol_id: impl Into<ProtocolId>,
         message: Message,
-    ) -> Result<Anchor<mpc::MerkleBlock>, mpc::UnrelatedProof> {
+    ) -> Result<Anchor<mpc::MerkleBlock>, mpc::InvalidProof> {
         let lnpbp4_proof = mpc::MerkleBlock::with(&self.mpc_proof, protocol_id.into(), message)?;
         Ok(Anchor {
             txid: self.txid,
@@ -163,7 +163,7 @@ impl Anchor<mpc::MerkleProof> {
         &self,
         protocol_id: impl Into<ProtocolId>,
         message: Message,
-    ) -> Result<Anchor<mpc::MerkleBlock>, mpc::UnrelatedProof> {
+    ) -> Result<Anchor<mpc::MerkleBlock>, mpc::InvalidProof> {
         self.clone().into_merkle_block(protocol_id, message)
     }
 
@@ -186,7 +186,7 @@ impl Anchor<mpc::MerkleProof> {
         &self,
         protocol_id: impl Into<ProtocolId>,
         message: Message,
-    ) -> Result<mpc::Commitment, mpc::UnrelatedProof> {
+    ) -> Result<mpc::Commitment, mpc::InvalidProof> {
         self.mpc_proof.convolve(protocol_id.into(), message)
     }
 }

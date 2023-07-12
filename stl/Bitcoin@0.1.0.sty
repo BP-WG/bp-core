@@ -1,5 +1,5 @@
 {-
-  Id: extra_rapid_armada_EXDzvefCHMLgk4KXNvsXsDr2QzgPkxFFUCSEkL3S1ZJL
+  Id: race_ballet_golf_6GgF7biXPVNcus2FfQj2pQuRzau11rXApMQLfCZhojgi
   Name: Bitcoin
   Version: 0.1.0
   Description: Consensus layer for bitcoin protocol
@@ -18,18 +18,18 @@ data LockTime         :: U32
 data Outpoint         :: txid Txid, vout Vout
 -- TomatoMixerAnita0BEBz6h7AGjYSDRCxVHnjYkkkxzBsjN3EvyNiD4ZrzmRL
 data Sats             :: U64
--- BaronMaltaHarvest07Bk3nVFjGbpESsetWgLCcJ4Qh7cr4cMwucYYn6f6QUUQ
-data ScriptBytes      :: [Byte ^ ..0xffffffffffffffff]
+-- PeacePrinceTarget03Y4AgjkFbDusgo3YqRDWv9BznDeAJEUDEPeEq1mpSkAR
+data ScriptBytes      :: [Byte ^ ..0xffffffff]
 -- GolfAgathaTonight02ZAYpWKB2BQxeXXjpQDpYGZ7eXFM9qQxN9TcdTiQqeB8
 data ScriptPubkey     :: ScriptBytes
 -- MeaningAladdinSaturn05HtymNhYBhjqPkLLw9QVWZ62cLm57cZxgQTDUBBXtmL
 data SeqNo            :: U32
 -- OscarHopeCeltic02gTMqAC393rBSGtBhDn8sJq3F3HtDosbqKDQTw9bHFyT
 data SigScript        :: ScriptBytes
--- BeyondDanielDispute04WmoLn9K9HwxJ2zuYHe9mmxT3SkRHUFGvh7baBjSEsUy
+-- MadonnaFlagCake0DynChojW1sfr8VjSoZbmReHhZoU8u9KCiuwijgEGdToe
 data Tx               :: version TxVer
-                       , inputs [TxIn ^ ..0xffffffffffffffff]
-                       , outputs [TxOut ^ ..0xffffffffffffffff]
+                       , inputs [TxIn ^ ..0xffffffff]
+                       , outputs [TxOut ^ ..0xffffffff]
                        , lockTime LockTime
 -- TrinityClientInside09Nf4Vvt3im8tFQSGzPWKfjfhsrkB8bf2XsLWfzywiFSv
 data TxIn             :: prevOutput Outpoint
@@ -44,6 +44,6 @@ data TxVer            :: I32
 data Txid             :: [Byte ^ 32]
 -- OpusDecadeExample03HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk
 data Vout             :: U32
--- DemoRetroSoda0H8KvsRjBS4XbQoA1bRYmJR4S6bX6mBjKGw3Nfj7dMS5S
-data Witness          :: [[Byte ^ ..0xffffffffffffffff] ^ ..0xffffffffffffffff]
+-- MoralKoreaCastro08mjN2CZj3Nhn2HjnKqTmEcN5vmyb3UJK8HSFW1uE3W2p
+data Witness          :: [[Byte ^ ..0xffffffff] ^ ..0xffffffff]
 

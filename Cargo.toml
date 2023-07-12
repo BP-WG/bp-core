@@ -16,19 +16,19 @@ default-members = [
 authors = ["Dr Maxim Orlovsky <orlovsky@lnp-bp.org>"]
 homepage = "https://github.com/BP-WG"
 repository = "https://github.com/BP-WG/bp-core"
-rust-version = "1.66" # Due to strict encoding library (caused by GAD)
+rust-version = "1.67" # Due to strict encoding library
 edition = "2021"
 license = "Apache-2.0"
 
 [workspace.dependencies]
 amplify = "4.0.0"
-strict_encoding = "2.3.0"
-commit_verify = "0.10.3"
+strict_encoding = "2.5.0"
+commit_verify = "0.10.4"
 single_use_seals = "0.10.0"
 
 [package]
 name = "bp-core"
-version = "0.10.4"
+version = "0.10.5"
 description = "Bitcoin protocol core library (BP Core Lib)"
 keywords = ["lnp-bp", "smart-contracts", "bitcoin", "blockchain"]
 categories = ["cryptography"]
@@ -52,12 +52,12 @@ required-features = ["stl"]
 [dependencies]
 amplify = { workspace = true }
 strict_encoding = { workspace = true }
-strict_types = { version = "1.3.0", optional = true }
+strict_types = { version = "1.5.0", optional = true }
 commit_verify = { workspace = true }
 single_use_seals = { workspace = true }
-bp-primitives = { version = "0.10.4", path = "./primitives" }
-bp-dbc = { version = "0.10.4", path = "./dbc" }
-bp-seals = { version = "0.10.4", path = "./seals" }
+bp-primitives = { version = "0.10.5", path = "./primitives" }
+bp-dbc = { version = "0.10.5", path = "./dbc" }
+bp-seals = { version = "0.10.5", path = "./seals" }
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
 
 [features]
