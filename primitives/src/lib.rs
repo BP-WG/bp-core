@@ -65,13 +65,13 @@ pub const LIB_NAME_BITCOIN: &str = "Bitcoin";
 mod types {
     use std::fmt::{Formatter, LowerHex, UpperHex};
 
-    use amplify::confinement::Confined;
+    use amplify::confinement::{Confined, U32};
     use amplify::hex::ToHex;
 
     use super::LIB_NAME_BITCOIN;
     use crate::opcodes::*;
 
-    pub type VarIntArray<T> = Confined<Vec<T>, 0, { u64::MAX as usize }>;
+    pub type VarIntArray<T> = Confined<Vec<T>, 0, U32>;
 
     #[derive(
         Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default, Debug, From
