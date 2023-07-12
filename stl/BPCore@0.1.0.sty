@@ -1,5 +1,5 @@
 {-
-  Id: caramel_shoe_cover_6gYqGfYk3ibDWHBTUkLxiRQQbvqSdshGD9QrdFG7zvx8
+  Id: cave_gemini_diana_4y3ZcuioPk3mJdudgWiyLUPxCSC5QxVuV89TyKiF5Eqk
   Name: BPCore
   Version: 0.1.0
   Description: Bitcoin client-side-validation library
@@ -9,6 +9,16 @@
 -}
 
 typelib BPCore
+
+import race_ballet_golf_6GgF7biXPVNcus2FfQj2pQuRzau11rXApMQLfCZhojgi as Bitcoin
+-- Imports:
+-- Vout := OpusDecadeExample03HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk
+-- ScriptBytes := PeacePrinceTarget03Y4AgjkFbDusgo3YqRDWv9BznDeAJEUDEPeEq1mpSkAR
+-- TapNodeHash := LicenseSnowCorrect04M8xyvABKKKJseN6Pme5eKrAuusMNMXoY5s6ifsEcreC
+-- LeafScript := DilemmaLegendCitizen07SUbonQ62tSaBTPpbZPACQo2NogXodi2mW5WEEDfBvp4
+-- Txid := TaxiLearnMalta0C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs
+-- LeafVer := ChessDisputeStock0DGELfUvcU62GNQRo7HaMbKDzYQwdYRMW3b91JHd4d3WY
+-- InternalPk := TeacherPearlHello0G5HFVaWwWNYSzqk548JgGZ8WKy6dQ2ftVgkJvHjgRudZ
 
 import boris_flipper_plasma_84rW5A3J1fohf4NgkEDAWaf59mReY6GuJvycURm1aPV6 as CommitVerify
 -- Imports:
@@ -23,16 +33,6 @@ import boris_flipper_plasma_84rW5A3J1fohf4NgkEDAWaf59mReY6GuJvycURm1aPV6 as Comm
 import lagoon_rodent_option_9KALDYR8Nyjq4FdMW6kYoL7vdkWnqPqNuFnmE9qHpNjZ as Std
 -- Imports:
 -- U4 := CaesarLolaToyota0BrEhDdRPrktqBgsNbgsmUagRz9b5n5csfbmif8Y7Bcc8
-
-import extra_rapid_armada_EXDzvefCHMLgk4KXNvsXsDr2QzgPkxFFUCSEkL3S1ZJL as Bitcoin
--- Imports:
--- Vout := OpusDecadeExample03HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk
--- TapNodeHash := LicenseSnowCorrect04M8xyvABKKKJseN6Pme5eKrAuusMNMXoY5s6ifsEcreC
--- ScriptBytes := BaronMaltaHarvest07Bk3nVFjGbpESsetWgLCcJ4Qh7cr4cMwucYYn6f6QUUQ
--- Txid := TaxiLearnMalta0C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs
--- LeafVer := ChessDisputeStock0DGELfUvcU62GNQRo7HaMbKDzYQwdYRMW3b91JHd4d3WY
--- LeafScript := LuckyBonanzaYoga0Faa53VyN79gC1P6j5ud5gLSSyJjpzqNsHfbTwobRrLJb
--- InternalPk := TeacherPearlHello0G5HFVaWwWNYSzqk548JgGZ8WKy6dQ2ftVgkJvHjgRudZ
 
 
 
@@ -76,9 +76,9 @@ data Proof            :: opretFirst ()
                        | tapretFirst TapretProof
 -- VocalWinterMango081NKrdc9pBoBjsKaGBVN9wXLG4tKjkK4f8DLj7TNMZxh
 data SecretSeal       :: [Byte ^ 32]
--- AlbertNurseSource0AXGtCWh9hJz7yZ9zX7Vfu6MawpshVPcqJMuaS23SuJKq
+-- DemandCheeseTwist03PZAAzvizihvnS1LB4QY3Ly3S2Va7Y4bt361mGcJ4qbp
 data TapretNodePartner :: leftNode Bitcoin.TapNodeHash {- LicenseSnowCorrect04M8xyvABKKKJseN6Pme5eKrAuusMNMXoY5s6ifsEcreC -}
-                       | rightLeaf Bitcoin.LeafScript {- LuckyBonanzaYoga0Faa53VyN79gC1P6j5ud5gLSSyJjpzqNsHfbTwobRrLJb -}
+                       | rightLeaf Bitcoin.LeafScript {- DilemmaLegendCitizen07SUbonQ62tSaBTPpbZPACQo2NogXodi2mW5WEEDfBvp4 -}
                        | rightBranch TapretRightBranch
 -- NylonUraniumRebel0BPYcTtbxvzWp8h7SMapT14FzLCnrnGzSShHTWGHCSD4C
 data TapretPathProof  :: partnerNode TapretNodePartner?, nonce U8
