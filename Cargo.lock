@@ -114,6 +114,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "baid58"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "052064cc0caa02b62c88f06a7237304fb297873c78b6e95addecc3c5ddfce4ae"
+dependencies = [
+ "base58",
+ "blake3",
+ "mnemonic",
+ "sha2",
+]
+
+[[package]]
 name = "base58"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -174,7 +186,7 @@ name = "bp-dbc"
 version = "0.10.5"
 dependencies = [
  "amplify",
- "baid58",
+ "baid58 0.3.2",
  "bp-primitives",
  "commit_verify",
  "secp256k1",
@@ -199,7 +211,7 @@ name = "bp-seals"
 version = "0.10.5"
 dependencies = [
  "amplify",
- "baid58",
+ "baid58 0.3.2",
  "bp-dbc",
  "bp-primitives",
  "commit_verify",
@@ -603,12 +615,12 @@ dependencies = [
 
 [[package]]
 name = "strict_types"
-version = "1.5.0"
+version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75574939fc4c5a13ab4f49d06e965a9d4bd0aa1deff4e227a2afb6dbebff1249"
+checksum = "d8a6654c43ed02891b249730856ad6b866fd85d1008aad51b30bd68812798427"
 dependencies = [
  "amplify",
- "baid58",
+ "baid58 0.4.1",
  "base64",
  "half",
  "indexmap 1.9.3",

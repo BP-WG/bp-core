@@ -1,5 +1,5 @@
 {-
-  Id: race_ballet_golf_6GgF7biXPVNcus2FfQj2pQuRzau11rXApMQLfCZhojgi
+  Id: urn:ubideco:stl:6GgF7biXPVNcus2FfQj2pQuRzau11rXApMQLfCZhojgi#money-pardon-parody
   Name: Bitcoin
   Version: 0.1.0
   Description: Consensus layer for bitcoin protocol
@@ -12,38 +12,38 @@ typelib Bitcoin
 
 -- no dependencies
 
--- ZodiacJupiterAirline04dDWWU4afiPN3q4AgCMuFRFhL4UDta2u5SrqrBzPvjby
+-- urn:ubideco:semid:4dDWWU4afiPN3q4AgCMuFRFhL4UDta2u5SrqrBzPvjby#tokyo-inch-program
 data LockTime         :: U32
--- BillyLeonidHeroic0FWt2MSo8A4nsYgYbuBqMRNLiKgtzvLBgUn774iKzTcuf
+-- urn:ubideco:semid:FWt2MSo8A4nsYgYbuBqMRNLiKgtzvLBgUn774iKzTcuf#pocket-pegasus-frank
 data Outpoint         :: txid Txid, vout Vout
--- TomatoMixerAnita0BEBz6h7AGjYSDRCxVHnjYkkkxzBsjN3EvyNiD4ZrzmRL
+-- urn:ubideco:semid:BEBz6h7AGjYSDRCxVHnjYkkkxzBsjN3EvyNiD4ZrzmRL#pyramid-spray-star
 data Sats             :: U64
--- PeacePrinceTarget03Y4AgjkFbDusgo3YqRDWv9BznDeAJEUDEPeEq1mpSkAR
+-- urn:ubideco:semid:3Y4AgjkFbDusgo3YqRDWv9BznDeAJEUDEPeEq1mpSkAR#maestro-source-jackson
 data ScriptBytes      :: [Byte ^ ..0xffffffff]
--- GolfAgathaTonight02ZAYpWKB2BQxeXXjpQDpYGZ7eXFM9qQxN9TcdTiQqeB8
+-- urn:ubideco:semid:2ZAYpWKB2BQxeXXjpQDpYGZ7eXFM9qQxN9TcdTiQqeB8#bingo-maestro-silk
 data ScriptPubkey     :: ScriptBytes
--- MeaningAladdinSaturn05HtymNhYBhjqPkLLw9QVWZ62cLm57cZxgQTDUBBXtmL
+-- urn:ubideco:semid:5HtymNhYBhjqPkLLw9QVWZ62cLm57cZxgQTDUBBXtmL#rhino-time-rodent
 data SeqNo            :: U32
--- OscarHopeCeltic02gTMqAC393rBSGtBhDn8sJq3F3HtDosbqKDQTw9bHFyT
+-- urn:ubideco:semid:2gTMqAC393rBSGtBhDn8sJq3F3HtDosbqKDQTw9bHFyT#prelude-analyze-think
 data SigScript        :: ScriptBytes
--- MadonnaFlagCake0DynChojW1sfr8VjSoZbmReHhZoU8u9KCiuwijgEGdToe
+-- urn:ubideco:semid:DynChojW1sfr8VjSoZbmReHhZoU8u9KCiuwijgEGdToe#milk-gloria-prize
 data Tx               :: version TxVer
                        , inputs [TxIn ^ ..0xffffffff]
                        , outputs [TxOut ^ ..0xffffffff]
                        , lockTime LockTime
--- TrinityClientInside09Nf4Vvt3im8tFQSGzPWKfjfhsrkB8bf2XsLWfzywiFSv
+-- urn:ubideco:semid:9Nf4Vvt3im8tFQSGzPWKfjfhsrkB8bf2XsLWfzywiFSv#antenna-crater-planet
 data TxIn             :: prevOutput Outpoint
                        , sigScript SigScript
                        , sequence SeqNo
                        , witness Witness
--- StoreDetailRussian0HutVbeKmYYrNun96Pi4T7YfYww7SeWxRFPZGDiZwoGZV
+-- urn:ubideco:semid:HutVbeKmYYrNun96Pi4T7YfYww7SeWxRFPZGDiZwoGZV#design-jacket-spirit
 data TxOut            :: value Sats, scriptPubkey ScriptPubkey
--- NirvanaTahitiReport0CLhr1zatQBSkCz9SiVrNoKB5igCZfF3hqRizfrviM6NR
+-- urn:ubideco:semid:CLhr1zatQBSkCz9SiVrNoKB5igCZfF3hqRizfrviM6NR#english-natasha-virus
 data TxVer            :: I32
--- TaxiLearnMalta0C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs
+-- urn:ubideco:semid:C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs#cowboy-diego-betty
 data Txid             :: [Byte ^ 32]
--- OpusDecadeExample03HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk
+-- urn:ubideco:semid:3HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk#chrome-robin-gallop
 data Vout             :: U32
--- MoralKoreaCastro08mjN2CZj3Nhn2HjnKqTmEcN5vmyb3UJK8HSFW1uE3W2p
+-- urn:ubideco:semid:8mjN2CZj3Nhn2HjnKqTmEcN5vmyb3UJK8HSFW1uE3W2p#warning-saddle-period
 data Witness          :: [[Byte ^ ..0xffffffff] ^ ..0xffffffff]
 
