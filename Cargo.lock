@@ -211,7 +211,7 @@ name = "bp-seals"
 version = "0.10.5"
 dependencies = [
  "amplify",
- "baid58 0.3.2",
+ "baid58 0.4.1",
  "bp-dbc",
  "bp-primitives",
  "commit_verify",
