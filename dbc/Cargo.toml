@@ -1,6 +1,6 @@
 [package]
 name = "bp-dbc"
-version = "0.10.5"
+version = "0.10.6"
 description = "Deterministic bitcoin commitments library"
 keywords = ["lnp-bp", "bitcoin", "blockchain", "smart-contracts", "single-use-seals"]
 categories = ["cryptography", "encoding"]
@@ -21,7 +21,7 @@ amplify = { workspace = true }
 baid58 = "0.4.1"
 strict_encoding = { workspace = true }
 commit_verify = { workspace = true, features = ["rand"] }
-bp-primitives = { version = "0.10.5", path = "../primitives" }
+bp-primitives = { version = "0.10.6", path = "../primitives" }
 secp256k1 = { version = "0.27.0", features = ["global-context", "rand-std"] }
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
 
