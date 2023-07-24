@@ -340,7 +340,7 @@ where Self: TxoSeal
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
 #[derive(CommitEncode)]
 #[commit_encode(strategy = strict)]
-#[display(Self::to_baid58)]
+#[display(Self::to_baid58_string)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -357,10 +357,14 @@ impl ToBaid58<32> for SecretSeal {
     fn to_baid58_payload(&self) -> [u8; 32] { self.0.into_inner() }
 }
 impl FromBaid58<32> for SecretSeal {}
-
 impl FromStr for SecretSeal {
     type Err = Baid58ParseError;
     fn from_str(s: &str) -> Result<Self, Self::Err> { SecretSeal::from_baid58_str(s) }
+}
+impl SecretSeal {
+    /// Returns Baid58 string representation of the secret seal. Equal to
+    /// `Display`
+    pub fn to_baid58_string(&self) -> String { format!("{:0^}", self.to_baid58()) }
 }
 
 impl From<Outpoint> for SecretSeal {
@@ -379,7 +383,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn outpoint_hash_is_sha256d() {
+    fn secret_seal_is_sha256d() {
         let reveal = BlindSeal {
             method: CloseMethod::TapretFirst,
             blinding: 54683213134637,
@@ -393,8 +397,8 @@ mod test {
     }
 
     #[test]
-    fn outpoint_hash_bech32() {
-        let outpoint_hash = BlindSeal {
+    fn secret_seal_baid58() {
+        let seal = BlindSeal {
             method: CloseMethod::TapretFirst,
             blinding: 54683213134637,
             txid: TxPtr::Txid(
@@ -405,17 +409,15 @@ mod test {
         }
         .to_concealed_seal();
 
-        let baid58 = "FZJtr2egUEqFbTtL6BWhyTnbLbh6B46BbQHDnUuZj6cL";
-        assert_eq!(baid58, outpoint_hash.to_string());
-        assert_eq!(outpoint_hash.to_string(), outpoint_hash.to_baid58().to_string());
-        /* TODO: uncomment when Baid58::from_str would work
-           let reconstructed = ConcealedSeal::from_str(bech32).unwrap();
-           assert_eq!(reconstructed, outpoint_hash);
-        */
+        let baid58 = "utxob02eFrirURjqLnqR74AKRfdnc9MDpvSRjmZGmFPrw7nvuTe1wy83";
+        assert_eq!(baid58, seal.to_string());
+        assert_eq!(seal.to_string(), seal.to_baid58_string());
+        let reconstructed = SecretSeal::from_str(baid58).unwrap();
+        assert_eq!(reconstructed, seal);
     }
 
     #[test]
-    fn outpoint_reveal_str() {
+    fn blind_seal_str() {
         let mut outpoint_reveal = BlindSeal {
             method: CloseMethod::TapretFirst,
             blinding: 0x31bbed7e7b2d,
