@@ -77,7 +77,7 @@ impl ToBaid58<33> for TapretCommitment {
 impl FromBaid58<33> for TapretCommitment {}
 
 impl TapretCommitment {
-    fn to_baid58_string(&self) -> String { format!("{}", self.to_baid58()) }
+    fn to_baid58_string(&self) -> String { format!("{:0^}", self.to_baid58()) }
 }
 
 impl FromStr for TapretCommitment {
@@ -109,13 +109,13 @@ impl CommitVerify<TapretCommitment, Lnpbp12> for TapScript {
 
 #[cfg(test)]
 mod test {
-    use strict_encoding::StrictDumb;
+    use amplify::RawArray;
 
     use super::*;
 
     pub fn commitment() -> TapretCommitment {
         TapretCommitment {
-            mpc: mpc::Commitment::strict_dumb(),
+            mpc: mpc::Commitment::from_raw_array([0x6Cu8; 32]),
             nonce: 8,
         }
     }
@@ -139,6 +139,9 @@ mod test {
         let commitment = commitment();
         let encoded = commitment.to_baid58();
         let decoded = TapretCommitment::from_baid58(encoded).unwrap();
+        let s = commitment.to_string();
+        assert_eq!(s, "tapret04dm9azJKdXhE27U4MHX8GsmibZEJ6WBMNmeKXGLPJDNaLPKNm9R");
+        assert_eq!(Ok(commitment.clone()), TapretCommitment::from_str(&s));
         assert_eq!(decoded, commitment);
     }
 }

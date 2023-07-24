@@ -24,7 +24,8 @@ use strict_types::{CompileError, LibBuilder, TypeLib};
 
 use crate::{Tx, LIB_NAME_BITCOIN};
 
-pub const LIB_ID_BITCOIN: &str = "race_ballet_golf_6GgF7biXPVNcus2FfQj2pQuRzau11rXApMQLfCZhojgi";
+pub const LIB_ID_BITCOIN: &str =
+    "urn:ubideco:stl:6GgF7biXPVNcus2FfQj2pQuRzau11rXApMQLfCZhojgi#money-pardon-parody";
 
 fn _bitcoin_stl() -> Result<TypeLib, CompileError> {
     LibBuilder::new(libname!(LIB_NAME_BITCOIN), None)
