@@ -163,7 +163,7 @@ dependencies = [
 
 [[package]]
 name = "bp-core"
-version = "0.10.6"
+version = "0.10.7"
 dependencies = [
  "amplify",
  "bp-dbc",
@@ -178,7 +178,7 @@ dependencies = [
 
 [[package]]
 name = "bp-dbc"
-version = "0.10.6"
+version = "0.10.7"
 dependencies = [
  "amplify",
  "base85",
@@ -203,7 +203,7 @@ dependencies = [
 
 [[package]]
 name = "bp-seals"
-version = "0.10.6"
+version = "0.10.7"
 dependencies = [
  "amplify",
  "baid58",
