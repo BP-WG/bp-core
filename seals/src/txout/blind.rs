@@ -26,7 +26,7 @@ use std::hash::Hash;
 use std::str::FromStr;
 
 use amplify::{hex, Bytes32, Wrapper};
-use baid58::{Baid58ParseError, FromBaid58, ToBaid58};
+use baid58::{Baid58ParseError, Chunking, FromBaid58, ToBaid58, CHUNKING_32CHECKSUM};
 use bc::{Outpoint, Txid, Vout};
 use commit_verify::{CommitVerify, Conceal};
 use dbc::tapret::Lnpbp12;
@@ -334,13 +334,12 @@ where Self: TxoSeal
 }
 
 /// Blind version of transaction outpoint-based single-use-seal
-#[derive(Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display, From)]
+#[derive(Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, From)]
 #[wrapper(Index, RangeOps, BorrowSlice, Hex)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
 #[derive(CommitEncode)]
 #[commit_encode(strategy = strict)]
-#[display(Self::to_baid58_string)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -354,17 +353,25 @@ pub struct SecretSeal(
 
 impl ToBaid58<32> for SecretSeal {
     const HRI: &'static str = "utxob";
+    const CHUNKING: Option<Chunking> = CHUNKING_32CHECKSUM;
     fn to_baid58_payload(&self) -> [u8; 32] { self.0.into_inner() }
+    fn to_baid58_string(&self) -> String { self.to_string() }
 }
 impl FromBaid58<32> for SecretSeal {}
 impl FromStr for SecretSeal {
     type Err = Baid58ParseError;
-    fn from_str(s: &str) -> Result<Self, Self::Err> { SecretSeal::from_baid58_str(s) }
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        SecretSeal::from_baid58_maybe_chunked_str(s, ':', ' ')
+    }
 }
-impl SecretSeal {
-    /// Returns Baid58 string representation of the secret seal. Equal to
-    /// `Display`
-    pub fn to_baid58_string(&self) -> String { format!("{:0^}", self.to_baid58()) }
+impl Display for SecretSeal {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        if f.alternate() {
+            write!(f, "{::^}", self.to_baid58())
+        } else {
+            write!(f, "{::^.3}", self.to_baid58())
+        }
+    }
 }
 
 impl From<Outpoint> for SecretSeal {
@@ -409,10 +416,13 @@ mod test {
         }
         .to_concealed_seal();
 
-        let baid58 = "utxob02eFrirURjqLnqR74AKRfdnc9MDpvSRjmZGmFPrw7nvuTe1wy83";
+        let baid58 = "utxob:2eFrirU-RjqLnqR74-AKRfdnc9M-DpvSRjmZG-mFPrw7nvu-Te1wy83";
         assert_eq!(baid58, seal.to_string());
+        assert_eq!(baid58.replace('-', ""), format!("{seal:#}"));
         assert_eq!(seal.to_string(), seal.to_baid58_string());
         let reconstructed = SecretSeal::from_str(baid58).unwrap();
+        assert_eq!(reconstructed, seal);
+        let reconstructed = SecretSeal::from_str(&baid58.replace('-', "")).unwrap();
         assert_eq!(reconstructed, seal);
     }
 

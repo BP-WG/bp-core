@@ -21,7 +21,7 @@ amplify = { workspace = true }
 single_use_seals = { workspace = true }
 commit_verify = { workspace = true }
 strict_encoding = { workspace = true }
-baid58 = "0.4.1"
+baid58 = "0.4.4"
 bp-primitives = { version = "0.10.6", path = "../primitives" }
 bp-dbc = { version = "0.10.6", path = "../dbc" }
 rand = "0.8.5"

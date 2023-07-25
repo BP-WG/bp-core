@@ -19,14 +19,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::fmt::{self, Display, Formatter};
 use std::io;
 use std::str::FromStr;
 
 use amplify::confinement::Confined;
-use baid58::{Baid58ParseError, FromBaid58, ToBaid58};
 use bc::{TapCode, TapScript};
 use commit_verify::{mpc, CommitEncode, CommitVerify};
-use strict_encoding::{StrictDeserialize, StrictSerialize};
+use strict_encoding::{DecodeError, DeserializeError, StrictDeserialize, StrictSerialize};
 
 use super::Lnpbp12;
 use crate::LIB_NAME_BPCORE;
@@ -39,8 +39,7 @@ pub const TAPRET_SCRIPT_COMMITMENT_PREFIX: [u8; 31] = [
 ];
 
 /// Information about tapret commitment.
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
-#[display(Self::to_baid58_string)]
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BPCORE)]
 #[derive(CommitEncode)]
@@ -66,23 +65,32 @@ impl From<[u8; 33]> for TapretCommitment {
     }
 }
 
-impl ToBaid58<33> for TapretCommitment {
-    const HRI: &'static str = "tapret";
-    fn to_baid58_payload(&self) -> [u8; 33] {
-        let mut data = io::Cursor::new([0u8; 33]);
-        self.commit_encode(&mut data);
-        data.into_inner()
+impl TapretCommitment {
+    /// Returns serialized representation of the commitment data.
+    pub fn to_vec(&self) -> Vec<u8> {
+        self.to_strict_serialized::<33>()
+            .expect("exact size match")
+            .into_inner()
     }
 }
-impl FromBaid58<33> for TapretCommitment {}
 
-impl TapretCommitment {
-    fn to_baid58_string(&self) -> String { format!("{:0^}", self.to_baid58()) }
+impl Display for TapretCommitment {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let s = base85::encode(&self.to_vec());
+        f.write_str(&s)
+    }
 }
-
 impl FromStr for TapretCommitment {
-    type Err = Baid58ParseError;
-    fn from_str(s: &str) -> Result<Self, Self::Err> { Self::from_baid58_str(s) }
+    type Err = DeserializeError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let data = base85::decode(s).ok_or_else(|| {
+            DecodeError::DataIntegrityError(format!(
+                "invalid Base85 encoding of tapret data \"{s}\""
+            ))
+        })?;
+        let data = Confined::try_from(data).map_err(DecodeError::from)?;
+        Self::from_strict_serialized::<33>(data)
+    }
 }
 
 impl TapretCommitment {
@@ -110,12 +118,14 @@ impl CommitVerify<TapretCommitment, Lnpbp12> for TapScript {
 #[cfg(test)]
 mod test {
     use amplify::RawArray;
+    use commit_verify::{Digest, Sha256};
 
     use super::*;
 
     pub fn commitment() -> TapretCommitment {
+        let msg = Sha256::digest("test data");
         TapretCommitment {
-            mpc: mpc::Commitment::from_raw_array([0x6Cu8; 32]),
+            mpc: mpc::Commitment::from_raw_array(msg),
             nonce: 8,
         }
     }
@@ -137,11 +147,8 @@ mod test {
     #[test]
     pub fn tapret_commitment_baid58() {
         let commitment = commitment();
-        let encoded = commitment.to_baid58();
-        let decoded = TapretCommitment::from_baid58(encoded).unwrap();
         let s = commitment.to_string();
-        assert_eq!(s, "tapret04dm9azJKdXhE27U4MHX8GsmibZEJ6WBMNmeKXGLPJDNaLPKNm9R");
+        assert_eq!(s, "k#7JerF92P=PEN7cf&`GWfS*?rIEdfEup1%zausI2m");
         assert_eq!(Ok(commitment.clone()), TapretCommitment::from_str(&s));
-        assert_eq!(decoded, commitment);
     }
 }
