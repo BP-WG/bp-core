@@ -170,15 +170,25 @@ impl<Id: SealTxid> BlindSeal<Id> {
     }
 
     /// Creates new seal using TapretFirst closing method for the provided
-    /// outpoint and seal closing method. Uses `thread_rng` to initialize
-    /// blinding factor.
+    /// outpoint. Uses `thread_rng` to initialize blinding factor.
+    pub fn tapret_first_from(txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
+        BlindSeal::with_rng(CloseMethod::TapretFirst, txid, vout, &mut thread_rng())
+    }
+
+    /// Creates new seal using OpretFirst closing method for the provided
+    /// outpoint. Uses `thread_rng` to initialize blinding factor.
+    pub fn opret_first_from(txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
+        BlindSeal::with_rng(CloseMethod::OpretFirst, txid, vout, &mut thread_rng())
+    }
+
+    /// Creates new seal using TapretFirst closing method for the provided
+    /// outpoint. Uses `thread_rng` to initialize blinding factor.
     pub fn tapret_first(txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
         BlindSeal::with_rng(CloseMethod::TapretFirst, txid, vout, &mut thread_rng())
     }
 
     /// Creates new seal using OpretFirst closing method for the provided
-    /// outpoint and seal closing method. Uses `thread_rng` to initialize
-    /// blinding factor.
+    /// outpoint. Uses `thread_rng` to initialize blinding factor.
     pub fn opret_first(txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
         BlindSeal::with_rng(CloseMethod::OpretFirst, txid, vout, &mut thread_rng())
     }
