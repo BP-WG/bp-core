@@ -146,6 +146,11 @@ impl From<&Txid> for TxPtr {
     fn from(txid: &Txid) -> Self { TxPtr::Txid(*txid) }
 }
 
+impl From<[u8; 32]> for TxPtr {
+    #[inline]
+    fn from(txid: [u8; 32]) -> Self { TxPtr::Txid(txid.into()) }
+}
+
 impl SealTxid for TxPtr {
     fn txid(&self) -> Option<Txid> {
         match self {
