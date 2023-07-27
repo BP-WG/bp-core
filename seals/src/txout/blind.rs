@@ -171,14 +171,14 @@ impl<Id: SealTxid> BlindSeal<Id> {
 
     /// Creates new seal using TapretFirst closing method for the provided
     /// outpoint. Uses `thread_rng` to initialize blinding factor.
-    pub fn tapret_first_from(txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
-        BlindSeal::with_rng(CloseMethod::TapretFirst, txid, vout, &mut thread_rng())
+    pub fn tapret_first_from(outpoint: Outpoint) -> Self {
+        BlindSeal::tapret_first(outpoint.txid, outpoint.vout)
     }
 
     /// Creates new seal using OpretFirst closing method for the provided
     /// outpoint. Uses `thread_rng` to initialize blinding factor.
-    pub fn opret_first_from(txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
-        BlindSeal::with_rng(CloseMethod::OpretFirst, txid, vout, &mut thread_rng())
+    pub fn opret_first_from(outpoint: Outpoint) -> Self {
+        BlindSeal::opret_first(outpoint.txid, outpoint.vout)
     }
 
     /// Creates new seal using TapretFirst closing method for the provided
