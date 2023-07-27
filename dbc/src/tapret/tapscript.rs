@@ -83,9 +83,10 @@ impl Display for TapretCommitment {
 impl FromStr for TapretCommitment {
     type Err = DeserializeError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let data = base85::decode(s).ok_or_else(|| {
+        let data = base85::decode(s).map_err(|err| {
             DecodeError::DataIntegrityError(format!(
-                "invalid Base85 encoding of tapret data \"{s}\""
+                "invalid Base85 encoding of tapret data \"{s}\": {}",
+                err.to_string().to_lowercase()
             ))
         })?;
         let data = Confined::try_from(data).map_err(DecodeError::from)?;
