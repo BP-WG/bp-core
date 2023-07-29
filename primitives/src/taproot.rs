@@ -420,6 +420,16 @@ impl ScriptPubkey {
         Self::p2tr_tweaked(output_key)
     }
 
+    pub fn p2tr_key_only(internal_key: InternalPk) -> Self {
+        let output_key = internal_key.to_output_key(None::<TapNodeHash>);
+        Self::p2tr_tweaked(output_key)
+    }
+
+    pub fn p2tr_scripted(internal_key: InternalPk, merkle_root: impl IntoTapHash) -> Self {
+        let output_key = internal_key.to_output_key(Some(merkle_root));
+        Self::p2tr_tweaked(output_key)
+    }
+
     pub fn p2tr_tweaked(output_key: XOnlyPublicKey) -> Self {
         // output key is 32 bytes long, so it's safe to use
         // `new_witness_program_unchecked` (Segwitv1)
