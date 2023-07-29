@@ -117,9 +117,6 @@ pub enum WitnessVer {
 impl WitnessVer {
     /// Converts bitcoin script opcode into [`WitnessVer`] variant.
     ///
-    /// # Returns
-    /// Version of the Witness program.
-    ///
     /// # Errors
     /// If the opcode does not correspond to any witness version, errors with
     /// [`SegwitError::MalformedWitnessVersion`].
@@ -144,6 +141,16 @@ impl WitnessVer {
             OP_PUSHNUM_16 => Ok(WitnessVer::V16),
             _ => Err(SegwitError::MalformedWitnessVersion),
         }
+    }
+
+    /// Converts witness version ordinal number into [`WitnessVer`] variant.
+    ///
+    /// # Errors
+    /// If the witness version number exceeds 16, errors with
+    /// [`SegwitError::MalformedWitnessVersion`].
+    pub fn from_version_no(no: u8) -> Result<Self, SegwitError> {
+        let op = OpCode::try_from(no).map_err(|_| SegwitError::MalformedWitnessVersion)?;
+        Self::from_op_code(op)
     }
 
     /// Converts [`WitnessVer`] instance into corresponding Bitcoin op-code.
