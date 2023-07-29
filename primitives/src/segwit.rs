@@ -194,14 +194,22 @@ impl WitnessProgram {
 }
 
 impl ScriptPubkey {
+    pub fn p2wkh(hash: impl Into<[u8; 20]>) -> Self {
+        Self::with_witness_program_unchecked(WitnessVer::V0, &hash.into())
+    }
+
+    pub fn p2wsh(hash: impl Into<[u8; 32]>) -> Self {
+        Self::with_witness_program_unchecked(WitnessVer::V0, &hash.into())
+    }
+
     /// Generates P2WSH-type of scriptPubkey with a given [`WitnessProgram`].
     pub fn from_witness_program(witness_program: &WitnessProgram) -> Self {
-        Self::with_segwit_unchecked(witness_program.version, witness_program.program())
+        Self::with_witness_program_unchecked(witness_program.version, witness_program.program())
     }
 
     /// Generates P2WSH-type of scriptPubkey with a given [`WitnessVer`] and
     /// the program bytes. Does not do any checks on version or program length.
-    pub(crate) fn with_segwit_unchecked(ver: WitnessVer, prog: &[u8]) -> Self {
+    pub(crate) fn with_witness_program_unchecked(ver: WitnessVer, prog: &[u8]) -> Self {
         let mut script = Self::with_capacity(ScriptBytes::len_for_slice(prog.len()) + 2);
         script.push_opcode(ver.op_code());
         script.push_slice(prog);

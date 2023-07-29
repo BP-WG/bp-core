@@ -423,7 +423,7 @@ impl ScriptPubkey {
     pub fn p2tr_tweaked(output_key: XOnlyPublicKey) -> Self {
         // output key is 32 bytes long, so it's safe to use
         // `new_witness_program_unchecked` (Segwitv1)
-        Self::with_segwit_unchecked(WitnessVer::V1, &output_key.serialize())
+        Self::with_witness_program_unchecked(WitnessVer::V1, &output_key.serialize())
     }
 
     pub fn is_p2tr(&self) -> bool {
