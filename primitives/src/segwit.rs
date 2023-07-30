@@ -203,11 +203,11 @@ impl ScriptPubkey {
     }
 
     pub fn is_p2wpkh(&self) -> bool {
-        self.len() == 22 && self[0] == WitnessVer::V1.op_code() as u8 && self[1] == OP_PUSHBYTES_20
+        self.len() == 22 && self[0] == WitnessVer::V0.op_code() as u8 && self[1] == OP_PUSHBYTES_20
     }
 
     pub fn is_p2wsh(&self) -> bool {
-        self.len() == 34 && self[0] == WitnessVer::V1.op_code() as u8 && self[1] == OP_PUSHBYTES_32
+        self.len() == 34 && self[0] == WitnessVer::V0.op_code() as u8 && self[1] == OP_PUSHBYTES_32
     }
 
     /// Generates P2WSH-type of scriptPubkey with a given [`WitnessProgram`].
