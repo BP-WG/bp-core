@@ -19,12 +19,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::fmt::{self, Debug, Formatter, LowerHex, UpperHex};
+use std::fmt::Debug;
 use std::num::ParseIntError;
 use std::str::FromStr;
 
-use amplify::hex::{self, FromHex, ToHex};
-use amplify::{Bytes32, RawArray, Wrapper};
+use amplify::{Bytes32, Wrapper};
 
 use super::{VarIntArray, LIB_NAME_BITCOIN};
 use crate::{NonStandardValue, ScriptPubkey, SigScript};
@@ -47,54 +46,7 @@ pub struct Txid(
     #[from([u8; 32])]
     Bytes32,
 );
-
-impl AsRef<[u8; 32]> for Txid {
-    fn as_ref(&self) -> &[u8; 32] { self.0.as_inner() }
-}
-
-impl AsRef<[u8]> for Txid {
-    fn as_ref(&self) -> &[u8] { self.0.as_ref() }
-}
-
-impl From<Txid> for [u8; 32] {
-    fn from(value: Txid) -> Self { value.0.into_inner() }
-}
-
-impl Debug for Txid {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("Txid").field(&self.to_hex()).finish()
-    }
-}
-
-/// Satoshi made all SHA245d-based hashes to be displayed as hex strings in a
-/// big endian order. Thus we need this manual implementation.
-impl LowerHex for Txid {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let mut slice = self.to_raw_array();
-        slice.reverse();
-        f.write_str(&slice.to_hex())
-    }
-}
-
-impl UpperHex for Txid {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.to_hex().to_uppercase())
-    }
-}
-
-impl FromStr for Txid {
-    type Err = hex::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> { Self::from_hex(s) }
-}
-
-/// Satoshi made all SHA245d-based hashes to be displayed as hex strings in a
-/// big endian order. Thus we need this manual implementation.
-impl FromHex for Txid {
-    fn from_byte_iter<I>(iter: I) -> Result<Self, hex::Error>
-    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
-        Bytes32::from_byte_iter(iter.rev()).map(Self::from)
-    }
-}
+impl_sha256d_hashtype!(Txid, "Txid");
 
 impl Txid {
     pub fn coinbase() -> Self { Self(zero!()) }
@@ -273,6 +225,8 @@ pub struct Tx {
 
 #[cfg(test)]
 mod test {
+    use amplify::hex::{FromHex, ToHex};
+
     use super::*;
 
     #[test]

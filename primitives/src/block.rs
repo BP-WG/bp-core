@@ -19,11 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::fmt::{self, Debug, Formatter, LowerHex, UpperHex};
-use std::str::FromStr;
-
-use amplify::hex::{FromHex, ToHex};
-use amplify::{hex, Bytes32, RawArray, Wrapper};
+use amplify::{Bytes32, Wrapper};
 
 use crate::LIB_NAME_BITCOIN;
 
@@ -42,54 +38,7 @@ pub struct BlockHash(
     #[from([u8; 32])]
     Bytes32,
 );
-
-impl AsRef<[u8; 32]> for BlockHash {
-    fn as_ref(&self) -> &[u8; 32] { self.0.as_inner() }
-}
-
-impl AsRef<[u8]> for BlockHash {
-    fn as_ref(&self) -> &[u8] { self.0.as_ref() }
-}
-
-impl From<BlockHash> for [u8; 32] {
-    fn from(value: BlockHash) -> Self { value.0.into_inner() }
-}
-
-impl Debug for BlockHash {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("BlockHash").field(&self.to_hex()).finish()
-    }
-}
-
-/// Satoshi made all SHA245d-based hashes to be displayed as hex strings in a
-/// big endian order. Thus we need this manual implementation.
-impl LowerHex for BlockHash {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let mut slice = self.to_raw_array();
-        slice.reverse();
-        f.write_str(&slice.to_hex())
-    }
-}
-
-impl UpperHex for BlockHash {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.to_hex().to_uppercase())
-    }
-}
-
-impl FromStr for BlockHash {
-    type Err = hex::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> { Self::from_hex(s) }
-}
-
-/// Satoshi made all SHA245d-based hashes to be displayed as hex strings in a
-/// big endian order. Thus we need this manual implementation.
-impl FromHex for BlockHash {
-    fn from_byte_iter<I>(iter: I) -> Result<Self, hex::Error>
-    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
-        Bytes32::from_byte_iter(iter.rev()).map(Self::from)
-    }
-}
+impl_sha256d_hashtype!(BlockHash, "BlockHash");
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct BlockHeader {

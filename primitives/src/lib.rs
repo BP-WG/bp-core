@@ -44,6 +44,8 @@ extern crate serde_crate as serde;
 /// Re-export of `secp256k1` crate.
 pub extern crate secp256k1;
 
+#[macro_use]
+mod macros;
 mod block;
 pub mod opcodes;
 mod script;
