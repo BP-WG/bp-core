@@ -155,9 +155,32 @@ impl WitnessVer {
 
     /// Converts [`WitnessVer`] instance into corresponding Bitcoin op-code.
     // TODO: Replace `try_from` with `from` since opcodes cover whole range of
-    // u8
+    //       u8
     pub fn op_code(self) -> OpCode {
         OpCode::try_from(self as u8).expect("full range of u8 is covered")
+    }
+
+    /// Converts [`WitnessVer`] into ordinal version number.
+    pub fn version_no(self) -> u8 {
+        match self {
+            WitnessVer::V0 => 0,
+            WitnessVer::V1 => 1,
+            WitnessVer::V2 => 2,
+            WitnessVer::V3 => 3,
+            WitnessVer::V4 => 4,
+            WitnessVer::V5 => 5,
+            WitnessVer::V6 => 6,
+            WitnessVer::V7 => 7,
+            WitnessVer::V8 => 8,
+            WitnessVer::V9 => 9,
+            WitnessVer::V10 => 10,
+            WitnessVer::V11 => 11,
+            WitnessVer::V12 => 12,
+            WitnessVer::V13 => 13,
+            WitnessVer::V14 => 14,
+            WitnessVer::V15 => 15,
+            WitnessVer::V16 => 16,
+        }
     }
 }
 
