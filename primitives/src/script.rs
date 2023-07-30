@@ -24,7 +24,7 @@ use amplify::confinement::Confined;
 use crate::opcodes::*;
 use crate::{ScriptBytes, LIB_NAME_BITCOIN};
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug, Display)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 // TODO: Replace `try_from` with `from` since opcodes cover whole range of u8
 #[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
