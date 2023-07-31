@@ -140,7 +140,10 @@ pub struct TxIn {
     pub witness: Witness,
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, From)]
+#[derive(Wrapper, WrapperMut, Copy, Clone, Eq, PartialEq, Hash, Debug, Display, From)]
+#[wrapper(Add, Sub, Mul, Div)]
+#[wrapper_mut(MathAssign)]
+#[display(inner)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
