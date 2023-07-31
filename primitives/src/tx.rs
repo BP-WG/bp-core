@@ -148,7 +148,41 @@ pub struct TxIn {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct Sats(u64);
+pub struct Sats(pub u64);
+
+impl Sats {
+    pub const ZERO: Self = Sats(0);
+    pub const BTC: Self = Sats(1_000_000_00);
+
+    pub const fn from_btc(btc: u32) -> Self { Self(btc as u64 * Self::BTC.0) }
+
+    pub const fn btc_round(&self) -> u64 {
+        if self.0 == 0 {
+            return 0;
+        }
+        let inc = 2 * self.sats_rem() / Self::BTC.0;
+        self.0 / Self::BTC.0 + inc
+    }
+
+    pub const fn btc_ceil(&self) -> u64 {
+        if self.0 == 0 {
+            return 0;
+        }
+        let inc = if self.sats_rem() > 0 { 1 } else { 0 };
+        self.0 / Self::BTC.0 + inc
+    }
+
+    pub const fn btc_floor(&self) -> u64 {
+        if self.0 == 0 {
+            return 0;
+        }
+        self.0 / Self::BTC.0
+    }
+
+    pub const fn sats(&self) -> u64 { self.0 }
+
+    pub const fn sats_rem(&self) -> u64 { self.0 % Self::BTC.0 }
+}
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
@@ -236,5 +270,47 @@ mod test {
         let from_hex = Txid::from_hex(hex).unwrap();
         assert_eq!(from_str, from_hex);
         assert_eq!(from_str.to_string(), from_str.to_hex());
+    }
+
+    #[test]
+    fn sats() {
+        assert_eq!(Sats(0).0, 0);
+        assert_eq!(Sats(0).btc_round(), 0);
+        assert_eq!(Sats(0).btc_ceil(), 0);
+        assert_eq!(Sats(0).btc_floor(), 0);
+        assert_eq!(Sats(0).sats(), 0);
+        assert_eq!(Sats(0).sats_rem(), 0);
+
+        assert_eq!(Sats(1000).0, 1000);
+        assert_eq!(Sats(1000).btc_round(), 0);
+        assert_eq!(Sats(1000).btc_ceil(), 1);
+        assert_eq!(Sats(1000).btc_floor(), 0);
+        assert_eq!(Sats(1000).sats(), 1000);
+        assert_eq!(Sats(1000).sats_rem(), 1000);
+
+        assert_eq!(Sats(49_999_999).btc_round(), 0);
+        assert_eq!(Sats(49_999_999).btc_ceil(), 1);
+        assert_eq!(Sats(49_999_999).btc_floor(), 0);
+        assert_eq!(Sats(50_000_000).0, 50_000_000);
+        assert_eq!(Sats(50_000_000).btc_round(), 1);
+        assert_eq!(Sats(50_000_000).btc_ceil(), 1);
+        assert_eq!(Sats(50_000_000).btc_floor(), 0);
+        assert_eq!(Sats(50_000_000).sats(), 50_000_000);
+        assert_eq!(Sats(50_000_000).sats_rem(), 50_000_000);
+
+        assert_eq!(Sats(99_999_999).btc_round(), 1);
+        assert_eq!(Sats(99_999_999).btc_ceil(), 1);
+        assert_eq!(Sats(99_999_999).btc_floor(), 0);
+        assert_eq!(Sats(100_000_000), Sats::from_btc(1));
+        assert_eq!(Sats(100_000_000).0, 100_000_000);
+        assert_eq!(Sats(100_000_000).btc_round(), 1);
+        assert_eq!(Sats(100_000_000).btc_ceil(), 1);
+        assert_eq!(Sats(100_000_000).btc_floor(), 1);
+        assert_eq!(Sats(100_000_000).sats(), 100_000_000);
+        assert_eq!(Sats(100_000_000).sats_rem(), 0);
+        assert_eq!(Sats(100_000_001).sats(), 100_000_001);
+        assert_eq!(Sats(100_000_001).sats_rem(), 1);
+        assert_eq!(Sats(110_000_000).sats(), 110_000_000);
+        assert_eq!(Sats(110_000_000).sats_rem(), 10_000_000);
     }
 }
