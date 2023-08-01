@@ -19,7 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::fmt::Debug;
+use std::fmt::{self, Debug, Display, Formatter};
 use std::num::ParseIntError;
 use std::str::FromStr;
 
@@ -140,10 +140,9 @@ pub struct TxIn {
     pub witness: Witness,
 }
 
-#[derive(Wrapper, WrapperMut, Copy, Clone, Eq, PartialEq, Hash, Debug, Display, From)]
-#[wrapper(Add, Sub, Mul, Div)]
+#[derive(Wrapper, WrapperMut, Copy, Clone, Eq, PartialEq, Hash, Debug, From)]
+#[wrapper(Add, Sub, Mul, Div, FromStr)]
 #[wrapper_mut(MathAssign)]
-#[display(inner)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
@@ -185,6 +184,10 @@ impl Sats {
     pub const fn sats(&self) -> u64 { self.0 }
 
     pub const fn sats_rem(&self) -> u64 { self.0 % Self::BTC.0 }
+}
+
+impl Display for Sats {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result { Display::fmt(&self.0, f) }
 }
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
