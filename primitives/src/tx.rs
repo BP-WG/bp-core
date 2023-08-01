@@ -19,18 +19,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::fmt::{self, Debug, Formatter};
+use std::fmt::{self, Debug, Display, Formatter};
 use std::num::ParseIntError;
 use std::str::FromStr;
 
-use amplify::hex::{self, FromHex, ToHex};
-use amplify::{Bytes32, RawArray, Wrapper};
+use amplify::{Bytes32, Wrapper};
 
 use super::{VarIntArray, LIB_NAME_BITCOIN};
 use crate::{NonStandardValue, ScriptPubkey, SigScript};
 
 #[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Display, From)]
-#[display(Self::to_hex)]
+#[display(LowerHex)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[derive(CommitEncode)]
@@ -40,42 +39,17 @@ use crate::{NonStandardValue, ScriptPubkey, SigScript};
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-#[wrapper(Index, RangeOps, BorrowSlice)]
+#[wrapper(BorrowSlice, Index, RangeOps)]
 // all-zeros used in coinbase
 pub struct Txid(
     #[from]
     #[from([u8; 32])]
     Bytes32,
 );
+impl_sha256d_hashtype!(Txid, "Txid");
 
-impl Debug for Txid {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("Txid").field(&self.to_hex()).finish()
-    }
-}
-
-impl FromStr for Txid {
-    type Err = hex::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> { Self::from_hex(s) }
-}
-
-/// Satoshi made all SHA245d-based hashes to be displayed as hex strings in a
-/// big endian order. Thus we need this manual implementation.
-impl ToHex for Txid {
-    fn to_hex(&self) -> String {
-        let mut slice = self.to_raw_array();
-        slice.reverse();
-        slice.to_hex()
-    }
-}
-
-/// Satoshi made all SHA245d-based hashes to be displayed as hex strings in a
-/// big endian order. Thus we need this manual implementation.
-impl FromHex for Txid {
-    fn from_byte_iter<I>(iter: I) -> Result<Self, hex::Error>
-    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
-        Bytes32::from_byte_iter(iter.rev()).map(Self::from)
-    }
+impl Txid {
+    pub fn coinbase() -> Self { Self(zero!()) }
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display, From)]
@@ -119,7 +93,7 @@ impl Outpoint {
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
@@ -137,7 +111,7 @@ impl SeqNo {
     pub const fn to_consensus_u32(&self) -> u32 { self.0 }
 }
 
-#[derive(Wrapper, Clone, Eq, PartialEq, Debug, From)]
+#[derive(Wrapper, Clone, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, Index, RangeOps)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
@@ -155,7 +129,7 @@ impl Witness {
     }
 }
 
-#[derive(Clone, Eq, PartialEq, Debug)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
@@ -166,7 +140,9 @@ pub struct TxIn {
     pub witness: Witness,
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug, From)]
+#[derive(Wrapper, WrapperMut, Copy, Clone, Eq, PartialEq, Hash, Debug, From)]
+#[wrapper(Add, Sub, Mul, Div, FromStr)]
+#[wrapper_mut(MathAssign)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
@@ -174,9 +150,47 @@ pub struct TxIn {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct Sats(u64);
+pub struct Sats(pub u64);
 
-#[derive(Clone, Eq, PartialEq, Debug)]
+impl Sats {
+    pub const ZERO: Self = Sats(0);
+    pub const BTC: Self = Sats(1_000_000_00);
+
+    pub const fn from_btc(btc: u32) -> Self { Self(btc as u64 * Self::BTC.0) }
+
+    pub const fn btc_round(&self) -> u64 {
+        if self.0 == 0 {
+            return 0;
+        }
+        let inc = 2 * self.sats_rem() / Self::BTC.0;
+        self.0 / Self::BTC.0 + inc
+    }
+
+    pub const fn btc_ceil(&self) -> u64 {
+        if self.0 == 0 {
+            return 0;
+        }
+        let inc = if self.sats_rem() > 0 { 1 } else { 0 };
+        self.0 / Self::BTC.0 + inc
+    }
+
+    pub const fn btc_floor(&self) -> u64 {
+        if self.0 == 0 {
+            return 0;
+        }
+        self.0 / Self::BTC.0
+    }
+
+    pub const fn sats(&self) -> u64 { self.0 }
+
+    pub const fn sats_rem(&self) -> u64 { self.0 % Self::BTC.0 }
+}
+
+impl Display for Sats {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result { Display::fmt(&self.0, f) }
+}
+
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
@@ -185,7 +199,7 @@ pub struct TxOut {
     pub script_pubkey: ScriptPubkey,
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
@@ -220,7 +234,7 @@ impl TxVer {
     pub const fn to_consensus_u32(&self) -> i32 { self.0 }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
@@ -238,7 +252,7 @@ impl LockTime {
     pub const fn to_consensus_u32(&self) -> u32 { self.0 }
 }
 
-#[derive(Clone, Eq, PartialEq, Debug)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
@@ -251,6 +265,8 @@ pub struct Tx {
 
 #[cfg(test)]
 mod test {
+    use amplify::hex::{FromHex, ToHex};
+
     use super::*;
 
     #[test]
@@ -260,5 +276,47 @@ mod test {
         let from_hex = Txid::from_hex(hex).unwrap();
         assert_eq!(from_str, from_hex);
         assert_eq!(from_str.to_string(), from_str.to_hex());
+    }
+
+    #[test]
+    fn sats() {
+        assert_eq!(Sats(0).0, 0);
+        assert_eq!(Sats(0).btc_round(), 0);
+        assert_eq!(Sats(0).btc_ceil(), 0);
+        assert_eq!(Sats(0).btc_floor(), 0);
+        assert_eq!(Sats(0).sats(), 0);
+        assert_eq!(Sats(0).sats_rem(), 0);
+
+        assert_eq!(Sats(1000).0, 1000);
+        assert_eq!(Sats(1000).btc_round(), 0);
+        assert_eq!(Sats(1000).btc_ceil(), 1);
+        assert_eq!(Sats(1000).btc_floor(), 0);
+        assert_eq!(Sats(1000).sats(), 1000);
+        assert_eq!(Sats(1000).sats_rem(), 1000);
+
+        assert_eq!(Sats(49_999_999).btc_round(), 0);
+        assert_eq!(Sats(49_999_999).btc_ceil(), 1);
+        assert_eq!(Sats(49_999_999).btc_floor(), 0);
+        assert_eq!(Sats(50_000_000).0, 50_000_000);
+        assert_eq!(Sats(50_000_000).btc_round(), 1);
+        assert_eq!(Sats(50_000_000).btc_ceil(), 1);
+        assert_eq!(Sats(50_000_000).btc_floor(), 0);
+        assert_eq!(Sats(50_000_000).sats(), 50_000_000);
+        assert_eq!(Sats(50_000_000).sats_rem(), 50_000_000);
+
+        assert_eq!(Sats(99_999_999).btc_round(), 1);
+        assert_eq!(Sats(99_999_999).btc_ceil(), 1);
+        assert_eq!(Sats(99_999_999).btc_floor(), 0);
+        assert_eq!(Sats(100_000_000), Sats::from_btc(1));
+        assert_eq!(Sats(100_000_000).0, 100_000_000);
+        assert_eq!(Sats(100_000_000).btc_round(), 1);
+        assert_eq!(Sats(100_000_000).btc_ceil(), 1);
+        assert_eq!(Sats(100_000_000).btc_floor(), 1);
+        assert_eq!(Sats(100_000_000).sats(), 100_000_000);
+        assert_eq!(Sats(100_000_000).sats_rem(), 0);
+        assert_eq!(Sats(100_000_001).sats(), 100_000_001);
+        assert_eq!(Sats(100_000_001).sats_rem(), 1);
+        assert_eq!(Sats(110_000_000).sats(), 110_000_000);
+        assert_eq!(Sats(110_000_000).sats_rem(), 10_000_000);
     }
 }

@@ -356,7 +356,7 @@ impl LeafScript {
     pub fn tap_leaf_hash(&self) -> TapLeafHash { TapLeafHash::with_leaf_script(self) }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug, Display)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
 #[repr(u8)]
@@ -420,10 +420,20 @@ impl ScriptPubkey {
         Self::p2tr_tweaked(output_key)
     }
 
+    pub fn p2tr_key_only(internal_key: InternalPk) -> Self {
+        let output_key = internal_key.to_output_key(None::<TapNodeHash>);
+        Self::p2tr_tweaked(output_key)
+    }
+
+    pub fn p2tr_scripted(internal_key: InternalPk, merkle_root: impl IntoTapHash) -> Self {
+        let output_key = internal_key.to_output_key(Some(merkle_root));
+        Self::p2tr_tweaked(output_key)
+    }
+
     pub fn p2tr_tweaked(output_key: XOnlyPublicKey) -> Self {
         // output key is 32 bytes long, so it's safe to use
         // `new_witness_program_unchecked` (Segwitv1)
-        Self::with_segwit_unchecked(WitnessVer::V1, &output_key.serialize())
+        Self::with_witness_program_unchecked(WitnessVer::V1, &output_key.serialize())
     }
 
     pub fn is_p2tr(&self) -> bool {
