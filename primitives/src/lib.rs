@@ -18,8 +18,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// Coding conventions
 
+// Coding conventions
 #![deny(
     non_upper_case_globals,
     non_camel_case_types,
@@ -44,6 +44,9 @@ extern crate serde_crate as serde;
 /// Re-export of `secp256k1` crate.
 pub extern crate secp256k1;
 
+#[macro_use]
+mod macros;
+mod block;
 pub mod opcodes;
 mod script;
 mod segwit;
@@ -53,6 +56,7 @@ mod util;
 #[cfg(feature = "stl")]
 pub mod stl;
 
+pub use block::{BlockHash, BlockHeader};
 pub use script::{OpCode, ScriptPubkey, SigScript};
 pub use segwit::*;
 pub use taproot::*;

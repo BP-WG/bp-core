@@ -117,9 +117,6 @@ pub enum WitnessVer {
 impl WitnessVer {
     /// Converts bitcoin script opcode into [`WitnessVer`] variant.
     ///
-    /// # Returns
-    /// Version of the Witness program.
-    ///
     /// # Errors
     /// If the opcode does not correspond to any witness version, errors with
     /// [`SegwitError::MalformedWitnessVersion`].
@@ -146,11 +143,44 @@ impl WitnessVer {
         }
     }
 
+    /// Converts witness version ordinal number into [`WitnessVer`] variant.
+    ///
+    /// # Errors
+    /// If the witness version number exceeds 16, errors with
+    /// [`SegwitError::MalformedWitnessVersion`].
+    pub fn from_version_no(no: u8) -> Result<Self, SegwitError> {
+        let op = OpCode::try_from(no).map_err(|_| SegwitError::MalformedWitnessVersion)?;
+        Self::from_op_code(op)
+    }
+
     /// Converts [`WitnessVer`] instance into corresponding Bitcoin op-code.
     // TODO: Replace `try_from` with `from` since opcodes cover whole range of
-    // u8
+    //       u8
     pub fn op_code(self) -> OpCode {
         OpCode::try_from(self as u8).expect("full range of u8 is covered")
+    }
+
+    /// Converts [`WitnessVer`] into ordinal version number.
+    pub fn version_no(self) -> u8 {
+        match self {
+            WitnessVer::V0 => 0,
+            WitnessVer::V1 => 1,
+            WitnessVer::V2 => 2,
+            WitnessVer::V3 => 3,
+            WitnessVer::V4 => 4,
+            WitnessVer::V5 => 5,
+            WitnessVer::V6 => 6,
+            WitnessVer::V7 => 7,
+            WitnessVer::V8 => 8,
+            WitnessVer::V9 => 9,
+            WitnessVer::V10 => 10,
+            WitnessVer::V11 => 11,
+            WitnessVer::V12 => 12,
+            WitnessVer::V13 => 13,
+            WitnessVer::V14 => 14,
+            WitnessVer::V15 => 15,
+            WitnessVer::V16 => 16,
+        }
     }
 }
 
@@ -187,17 +217,57 @@ impl WitnessProgram {
 }
 
 impl ScriptPubkey {
+    pub fn p2wpkh(hash: impl Into<[u8; 20]>) -> Self {
+        Self::with_witness_program_unchecked(WitnessVer::V0, &hash.into())
+    }
+
+    pub fn p2wsh(hash: impl Into<[u8; 32]>) -> Self {
+        Self::with_witness_program_unchecked(WitnessVer::V0, &hash.into())
+    }
+
+    pub fn is_p2wpkh(&self) -> bool {
+        self.len() == 22 && self[0] == WitnessVer::V0.op_code() as u8 && self[1] == OP_PUSHBYTES_20
+    }
+
+    pub fn is_p2wsh(&self) -> bool {
+        self.len() == 34 && self[0] == WitnessVer::V0.op_code() as u8 && self[1] == OP_PUSHBYTES_32
+    }
+
     /// Generates P2WSH-type of scriptPubkey with a given [`WitnessProgram`].
     pub fn from_witness_program(witness_program: &WitnessProgram) -> Self {
-        Self::with_segwit_unchecked(witness_program.version, witness_program.program())
+        Self::with_witness_program_unchecked(witness_program.version, witness_program.program())
     }
 
     /// Generates P2WSH-type of scriptPubkey with a given [`WitnessVer`] and
     /// the program bytes. Does not do any checks on version or program length.
-    pub(crate) fn with_segwit_unchecked(ver: WitnessVer, prog: &[u8]) -> Self {
+    pub(crate) fn with_witness_program_unchecked(ver: WitnessVer, prog: &[u8]) -> Self {
         let mut script = Self::with_capacity(ScriptBytes::len_for_slice(prog.len()) + 2);
         script.push_opcode(ver.op_code());
         script.push_slice(prog);
         script
+    }
+
+    /// Checks whether a script pubkey is a Segregated Witness (segwit) program.
+    #[inline]
+    pub fn is_witness_program(&self) -> bool {
+        // A scriptPubKey (or redeemScript as defined in BIP16/P2SH) that consists of a
+        // 1-byte push opcode (for 0 to 16) followed by a data push between 2
+        // and 40 bytes gets a new special meaning. The value of the first push
+        // is called the "version byte". The following byte vector pushed is
+        // called the "witness program".
+        let script_len = self.len();
+        if !(4..=42).contains(&script_len) {
+            return false;
+        }
+        // Version 0 or PUSHNUM_1-PUSHNUM_16
+        let Ok(ver_opcode) = OpCode::try_from(self[0]) else {
+            return false;
+        };
+        let push_opbyte = self[1]; // Second byte push opcode 2-40 bytes
+        WitnessVer::from_op_code(ver_opcode).is_ok()
+            && push_opbyte >= OP_PUSHBYTES_2
+            && push_opbyte <= OP_PUSHBYTES_40
+            // Check that the rest of the script has the correct size
+            && script_len - 2 == push_opbyte as usize
     }
 }

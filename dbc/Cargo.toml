@@ -1,6 +1,6 @@
 [package]
 name = "bp-dbc"
-version = "0.10.8"
+version = "0.10.9"
 description = "Deterministic bitcoin commitments library"
 keywords = ["lnp-bp", "bitcoin", "blockchain", "smart-contracts", "single-use-seals"]
 categories = ["cryptography", "encoding"]
@@ -18,7 +18,7 @@ path = "src/lib.rs"
 
 [dependencies]
 amplify = { workspace = true }
-base85 = "1.2.1"
+base85 = "=2.0.0"
 strict_encoding = { workspace = true }
 commit_verify = { workspace = true, features = ["rand"] }
 bp-primitives = { version = "0.10.6", path = "../primitives" }
