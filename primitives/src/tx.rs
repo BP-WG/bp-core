@@ -20,6 +20,7 @@
 // limitations under the License.
 
 use std::fmt::{self, Debug, Display, Formatter};
+use std::iter::Sum;
 use std::num::ParseIntError;
 use std::str::FromStr;
 
@@ -150,7 +151,13 @@ pub struct TxIn {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct Sats(pub u64);
+pub struct Sats(
+    #[from]
+    #[from(u32)]
+    #[from(u16)]
+    #[from(u8)]
+    pub u64,
+);
 
 impl Sats {
     pub const ZERO: Self = Sats(0);
@@ -184,6 +191,56 @@ impl Sats {
     pub const fn sats(&self) -> u64 { self.0 }
 
     pub const fn sats_rem(&self) -> u64 { self.0 % Self::BTC.0 }
+
+    pub fn checked_add(&self, other: impl Into<Self>) -> Option<Self> {
+        self.0.checked_add(other.into().0).map(Self)
+    }
+    pub fn checked_sub(&self, other: impl Into<Self>) -> Option<Self> {
+        self.0.checked_sub(other.into().0).map(Self)
+    }
+
+    pub fn checked_add_assign(&mut self, other: impl Into<Self>) -> bool {
+        self.0
+            .checked_add(other.into().0)
+            .map(Self)
+            .map(|sum| *self = sum)
+            .map(|_| true)
+            .unwrap_or_default()
+    }
+    pub fn checked_sub_assign(&mut self, other: impl Into<Self>) -> bool {
+        self.0
+            .checked_sub(other.into().0)
+            .map(Self)
+            .map(|sum| *self = sum)
+            .map(|_| true)
+            .unwrap_or_default()
+    }
+
+    pub fn saturating_add(&self, other: impl Into<Self>) -> Self {
+        self.0.saturating_add(other.into().0).into()
+    }
+    pub fn saturating_sub(&self, other: impl Into<Self>) -> Self {
+        self.0.saturating_sub(other.into().0).into()
+    }
+
+    pub fn saturating_add_assign(&mut self, other: impl Into<Self>) {
+        *self = self.0.saturating_add(other.into().0).into();
+    }
+    pub fn saturating_sub_assign(&mut self, other: impl Into<Self>) {
+        *self = self.0.saturating_sub(other.into().0).into();
+    }
+}
+
+impl Sum for Sats {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Sats::ZERO, |sum, value| sum.saturating_add(value))
+    }
+}
+
+impl Sum<u64> for Sats {
+    fn sum<I: Iterator<Item = u64>>(iter: I) -> Self {
+        iter.fold(Sats::ZERO, |sum, value| sum.saturating_add(value))
+    }
 }
 
 impl Display for Sats {
