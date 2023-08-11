@@ -60,7 +60,10 @@ pub use block::{BlockHash, BlockHeader};
 pub use script::{OpCode, ScriptPubkey, SigScript};
 pub use segwit::*;
 pub use taproot::*;
-pub use tx::{LockTime, Outpoint, Sats, SeqNo, Tx, TxIn, TxOut, TxVer, Txid, Vout, Witness};
+pub use tx::{
+    LockTime, Outpoint, OutpointParseError, Sats, SeqNo, Tx, TxIn, TxOut, TxVer, Txid, Vout,
+    Witness,
+};
 pub use types::{ScriptBytes, VarIntArray};
 pub use util::{Chain, NonStandardValue};
 
