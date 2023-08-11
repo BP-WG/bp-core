@@ -41,6 +41,11 @@ pub struct BlockHash(
 impl_sha256d_hashtype!(BlockHash, "BlockHash");
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", rename_all = "camelCase")
+)]
 pub struct BlockHeader {
     /// Block version, now repurposed for soft fork signalling.
     pub version: i32,
