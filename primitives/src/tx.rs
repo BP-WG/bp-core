@@ -24,7 +24,7 @@ use std::iter::Sum;
 use std::num::ParseIntError;
 use std::str::FromStr;
 
-use amplify::{Bytes32, Wrapper};
+use amplify::{hex, Bytes32, Wrapper};
 
 use super::{VarIntArray, LIB_NAME_BITCOIN};
 use crate::{NonStandardValue, ScriptPubkey, SigScript};
@@ -91,6 +91,33 @@ impl Outpoint {
             txid,
             vout: vout.into(),
         }
+    }
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Display, From, Error)]
+#[display(doc_comments)]
+pub enum OutpointParseError {
+    /// malformed string representation of outoint '{0}' lacking txid and vout
+    /// separator ':'
+    MalformedSeparator(String),
+
+    /// malformed outpoint output number. Details: {0}
+    #[from]
+    InvalidVout(ParseIntError),
+
+    /// malformed outpoint txid value. Details: {0}
+    #[from]
+    InvalidTxid(hex::Error),
+}
+
+impl FromStr for Outpoint {
+    type Err = OutpointParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let (txid, vout) = s
+            .split_once(':')
+            .ok_or_else(|| OutpointParseError::MalformedSeparator(s.to_owned()))?;
+        Ok(Outpoint::new(txid.parse()?, Vout::from_str(vout)?))
     }
 }
 
