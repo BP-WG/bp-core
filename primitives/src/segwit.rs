@@ -149,8 +149,26 @@ impl WitnessVer {
     /// If the witness version number exceeds 16, errors with
     /// [`SegwitError::MalformedWitnessVersion`].
     pub fn from_version_no(no: u8) -> Result<Self, SegwitError> {
-        let op = OpCode::try_from(no).map_err(|_| SegwitError::MalformedWitnessVersion)?;
-        Self::from_op_code(op)
+        Ok(match no {
+            v if v == Self::V0.version_no() => Self::V0,
+            v if v == Self::V1.version_no() => Self::V1,
+            v if v == Self::V2.version_no() => Self::V2,
+            v if v == Self::V3.version_no() => Self::V3,
+            v if v == Self::V4.version_no() => Self::V4,
+            v if v == Self::V5.version_no() => Self::V5,
+            v if v == Self::V6.version_no() => Self::V6,
+            v if v == Self::V7.version_no() => Self::V7,
+            v if v == Self::V8.version_no() => Self::V8,
+            v if v == Self::V9.version_no() => Self::V9,
+            v if v == Self::V10.version_no() => Self::V10,
+            v if v == Self::V11.version_no() => Self::V11,
+            v if v == Self::V12.version_no() => Self::V12,
+            v if v == Self::V13.version_no() => Self::V13,
+            v if v == Self::V14.version_no() => Self::V14,
+            v if v == Self::V15.version_no() => Self::V15,
+            v if v == Self::V16.version_no() => Self::V16,
+            _ => return Err(SegwitError::InvalidWitnessVersion(no)),
+        })
     }
 
     /// Converts [`WitnessVer`] instance into corresponding Bitcoin op-code.
