@@ -65,7 +65,7 @@ pub use tx::{
     Witness,
 };
 pub use types::{ScriptBytes, VarIntArray};
-pub use util::{Chain, NonStandardValue};
+pub use util::{Chain, ChainParseError, NonStandardValue};
 
 pub const LIB_NAME_BITCOIN: &str = "Bitcoin";
 
