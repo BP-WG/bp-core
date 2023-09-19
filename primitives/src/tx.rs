@@ -72,12 +72,14 @@ impl FromHex for Txid {
 pub struct Vout(u32);
 
 impl Vout {
+    #[inline]
     pub fn into_u32(self) -> u32 { self.0 }
 }
 
 impl FromStr for Vout {
     type Err = ParseIntError;
 
+    #[inline]
     fn from_str(s: &str) -> Result<Self, Self::Err> { s.parse().map(Self) }
 }
 
@@ -92,12 +94,16 @@ pub struct Outpoint {
 }
 
 impl Outpoint {
+    #[inline]
     pub fn new(txid: Txid, vout: impl Into<Vout>) -> Self {
         Self {
             txid,
             vout: vout.into(),
         }
     }
+
+    #[inline]
+    pub fn vout_u32(self) -> u32 { self.vout.into_u32() }
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Display, From, Error)]
