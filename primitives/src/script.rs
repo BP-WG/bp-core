@@ -20,6 +20,7 @@
 // limitations under the License.
 
 use amplify::confinement::Confined;
+use amplify::hex::{Error, FromHex};
 
 use crate::opcodes::*;
 use crate::{ScriptBytes, LIB_NAME_BITCOIN};
@@ -121,6 +122,15 @@ pub struct SigScript(
     ScriptBytes,
 );
 
+impl FromHex for SigScript {
+    fn from_hex(s: &str) -> Result<Self, Error> { ScriptBytes::from_hex(s).map(Self) }
+
+    fn from_byte_iter<I>(_: I) -> Result<Self, Error>
+    where I: Iterator<Item = Result<u8, Error>> + ExactSizeIterator + DoubleEndedIterator {
+        unreachable!()
+    }
+}
+
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
 #[wrapper(Deref, Index, RangeOps, BorrowSlice, LowerHex, UpperHex)]
 #[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
@@ -194,5 +204,14 @@ impl ScriptPubkey {
     /// Adds a single opcode to the script.
     pub fn push_opcode(&mut self, op_code: OpCode) {
         self.0.push(op_code as u8).expect("script exceeds 4GB");
+    }
+}
+
+impl FromHex for ScriptPubkey {
+    fn from_hex(s: &str) -> Result<Self, Error> { ScriptBytes::from_hex(s).map(Self) }
+
+    fn from_byte_iter<I>(_: I) -> Result<Self, Error>
+    where I: Iterator<Item = Result<u8, Error>> + ExactSizeIterator + DoubleEndedIterator {
+        unreachable!()
     }
 }

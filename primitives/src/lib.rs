@@ -71,7 +71,7 @@ mod types {
     use std::fmt::{Formatter, LowerHex, UpperHex};
 
     use amplify::confinement::{Confined, U32};
-    use amplify::hex::ToHex;
+    use amplify::hex::{Error, FromHex, ToHex};
 
     use super::LIB_NAME_BITCOIN;
     use crate::opcodes::*;
@@ -105,6 +105,15 @@ mod types {
     impl UpperHex for ScriptBytes {
         fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
             f.write_str(&self.0.as_inner().to_hex().to_uppercase())
+        }
+    }
+
+    impl FromHex for ScriptBytes {
+        fn from_hex(s: &str) -> Result<Self, Error> { Vec::<u8>::from_hex(s).map(Self::from) }
+        fn from_byte_iter<I>(_: I) -> Result<Self, Error>
+        where I: Iterator<Item = Result<u8, Error>> + ExactSizeIterator + DoubleEndedIterator
+        {
+            unreachable!()
         }
     }
 
