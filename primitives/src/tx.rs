@@ -164,6 +164,35 @@ impl Witness {
     }
 }
 
+#[cfg(feature = "serde")]
+mod _serde {
+    use serde::{Deserialize, Serialize};
+    use serde_crate::ser::SerializeSeq;
+    use serde_crate::{Deserializer, Serializer};
+
+    use super::*;
+    use crate::ScriptBytes;
+
+    impl Serialize for Witness {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer {
+            let mut ser = serializer.serialize_seq(Some(self.len()))?;
+            for el in &self.0 {
+                ser.serialize_element(&ScriptBytes::from(el.to_inner()))?;
+            }
+            ser.end()
+        }
+    }
+
+    impl<'de> Deserialize<'de> for Witness {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de> {
+            let data = Vec::<ScriptBytes>::deserialize(deserializer)?;
+            Ok(Witness::from_consensus_stack(data.into_iter().map(ScriptBytes::into_vec)))
+        }
+    }
+}
+
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
