@@ -145,14 +145,15 @@ impl SeqNo {
     pub const fn to_consensus_u32(&self) -> u32 { self.0 }
 }
 
-#[derive(Wrapper, Clone, Eq, PartialEq, Hash, Debug, From)]
+#[derive(Wrapper, Clone, Eq, PartialEq, Hash, Debug, From, Default)]
 #[wrapper(Deref, Index, RangeOps)]
-#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct Witness(VarIntArray<VarIntArray<u8>>);
 
 impl Witness {
+    pub fn new() -> Self { default!() }
+
     pub fn from_consensus_stack(witness: impl IntoIterator<Item = Vec<u8>>) -> Witness {
         let iter = witness.into_iter().map(|vec| {
             VarIntArray::try_from(vec).expect("witness stack element length exceeds 2^64 bytes")
