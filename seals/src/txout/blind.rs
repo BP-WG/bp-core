@@ -533,7 +533,7 @@ mod test {
         );
         assert_eq!(
             ChainBlindSeal::from_str("tapret1st:rvgbdg:5#0x78ca69"),
-            Err(ParseError::WrongTxid(hex::Error::InvalidChar(b'g')))
+            Err(ParseError::WrongTxid(hex::Error::InvalidChar(b'r')))
         );
         assert_eq!(
             ChainBlindSeal::from_str(
