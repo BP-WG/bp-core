@@ -19,12 +19,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use amplify::{Bytes32, Wrapper};
+use amplify::hex::{self, FromHex};
+use amplify::{Bytes32, Bytes32StrRev, Wrapper};
 
 use crate::LIB_NAME_BITCOIN;
 
-#[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Display, From)]
-#[display(LowerHex)]
+#[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, From)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
@@ -32,13 +32,19 @@ use crate::LIB_NAME_BITCOIN;
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-#[wrapper(BorrowSlice, Index, RangeOps)]
+#[wrapper(BorrowSlice, Index, RangeOps, Debug, LowerHex, UpperHex, Display, FromStr)]
 pub struct BlockHash(
     #[from]
     #[from([u8; 32])]
-    Bytes32,
+    Bytes32StrRev,
 );
-impl_sha256d_hashtype!(BlockHash, "BlockHash");
+
+impl FromHex for BlockHash {
+    fn from_byte_iter<I>(iter: I) -> Result<Self, hex::Error>
+    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
+        Bytes32StrRev::from_byte_iter(iter).map(Self)
+    }
+}
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[cfg_attr(
