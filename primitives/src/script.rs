@@ -219,11 +219,6 @@ impl FromHex for ScriptPubkey {
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default, Debug, From)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
 #[wrapper(Deref, Index, RangeOps, BorrowSlice)]
 #[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
 pub struct ScriptBytes(VarIntArray<u8>);
@@ -306,6 +301,39 @@ impl ScriptBytes {
             0x100..=0xffff => 3,
             // we don't care about oversized, the other fn will panic anyway
             _ => 5,
+        }
+    }
+}
+
+#[cfg(feature = "serde")]
+mod _serde {
+    use serde::{Deserialize, Serialize};
+    use serde_crate::de::Error;
+    use serde_crate::{Deserializer, Serializer};
+
+    use super::*;
+
+    impl Serialize for ScriptBytes {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer {
+            if serializer.is_human_readable() {
+                serializer.serialize_str(&self.to_hex())
+            } else {
+                serializer.serialize_bytes(self.as_slice())
+            }
+        }
+    }
+
+    impl<'de> Deserialize<'de> for ScriptBytes {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de> {
+            if deserializer.is_human_readable() {
+                String::deserialize(deserializer).and_then(|string| {
+                    Self::from_hex(&string).map_err(|_| D::Error::custom("wrong hex data"))
+                })
+            } else {
+                Vec::<u8>::deserialize(deserializer).map(ScriptBytes::from)
+            }
         }
     }
 }
