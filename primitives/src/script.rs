@@ -303,6 +303,8 @@ impl ScriptBytes {
             _ => 5,
         }
     }
+
+    pub fn into_vec(self) -> Vec<u8> { self.0.into_inner() }
 }
 
 #[cfg(feature = "serde")]
