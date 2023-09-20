@@ -214,10 +214,10 @@ pub struct TxIn {
     pub witness: Witness,
 }
 
-#[derive(Wrapper, WrapperMut, Copy, Clone, Eq, PartialEq, Hash, Debug, From)]
+#[derive(Wrapper, WrapperMut, Copy, Clone, Eq, PartialEq, Hash, Debug, From, Default)]
 #[wrapper(Add, Sub, Mul, Div, FromStr)]
 #[wrapper_mut(MathAssign)]
-#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
     feature = "serde",
@@ -237,6 +237,10 @@ impl Sats {
     pub const BTC: Self = Sats(1_000_000_00);
 
     pub const fn from_btc(btc: u32) -> Self { Self(btc as u64 * Self::BTC.0) }
+    pub fn from_sats(sats: impl Into<u64>) -> Self { Self(sats.into()) }
+
+    pub const fn is_zero(&self) -> bool { self.0 == 0 }
+    pub const fn is_non_zero(&self) -> bool { self.0 != 0 }
 
     pub const fn btc_round(&self) -> u64 {
         if self.0 == 0 {
@@ -262,6 +266,10 @@ impl Sats {
     }
 
     pub const fn sats(&self) -> u64 { self.0 }
+
+    pub fn sats_i64(&self) -> i64 {
+        i64::try_from(self.0).expect("amount of sats exceeds total bitcoin supply")
+    }
 
     pub const fn sats_rem(&self) -> u64 { self.0 % Self::BTC.0 }
 
@@ -302,6 +310,10 @@ impl Sats {
     pub fn saturating_sub_assign(&mut self, other: impl Into<Self>) {
         *self = self.0.saturating_sub(other.into().0).into();
     }
+}
+
+impl PartialEq<u64> for Sats {
+    fn eq(&self, other: &u64) -> bool { self.0.eq(other) }
 }
 
 impl Sum for Sats {
