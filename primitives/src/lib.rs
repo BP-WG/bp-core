@@ -60,7 +60,7 @@ pub use segwit::*;
 pub use taproot::*;
 pub use tx::{
     LockTime, Outpoint, OutpointParseError, Sats, SeqNo, Tx, TxIn, TxOut, TxVer, Txid, Vout,
-    Witness,
+    Witness, LOCKTIME_THRESHOLD,
 };
 pub use types::VarIntArray;
 pub use util::{Chain, ChainParseError, NonStandardValue};
