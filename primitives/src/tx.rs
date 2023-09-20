@@ -74,6 +74,8 @@ pub struct Vout(u32);
 impl Vout {
     #[inline]
     pub fn into_u32(self) -> u32 { self.0 }
+    #[inline]
+    pub fn into_usize(self) -> usize { self.0 as usize }
 }
 
 impl FromStr for Vout {
@@ -104,6 +106,9 @@ impl Outpoint {
 
     #[inline]
     pub fn vout_u32(self) -> u32 { self.vout.into_u32() }
+
+    #[inline]
+    pub fn vout_usize(self) -> usize { self.vout.into_usize() }
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Display, From, Error)]
