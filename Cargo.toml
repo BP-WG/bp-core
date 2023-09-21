@@ -21,7 +21,7 @@ edition = "2021"
 license = "Apache-2.0"
 
 [workspace.dependencies]
-amplify = "4.0.1"
+amplify = "4.0.2"
 strict_encoding = "2.5.0"
 commit_verify = "0.10.5"
 single_use_seals = "0.10.0"
@@ -72,3 +72,7 @@ stl = ["strict_types", "strict_types/base64", "bp-primitives/stl", "commit_verif
 
 [package.metadata.docs.rs]
 features = [ "all" ]
+
+[patch.crates-io]
+amplify = { git = "https://github.com/rust-amplify/rust-amplify", branch = "feat/array-reverse" }
+strict_encoding = { git = "https://github.com/strict-types/strict-encoding", branch = "chore/amplify-4.1.0" }

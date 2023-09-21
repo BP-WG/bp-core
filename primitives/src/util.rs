@@ -82,3 +82,13 @@ impl FromStr for Chain {
         })
     }
 }
+
+impl Chain {
+    #[inline]
+    pub fn is_test_chain(self) -> bool {
+        match self {
+            Chain::Bitcoin => false,
+            Chain::Testnet3 | Chain::Regtest | Chain::Signet => true,
+        }
+    }
+}
