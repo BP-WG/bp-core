@@ -383,7 +383,7 @@ impl TxVer {
     pub const fn is_standard(self) -> bool { self.0 <= TxVer::V2.0 }
 
     #[inline]
-    pub const fn to_consensus_u32(&self) -> i32 { self.0 }
+    pub const fn to_consensus_i32(&self) -> i32 { self.0 }
 }
 
 /// The Threshold for deciding whether a lock time value is a height or a time
