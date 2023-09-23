@@ -24,6 +24,7 @@ use std::fmt::{self, Debug, Display, Formatter};
 use std::iter::Sum;
 use std::num::ParseIntError;
 use std::str::FromStr;
+use std::vec;
 
 use amplify::hex::FromHex;
 use amplify::{hex, Bytes32StrRev, Wrapper};
@@ -163,8 +164,19 @@ impl SeqNo {
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 pub struct Witness(VarIntArray<VarIntArray<u8>>);
 
+impl IntoIterator for Witness {
+    type Item = VarIntArray<u8>;
+    type IntoIter = vec::IntoIter<VarIntArray<u8>>;
+
+    fn into_iter(self) -> Self::IntoIter { self.0.into_iter() }
+}
+
 impl Witness {
     pub fn new() -> Self { default!() }
+
+    pub fn elements(&self) -> impl Iterator<Item = &'_ [u8]> {
+        self.0.iter().map(|el| el.as_slice())
+    }
 
     pub fn from_consensus_stack(witness: impl IntoIterator<Item = Vec<u8>>) -> Witness {
         let iter = witness.into_iter().map(|vec| {
