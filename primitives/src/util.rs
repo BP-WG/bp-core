@@ -92,3 +92,26 @@ impl Chain {
         }
     }
 }
+
+/// A variable-length unsigned integer.
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug)]
+pub struct VarInt(pub u64);
+
+#[allow(clippy::len_without_is_empty)] // VarInt has on concept of 'is_empty'.
+impl VarInt {
+    pub fn with(u: impl Into<usize>) -> Self { VarInt(u.into() as u64) }
+
+    /// Gets the length of this VarInt when encoded.
+    ///
+    /// Returns 1 for 0..=0xFC, 3 for 0xFD..=(2^16-1), 5 for 0x10000..=(2^32-1),
+    /// and 9 otherwise.
+    #[inline]
+    pub const fn len(&self) -> usize {
+        match self.0 {
+            0..=0xFC => 1,
+            0xFD..=0xFFFF => 3,
+            0x10000..=0xFFFFFFFF => 5,
+            _ => 9,
+        }
+    }
+}

@@ -63,7 +63,7 @@ pub use tx::{
     Witness, LOCKTIME_THRESHOLD,
 };
 pub use types::VarIntArray;
-pub use util::{Chain, ChainParseError, NonStandardValue};
+pub use util::{Chain, ChainParseError, NonStandardValue, VarInt};
 
 pub const LIB_NAME_BITCOIN: &str = "Bitcoin";
 
