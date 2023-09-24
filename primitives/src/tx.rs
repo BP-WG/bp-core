@@ -363,6 +363,15 @@ pub struct TxOut {
     pub script_pubkey: ScriptPubkey,
 }
 
+impl TxOut {
+    pub fn new(script_pubkey: impl Into<ScriptPubkey>, value: impl Into<Sats>) -> Self {
+        TxOut {
+            script_pubkey: script_pubkey.into(),
+            value: value.into(),
+        }
+    }
+}
+
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
