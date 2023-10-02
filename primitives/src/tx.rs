@@ -233,7 +233,9 @@ pub struct TxIn {
     pub witness: Witness,
 }
 
-#[derive(Wrapper, WrapperMut, Copy, Clone, Eq, PartialEq, Hash, Debug, From, Default)]
+#[derive(
+    Wrapper, WrapperMut, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, From, Default
+)]
 #[wrapper(Add, Sub, Mul, Div, FromStr)]
 #[wrapper_mut(MathAssign)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
