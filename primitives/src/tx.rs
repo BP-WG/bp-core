@@ -19,6 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use core::slice;
 use std::cmp::Ordering;
 use std::fmt::{self, Debug, Display, Formatter};
 use std::iter::Sum;
@@ -509,6 +510,14 @@ pub struct Tx {
     pub inputs: VarIntArray<TxIn>,
     pub outputs: VarIntArray<TxOut>,
     pub lock_time: LockTime,
+}
+
+impl Tx {
+    #[inline]
+    pub fn inputs(&self) -> slice::Iter<TxIn> { self.inputs.iter() }
+
+    #[inline]
+    pub fn outputs(&self) -> slice::Iter<TxOut> { self.outputs.iter() }
 }
 
 #[cfg(test)]
