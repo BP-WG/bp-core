@@ -41,6 +41,7 @@ extern crate commit_verify;
 #[macro_use]
 extern crate serde_crate as serde;
 
+extern crate core;
 /// Re-export of `secp256k1` crate.
 pub extern crate secp256k1;
 
@@ -51,6 +52,7 @@ mod segwit;
 mod taproot;
 mod tx;
 mod util;
+mod weights;
 #[cfg(feature = "stl")]
 pub mod stl;
 
@@ -62,13 +64,24 @@ pub use tx::{
     LockTime, Outpoint, OutpointParseError, Sats, SeqNo, Tx, TxIn, TxOut, TxVer, Txid, Vout,
     Witness, LOCKTIME_THRESHOLD,
 };
-pub use types::VarIntArray;
+pub use types::{VarIntArray, VarIntSize};
 pub use util::{Chain, ChainParseError, NonStandardValue, VarInt};
+pub use weights::{VBytes, Weight, WeightUnits};
 
 pub const LIB_NAME_BITCOIN: &str = "Bitcoin";
 
 mod types {
     use amplify::confinement::{Confined, U32};
 
+    use crate::VarInt;
+
     pub type VarIntArray<T> = Confined<Vec<T>, 0, U32>;
+
+    pub trait VarIntSize {
+        fn var_int_size(&self) -> VarInt;
+    }
+
+    impl<T> VarIntSize for VarIntArray<T> {
+        fn var_int_size(&self) -> VarInt { VarInt::with(self.len()) }
+    }
 }
