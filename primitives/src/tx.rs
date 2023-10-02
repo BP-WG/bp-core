@@ -518,6 +518,9 @@ impl Tx {
 
     #[inline]
     pub fn outputs(&self) -> slice::Iter<TxOut> { self.outputs.iter() }
+
+    #[inline]
+    pub fn is_segwit(&self) -> bool { self.inputs().any(|txin| !txin.witness.is_empty()) }
 }
 
 #[cfg(test)]
