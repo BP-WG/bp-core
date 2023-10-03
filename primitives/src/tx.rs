@@ -471,8 +471,12 @@ impl PartialOrd for LockTime {
 }
 
 impl LockTime {
+    /// Zero time lock
+    pub const ZERO: Self = Self(0);
+
     /// Create zero time lock
     #[inline]
+    #[deprecated(since = "0.10.8", note = "use LockTime::ZERO")]
     pub const fn zero() -> Self { Self(0) }
 
     /// Creates absolute time lock with the given block height.
