@@ -39,7 +39,7 @@ impl<T> VarIntSize for VarIntArray<T> {
     fn var_int_size(&self) -> VarInt { VarInt::with(self.len()) }
 }
 
-#[derive(Clone, Debug, Display, Error, From)]
+#[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]
 #[display(inner)]
 pub enum ConsensusDecodeError {
     #[from]
@@ -51,7 +51,7 @@ pub enum ConsensusDecodeError {
     Data(ConsensusDataError),
 }
 
-#[derive(Clone, Debug, Display, Error, From)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Display, Error, From)]
 #[display(doc_comments)]
 pub enum ConsensusDataError {
     /// consensus data are followed by some excessive bytes
@@ -77,14 +77,11 @@ pub trait ConsensusDecode
 where Self: Sized
 {
     fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError>;
-    fn consensus_deserialize(bytes: impl AsRef<[u8]>) -> Result<Self, ConsensusDataError> {
+    fn consensus_deserialize(bytes: impl AsRef<[u8]>) -> Result<Self, ConsensusDecodeError> {
         let mut cursor = Cursor::new(bytes.as_ref());
-        let me = Self::consensus_decode(&mut cursor).map_err(|err| match err {
-            ConsensusDecodeError::Data(e) => e,
-            ConsensusDecodeError::Io(_) => unreachable!(),
-        })?;
+        let me = Self::consensus_decode(&mut cursor)?;
         if cursor.position() as usize != bytes.as_ref().len() {
-            return Err(ConsensusDataError::DataNotConsumed);
+            return Err(ConsensusDataError::DataNotConsumed.into());
         }
         Ok(me)
     }
@@ -489,5 +486,210 @@ impl ConsensusDecode for [u8; 32] {
         let mut buf = [0u8; 32];
         reader.read_exact(&mut buf)?;
         Ok(buf)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn serialize(t: &impl ConsensusEncode) -> Vec<u8> {
+        let mut vec = Vec::new();
+        t.consensus_encode(&mut vec).unwrap();
+        vec
+    }
+
+    fn deserialize<T: ConsensusDecode>(d: impl AsRef<[u8]>) -> Result<T, ConsensusDecodeError> {
+        T::consensus_deserialize(d)
+    }
+
+    fn deserialize_partial<T: ConsensusDecode>(
+        d: impl AsRef<[u8]>,
+    ) -> Result<T, ConsensusDataError> {
+        let mut cursor = Cursor::new(d.as_ref());
+        Ok(T::consensus_decode(&mut cursor).map_err(|err| match err {
+            ConsensusDecodeError::Data(e) => e,
+            ConsensusDecodeError::Io(_) => unreachable!(),
+        })?)
+    }
+
+    #[test]
+    fn serialize_int_test() {
+        // u8
+        assert_eq!(serialize(&1u8), vec![1u8]);
+        assert_eq!(serialize(&0u8), vec![0u8]);
+        assert_eq!(serialize(&255u8), vec![255u8]);
+        // u16
+        assert_eq!(serialize(&1u16), vec![1u8, 0]);
+        assert_eq!(serialize(&256u16), vec![0u8, 1]);
+        assert_eq!(serialize(&5000u16), vec![136u8, 19]);
+        // u32
+        assert_eq!(serialize(&1u32), vec![1u8, 0, 0, 0]);
+        assert_eq!(serialize(&256u32), vec![0u8, 1, 0, 0]);
+        assert_eq!(serialize(&5000u32), vec![136u8, 19, 0, 0]);
+        assert_eq!(serialize(&500000u32), vec![32u8, 161, 7, 0]);
+        assert_eq!(serialize(&168430090u32), vec![10u8, 10, 10, 10]);
+        // i32
+        assert_eq!(serialize(&-1i32), vec![255u8, 255, 255, 255]);
+        assert_eq!(serialize(&-256i32), vec![0u8, 255, 255, 255]);
+        assert_eq!(serialize(&-5000i32), vec![120u8, 236, 255, 255]);
+        assert_eq!(serialize(&-500000i32), vec![224u8, 94, 248, 255]);
+        assert_eq!(serialize(&-168430090i32), vec![246u8, 245, 245, 245]);
+        assert_eq!(serialize(&1i32), vec![1u8, 0, 0, 0]);
+        assert_eq!(serialize(&256i32), vec![0u8, 1, 0, 0]);
+        assert_eq!(serialize(&5000i32), vec![136u8, 19, 0, 0]);
+        assert_eq!(serialize(&500000i32), vec![32u8, 161, 7, 0]);
+        assert_eq!(serialize(&168430090i32), vec![10u8, 10, 10, 10]);
+        // u64
+        assert_eq!(serialize(&1u64), vec![1u8, 0, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(serialize(&256u64), vec![0u8, 1, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(serialize(&5000u64), vec![136u8, 19, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(serialize(&500000u64), vec![32u8, 161, 7, 0, 0, 0, 0, 0]);
+        assert_eq!(serialize(&723401728380766730u64), vec![10u8, 10, 10, 10, 10, 10, 10, 10]);
+    }
+
+    #[test]
+    fn serialize_varint_test() {
+        assert_eq!(serialize(&VarInt(10)), vec![10u8]);
+        assert_eq!(serialize(&VarInt(0xFC)), vec![0xFCu8]);
+        assert_eq!(serialize(&VarInt(0xFD)), vec![0xFDu8, 0xFD, 0]);
+        assert_eq!(serialize(&VarInt(0xFFF)), vec![0xFDu8, 0xFF, 0xF]);
+        assert_eq!(serialize(&VarInt(0xF0F0F0F)), vec![0xFEu8, 0xF, 0xF, 0xF, 0xF]);
+        assert_eq!(serialize(&VarInt(0xF0F0F0F0F0E0)), vec![
+            0xFFu8, 0xE0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0, 0
+        ]);
+        assert_eq!(
+            test_varint_encode(0xFF, &0x100000000_u64.to_le_bytes()).unwrap(),
+            VarInt(0x100000000)
+        );
+        assert_eq!(test_varint_encode(0xFE, &0x10000_u64.to_le_bytes()).unwrap(), VarInt(0x10000));
+        assert_eq!(test_varint_encode(0xFD, &0xFD_u64.to_le_bytes()).unwrap(), VarInt(0xFD));
+
+        // Test that length calc is working correctly
+        test_varint_len(VarInt(0), 1);
+        test_varint_len(VarInt(0xFC), 1);
+        test_varint_len(VarInt(0xFD), 3);
+        test_varint_len(VarInt(0xFFFF), 3);
+        test_varint_len(VarInt(0x10000), 5);
+        test_varint_len(VarInt(0xFFFFFFFF), 5);
+        test_varint_len(VarInt(0xFFFFFFFF + 1), 9);
+        test_varint_len(VarInt(u64::MAX), 9);
+    }
+
+    fn test_varint_len(varint: VarInt, expected: usize) {
+        let mut encoder = vec![];
+        assert_eq!(varint.consensus_encode(&mut encoder).unwrap(), expected);
+        assert_eq!(varint.len(), expected);
+    }
+
+    fn test_varint_encode(n: u8, x: &[u8]) -> Result<VarInt, ConsensusDataError> {
+        let mut input = [0u8; 9];
+        input[0] = n;
+        input[1..x.len() + 1].copy_from_slice(x);
+        deserialize_partial::<VarInt>(&input)
+    }
+
+    #[test]
+    fn deserialize_nonminimal_vec() {
+        // Check the edges for variant int
+        assert_eq!(
+            test_varint_encode(0xFF, &(0x100000000_u64 - 1).to_le_bytes()).unwrap_err(),
+            ConsensusDataError::NonMinimalVarInt
+        );
+        assert_eq!(
+            test_varint_encode(0xFE, &(0x10000_u64 - 1).to_le_bytes()).unwrap_err(),
+            ConsensusDataError::NonMinimalVarInt
+        );
+        assert_eq!(
+            test_varint_encode(0xFD, &(0xFD_u64 - 1).to_le_bytes()).unwrap_err(),
+            ConsensusDataError::NonMinimalVarInt
+        );
+
+        assert_eq!(
+            deserialize::<VarIntArray<u8>>(&[0xfd, 0x00, 0x00]).unwrap_err(),
+            ConsensusDataError::NonMinimalVarInt.into()
+        );
+        assert_eq!(
+            deserialize::<VarIntArray<u8>>(&[0xfd, 0xfc, 0x00]).unwrap_err(),
+            ConsensusDataError::NonMinimalVarInt.into()
+        );
+        assert_eq!(
+            deserialize::<VarIntArray<u8>>(&[0xfd, 0xfc, 0x00]).unwrap_err(),
+            ConsensusDataError::NonMinimalVarInt.into()
+        );
+        assert_eq!(
+            deserialize::<VarIntArray<u8>>(&[0xfe, 0xff, 0x00, 0x00, 0x00]).unwrap_err(),
+            ConsensusDataError::NonMinimalVarInt.into()
+        );
+        assert_eq!(
+            deserialize::<VarIntArray<u8>>(&[0xfe, 0xff, 0xff, 0x00, 0x00]).unwrap_err(),
+            ConsensusDataError::NonMinimalVarInt.into()
+        );
+        assert_eq!(
+            deserialize::<VarIntArray<u8>>(&[0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+                .unwrap_err(),
+            ConsensusDataError::NonMinimalVarInt.into()
+        );
+        assert_eq!(
+            deserialize::<VarIntArray<u8>>(&[0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00])
+                .unwrap_err(),
+            ConsensusDataError::NonMinimalVarInt.into()
+        );
+
+        let mut vec_256 = vec![0; 259];
+        vec_256[0] = 0xfd;
+        vec_256[1] = 0x00;
+        vec_256[2] = 0x01;
+        assert!(deserialize::<VarIntArray<u8>>(&vec_256).is_ok());
+
+        let mut vec_253 = vec![0; 256];
+        vec_253[0] = 0xfd;
+        vec_253[1] = 0xfd;
+        vec_253[2] = 0x00;
+        assert!(deserialize::<VarIntArray<u8>>(&vec_253).is_ok());
+    }
+
+    #[test]
+    fn deserialize_int_test() {
+        // u8
+        assert_eq!(deserialize(&[58u8]).ok(), Some(58u8));
+
+        // u16
+        assert_eq!(deserialize(&[0x01u8, 0x02]).ok(), Some(0x0201u16));
+        assert_eq!(deserialize(&[0xABu8, 0xCD]).ok(), Some(0xCDABu16));
+        assert_eq!(deserialize(&[0xA0u8, 0x0D]).ok(), Some(0xDA0u16));
+        let failure16: Result<u16, _> = deserialize(&[1u8]);
+        assert!(failure16.is_err());
+
+        // u32
+        assert_eq!(deserialize(&[0xABu8, 0xCD, 0, 0]).ok(), Some(0xCDABu32));
+        assert_eq!(deserialize(&[0xA0u8, 0x0D, 0xAB, 0xCD]).ok(), Some(0xCDAB0DA0u32));
+
+        let failure32: Result<u32, _> = deserialize(&[1u8, 2, 3]);
+        assert!(failure32.is_err());
+
+        // i32
+        assert_eq!(deserialize(&[0xABu8, 0xCD, 0, 0]).ok(), Some(0xCDABi32));
+        assert_eq!(deserialize(&[0xA0u8, 0x0D, 0xAB, 0x2D]).ok(), Some(0x2DAB0DA0i32));
+
+        assert_eq!(deserialize(&[0, 0, 0, 0]).ok(), Some(-0_i32));
+        assert_eq!(deserialize(&[0, 0, 0, 0]).ok(), Some(0_i32));
+
+        assert_eq!(deserialize(&[0xFF, 0xFF, 0xFF, 0xFF]).ok(), Some(-1_i32));
+        assert_eq!(deserialize(&[0xFE, 0xFF, 0xFF, 0xFF]).ok(), Some(-2_i32));
+        assert_eq!(deserialize(&[0x01, 0xFF, 0xFF, 0xFF]).ok(), Some(-255_i32));
+        assert_eq!(deserialize(&[0x02, 0xFF, 0xFF, 0xFF]).ok(), Some(-254_i32));
+
+        let failurei32: Result<i32, _> = deserialize(&[1u8, 2, 3]);
+        assert!(failurei32.is_err());
+
+        // u64
+        assert_eq!(deserialize(&[0xABu8, 0xCD, 0, 0, 0, 0, 0, 0]).ok(), Some(0xCDABu64));
+        assert_eq!(
+            deserialize(&[0xA0u8, 0x0D, 0xAB, 0xCD, 0x99, 0, 0, 0x99]).ok(),
+            Some(0x99000099CDAB0DA0u64)
+        );
+        let failure64: Result<u64, _> = deserialize(&[1u8, 2, 3, 4, 5, 6, 7]);
+        assert!(failure64.is_err());
     }
 }
