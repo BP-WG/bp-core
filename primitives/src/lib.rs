@@ -66,8 +66,8 @@ pub use script::{OpCode, ScriptBytes, ScriptPubkey, SigScript};
 pub use segwit::*;
 pub use taproot::*;
 pub use tx::{
-    LockTime, Outpoint, OutpointParseError, Sats, SeqNo, Tx, TxIn, TxOut, TxVer, Txid, Vout,
-    Witness, LOCKTIME_THRESHOLD,
+    LockTime, Outpoint, OutpointParseError, Sats, SeqNo, Tx, TxIn, TxOut, TxParseError, TxVer,
+    Txid, Vout, Witness, Wtxid, LOCKTIME_THRESHOLD,
 };
 pub use util::{Chain, ChainParseError, NonStandardValue, VarInt};
 pub use weights::{VBytes, Weight, WeightUnits};

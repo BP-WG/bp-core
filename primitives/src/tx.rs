@@ -21,7 +21,7 @@
 
 use core::slice;
 use std::cmp::Ordering;
-use std::fmt::{self, Debug, Display, Formatter};
+use std::fmt::{self, Debug, Display, Formatter, LowerHex};
 use std::iter::Sum;
 use std::num::ParseIntError;
 use std::str::FromStr;
@@ -31,7 +31,10 @@ use amplify::hex::FromHex;
 use amplify::{hex, Bytes32StrRev, RawArray, Wrapper};
 
 use super::{VarIntArray, LIB_NAME_BITCOIN};
-use crate::{NonStandardValue, ScriptPubkey, SigScript};
+use crate::{
+    ConsensusDecode, ConsensusDecodeError, ConsensusEncode, NonStandardValue, ScriptPubkey,
+    SigScript,
+};
 
 #[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, From)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
@@ -520,7 +523,7 @@ impl LockTime {
     pub const fn is_time_based(self) -> bool { !self.is_height_based() }
 }
 
-#[derive(Clone, Eq, PartialEq, Hash, Debug)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
@@ -528,11 +531,36 @@ impl LockTime {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", rename_all = "camelCase")
 )]
+#[display(LowerHex)]
 pub struct Tx {
     pub version: TxVer,
     pub inputs: VarIntArray<TxIn>,
     pub outputs: VarIntArray<TxOut>,
     pub lock_time: LockTime,
+}
+
+impl LowerHex for Tx {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.consensus_serialize().to_hex())
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]
+#[display(inner)]
+pub enum TxParseError {
+    #[from]
+    Hex(hex::Error),
+    #[from]
+    Consensus(ConsensusDecodeError),
+}
+
+impl FromStr for Tx {
+    type Err = TxParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let data = Vec::<u8>::from_hex(s)?;
+        Tx::consensus_deserialize(&data).map_err(TxParseError::from)
+    }
 }
 
 impl Tx {
