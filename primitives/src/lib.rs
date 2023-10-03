@@ -55,8 +55,13 @@ mod util;
 mod weights;
 #[cfg(feature = "stl")]
 pub mod stl;
+mod consensus;
 
 pub use block::{BlockHash, BlockHeader};
+pub use consensus::{
+    ConensusDecodeError, ConsensusDataError, ConsensusDecode, ConsensusEncode, VarIntArray,
+    VarIntSize,
+};
 pub use script::{OpCode, ScriptBytes, ScriptPubkey, SigScript};
 pub use segwit::*;
 pub use taproot::*;
@@ -64,24 +69,7 @@ pub use tx::{
     LockTime, Outpoint, OutpointParseError, Sats, SeqNo, Tx, TxIn, TxOut, TxVer, Txid, Vout,
     Witness, LOCKTIME_THRESHOLD,
 };
-pub use types::{VarIntArray, VarIntSize};
 pub use util::{Chain, ChainParseError, NonStandardValue, VarInt};
 pub use weights::{VBytes, Weight, WeightUnits};
 
 pub const LIB_NAME_BITCOIN: &str = "Bitcoin";
-
-mod types {
-    use amplify::confinement::{Confined, U32};
-
-    use crate::VarInt;
-
-    pub type VarIntArray<T> = Confined<Vec<T>, 0, U32>;
-
-    pub trait VarIntSize {
-        fn var_int_size(&self) -> VarInt;
-    }
-
-    impl<T> VarIntSize for VarIntArray<T> {
-        fn var_int_size(&self) -> VarInt { VarInt::with(self.len()) }
-    }
-}

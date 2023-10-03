@@ -133,6 +133,10 @@ impl FromHex for SigScript {
     }
 }
 
+impl SigScript {
+    pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
+}
+
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
 #[wrapper(Deref, Index, RangeOps, BorrowSlice, LowerHex, UpperHex)]
 #[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
@@ -205,6 +209,8 @@ impl ScriptPubkey {
 
     /// Adds a single opcode to the script.
     pub fn push_opcode(&mut self, op_code: OpCode) { self.0.push(op_code as u8) }
+
+    pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
 }
 
 impl FromHex for ScriptPubkey {
