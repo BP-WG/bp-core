@@ -27,8 +27,9 @@ use std::num::ParseIntError;
 use std::str::FromStr;
 use std::vec;
 
-use amplify::hex::FromHex;
-use amplify::{hex, Bytes32StrRev, RawArray, Wrapper};
+use amplify::hex::{self, FromHex, ToHex};
+use amplify::{Bytes32StrRev, RawArray, Wrapper};
+use commit_verify::{DigestExt, Sha256};
 
 use super::{VarIntArray, LIB_NAME_BITCOIN};
 use crate::{
@@ -62,6 +63,30 @@ impl Txid {
 }
 
 impl FromHex for Txid {
+    fn from_byte_iter<I>(iter: I) -> Result<Self, hex::Error>
+    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
+        Bytes32StrRev::from_byte_iter(iter).map(Self)
+    }
+}
+
+#[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, From)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
+#[derive(CommitEncode)]
+#[commit_encode(strategy = strict)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
+#[wrapper(BorrowSlice, Index, RangeOps, Debug, LowerHex, UpperHex, Display, FromStr)]
+pub struct Wtxid(
+    #[from]
+    #[from([u8; 32])]
+    Bytes32StrRev,
+);
+
+impl FromHex for Wtxid {
     fn from_byte_iter<I>(iter: I) -> Result<Self, hex::Error>
     where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
         Bytes32StrRev::from_byte_iter(iter).map(Self)
@@ -576,6 +601,62 @@ impl Tx {
 
     #[inline]
     pub fn is_segwit(&self) -> bool { self.inputs().any(|txin| !txin.witness.is_empty()) }
+
+    #[inline]
+    pub fn to_unsigned_tx(&self) -> Tx {
+        let mut tx = self.clone();
+        for input in &mut tx.inputs {
+            input.sig_script = SigScript::empty();
+            input.witness = empty!();
+        }
+        tx
+    }
+
+    /// Computes a "normalized TXID" which does not include any signatures.
+    ///
+    /// This gives a way to identify a transaction that is "the same" as
+    /// another in the sense of having same inputs and outputs.
+    pub fn ntxid(&self) -> [u8; 32] { self.to_unsigned_tx().txid().to_raw_array() }
+
+    /// Computes the [`Txid`].
+    ///
+    /// Hashes the transaction **excluding** the segwit data (i.e. the marker,
+    /// flag bytes, and the witness fields themselves). For non-segwit
+    /// transactions which do not have any segwit data, this will be equal
+    /// to [`Tx::wtxid()`].
+    pub fn txid(&self) -> Txid {
+        let mut enc = Sha256::default();
+        self.version
+            .consensus_encode(&mut enc)
+            .expect("engines don't error");
+        self.inputs
+            .consensus_encode(&mut enc)
+            .expect("engines don't error");
+        self.outputs
+            .consensus_encode(&mut enc)
+            .expect("engines don't error");
+        self.lock_time
+            .consensus_encode(&mut enc)
+            .expect("engines don't error");
+        let mut double = Sha256::default();
+        double.input_raw(&enc.finish());
+        Txid::from_raw_array(double.finish())
+    }
+
+    /// Computes the segwit version of the transaction id.
+    ///
+    /// Hashes the transaction **including** all segwit data (i.e. the marker,
+    /// flag bytes, and the witness fields themselves). For non-segwit
+    /// transactions which do not have any segwit data, this will be equal
+    /// to [`Transaction::txid()`].
+    pub fn wtxid(&self) -> Wtxid {
+        let mut enc = Sha256::default();
+        self.consensus_encode(&mut enc)
+            .expect("engines don't error");
+        let mut double = Sha256::default();
+        double.input_raw(&enc.finish());
+        Wtxid::from_raw_array(double.finish())
+    }
 }
 
 #[cfg(test)]
