@@ -25,8 +25,8 @@ use amplify::confinement::{Confined, U32};
 use amplify::{IoError, RawArray};
 
 use crate::{
-    LockTime, Sats, ScriptBytes, ScriptPubkey, SeqNo, SigScript, TxOut, TxVer, Txid, VarInt, Vout,
-    Witness,
+    LockTime, Outpoint, Sats, ScriptBytes, ScriptPubkey, SeqNo, SigScript, Tx, TxIn, TxOut, TxVer,
+    Txid, VarInt, Vout, Witness,
 };
 
 pub type VarIntArray<T> = Confined<Vec<T>, 0, U32>;
@@ -78,6 +78,26 @@ where Self: Sized
     }
 }
 
+impl ConsensusEncode for Tx {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        let mut counter = self.version.consensus_encode(writer)?;
+        if self.is_segwit() && !self.inputs.is_empty() {
+            0x00_u8.consensus_encode(writer)?;
+            0x01_u8.consensus_encode(writer)?;
+            counter += 2;
+        }
+        counter += self.inputs.consensus_encode(writer)?;
+        counter += self.outputs.consensus_encode(writer)?;
+        if self.is_segwit() {
+            for input in self.inputs() {
+                counter += input.witness.consensus_encode(writer)?;
+            }
+        }
+        counter += self.lock_time.consensus_encode(writer)?;
+        Ok(counter)
+    }
+}
+
 impl ConsensusEncode for TxVer {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
         writer.write_all(&self.to_consensus_i32().to_le_bytes())?;
@@ -85,10 +105,27 @@ impl ConsensusEncode for TxVer {
     }
 }
 
+impl ConsensusEncode for TxIn {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        let mut counter = self.prev_output.consensus_encode(writer)?;
+        counter += self.sig_script.consensus_encode(writer)?;
+        counter += self.sequence.consensus_encode(writer)?;
+        Ok(counter)
+    }
+}
+
 impl ConsensusEncode for TxOut {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
         let mut counter = self.value.consensus_encode(writer)?;
         counter += self.script_pubkey.consensus_encode(writer)?;
+        Ok(counter)
+    }
+}
+
+impl ConsensusEncode for Outpoint {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        let mut counter = self.txid.consensus_encode(writer)?;
+        counter += self.vout.consensus_encode(writer)?;
         Ok(counter)
     }
 }
@@ -217,6 +254,16 @@ impl ConsensusDecode for VarInt {
     }
 }
  */
+
+impl<T: ConsensusEncode> ConsensusEncode for VarIntArray<T> {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        let mut counter = self.var_int_size().consensus_encode(writer)?;
+        for item in self {
+            counter += item.consensus_encode(writer)?;
+        }
+        Ok(counter)
+    }
+}
 
 impl ConsensusEncode for u8 {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
