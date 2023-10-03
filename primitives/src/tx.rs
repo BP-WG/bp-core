@@ -78,14 +78,15 @@ impl FromHex for Txid {
 pub struct Vout(u32);
 
 impl Vout {
+    pub const fn from_u32(u: u32) -> Self { Vout(u) }
     #[inline]
-    pub fn into_u32(self) -> u32 { self.0 }
+    pub const fn into_u32(self) -> u32 { self.0 }
     #[inline]
-    pub fn into_usize(self) -> usize { self.0 as usize }
+    pub const fn into_usize(self) -> usize { self.0 as usize }
     #[inline]
-    pub fn to_u32(&self) -> u32 { self.0 }
+    pub const fn to_u32(&self) -> u32 { self.0 }
     #[inline]
-    pub fn to_usize(&self) -> usize { self.0 as usize }
+    pub const fn to_usize(&self) -> usize { self.0 as usize }
 }
 
 impl FromStr for Vout {
@@ -118,7 +119,7 @@ impl Outpoint {
     pub const fn coinbse() -> Self {
         Self {
             txid: Txid::coinbase(),
-            vout: Vout::from(0),
+            vout: Vout::from_u32(0),
         }
     }
 
