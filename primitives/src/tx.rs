@@ -28,7 +28,7 @@ use std::str::FromStr;
 use std::vec;
 
 use amplify::hex::FromHex;
-use amplify::{hex, Bytes32StrRev, Wrapper};
+use amplify::{hex, Bytes32StrRev, RawArray, Wrapper};
 
 use super::{VarIntArray, LIB_NAME_BITCOIN};
 use crate::{NonStandardValue, ScriptPubkey, SigScript};
@@ -52,7 +52,10 @@ pub struct Txid(
 );
 
 impl Txid {
-    pub fn coinbase() -> Self { Self(zero!()) }
+    #[inline]
+    pub const fn coinbase() -> Self { Self(Bytes32StrRev::zero()) }
+    #[inline]
+    pub fn is_coinbase(&self) -> bool { self.to_raw_array() == [0u8; 32] }
 }
 
 impl FromHex for Txid {
@@ -79,6 +82,10 @@ impl Vout {
     pub fn into_u32(self) -> u32 { self.0 }
     #[inline]
     pub fn into_usize(self) -> usize { self.0 as usize }
+    #[inline]
+    pub fn to_u32(&self) -> u32 { self.0 }
+    #[inline]
+    pub fn to_usize(&self) -> usize { self.0 as usize }
 }
 
 impl FromStr for Vout {
@@ -108,10 +115,21 @@ impl Outpoint {
     }
 
     #[inline]
+    pub const fn coinbse() -> Self {
+        Self {
+            txid: Txid::coinbase(),
+            vout: Vout::from(0),
+        }
+    }
+
+    #[inline]
     pub fn vout_u32(self) -> u32 { self.vout.into_u32() }
 
     #[inline]
     pub fn vout_usize(self) -> usize { self.vout.into_usize() }
+
+    #[inline]
+    pub fn is_coinbase(&self) -> bool { self.txid.is_coinbase() && self.vout.into_u32() == 0 }
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Display, From, Error)]
