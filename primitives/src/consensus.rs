@@ -54,19 +54,18 @@ pub enum ConsensusDecodeError {
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Display, Error, From)]
 #[display(doc_comments)]
 pub enum ConsensusDataError {
-    /// consensus data are followed by some excessive bytes
+    /// consensus data are followed by some excessive bytes.
     DataNotConsumed,
 
-    /// not a minimally-encoded variable integer
+    /// not a minimally-encoded variable integer.
     NonMinimalVarInt,
 
     #[from]
     #[display(inner)]
     Confined(confinement::Error),
 
-    /// invalid SegWit transaction encoding missing required flag 0x01 in the
-    /// six byte
-    InvalidSegWitEncoding,
+    /// unsupported Segwit flag {0}.
+    UnsupportedSegwitFlag(u8),
 }
 
 pub trait ConsensusEncode {
@@ -123,7 +122,7 @@ impl ConsensusDecode for Tx {
             // SegWit
             let flag = u8::consensus_decode(reader)?;
             if flag != 0x01 {
-                Err(ConsensusDataError::InvalidSegWitEncoding)?
+                Err(ConsensusDataError::UnsupportedSegwitFlag(flag))?
             }
             VarIntArray::<TxIn>::consensus_decode(reader)?
         } else {
@@ -135,13 +134,12 @@ impl ConsensusDecode for Tx {
             VarIntArray::try_from(inputs)?
         };
 
+        let outputs = VarIntArray::consensus_decode(reader)?;
         if segwit {
             for input in &mut inputs {
                 input.witness = Witness::consensus_decode(reader)?;
             }
         }
-
-        let outputs = VarIntArray::consensus_decode(reader)?;
         let lock_time = LockTime::consensus_decode(reader)?;
 
         Ok(Tx {

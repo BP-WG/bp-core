@@ -718,4 +718,104 @@ mod test {
         assert_eq!(Sats(110_000_000).sats(), 110_000_000);
         assert_eq!(Sats(110_000_000).sats_rem(), 10_000_000);
     }
+
+    #[test]
+    fn nonsegwit_transaction() {
+        let tx =
+            "0100000001a15d57094aa7a21a28cb20b59aab8fc7d1149a3bdbcddba9c622e4f5f6a99ece010000006c49\
+            3046022100f93bb0e7d8db7bd46e40132d1f8242026e045f03a0efe71bbb8e3f475e970d790221009337cd7\
+            f1f929f00cc6ff01f03729b069a7c21b59b1736ddfee5db5946c5da8c0121033b9b137ee87d5a812d6f506e\
+            fdd37f0affa7ffc310711c06c7f3e097c9447c52ffffffff0100e1f505000000001976a9140389035a9225b\
+            3839e2bbf32d826a1e222031fd888ac00000000";
+        let realtx = Tx::from_str(tx).unwrap();
+
+        assert_eq!(&realtx.to_string(), tx);
+        assert_eq!(&realtx.to_hex(), tx);
+        assert_eq!(&format!("{realtx:x}"), tx);
+
+        // All these tests aren't really needed because if they fail, the hash check at
+        // the end will also fail. But these will show you where the failure is
+        // so I'll leave them in.
+        assert_eq!(realtx.version, TxVer::V1);
+        assert_eq!(realtx.inputs.len(), 1);
+        // In particular this one is easy to get backward -- in bitcoin hashes are
+        // encoded as little-endian 256-bit numbers rather than as data strings.
+        assert_eq!(
+            format!("{:x}", realtx.inputs[0].prev_output.txid),
+            "ce9ea9f6f5e422c6a9dbcddb3b9a14d1c78fab9ab520cb281aa2a74a09575da1".to_string()
+        );
+        assert_eq!(realtx.inputs[0].prev_output.vout, Vout::from_u32(1));
+        assert_eq!(realtx.outputs.len(), 1);
+        assert_eq!(realtx.lock_time, LockTime::ZERO);
+
+        assert_eq!(
+            format!("{:x}", realtx.txid()),
+            "a6eab3c14ab5272a58a5ba91505ba1a4b6d7a3a9fcbd187b6cd99a7b6d548cb7".to_string()
+        );
+        assert_eq!(
+            format!("{:x}", realtx.wtxid()),
+            "a6eab3c14ab5272a58a5ba91505ba1a4b6d7a3a9fcbd187b6cd99a7b6d548cb7".to_string()
+        );
+        /* TODO: Enable once weight calculation is there
+        assert_eq!(realtx.weight().to_wu() as usize, tx_bytes.len() * WITNESS_SCALE_FACTOR);
+        assert_eq!(realtx.total_size(), tx_bytes.len());
+        assert_eq!(realtx.vsize(), tx_bytes.len());
+        assert_eq!(realtx.base_size(), tx_bytes.len());
+         */
+    }
+
+    #[test]
+    fn segwit_transaction() {
+        let tx =
+            "02000000000101595895ea20179de87052b4046dfe6fd515860505d6511a9004cf12a1f93cac7c01000000\
+            00ffffffff01deb807000000000017a9140f3444e271620c736808aa7b33e370bd87cb5a078702483045022\
+            100fb60dad8df4af2841adc0346638c16d0b8035f5e3f3753b88db122e70c79f9370220756e6633b17fd271\
+            0e626347d28d60b0a2d6cbb41de51740644b9fb3ba7751040121028fa937ca8cba2197a37c007176ed89410\
+            55d3bcb8627d085e94553e62f057dcc00000000";
+        let realtx = Tx::from_str(tx).unwrap();
+
+        assert_eq!(&realtx.to_string(), tx);
+        assert_eq!(&realtx.to_hex(), tx);
+        assert_eq!(&format!("{realtx:x}"), tx);
+
+        // All these tests aren't really needed because if they fail, the hash check at
+        // the end will also fail. But these will show you where the failure is
+        // so I'll leave them in.
+        assert_eq!(realtx.version, TxVer::V2);
+        assert_eq!(realtx.inputs.len(), 1);
+        // In particular this one is easy to get backward -- in bitcoin hashes are
+        // encoded as little-endian 256-bit numbers rather than as data strings.
+        assert_eq!(
+            format!("{:x}", realtx.inputs[0].prev_output.txid),
+            "7cac3cf9a112cf04901a51d605058615d56ffe6d04b45270e89d1720ea955859".to_string()
+        );
+        assert_eq!(realtx.inputs[0].prev_output.vout, Vout::from_u32(1));
+        assert_eq!(realtx.outputs.len(), 1);
+        assert_eq!(realtx.lock_time, LockTime::ZERO);
+
+        assert_eq!(
+            format!("{:x}", realtx.txid()),
+            "f5864806e3565c34d1b41e716f72609d00b55ea5eac5b924c9719a842ef42206".to_string()
+        );
+        assert_eq!(
+            format!("{:x}", realtx.wtxid()),
+            "80b7d8a82d5d5bf92905b06f2014dd699e03837ca172e3a59d51426ebbe3e7f5".to_string()
+        );
+
+        /* TODO: Enable once weight calculation is threr
+        const EXPECTED_WEIGHT: Weight = Weight::from_wu(442);
+        assert_eq!(realtx.weight(), EXPECTED_WEIGHT);
+        assert_eq!(realtx.total_size(), tx_bytes.len());
+        assert_eq!(realtx.vsize(), 111);
+
+        let expected_strippedsize = (442 - realtx.total_size()) / 3;
+        assert_eq!(realtx.base_size(), expected_strippedsize);
+
+        // Construct a transaction without the witness data.
+        let mut tx_without_witness = realtx;
+        tx_without_witness.input.iter_mut().for_each(|input| input.witness.clear());
+        assert_eq!(tx_without_witness.total_size(), tx_without_witness.total_size());
+        assert_eq!(tx_without_witness.total_size(), expected_strippedsize);
+         */
+    }
 }
