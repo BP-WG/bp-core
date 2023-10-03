@@ -94,11 +94,13 @@ impl Chain {
 }
 
 /// A variable-length unsigned integer.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct VarInt(pub u64);
 
 #[allow(clippy::len_without_is_empty)] // VarInt has on concept of 'is_empty'.
 impl VarInt {
+    pub const fn new(u: u64) -> Self { VarInt(u) }
+
     pub fn with(u: impl Into<usize>) -> Self { VarInt(u.into() as u64) }
 
     /// Gets the length of this VarInt when encoded.
@@ -114,4 +116,15 @@ impl VarInt {
             _ => 9,
         }
     }
+
+    pub const fn to_u64(&self) -> u64 { self.0 }
+    pub const fn into_u64(self) -> u64 { self.0 }
+    pub fn to_usize(&self) -> usize {
+        usize::try_from(self.0).expect("transaction too large for a non-64 bit platform")
+    }
+    pub fn into_usize(self) -> usize { self.to_usize() }
+}
+
+impl<U: Into<u64> + Copy> PartialEq<U> for VarInt {
+    fn eq(&self, other: &U) -> bool { self.0.eq(&(*other).into()) }
 }

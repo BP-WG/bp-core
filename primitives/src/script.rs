@@ -311,6 +311,8 @@ impl ScriptBytes {
     }
 
     pub fn into_vec(self) -> Vec<u8> { self.0.into_inner() }
+
+    pub(crate) fn as_var_int_array(&self) -> &VarIntArray<u8> { &self.0 }
 }
 
 #[cfg(feature = "serde")]

@@ -59,7 +59,7 @@ mod consensus;
 
 pub use block::{BlockHash, BlockHeader};
 pub use consensus::{
-    ConensusDecodeError, ConsensusDataError, ConsensusDecode, ConsensusEncode, VarIntArray,
+    ConsensusDataError, ConsensusDecode, ConsensusDecodeError, ConsensusEncode, VarIntArray,
     VarIntSize,
 };
 pub use script::{OpCode, ScriptBytes, ScriptPubkey, SigScript};

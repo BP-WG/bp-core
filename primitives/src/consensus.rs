@@ -22,7 +22,7 @@
 use std::io::{self, Cursor, Read, Write};
 
 use amplify::confinement::{Confined, U32};
-use amplify::{IoError, RawArray};
+use amplify::{confinement, IoError, RawArray, Wrapper};
 
 use crate::{
     LockTime, Outpoint, Sats, ScriptBytes, ScriptPubkey, SeqNo, SigScript, Tx, TxIn, TxOut, TxVer,
@@ -41,12 +41,13 @@ impl<T> VarIntSize for VarIntArray<T> {
 
 #[derive(Clone, Debug, Display, Error, From)]
 #[display(inner)]
-pub enum ConensusDecodeError {
+pub enum ConsensusDecodeError {
     #[from]
     #[from(io::Error)]
     Io(IoError),
 
     #[from]
+    #[from(confinement::Error)]
     Data(ConsensusDataError),
 }
 
@@ -55,6 +56,17 @@ pub enum ConensusDecodeError {
 pub enum ConsensusDataError {
     /// consensus data are followed by some excessive bytes
     DataNotConsumed,
+
+    /// not a minimally-encoded variable integer
+    NonMinimalVarInt,
+
+    #[from]
+    #[display(inner)]
+    Confined(confinement::Error),
+
+    /// invalid SegWit transaction encoding missing required flag 0x01 in the
+    /// six byte
+    InvalidSegWitEncoding,
 }
 
 pub trait ConsensusEncode {
@@ -64,12 +76,12 @@ pub trait ConsensusEncode {
 pub trait ConsensusDecode
 where Self: Sized
 {
-    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConensusDecodeError>;
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError>;
     fn consensus_deserialize(bytes: impl AsRef<[u8]>) -> Result<Self, ConsensusDataError> {
         let mut cursor = Cursor::new(bytes.as_ref());
         let me = Self::consensus_decode(&mut cursor).map_err(|err| match err {
-            ConensusDecodeError::Data(e) => e,
-            ConensusDecodeError::Io(_) => unreachable!(),
+            ConsensusDecodeError::Data(e) => e,
+            ConsensusDecodeError::Io(_) => unreachable!(),
         })?;
         if cursor.position() as usize != bytes.as_ref().len() {
             return Err(ConsensusDataError::DataNotConsumed);
@@ -98,10 +110,55 @@ impl ConsensusEncode for Tx {
     }
 }
 
+impl ConsensusDecode for Tx {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        let version = TxVer::consensus_decode(reader)?;
+        let prefix = VarInt::consensus_decode(reader)?;
+
+        let segwit = prefix == 0u8;
+        let mut inputs = if segwit {
+            // SegWit
+            let flag = u8::consensus_decode(reader)?;
+            if flag != 0x01 {
+                Err(ConsensusDataError::InvalidSegWitEncoding)?
+            }
+            VarIntArray::<TxIn>::consensus_decode(reader)?
+        } else {
+            // our prefix is the number of inputs
+            let mut inputs = Vec::with_capacity(prefix.to_usize());
+            for _ in 0..prefix.to_u64() {
+                inputs.push(TxIn::consensus_decode(reader)?);
+            }
+            VarIntArray::try_from(inputs)?
+        };
+
+        if segwit {
+            for input in &mut inputs {
+                input.witness = Witness::consensus_decode(reader)?;
+            }
+        }
+
+        let outputs = VarIntArray::consensus_decode(reader)?;
+        let lock_time = LockTime::consensus_decode(reader)?;
+
+        Ok(Tx {
+            version,
+            inputs,
+            outputs,
+            lock_time,
+        })
+    }
+}
+
 impl ConsensusEncode for TxVer {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
-        writer.write_all(&self.to_consensus_i32().to_le_bytes())?;
-        Ok(4)
+        self.to_consensus_i32().consensus_encode(writer)
+    }
+}
+
+impl ConsensusDecode for TxVer {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        i32::consensus_decode(reader).map(Self::from_consensus_i32)
     }
 }
 
@@ -114,11 +171,36 @@ impl ConsensusEncode for TxIn {
     }
 }
 
+impl ConsensusDecode for TxIn {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        let prev_output = Outpoint::consensus_decode(reader)?;
+        let sig_script = SigScript::consensus_decode(reader)?;
+        let sequence = SeqNo::consensus_decode(reader)?;
+        Ok(TxIn {
+            prev_output,
+            sig_script,
+            sequence,
+            witness: none!(),
+        })
+    }
+}
+
 impl ConsensusEncode for TxOut {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
         let mut counter = self.value.consensus_encode(writer)?;
         counter += self.script_pubkey.consensus_encode(writer)?;
         Ok(counter)
+    }
+}
+
+impl ConsensusDecode for TxOut {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        let value = Sats::consensus_decode(reader)?;
+        let script_pubkey = ScriptPubkey::consensus_decode(reader)?;
+        Ok(TxOut {
+            value,
+            script_pubkey,
+        })
     }
 }
 
@@ -130,10 +212,24 @@ impl ConsensusEncode for Outpoint {
     }
 }
 
+impl ConsensusDecode for Outpoint {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        let txid = Txid::consensus_decode(reader)?;
+        let vout = Vout::consensus_decode(reader)?;
+        Ok(Outpoint { txid, vout })
+    }
+}
+
 impl ConsensusEncode for Txid {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
         writer.write_all(&self.to_raw_array())?;
         Ok(32)
+    }
+}
+
+impl ConsensusDecode for Txid {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        <[u8; 32]>::consensus_decode(reader).map(Self::from)
     }
 }
 
@@ -143,9 +239,21 @@ impl ConsensusEncode for Vout {
     }
 }
 
+impl ConsensusDecode for Vout {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        u32::consensus_decode(reader).map(Self::from)
+    }
+}
+
 impl ConsensusEncode for SeqNo {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
         self.to_consensus_u32().consensus_encode(writer)
+    }
+}
+
+impl ConsensusDecode for SeqNo {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        u32::consensus_decode(reader).map(Self::from_consensus_u32)
     }
 }
 
@@ -155,10 +263,21 @@ impl ConsensusEncode for LockTime {
     }
 }
 
+impl ConsensusDecode for LockTime {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        u32::consensus_decode(reader).map(Self::from_consensus_u32)
+    }
+}
+
 impl ConsensusEncode for ScriptBytes {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
-        writer.write_all(&self[..])?;
-        Ok(self.len())
+        self.as_var_int_array().consensus_encode(writer)
+    }
+}
+
+impl ConsensusDecode for ScriptBytes {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        VarIntArray::consensus_decode(reader).map(Self::from_inner)
     }
 }
 
@@ -168,29 +287,45 @@ impl ConsensusEncode for ScriptPubkey {
     }
 }
 
+impl ConsensusDecode for ScriptPubkey {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        ScriptBytes::consensus_decode(reader).map(Self::from_inner)
+    }
+}
+
 impl ConsensusEncode for SigScript {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
         self.as_script_bytes().consensus_encode(writer)
     }
 }
 
+impl ConsensusDecode for SigScript {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        ScriptBytes::consensus_decode(reader).map(Self::from_inner)
+    }
+}
+
 impl ConsensusEncode for Witness {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
-        let mut counter = 0;
-        counter += self.len().consensus_encode(writer)?;
-        for el in self.elements() {
-            let len = el.len();
-            counter += len.consensus_encode(writer)?;
-            writer.write_all(el)?;
-            counter += len;
-        }
-        Ok(counter)
+        self.as_var_int_array().consensus_encode(writer)
+    }
+}
+
+impl ConsensusDecode for Witness {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        VarIntArray::consensus_decode(reader).map(Self::from_inner)
     }
 }
 
 impl ConsensusEncode for Sats {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
         self.0.consensus_encode(writer)
+    }
+}
+
+impl ConsensusDecode for Sats {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        u64::consensus_decode(reader).map(Self)
     }
 }
 
@@ -220,31 +355,30 @@ impl ConsensusEncode for VarInt {
     }
 }
 
-/*
 impl ConsensusDecode for VarInt {
     fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
-        let n = u8::decode(reader)?;
+        let n = u8::consensus_decode(reader)?;
         match n {
             0xFF => {
-                let x = u64::decode(reader)?;
+                let x = u64::consensus_decode(reader)?;
                 if x < 0x100000000 {
-                    Err(self::Error::NonMinimalVarInt)
+                    Err(ConsensusDataError::NonMinimalVarInt)?
                 } else {
-                    Ok(VarInt::with(x))
+                    Ok(VarInt::new(x))
                 }
             }
             0xFE => {
-                let x = u32::decode(reader)?;
+                let x = u32::consensus_decode(reader)?;
                 if x < 0x10000 {
-                    Err(self::Error::NonMinimalVarInt)
+                    Err(ConsensusDataError::NonMinimalVarInt)?
                 } else {
-                    Ok(VarInt::with(x))
+                    Ok(VarInt::new(x as u64))
                 }
             }
             0xFD => {
-                let x = u16::decode(reader)?;
+                let x = u16::consensus_decode(reader)?;
                 if x < 0xFD {
-                    Err(self::Error::NonMinimalVarInt)
+                    Err(ConsensusDataError::NonMinimalVarInt)?
                 } else {
                     Ok(VarInt::with(x))
                 }
@@ -253,7 +387,6 @@ impl ConsensusDecode for VarInt {
         }
     }
 }
- */
 
 impl<T: ConsensusEncode> ConsensusEncode for VarIntArray<T> {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
@@ -265,10 +398,29 @@ impl<T: ConsensusEncode> ConsensusEncode for VarIntArray<T> {
     }
 }
 
+impl<T: ConsensusDecode> ConsensusDecode for VarIntArray<T> {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        let len = VarInt::consensus_decode(reader)?;
+        let mut arr = Vec::new();
+        for _ in 0..len.0 {
+            arr.push(T::consensus_decode(reader)?);
+        }
+        VarIntArray::try_from(arr).map_err(ConsensusDecodeError::from)
+    }
+}
+
 impl ConsensusEncode for u8 {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
         writer.write_all(&[*self])?;
         Ok(1)
+    }
+}
+
+impl ConsensusDecode for u8 {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        let mut buf = [0u8; (Self::BITS / 8) as usize];
+        reader.read_exact(&mut buf)?;
+        Ok(Self::from_le_bytes(buf))
     }
 }
 
@@ -279,10 +431,41 @@ impl ConsensusEncode for u16 {
     }
 }
 
+impl ConsensusDecode for u16 {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        let mut buf = [0u8; (Self::BITS / 8) as usize];
+        reader.read_exact(&mut buf)?;
+        Ok(Self::from_le_bytes(buf))
+    }
+}
+
 impl ConsensusEncode for u32 {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
         writer.write_all(&self.to_le_bytes())?;
         Ok(4)
+    }
+}
+
+impl ConsensusDecode for u32 {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        let mut buf = [0u8; (Self::BITS / 8) as usize];
+        reader.read_exact(&mut buf)?;
+        Ok(Self::from_le_bytes(buf))
+    }
+}
+
+impl ConsensusEncode for i32 {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        writer.write_all(&self.to_le_bytes())?;
+        Ok(4)
+    }
+}
+
+impl ConsensusDecode for i32 {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        let mut buf = [0u8; (Self::BITS / 8) as usize];
+        reader.read_exact(&mut buf)?;
+        Ok(Self::from_le_bytes(buf))
     }
 }
 
@@ -293,8 +476,18 @@ impl ConsensusEncode for u64 {
     }
 }
 
-impl ConsensusEncode for usize {
-    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
-        VarInt::with(*self).consensus_encode(writer)
+impl ConsensusDecode for u64 {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        let mut buf = [0u8; (Self::BITS / 8) as usize];
+        reader.read_exact(&mut buf)?;
+        Ok(Self::from_le_bytes(buf))
+    }
+}
+
+impl ConsensusDecode for [u8; 32] {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        let mut buf = [0u8; 32];
+        reader.read_exact(&mut buf)?;
+        Ok(buf)
     }
 }

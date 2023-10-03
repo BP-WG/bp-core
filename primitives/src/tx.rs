@@ -187,6 +187,8 @@ impl Witness {
             VarIntArray::try_from_iter(iter).expect("witness stack size exceeds 2^64 bytes");
         Witness(stack)
     }
+
+    pub(crate) fn as_var_int_array(&self) -> &VarIntArray<VarIntArray<u8>> { &self.0 }
 }
 
 #[cfg(feature = "serde")]
