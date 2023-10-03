@@ -134,6 +134,7 @@ impl FromHex for SigScript {
 }
 
 impl SigScript {
+    pub fn empty() -> Self { SigScript::default() }
     pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
 }
 
