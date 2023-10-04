@@ -53,6 +53,10 @@ pub const MIDSTATE_TAPTWEAK: [u8; 8] = *b"TapTweak";
 pub const MIDSTATE_TAPSIGHASH: [u8; 10] = *b"TapSighash";
 // f504a425d7f8783b1363868ae3e556586eee945dbc7888dd02a6e2c31873fe9f
 
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Display, Error)]
+#[display("invalid public key")]
+pub struct InvalidPubkey;
+
 #[derive(Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, LowerHex, Display, FromStr)]
 #[wrapper_mut(DerefMut)]
@@ -66,6 +70,14 @@ pub const MIDSTATE_TAPSIGHASH: [u8; 10] = *b"TapSighash";
 pub struct InternalPk(XOnlyPublicKey);
 
 impl InternalPk {
+    pub fn from_byte_array(data: [u8; 32]) -> Result<Self, InvalidPubkey> {
+        XOnlyPublicKey::from_slice(data.as_ref())
+            .map(Self)
+            .map_err(|_| InvalidPubkey)
+    }
+
+    pub fn to_byte_array(&self) -> [u8; 32] { self.0.serialize() }
+
     pub fn to_output_key(&self, merkle_root: Option<impl IntoTapHash>) -> XOnlyPublicKey {
         let mut engine = Sha256::from_tag(MIDSTATE_TAPTWEAK);
         // always hash the key
