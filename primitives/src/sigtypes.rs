@@ -23,13 +23,7 @@ use std::iter;
 
 use secp256k1::{ecdsa, schnorr};
 
-use crate::LIB_NAME_BITCOIN;
-
-/// This type is consensus valid but an input including it would prevent the
-/// transaction from being relayed on today's Bitcoin network.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Display, Error)]
-#[display("non-standard SIGHASH_TYPE value {0:#X}")]
-pub struct NonStandardSighashType(pub u32);
+use crate::{NonStandardValue, LIB_NAME_BITCOIN};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash, Default)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
@@ -144,7 +138,7 @@ impl SighashType {
     /// # Errors
     ///
     /// If `n` is a non-standard sighash value.
-    pub fn from_standard_u32(n: u32) -> Result<SighashType, NonStandardSighashType> {
+    pub fn from_standard_u32(n: u32) -> Result<SighashType, NonStandardValue<u32>> {
         let (flag, anyone_can_pay) = match n {
             // Standard sighashes, see https://github.com/bitcoin/bitcoin/blob/b805dbb0b9c90dadef0424e5b3bf86ac308e103e/src/script/interpreter.cpp#L189-L198
             0x01 => (SighashFlag::All, false),
@@ -153,7 +147,7 @@ impl SighashType {
             0x81 => (SighashFlag::All, true),
             0x82 => (SighashFlag::None, true),
             0x83 => (SighashFlag::Single, true),
-            non_standard => return Err(NonStandardSighashType(non_standard)),
+            non_standard => return Err(NonStandardValue::with(non_standard, "SighashType")),
         };
         Ok(SighashType {
             flag,
@@ -195,7 +189,7 @@ pub enum SigError {
     /// Non-standard sighash type.
     #[display(inner)]
     #[from]
-    SighashType(NonStandardSighashType),
+    SighashType(NonStandardValue<u32>),
 
     /// empty signature.
     EmptySignature,

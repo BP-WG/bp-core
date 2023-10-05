@@ -23,7 +23,6 @@
 // TODO: Complete taproot consensus structure implementation (ControlBlock)
 // TODO: Complete block data type implementation
 // TODO: Add VarBytes data type
-// TODO: Use NonStandardValue instead of NonStandardSighashType
 // TODO: Do a no-std feature
 // TODO: Complete OpCode structure implementation
 // TODO: Move consensus-level timelocks and sequence locks from other libraries
@@ -75,9 +74,7 @@ pub use coding::{
 };
 pub use script::{OpCode, RedeemScript, ScriptBytes, ScriptPubkey, SigScript};
 pub use segwit::{SegwitError, Witness, WitnessProgram, WitnessScript, WitnessVer, Wtxid};
-pub use sigtypes::{
-    Bip340Sig, LegacySig, NonStandardSighashType, SigError, SighashFlag, SighashType,
-};
+pub use sigtypes::{Bip340Sig, LegacySig, SigError, SighashFlag, SighashType};
 pub use taproot::{
     FutureLeafVer, InternalPk, IntoTapHash, InvalidLeafVer, LeafScript, LeafVer, TapBranchHash,
     TapCode, TapLeafHash, TapMerklePath, TapNodeHash, TapScript, TAPROOT_ANNEX_PREFIX,
