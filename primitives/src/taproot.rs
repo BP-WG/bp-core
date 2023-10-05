@@ -454,6 +454,8 @@ impl TapScript {
 
     /// Adds a single opcode to the script.
     pub fn push_opcode(&mut self, op_code: TapCode) { self.0.push(op_code as u8); }
+
+    pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
 }
 
 impl ScriptPubkey {
