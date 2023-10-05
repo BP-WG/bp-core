@@ -25,16 +25,14 @@ use std::fmt::{self, Debug, Display, Formatter, LowerHex};
 use std::iter::Sum;
 use std::num::ParseIntError;
 use std::str::FromStr;
-use std::vec;
 
 use amplify::hex::{self, FromHex, ToHex};
 use amplify::{Bytes32StrRev, RawArray, Wrapper};
 use commit_verify::{DigestExt, Sha256};
 
-use super::{VarIntArray, LIB_NAME_BITCOIN};
 use crate::{
     ConsensusDecode, ConsensusDecodeError, ConsensusEncode, NonStandardValue, ScriptPubkey,
-    SigScript,
+    SigScript, VarIntArray, Witness, Wtxid, LIB_NAME_BITCOIN,
 };
 
 #[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, From)]
@@ -63,30 +61,6 @@ impl Txid {
 }
 
 impl FromHex for Txid {
-    fn from_byte_iter<I>(iter: I) -> Result<Self, hex::Error>
-    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
-        Bytes32StrRev::from_byte_iter(iter).map(Self)
-    }
-}
-
-#[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, From)]
-#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BITCOIN)]
-#[derive(CommitEncode)]
-#[commit_encode(strategy = strict)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
-#[wrapper(BorrowSlice, Index, RangeOps, Debug, LowerHex, UpperHex, Display, FromStr)]
-pub struct Wtxid(
-    #[from]
-    #[from([u8; 32])]
-    Bytes32StrRev,
-);
-
-impl FromHex for Wtxid {
     fn from_byte_iter<I>(iter: I) -> Result<Self, hex::Error>
     where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
         Bytes32StrRev::from_byte_iter(iter).map(Self)
@@ -204,67 +178,6 @@ impl SeqNo {
 
     #[inline]
     pub const fn to_consensus_u32(&self) -> u32 { self.0 }
-}
-
-#[derive(Wrapper, Clone, Eq, PartialEq, Hash, Debug, From, Default)]
-#[wrapper(Deref, Index, RangeOps)]
-#[derive(StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BITCOIN)]
-pub struct Witness(VarIntArray<VarIntArray<u8>>);
-
-impl IntoIterator for Witness {
-    type Item = VarIntArray<u8>;
-    type IntoIter = vec::IntoIter<VarIntArray<u8>>;
-
-    fn into_iter(self) -> Self::IntoIter { self.0.into_iter() }
-}
-
-impl Witness {
-    pub fn new() -> Self { default!() }
-
-    pub fn elements(&self) -> impl Iterator<Item = &'_ [u8]> {
-        self.0.iter().map(|el| el.as_slice())
-    }
-
-    pub fn from_consensus_stack(witness: impl IntoIterator<Item = Vec<u8>>) -> Witness {
-        let iter = witness.into_iter().map(|vec| {
-            VarIntArray::try_from(vec).expect("witness stack element length exceeds 2^64 bytes")
-        });
-        let stack =
-            VarIntArray::try_from_iter(iter).expect("witness stack size exceeds 2^64 bytes");
-        Witness(stack)
-    }
-
-    pub(crate) fn as_var_int_array(&self) -> &VarIntArray<VarIntArray<u8>> { &self.0 }
-}
-
-#[cfg(feature = "serde")]
-mod _serde {
-    use serde::{Deserialize, Serialize};
-    use serde_crate::ser::SerializeSeq;
-    use serde_crate::{Deserializer, Serializer};
-
-    use super::*;
-    use crate::ScriptBytes;
-
-    impl Serialize for Witness {
-        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer {
-            let mut ser = serializer.serialize_seq(Some(self.len()))?;
-            for el in &self.0 {
-                ser.serialize_element(&ScriptBytes::from(el.to_inner()))?;
-            }
-            ser.end()
-        }
-    }
-
-    impl<'de> Deserialize<'de> for Witness {
-        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer<'de> {
-            let data = Vec::<ScriptBytes>::deserialize(deserializer)?;
-            Ok(Witness::from_consensus_stack(data.into_iter().map(ScriptBytes::into_vec)))
-        }
-    }
 }
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]

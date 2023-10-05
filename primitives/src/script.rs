@@ -231,42 +231,6 @@ impl FromHex for ScriptPubkey {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct WitnessScript(
-    #[from]
-    #[from(Vec<u8>)]
-    ScriptBytes,
-);
-
-impl WitnessScript {
-    pub fn new() -> Self { Self::default() }
-
-    pub fn with_capacity(capacity: usize) -> Self {
-        Self(ScriptBytes::from(Confined::with_capacity(capacity)))
-    }
-
-    /// Adds a single opcode to the script.
-    pub fn push_opcode(&mut self, op_code: OpCode) { self.0.push(op_code as u8); }
-
-    pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
-}
-
-impl FromHex for WitnessScript {
-    fn from_hex(s: &str) -> Result<Self, hex::Error> { ScriptBytes::from_hex(s).map(Self) }
-
-    fn from_byte_iter<I>(_: I) -> Result<Self, hex::Error>
-    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
-        unreachable!()
-    }
-}
-
-#[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
-#[wrapper(Deref, Index, RangeOps, BorrowSlice, LowerHex, UpperHex)]
-#[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
 pub struct RedeemScript(
     #[from]
     #[from(Vec<u8>)]
@@ -362,10 +326,10 @@ impl ScriptBytes {
     }
 
     #[inline]
-    fn push(&mut self, data: u8) { self.0.push(data).expect("script exceeds 4GB") }
+    pub(crate) fn push(&mut self, data: u8) { self.0.push(data).expect("script exceeds 4GB") }
 
     #[inline]
-    fn extend(&mut self, data: &[u8]) {
+    pub(crate) fn extend(&mut self, data: &[u8]) {
         self.0
             .extend(data.iter().copied())
             .expect("script exceeds 4GB")

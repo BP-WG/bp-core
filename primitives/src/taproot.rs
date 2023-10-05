@@ -421,9 +421,7 @@ impl TapScript {
     }
 
     /// Adds a single opcode to the script.
-    pub fn push_opcode(&mut self, op_code: TapCode) {
-        self.0.push(op_code as u8).expect("script exceeds 4GB");
-    }
+    pub fn push_opcode(&mut self, op_code: TapCode) { self.0.push(op_code as u8); }
 }
 
 impl ScriptPubkey {

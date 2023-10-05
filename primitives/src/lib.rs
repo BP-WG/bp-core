@@ -63,15 +63,15 @@ pub use consensus::{
     ConsensusDataError, ConsensusDecode, ConsensusDecodeError, ConsensusEncode, VarIntArray,
     VarIntSize,
 };
-pub use script::{OpCode, RedeemScript, ScriptBytes, ScriptPubkey, SigScript, WitnessScript};
-pub use segwit::*;
+pub use script::{OpCode, RedeemScript, ScriptBytes, ScriptPubkey, SigScript};
+pub use segwit::{SegwitError, Witness, WitnessProgram, WitnessScript, WitnessVer, Wtxid};
 pub use sigtypes::{
     Bip340Sig, LegacySig, NonStandardSighashType, SigError, SighashFlag, SighashType,
 };
 pub use taproot::*;
 pub use tx::{
     LockTime, Outpoint, OutpointParseError, Sats, SeqNo, Tx, TxIn, TxOut, TxParseError, TxVer,
-    Txid, Vout, Witness, Wtxid, LOCKTIME_THRESHOLD,
+    Txid, Vout, LOCKTIME_THRESHOLD,
 };
 pub use util::{Chain, ChainParseError, NonStandardValue, VarInt};
 pub use weights::{VBytes, Weight, WeightUnits};
