@@ -214,15 +214,15 @@ pub struct WitnessProgram {
     /// The witness program version.
     version: WitnessVer,
     /// The witness program. (Between 2 and 40 bytes)
-    program: Vec<u8>,
+    program: Confined<Vec<u8>, 2, 40>,
 }
 
 impl WitnessProgram {
     /// Creates a new witness program.
     pub fn new(version: WitnessVer, program: Vec<u8>) -> Result<Self, SegwitError> {
-        if program.len() < 2 || program.len() > 40 {
-            return Err(SegwitError::InvalidWitnessProgramLength(program.len()));
-        }
+        let len = program.len();
+        let program = Confined::try_from(program)
+            .map_err(|_| SegwitError::InvalidWitnessProgramLength(len))?;
 
         // Specific segwit v0 check. These addresses can never spend funds sent
         // to them.
