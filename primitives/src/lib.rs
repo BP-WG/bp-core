@@ -21,7 +21,7 @@
 
 // Version 0.10.10:
 // TODO: Ensure all serde uses both string and binary version
-// TODO: Complete taproot consensus structure implementation (ControlBlock)
+// TODO: Complete consensus encoding for taproot data
 // TODO: Complete block data type implementation
 // TODO: Move consensus-level timelocks and sequence locks from other libraries
 // Version 1.0:
@@ -77,9 +77,9 @@ pub use script::{OpCode, RedeemScript, ScriptBytes, ScriptPubkey, SigScript};
 pub use segwit::{SegwitError, Witness, WitnessProgram, WitnessScript, WitnessVer, Wtxid};
 pub use sigtypes::{Bip340Sig, LegacySig, SigError, SighashFlag, SighashType};
 pub use taproot::{
-    FutureLeafVer, InternalPk, IntoTapHash, InvalidLeafVer, LeafScript, LeafVer, TapBranchHash,
-    TapCode, TapLeafHash, TapMerklePath, TapNodeHash, TapScript, TAPROOT_ANNEX_PREFIX,
-    TAPROOT_LEAF_MASK, TAPROOT_LEAF_TAPSCRIPT,
+    ControlBlock, FutureLeafVer, InternalPk, IntoTapHash, InvalidLeafVer, LeafScript, LeafVer,
+    Parity, TapBranchHash, TapCode, TapLeafHash, TapMerklePath, TapNodeHash, TapScript,
+    TAPROOT_ANNEX_PREFIX, TAPROOT_LEAF_MASK, TAPROOT_LEAF_TAPSCRIPT,
 };
 pub use tx::{
     LockTime, Outpoint, OutpointParseError, Sats, SeqNo, Tx, TxIn, TxOut, TxParseError, TxVer,

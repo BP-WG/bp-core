@@ -1,5 +1,5 @@
 {-
-  Id: urn:ubideco:stl:DrkRxZuxVjPSc5CtPmXhxQ14wyfVDz787WEfdrgqgffB#gray-prepare-proton
+  Id: urn:ubideco:stl:A6tfQFthqmb39wR5sWvrfgf3oiAyazm8rh7ff35ruioi#russian-emerald-extra
   Name: Bitcoin
   Version: 0.1.0
   Description: Consensus library for bitcoin protocol
@@ -32,6 +32,11 @@ data ByteStr          :: [Byte ^ ..0xffffffff]
 -- urn:ubideco:semid:6aRP3odHaTGySvSWHjreC8HsbX5ss9LxkQqwcjaoxhpv#aspirin-brown-alpine
 data Chain            :: bitcoin:0 | regtest:128 | testnet3:131 | signet:132
 
+-- urn:ubideco:semid:C7rC7icVsoUF43k8QpzxWSx6BAbT8uyY2PWGjsQuf2kd#mega-optic-type
+data ControlBlock     :: leafVersion LeafVer
+                       , outputKeyParity Parity
+                       , internalKey InternalPk
+                       , merkleBranch TapMerklePath
 -- urn:ubideco:semid:CvDS9EgqtBkWLvADynNeR7VGwVAy14EXViKnLaBkqtac#student-formula-circus
 data FutureLeafVer    :: U8
 -- urn:ubideco:semid:G5HFVaWwWNYSzqk548JgGZ8WKy6dQ2ftVgkJvHjgRudZ#horse-major-vienna
@@ -53,6 +58,9 @@ data OpCode           :: pushBytes0:0 | pushBytes32:32 | pushData1:76 | pushData
 
 -- urn:ubideco:semid:FWt2MSo8A4nsYgYbuBqMRNLiKgtzvLBgUn774iKzTcuf#pocket-pegasus-frank
 data Outpoint         :: txid Txid, vout Vout
+-- urn:ubideco:semid:AgJ5n58hrH761B4MV7giZ1FhMipaDrUmnFYCLno74HDy#method-editor-echo
+data Parity           :: even:0 | odd:1
+
 -- urn:ubideco:semid:85m9Qv56neQKaqiPSZ8G8NPWz5DDeJeeXhBwnUpcZGug#delta-jumbo-clone
 data RedeemScript     :: ScriptBytes
 -- urn:ubideco:semid:BEBz6h7AGjYSDRCxVHnjYkkkxzBsjN3EvyNiD4ZrzmRL#pyramid-spray-star

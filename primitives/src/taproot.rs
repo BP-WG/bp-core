@@ -23,6 +23,7 @@
 
 use std::borrow::Borrow;
 use std::fmt::{self, Formatter, LowerHex, UpperHex};
+use std::ops::BitXor;
 use std::{cmp, io};
 
 use amplify::confinement::{Confined, U32};
@@ -456,4 +457,82 @@ impl ScriptPubkey {
     pub fn is_p2tr(&self) -> bool {
         self.len() == 34 && self[0] == WitnessVer::V1.op_code() as u8 && self[1] == OP_PUSHBYTES_32
     }
+}
+
+/// invalid parity value {0} - must be 0 or 1
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display, Error)]
+#[display(doc_comments)]
+pub struct InvalidParityValue(pub u8);
+
+/// Represents the parity passed between FFI function calls.
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
+#[display(lowercase)]
+#[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
+#[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", rename_all = "camelCase")
+)]
+#[repr(u8)]
+pub enum Parity {
+    /// Even parity.
+    #[strict_type(dumb)]
+    Even = 0,
+    /// Odd parity.
+    Odd = 1,
+}
+
+impl Parity {
+    /// Converts parity into an integer (byte) value.
+    ///
+    /// This returns `0` for even parity and `1` for odd parity.
+    pub fn to_consensus_u8(self) -> u8 { self as u8 }
+
+    /// Constructs a [`Parity`] from a byte.
+    ///
+    /// The only allowed values are `0` meaning even parity and `1` meaning odd.
+    /// Other values result in error being returned.
+    pub fn from_consensus_u8(parity: u8) -> Result<Parity, InvalidParityValue> {
+        match parity {
+            0 => Ok(Parity::Even),
+            1 => Ok(Parity::Odd),
+            invalid => Err(InvalidParityValue(invalid)),
+        }
+    }
+}
+
+/// Returns even parity if the operands are equal, odd otherwise.
+impl BitXor for Parity {
+    type Output = Parity;
+
+    fn bitxor(self, rhs: Parity) -> Self::Output {
+        // This works because Parity has only two values (i.e. only 1 bit of
+        // information).
+        if self == rhs {
+            Parity::Even // 1^1==0 and 0^0==0
+        } else {
+            Parity::Odd // 1^0==1 and 0^1==1
+        }
+    }
+}
+
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
+#[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", rename_all = "camelCase")
+)]
+pub struct ControlBlock {
+    /// The tapleaf version.
+    pub leaf_version: LeafVer,
+    /// The parity of the output key (NOT THE INTERNAL KEY WHICH IS ALWAYS
+    /// XONLY).
+    pub output_key_parity: Parity,
+    /// The internal key.
+    pub internal_key: InternalPk,
+    /// The merkle proof of a script associated with this leaf.
+    pub merkle_branch: TapMerklePath,
 }
