@@ -23,13 +23,17 @@ use std::iter;
 
 use secp256k1::{ecdsa, schnorr};
 
+use crate::LIB_NAME_BITCOIN;
+
 /// This type is consensus valid but an input including it would prevent the
 /// transaction from being relayed on today's Bitcoin network.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Display, Error)]
 #[display("non-standard SIGHASH_TYPE value {0:#X}")]
 pub struct NonStandardSighashType(pub u32);
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Hash, Default)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -38,6 +42,7 @@ pub struct NonStandardSighashType(pub u32);
 #[repr(u8)]
 pub enum SighashFlag {
     /// 0x1: Sign all outputs.
+    #[default]
     All = 0x01,
     /// 0x2: Sign no outputs --- anyone can choose the destination.
     None = 0x02,
@@ -49,7 +54,9 @@ pub enum SighashFlag {
     Single = 0x03,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Hash, Default)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -204,6 +211,8 @@ pub enum SigError {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
+#[derive(StrictType)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -248,6 +257,8 @@ impl LegacySig {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
+#[derive(StrictType)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -293,5 +304,93 @@ impl Bip340Sig {
             ser.push(sighash_type.into_consensus_u8())
         }
         ser
+    }
+}
+
+mod _strict_encode {
+    use std::io;
+
+    use amplify::confinement::TinyBlob;
+    use amplify::hex::FromHex;
+    use amplify::Bytes64;
+    use strict_encoding::{
+        DecodeError, ReadStruct, StrictDecode, StrictDumb, StrictEncode, TypedRead, TypedWrite,
+        WriteStruct,
+    };
+
+    use super::*;
+
+    impl StrictDumb for LegacySig {
+        fn strict_dumb() -> Self {
+            Self {
+                sig: ecdsa::Signature::from_der(&Vec::<u8>::from_hex(
+                    "304402206fa6c164fb89906e2e1d291cc5461ceadf0f115c6b71e58f87482c94d512c3630220\
+                    0ab641f3ece1d77f13ad2d8910cb7abd5a9b85f0f9036317dbb1470f22e7714c").unwrap()
+                ).expect("hardcoded signature"),
+                sighash_type: default!(),
+            }
+        }
+    }
+
+    impl StrictEncode for LegacySig {
+        fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+            writer.write_struct::<Self>(|w| {
+                Ok(w.write_field(
+                    fname!("sig"),
+                    &TinyBlob::try_from(self.sig.serialize_der().to_vec())
+                        .expect("invalid signature"),
+                )?
+                .write_field(fname!("sighash_type"), &self.sighash_type)?
+                .complete())
+            })
+        }
+    }
+
+    impl StrictDecode for LegacySig {
+        fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+            reader.read_struct(|r| {
+                let bytes: TinyBlob = r.read_field(fname!("sig"))?;
+                let sig = ecdsa::Signature::from_der(bytes.as_slice()).map_err(|_| {
+                    DecodeError::DataIntegrityError(s!("invalid signature DER encoding"))
+                })?;
+                let sighash_type = r.read_field(fname!("sighash_type"))?;
+                Ok(Self { sig, sighash_type })
+            })
+        }
+    }
+
+    impl StrictDumb for Bip340Sig {
+        fn strict_dumb() -> Self {
+            Bip340Sig::from_bytes(&Vec::<u8>::from_hex(
+                "a12b3f4c224619d7834f0bad0a598b79111ba08146ae1205f3e6220a132aef0ed8290379624db643\
+                e6b861d8dcd37b406a11f91a51bf5a6cdf9b3c9b772f67c301"
+            ).unwrap())
+            .expect("hardcoded signature")
+        }
+    }
+
+    impl StrictEncode for Bip340Sig {
+        fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+            writer.write_struct::<Self>(|w| {
+                Ok(w.write_field(fname!("sig"), &Bytes64::from(*self.sig.as_ref()))?
+                    .write_field(fname!("sighash_type"), &self.sighash_type)?
+                    .complete())
+            })
+        }
+    }
+
+    impl StrictDecode for Bip340Sig {
+        fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+            reader.read_struct(|r| {
+                let bytes: Bytes64 = r.read_field(fname!("sig"))?;
+                let sig = schnorr::Signature::from_slice(bytes.as_slice()).map_err(|_| {
+                    DecodeError::DataIntegrityError(format!(
+                        "invalid signature BIP340 encoding '{bytes:x}'"
+                    ))
+                })?;
+                let sighash_type = r.read_field(fname!("sighash_type"))?;
+                Ok(Self { sig, sighash_type })
+            })
+        }
     }
 }

@@ -130,6 +130,8 @@ pub trait IntoTapHash {
 
 #[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Index, RangeOps, BorrowSlice, Hex, Display, FromStr)]
+#[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -163,6 +165,8 @@ impl IntoTapHash for TapLeafHash {
 
 #[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Index, RangeOps, BorrowSlice, Hex, Display, FromStr)]
+#[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -208,8 +212,10 @@ impl IntoTapHash for TapNodeHash {
     fn into_tap_hash(self) -> TapNodeHash { self }
 }
 
-#[derive(Wrapper, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
+#[derive(Wrapper, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
 #[wrapper(Deref)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),

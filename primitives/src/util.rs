@@ -94,7 +94,9 @@ impl Chain {
 }
 
 /// A variable-length unsigned integer.
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Default)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 pub struct VarInt(pub u64);
 
 #[allow(clippy::len_without_is_empty)] // VarInt has no concept of 'is_empty'.

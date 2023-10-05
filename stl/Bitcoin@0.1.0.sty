@@ -1,5 +1,5 @@
 {-
-  Id: urn:ubideco:stl:6GgF7biXPVNcus2FfQj2pQuRzau11rXApMQLfCZhojgi#money-pardon-parody
+  Id: urn:ubideco:stl:HeTuSir1NWBfMe11Zf3dfw9uCrmfsSNdCaCaaLJQpQ91#apropos-milk-order
   Name: Bitcoin
   Version: 0.1.0
   Description: Consensus transaction library for bitcoin protocol
@@ -10,12 +10,49 @@
 
 typelib Bitcoin
 
--- no dependencies
+import urn:ubideco:stl:9KALDYR8Nyjq4FdMW6kYoL7vdkWnqPqNuFnmE9qHpNjZ#justice-rocket-type as Std
+-- Imports:
+-- Bool := urn:ubideco:semid:7ZhBHGSJm9ixmm8Z9vCX7i5Ga7j5xrW8t11nsb1Cgpnx#laser-madam-maxwell
 
+
+
+-- urn:ubideco:semid:8NDnad1DezNcQSjq85QMxnDhsBbLwxLCFUfMHEJpnFnH#politic-cactus-salon
+data Bip340Sig        :: sig [Byte ^ 64], sighash_type SighashType?
+-- urn:ubideco:semid:FWCcWgBQCGQw8FX5Z4P3etje6e92qWpVPgXBonNrTM7C#canada-sharp-traffic
+data BlockHash        :: [Byte ^ 32]
+-- urn:ubideco:semid:HHzmwexZQY4G1YKWB6mWwk7rJW8KKb1CaeuRw8xHV1tm#rose-apropos-join
+data BlockHeader      :: version I32
+                       , prevBlockHash BlockHash
+                       , merkleRoot [Byte ^ 32]
+                       , time U32
+                       , bits U32
+                       , nonce U32
+-- urn:ubideco:semid:6aRP3odHaTGySvSWHjreC8HsbX5ss9LxkQqwcjaoxhpv#aspirin-brown-alpine
+data Chain            :: bitcoin:0 | regtest:128 | testnet3:131 | signet:132
+
+-- urn:ubideco:semid:CvDS9EgqtBkWLvADynNeR7VGwVAy14EXViKnLaBkqtac#student-formula-circus
+data FutureLeafVer    :: U8
+-- urn:ubideco:semid:G5HFVaWwWNYSzqk548JgGZ8WKy6dQ2ftVgkJvHjgRudZ#horse-major-vienna
+data InternalPk       :: [Byte ^ 32]
+-- urn:ubideco:semid:Birr99aCTGqzwnuBou79KNhyLLBTNQvoTAkTbMu7C4y5#anvil-arctic-cloud
+data LeafScript       :: version LeafVer, script ScriptBytes
+-- urn:ubideco:semid:DGELfUvcU62GNQRo7HaMbKDzYQwdYRMW3b91JHd4d3WY#tunnel-lagoon-cowboy
+data LeafVer          :: U8
+-- urn:ubideco:semid:89ux18kFuT9nT6LEWnvkpFBiWR9GJwBYVVBqFUPvrTuj#gondola-middle-style
+data LegacySig        :: sig [Byte ^ ..0xff], sighash_type SighashType
 -- urn:ubideco:semid:4dDWWU4afiPN3q4AgCMuFRFhL4UDta2u5SrqrBzPvjby#tokyo-inch-program
 data LockTime         :: U32
+-- urn:ubideco:semid:F8WJfUNUgyVDSX6zXjrdi2pWBa54zLWorawtahJf33Hw#shampoo-rufus-tobacco
+data OpCode           :: pushBytes0:0 | pushBytes32:32 | pushData1:76 | pushData2:77
+                       | pushData4:78 | reserved:80 | pushNum1:81 | return:106
+                       | dup:118 | equal:135 | equalVerify:136 | ripemd160:166
+                       | sha1:167 | sha256:168 | hash160:169 | hash256:170
+                       | checkSig:172 | checkSigVerify:173
+
 -- urn:ubideco:semid:FWt2MSo8A4nsYgYbuBqMRNLiKgtzvLBgUn774iKzTcuf#pocket-pegasus-frank
 data Outpoint         :: txid Txid, vout Vout
+-- urn:ubideco:semid:85m9Qv56neQKaqiPSZ8G8NPWz5DDeJeeXhBwnUpcZGug#delta-jumbo-clone
+data RedeemScript     :: ScriptBytes
 -- urn:ubideco:semid:BEBz6h7AGjYSDRCxVHnjYkkkxzBsjN3EvyNiD4ZrzmRL#pyramid-spray-star
 data Sats             :: U64
 -- urn:ubideco:semid:3Y4AgjkFbDusgo3YqRDWv9BznDeAJEUDEPeEq1mpSkAR#maestro-source-jackson
@@ -26,6 +63,25 @@ data ScriptPubkey     :: ScriptBytes
 data SeqNo            :: U32
 -- urn:ubideco:semid:2gTMqAC393rBSGtBhDn8sJq3F3HtDosbqKDQTw9bHFyT#prelude-analyze-think
 data SigScript        :: ScriptBytes
+-- urn:ubideco:semid:JBNAWau3wDWa66fxnSyRJLkcUXSovZLxQJxERoUMNCbD#prefix-pioneer-remark
+data SighashFlag      :: all:1 | none:2 | single:3
+
+-- urn:ubideco:semid:6mjKj9hdk5HzS8XR6SwsyAvzzaEfXmuXqmLuWq2EfayQ#balsa-equator-ground
+data SighashType      :: flag SighashFlag, anyoneCanPay Std.Bool {- urn:ubideco:semid:7ZhBHGSJm9ixmm8Z9vCX7i5Ga7j5xrW8t11nsb1Cgpnx#laser-madam-maxwell -}
+-- urn:ubideco:semid:CqisAtFLQku77z3HbB1rBe9EjuctxLqcojV8p4THe3Uj#europe-welcome-phone
+data TapBranchHash    :: [Byte ^ 32]
+-- urn:ubideco:semid:5WjBwSuKQwoTq6eXRtXwFrAmcPP1vLpBJ94AWpUgEsPe#weekend-boris-import
+data TapCode          :: pushBytes32:32 | pushData1:76 | pushData2:77 | pushData4:78
+                       | reserved:80 | return:106
+
+-- urn:ubideco:semid:FHWiTycy1JvN5CvVJ3ibyAhtXfr21t3BDNuLFnqYPQ2j#middle-jazz-basket
+data TapLeafHash      :: [Byte ^ 32]
+-- urn:ubideco:semid:5YrqoQi4fLCLqzBE1ZKb623WC311FGRgjcivLPXadnEN#gossip-protein-orion
+data TapMerklePath    :: [TapBranchHash ^ ..0xff]
+-- urn:ubideco:semid:4M8xyvABKKKJseN6Pme5eKrAuusMNMXoY5s6ifsEcreC#crash-culture-jamaica
+data TapNodeHash      :: [Byte ^ 32]
+-- urn:ubideco:semid:71AxyLFsoRG6hJ1c11gxad65nEbWfzkQBjWCPPrgCyjX#telecom-quest-helium
+data TapScript        :: ScriptBytes
 -- urn:ubideco:semid:DynChojW1sfr8VjSoZbmReHhZoU8u9KCiuwijgEGdToe#milk-gloria-prize
 data Tx               :: version TxVer
                        , inputs [TxIn ^ ..0xffffffff]
@@ -42,8 +98,27 @@ data TxOut            :: value Sats, scriptPubkey ScriptPubkey
 data TxVer            :: I32
 -- urn:ubideco:semid:C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs#cowboy-diego-betty
 data Txid             :: [Byte ^ 32]
+-- urn:ubideco:semid:8ALgmuRBL8YRNWmcFoPdBFCsZwCvDjupXgdq9DjFVnkV#waiter-salad-casino
+data VBytes           :: U32
+-- urn:ubideco:semid:AZqcQMyFBmixEkiDtAqGxB4nM8i9hmxV3mk4vUgNAkWT#conan-avalon-food
+data VarInt           :: U64
 -- urn:ubideco:semid:3HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk#chrome-robin-gallop
 data Vout             :: U32
+-- urn:ubideco:semid:EcY6NU6BVRVkgCFwfWmSkbVKpLmWWVfDwBRRiSr6FJUC#bridge-version-voyage
+data WeightUnits      :: U32
 -- urn:ubideco:semid:8mjN2CZj3Nhn2HjnKqTmEcN5vmyb3UJK8HSFW1uE3W2p#warning-saddle-period
 data Witness          :: [[Byte ^ ..0xffffffff] ^ ..0xffffffff]
+-- urn:ubideco:semid:FK7h8D8X6BTAuh8q4NdkdAGgF9vwAZRyYcUpFzR3fcDG#scholar-juice-titanic
+data WitnessProgram   :: version WitnessVer, program [Byte ^ 2..0x28]
+-- urn:ubideco:semid:Bd2bXQc2D6YmMFpupKnFGvjBiZNcGKrhaxS9omUUedcS#boris-harbor-equal
+data WitnessScript    :: ScriptBytes
+-- urn:ubideco:semid:F8Tgd8G4vQdBtiF8nnC46tANuaBcp9jnkaSeYxjREwEU#richard-average-unit
+data WitnessVer       :: v0:0 | v1:81 | v2:82 | v3:83
+                       | v4:84 | v5:85 | v6:86 | v7:87
+                       | v8:88 | v9:89 | v10:90 | v11:91
+                       | v12:92 | v13:93 | v14:94 | v15:95
+                       | v16:96
+
+-- urn:ubideco:semid:HZbMnxQ1p2duNgYuYrQn9xtHBwSom63zWtRwy6pmBGfU#sushi-polygon-circus
+data Wtxid            :: [Byte ^ 32]
 

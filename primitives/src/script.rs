@@ -226,6 +226,8 @@ impl FromHex for ScriptPubkey {
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
 #[wrapper(Deref, Index, RangeOps, BorrowSlice, LowerHex, UpperHex)]
 #[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),

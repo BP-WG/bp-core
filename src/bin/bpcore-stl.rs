@@ -41,13 +41,14 @@ fn main() {
     )
     .expect("unable to write to the file");
 
+    bc::stl::bp_consensus_stl()
         .serialize(
             format,
             dir.as_ref(),
             "0.1.0",
             Some(
                 "
-  Description: Consensus transaction library for bitcoin protocol
+  Description: Consensus library for bitcoin protocol
   Author: Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
   Copyright (C) 2023 LNP/BP Standards Association. All rights reserved.
   License: Apache-2.0",

@@ -49,9 +49,12 @@ pub enum SegwitError {
 /// First byte of `scriptPubkey` in transaction output for transactions starting
 /// with 0 and 0x51-0x60 (inclusive).
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
+#[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
+#[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
 #[repr(u8)]
 pub enum WitnessVer {
     /// Initial version of witness program. Used for P2WPKH and P2WPK outputs
+    #[strict_type(dumb)]
     #[display("segwit0")]
     V0 = OP_PUSHBYTES_0,
 
@@ -210,6 +213,8 @@ impl WitnessVer {
 
 /// Witness program as defined in BIP141.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
+#[strict_type(lib = LIB_NAME_BITCOIN, dumb = {Self::new(strict_dumb!(), vec![0; 32]).unwrap()})]
 pub struct WitnessProgram {
     /// The witness program version.
     version: WitnessVer,
@@ -299,6 +304,8 @@ impl ScriptPubkey {
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
 #[wrapper(Deref, Index, RangeOps, BorrowSlice, LowerHex, UpperHex)]
 #[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
