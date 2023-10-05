@@ -22,7 +22,7 @@
 use std::iter::Sum;
 use std::ops::{Add, AddAssign};
 
-use crate::{ScriptPubkey, SigScript, Tx, TxIn, TxOut, VarIntSize, Witness, LIB_NAME_BITCOIN};
+use crate::{LenVarInt, ScriptPubkey, SigScript, Tx, TxIn, TxOut, Witness, LIB_NAME_BITCOIN};
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
@@ -88,8 +88,8 @@ pub trait Weight {
 impl Weight for Tx {
     fn weight_units(&self) -> WeightUnits {
         let bytes = 4 // version
-        + self.inputs.var_int_size().len()
-        + self.outputs.var_int_size().len()
+        + self.inputs.len_var_int().len()
+        + self.outputs.len_var_int().len()
         + 4; // lock time
 
         let mut weight = WeightUnits::no_discount(bytes) +
@@ -126,22 +126,22 @@ impl Weight for TxOut {
 
 impl Weight for ScriptPubkey {
     fn weight_units(&self) -> WeightUnits {
-        WeightUnits::no_discount(self.var_int_size().len() + self.len())
+        WeightUnits::no_discount(self.len_var_int().len() + self.len())
     }
 }
 
 impl Weight for SigScript {
     fn weight_units(&self) -> WeightUnits {
-        WeightUnits::no_discount(self.var_int_size().len() + self.len())
+        WeightUnits::no_discount(self.len_var_int().len() + self.len())
     }
 }
 
 impl Weight for Witness {
     fn weight_units(&self) -> WeightUnits {
         WeightUnits::witness_discount(
-            self.var_int_size().len() +
+            self.len_var_int().len() +
                 self.iter()
-                    .map(|item| item.var_int_size().len() + item.len())
+                    .map(|item| item.len_var_int().len() + item.len())
                     .sum::<usize>(),
         )
     }

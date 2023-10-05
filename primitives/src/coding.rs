@@ -19,9 +19,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::fmt::{Formatter, LowerHex, UpperHex};
 use std::io::{self, Cursor, Read, Write};
 
 use amplify::confinement::{Confined, U32};
+use amplify::hex::{self, FromHex, ToHex};
 use amplify::{confinement, IoError, RawArray, Wrapper};
 
 use crate::{
@@ -69,12 +71,49 @@ impl<U: Into<u64> + Copy> PartialEq<U> for VarInt {
     fn eq(&self, other: &U) -> bool { self.0.eq(&(*other).into()) }
 }
 
-pub trait VarIntSize {
-    fn var_int_size(&self) -> VarInt;
+pub trait LenVarInt {
+    fn len_var_int(&self) -> VarInt;
 }
 
-impl<T> VarIntSize for VarIntArray<T> {
-    fn var_int_size(&self) -> VarInt { VarInt::with(self.len()) }
+impl<T> LenVarInt for VarIntArray<T> {
+    fn len_var_int(&self) -> VarInt { VarInt::with(self.len()) }
+}
+
+#[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default, Debug, From)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
+#[wrapper(Deref, Index, RangeOps, BorrowSlice)]
+#[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
+pub struct ByteStr(VarIntArray<u8>);
+
+impl From<Vec<u8>> for ByteStr {
+    fn from(value: Vec<u8>) -> Self { Self(Confined::try_from(value).expect("u64 >= usize")) }
+}
+
+impl LowerHex for ByteStr {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0.as_inner().to_hex())
+    }
+}
+
+impl UpperHex for ByteStr {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0.as_inner().to_hex().to_uppercase())
+    }
+}
+
+impl FromHex for ByteStr {
+    fn from_hex(s: &str) -> Result<Self, hex::Error> { Vec::<u8>::from_hex(s).map(Self::from) }
+    fn from_byte_iter<I>(_: I) -> Result<Self, hex::Error>
+    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
+        unreachable!()
+    }
+}
+
+impl ByteStr {
+    pub fn len_var_int(&self) -> VarInt { VarInt(self.len() as u64) }
+
+    pub fn into_vec(self) -> Vec<u8> { self.0.into_inner() }
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]
@@ -429,7 +468,7 @@ impl ConsensusDecode for VarInt {
 
 impl<T: ConsensusEncode> ConsensusEncode for VarIntArray<T> {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
-        let mut counter = self.var_int_size().consensus_encode(writer)?;
+        let mut counter = self.len_var_int().consensus_encode(writer)?;
         for item in self {
             counter += item.consensus_encode(writer)?;
         }

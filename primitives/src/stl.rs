@@ -23,10 +23,10 @@
 use strict_types::{CompileError, LibBuilder, TypeLib};
 
 use crate::{
-    Bip340Sig, BlockHeader, Chain, FutureLeafVer, InternalPk, LeafScript, LeafVer, LegacySig,
-    OpCode, RedeemScript, TapBranchHash, TapCode, TapLeafHash, TapMerklePath, TapNodeHash,
-    TapScript, Tx, VBytes, VarInt, WeightUnits, WitnessProgram, WitnessScript, WitnessVer, Wtxid,
-    LIB_NAME_BITCOIN,
+    Bip340Sig, BlockHeader, ByteStr, Chain, FutureLeafVer, InternalPk, LeafScript, LeafVer,
+    LegacySig, OpCode, RedeemScript, TapBranchHash, TapCode, TapLeafHash, TapMerklePath,
+    TapNodeHash, TapScript, Tx, VBytes, VarInt, WeightUnits, WitnessProgram, WitnessScript,
+    WitnessVer, Wtxid, LIB_NAME_BITCOIN,
 };
 
 #[deprecated(since = "0.10.8", note = "use LIB_ID_BP_TX instead")]
@@ -35,7 +35,7 @@ pub const LIB_ID_BITCOIN: &str =
 pub const LIB_ID_BP_TX: &str =
     "urn:ubideco:stl:6GgF7biXPVNcus2FfQj2pQuRzau11rXApMQLfCZhojgi#money-pardon-parody";
 pub const LIB_ID_BP_CONSENSUS: &str =
-    "urn:ubideco:stl:HeTuSir1NWBfMe11Zf3dfw9uCrmfsSNdCaCaaLJQpQ91#apropos-milk-order";
+    "urn:ubideco:stl:DrkRxZuxVjPSc5CtPmXhxQ14wyfVDz787WEfdrgqgffB#gray-prepare-proton";
 
 #[deprecated(since = "0.10.8", note = "use _bp_tx_stl instead")]
 fn _bitcoin_stl() -> Result<TypeLib, CompileError> { _bp_tx_stl() }
@@ -71,6 +71,7 @@ fn _bp_consensus_stl() -> Result<TypeLib, CompileError> {
     .transpile::<BlockHeader>()
     .transpile::<Tx>()
     .transpile::<VarInt>()
+    .transpile::<ByteStr>()
     .transpile::<Chain>()
     .transpile::<WeightUnits>()
     .transpile::<VBytes>()

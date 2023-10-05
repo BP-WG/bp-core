@@ -25,7 +25,7 @@ use amplify::confinement::Confined;
 use amplify::hex::{self, FromHex, ToHex};
 
 use crate::opcodes::*;
-use crate::{VarIntArray, LIB_NAME_BITCOIN};
+use crate::{VarInt, VarIntArray, LIB_NAME_BITCOIN};
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
@@ -348,6 +348,8 @@ impl ScriptBytes {
             _ => 5,
         }
     }
+
+    pub fn len_var_int(&self) -> VarInt { VarInt(self.len() as u64) }
 
     pub fn into_vec(self) -> Vec<u8> { self.0.into_inner() }
 

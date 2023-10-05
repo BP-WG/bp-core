@@ -19,13 +19,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Version 0.10.10:
 // TODO: Ensure all serde uses both string and binary version
 // TODO: Complete taproot consensus structure implementation (ControlBlock)
 // TODO: Complete block data type implementation
-// TODO: Add VarBytes data type
-// TODO: Do a no-std feature
-// TODO: Complete OpCode structure implementation
 // TODO: Move consensus-level timelocks and sequence locks from other libraries
+// Version 1.0:
+// TODO: Complete OpCode structure implementation
+// TODO: Do a no-std feature
 
 // Coding conventions
 #![deny(
@@ -69,8 +70,8 @@ mod coding;
 
 pub use block::{BlockHash, BlockHeader};
 pub use coding::{
-    ConsensusDataError, ConsensusDecode, ConsensusDecodeError, ConsensusEncode, VarInt,
-    VarIntArray, VarIntSize,
+    ByteStr, ConsensusDataError, ConsensusDecode, ConsensusDecodeError, ConsensusEncode, LenVarInt,
+    VarInt, VarIntArray,
 };
 pub use script::{OpCode, RedeemScript, ScriptBytes, ScriptPubkey, SigScript};
 pub use segwit::{SegwitError, Witness, WitnessProgram, WitnessScript, WitnessVer, Wtxid};
