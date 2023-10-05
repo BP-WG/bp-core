@@ -85,7 +85,16 @@ impl<T> LenVarInt for VarIntArray<T> {
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[wrapper(Deref, Index, RangeOps, BorrowSlice)]
 #[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
 pub struct ByteStr(VarIntArray<u8>);
+
+impl AsRef<[u8]> for ByteStr {
+    fn as_ref(&self) -> &[u8] { self.0.as_slice() }
+}
 
 impl From<Vec<u8>> for ByteStr {
     fn from(value: Vec<u8>) -> Self { Self(Confined::try_from(value).expect("u64 >= usize")) }
