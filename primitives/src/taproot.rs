@@ -24,7 +24,7 @@
 use std::borrow::Borrow;
 use std::fmt::{self, Formatter, LowerHex, UpperHex};
 use std::ops::BitXor;
-use std::{cmp, io};
+use std::{cmp, io, slice, vec};
 
 use amplify::confinement::{Confined, U32};
 use amplify::{Bytes32, Wrapper};
@@ -223,6 +223,20 @@ impl IntoTapHash for TapNodeHash {
     serde(crate = "serde_crate", transparent)
 )]
 pub struct TapMerklePath(Confined<Vec<TapBranchHash>, 0, 128>);
+
+impl IntoIterator for TapMerklePath {
+    type Item = TapBranchHash;
+    type IntoIter = vec::IntoIter<TapBranchHash>;
+
+    fn into_iter(self) -> Self::IntoIter { self.0.into_iter() }
+}
+
+impl<'a> IntoIterator for &'a TapMerklePath {
+    type Item = &'a TapBranchHash;
+    type IntoIter = slice::Iter<'a, TapBranchHash>;
+
+    fn into_iter(self) -> Self::IntoIter { self.0.iter() }
+}
 
 /// Taproot annex prefix.
 pub const TAPROOT_ANNEX_PREFIX: u8 = 0x50;
