@@ -21,11 +21,10 @@
 
 // Version 0.10.10:
 // TODO: Ensure all serde uses both string and binary version
-// TODO: Complete consensus encoding for taproot data
-// TODO: Complete block data type implementation
 // TODO: Move consensus-level timelocks and sequence locks from other libraries
 // Version 1.0:
-// TODO: Complete OpCode structure implementation
+// TODO: Complete block data type implementation
+// TODO: Complete OpCode enumeration
 // TODO: Do a no-std feature
 
 // Coding conventions

@@ -24,11 +24,12 @@ use std::io::{self, Cursor, Read, Write};
 
 use amplify::confinement::{Confined, U32};
 use amplify::hex::{self, FromHex, ToHex};
-use amplify::{confinement, IoError, RawArray, Wrapper};
+use amplify::{confinement, Bytes32, IoError, RawArray, Wrapper};
 
 use crate::{
-    LockTime, Outpoint, Sats, ScriptBytes, ScriptPubkey, SeqNo, SigScript, Tx, TxIn, TxOut, TxVer,
-    Txid, Vout, Witness, LIB_NAME_BITCOIN,
+    ControlBlock, InternalPk, LockTime, Outpoint, RedeemScript, Sats, ScriptBytes, ScriptPubkey,
+    SeqNo, SigScript, TapBranchHash, TapScript, Tx, TxIn, TxOut, TxVer, Txid, Vout, Witness,
+    WitnessScript, LIB_NAME_BITCOIN,
 };
 
 pub type VarIntArray<T> = Confined<Vec<T>, 0, U32>;
@@ -136,6 +137,9 @@ pub enum ConsensusDataError {
 
     /// not a minimally-encoded variable integer.
     NonMinimalVarInt,
+
+    /// invalid BIP340 (x-only) pubkey data.
+    InvalidXonlyPubkey(Bytes32),
 
     #[from]
     #[display(inner)]
@@ -371,6 +375,42 @@ impl ConsensusDecode for ScriptPubkey {
     }
 }
 
+impl ConsensusEncode for WitnessScript {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        self.as_script_bytes().consensus_encode(writer)
+    }
+}
+
+impl ConsensusDecode for WitnessScript {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        ScriptBytes::consensus_decode(reader).map(Self::from_inner)
+    }
+}
+
+impl ConsensusEncode for RedeemScript {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        self.as_script_bytes().consensus_encode(writer)
+    }
+}
+
+impl ConsensusDecode for RedeemScript {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        ScriptBytes::consensus_decode(reader).map(Self::from_inner)
+    }
+}
+
+impl ConsensusEncode for TapScript {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        self.as_script_bytes().consensus_encode(writer)
+    }
+}
+
+impl ConsensusDecode for TapScript {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        ScriptBytes::consensus_decode(reader).map(Self::from_inner)
+    }
+}
+
 impl ConsensusEncode for SigScript {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
         self.as_script_bytes().consensus_encode(writer)
@@ -392,6 +432,54 @@ impl ConsensusEncode for Witness {
 impl ConsensusDecode for Witness {
     fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
         VarIntArray::consensus_decode(reader).map(Self::from_inner)
+    }
+}
+
+impl ConsensusEncode for InternalPk {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        writer.write_all(&self.to_byte_array())?;
+        Ok(32)
+    }
+}
+
+impl ConsensusEncode for TapBranchHash {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        writer.write_all(&self.to_raw_array())?;
+        Ok(32)
+    }
+}
+
+impl ConsensusDecode for TapBranchHash {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        let mut buf = [0u8; 32];
+        reader.read_exact(&mut buf)?;
+        Ok(TapBranchHash::from_raw_array(buf))
+    }
+}
+
+impl ConsensusDecode for InternalPk {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        let mut buf = [0u8; 32];
+        reader.read_exact(&mut buf)?;
+        InternalPk::from_byte_array(buf)
+            .map_err(|_| ConsensusDataError::InvalidXonlyPubkey(buf.into()).into())
+    }
+}
+
+impl ConsensusEncode for ControlBlock {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        let mut counter = 0;
+
+        let first_byte =
+            self.leaf_version.to_consensus_u8() & self.output_key_parity.to_consensus_u8();
+        first_byte.consensus_encode(writer)?;
+
+        counter += self.internal_key.consensus_encode(writer)?;
+        for step in &self.merkle_branch {
+            counter += step.consensus_encode(writer)?;
+        }
+
+        Ok(counter)
     }
 }
 
@@ -463,6 +551,18 @@ impl ConsensusDecode for VarInt {
             }
             n => Ok(VarInt::with(n)),
         }
+    }
+}
+
+impl ConsensusEncode for ByteStr {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        self.0.consensus_encode(writer)
+    }
+}
+
+impl ConsensusDecode for ByteStr {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        VarIntArray::consensus_decode(reader).map(Self::from_inner)
     }
 }
 
