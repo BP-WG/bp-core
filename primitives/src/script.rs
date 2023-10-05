@@ -133,6 +133,11 @@ impl FromHex for SigScript {
     }
 }
 
+impl SigScript {
+    pub fn empty() -> Self { SigScript::default() }
+    pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
+}
+
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
 #[wrapper(Deref, Index, RangeOps, BorrowSlice, LowerHex, UpperHex)]
 #[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
@@ -205,6 +210,8 @@ impl ScriptPubkey {
 
     /// Adds a single opcode to the script.
     pub fn push_opcode(&mut self, op_code: OpCode) { self.0.push(op_code as u8) }
+
+    pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
 }
 
 impl FromHex for ScriptPubkey {
@@ -305,6 +312,8 @@ impl ScriptBytes {
     }
 
     pub fn into_vec(self) -> Vec<u8> { self.0.into_inner() }
+
+    pub(crate) fn as_var_int_array(&self) -> &VarIntArray<u8> { &self.0 }
 }
 
 #[cfg(feature = "serde")]

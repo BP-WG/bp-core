@@ -41,6 +41,7 @@ extern crate commit_verify;
 #[macro_use]
 extern crate serde_crate as serde;
 
+extern crate core;
 /// Re-export of `secp256k1` crate.
 pub extern crate secp256k1;
 
@@ -51,24 +52,24 @@ mod segwit;
 mod taproot;
 mod tx;
 mod util;
+mod weights;
 #[cfg(feature = "stl")]
 pub mod stl;
+mod consensus;
 
 pub use block::{BlockHash, BlockHeader};
+pub use consensus::{
+    ConsensusDataError, ConsensusDecode, ConsensusDecodeError, ConsensusEncode, VarIntArray,
+    VarIntSize,
+};
 pub use script::{OpCode, ScriptBytes, ScriptPubkey, SigScript};
 pub use segwit::*;
 pub use taproot::*;
 pub use tx::{
-    LockTime, Outpoint, OutpointParseError, Sats, SeqNo, Tx, TxIn, TxOut, TxVer, Txid, Vout,
-    Witness, LOCKTIME_THRESHOLD,
+    LockTime, Outpoint, OutpointParseError, Sats, SeqNo, Tx, TxIn, TxOut, TxParseError, TxVer,
+    Txid, Vout, Witness, Wtxid, LOCKTIME_THRESHOLD,
 };
-pub use types::VarIntArray;
-pub use util::{Chain, ChainParseError, NonStandardValue};
+pub use util::{Chain, ChainParseError, NonStandardValue, VarInt};
+pub use weights::{VBytes, Weight, WeightUnits};
 
 pub const LIB_NAME_BITCOIN: &str = "Bitcoin";
-
-mod types {
-    use amplify::confinement::{Confined, U32};
-
-    pub type VarIntArray<T> = Confined<Vec<T>, 0, U32>;
-}
