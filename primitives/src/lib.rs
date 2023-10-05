@@ -63,7 +63,7 @@ pub use consensus::{
     ConsensusDataError, ConsensusDecode, ConsensusDecodeError, ConsensusEncode, VarIntArray,
     VarIntSize,
 };
-pub use script::{OpCode, ScriptBytes, ScriptPubkey, SigScript};
+pub use script::{OpCode, RedeemScript, ScriptBytes, ScriptPubkey, SigScript, WitnessScript};
 pub use segwit::*;
 pub use sigtypes::{
     Bip340Sig, LegacySig, NonStandardSighashType, SigError, SighashFlag, SighashType,
