@@ -56,10 +56,10 @@ mod util;
 mod weights;
 #[cfg(feature = "stl")]
 pub mod stl;
-mod consensus;
+mod coding;
 
 pub use block::{BlockHash, BlockHeader};
-pub use consensus::{
+pub use coding::{
     ConsensusDataError, ConsensusDecode, ConsensusDecodeError, ConsensusEncode, VarIntArray,
     VarIntSize,
 };
