@@ -51,6 +51,7 @@ mod script;
 mod segwit;
 mod taproot;
 mod tx;
+mod sigtypes;
 mod util;
 mod weights;
 #[cfg(feature = "stl")]
@@ -64,6 +65,9 @@ pub use consensus::{
 };
 pub use script::{OpCode, ScriptBytes, ScriptPubkey, SigScript};
 pub use segwit::*;
+pub use sigtypes::{
+    Bip340Sig, LegacySig, NonStandardSighashType, SigError, SighashFlag, SighashType,
+};
 pub use taproot::*;
 pub use tx::{
     LockTime, Outpoint, OutpointParseError, Sats, SeqNo, Tx, TxIn, TxOut, TxParseError, TxVer,
