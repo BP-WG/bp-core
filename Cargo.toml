@@ -72,7 +72,3 @@ stl = ["strict_types", "strict_types/base64", "bp-primitives/stl", "commit_verif
 
 [package.metadata.docs.rs]
 features = [ "all" ]
-
-[patch.crates-io]
-amplify = { git = "https://github.com/rust-amplify/rust-amplify", branch = "feat/array-reverse" }
-strict_encoding = { git = "https://github.com/strict-types/strict-encoding", branch = "chore/amplify-4.1.0" }

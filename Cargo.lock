@@ -5,7 +5,8 @@ version = 3
 [[package]]
 name = "amplify"
 version = "4.1.1"
-source = "git+https://github.com/rust-amplify/rust-amplify?branch=feat/array-reverse#cb9186baded3635bc85ce6d4b4fe512ba7201932"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a3f58ae011435caa061fb64894c7b05d615321011d35dd07b53b2843a4b61933"
 dependencies = [
  "amplify_apfloat",
  "amplify_derive 3.0.1",
@@ -192,7 +193,7 @@ dependencies = [
 
 [[package]]
 name = "bp-primitives"
-version = "0.10.7"
+version = "0.10.8"
 dependencies = [
  "amplify",
  "commit_verify",
@@ -567,8 +568,9 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding"
-version = "2.5.0"
-source = "git+https://github.com/strict-types/strict-encoding?branch=chore/amplify-4.1.0#b54ba615b3a2d32278ba8b2ad1ec207dd5d4f853"
+version = "2.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7c5667c167479cd4abf9f4e02a86fcc45b0d59cd1dbef97f341ecd31b7bcd320"
 dependencies = [
  "amplify",
  "half",
@@ -578,7 +580,8 @@ dependencies = [
 [[package]]
 name = "strict_encoding_derive"
 version = "2.0.0"
-source = "git+https://github.com/strict-types/strict-encoding?branch=chore/amplify-4.1.0#b54ba615b3a2d32278ba8b2ad1ec207dd5d4f853"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4f5adae55367464f5a229bfd539682c94f870b98a220be6e61dc43f85d612e7e"
 dependencies = [
  "amplify_syn",
  "heck",
