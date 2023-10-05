@@ -115,7 +115,7 @@ impl Weight for TxIn {
 
 impl Weight for TxOut {
     fn weight_units(&self) -> WeightUnits {
-        WeightUnits::no_discount(8) //value
+        WeightUnits::no_discount(8) // value
         + self.script_pubkey.weight_units()
     }
 }

@@ -97,7 +97,7 @@ impl Chain {
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct VarInt(pub u64);
 
-#[allow(clippy::len_without_is_empty)] // VarInt has on concept of 'is_empty'.
+#[allow(clippy::len_without_is_empty)] // VarInt has no concept of 'is_empty'.
 impl VarInt {
     pub const fn new(u: u64) -> Self { VarInt(u) }
 

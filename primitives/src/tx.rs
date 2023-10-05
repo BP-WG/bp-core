@@ -144,7 +144,7 @@ impl Outpoint {
     }
 
     #[inline]
-    pub const fn coinbse() -> Self {
+    pub const fn coinbase() -> Self {
         Self {
             txid: Txid::coinbase(),
             vout: Vout::from_u32(0),
@@ -802,7 +802,7 @@ mod test {
             "80b7d8a82d5d5bf92905b06f2014dd699e03837ca172e3a59d51426ebbe3e7f5".to_string()
         );
 
-        /* TODO: Enable once weight calculation is threr
+        /* TODO: Enable once weight calculation is there
         const EXPECTED_WEIGHT: Weight = Weight::from_wu(442);
         assert_eq!(realtx.weight(), EXPECTED_WEIGHT);
         assert_eq!(realtx.total_size(), tx_bytes.len());
