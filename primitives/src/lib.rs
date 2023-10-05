@@ -19,6 +19,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// TODO: Ensure all serde uses both string and binary version
+// TODO: Complete taproot consensus structure implementation (ControlBlock)
+// TODO: Complete block data type implementation
+// TODO: Add VarBytes data type
+// TODO: Use NonStandardValue instead of NonStandardSighashType
+// TODO: Do a no-std feature
+// TODO: Complete OpCode structure implementation
+// TODO: Move consensus-level timelocks and sequence locks from other libraries
+
 // Coding conventions
 #![deny(
     non_upper_case_globals,
@@ -33,6 +42,7 @@
 
 #[macro_use]
 extern crate amplify;
+// TODO: Make strict encoding optional dependency
 #[macro_use]
 extern crate strict_encoding;
 #[macro_use]
