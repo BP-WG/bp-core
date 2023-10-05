@@ -38,19 +38,20 @@ use crate::opcodes::*;
 use crate::{ScriptBytes, ScriptPubkey, WitnessVer, LIB_NAME_BITCOIN};
 
 /// The SHA-256 midstate value for the TapLeaf hash.
-pub const MIDSTATE_TAPLEAF: [u8; 7] = *b"TapLeaf";
+const MIDSTATE_TAPLEAF: [u8; 7] = *b"TapLeaf";
 // 9ce0e4e67c116c3938b3caf2c30f5089d3f3936c47636e607db33eeaddc6f0c9
 
 /// The SHA-256 midstate value for the TapBranch hash.
-pub const MIDSTATE_TAPBRANCH: [u8; 9] = *b"TapBranch";
+const MIDSTATE_TAPBRANCH: [u8; 9] = *b"TapBranch";
 // 23a865a9b8a40da7977c1e04c49e246fb5be13769d24c9b7b583b5d4a8d226d2
 
 /// The SHA-256 midstate value for the TapTweak hash.
-pub const MIDSTATE_TAPTWEAK: [u8; 8] = *b"TapTweak";
+const MIDSTATE_TAPTWEAK: [u8; 8] = *b"TapTweak";
 // d129a2f3701c655d6583b6c3b941972795f4e23294fd54f4a2ae8d8547ca590b
 
 /// The SHA-256 midstate value for the TapSig hash.
-pub const MIDSTATE_TAPSIGHASH: [u8; 10] = *b"TapSighash";
+#[warn(dead_code)]
+const MIDSTATE_TAPSIGHASH: [u8; 10] = *b"TapSighash";
 // f504a425d7f8783b1363868ae3e556586eee945dbc7888dd02a6e2c31873fe9f
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Display, Error)]
