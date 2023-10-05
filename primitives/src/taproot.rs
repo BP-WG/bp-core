@@ -147,7 +147,7 @@ pub struct TapLeafHash(
 impl TapLeafHash {
     pub fn with_leaf_script(leaf_script: &LeafScript) -> Self {
         let mut engine = Sha256::from_tag(MIDSTATE_TAPLEAF);
-        engine.input_raw(&[leaf_script.version.to_consensus()]);
+        engine.input_raw(&[leaf_script.version.to_consensus_u8()]);
         engine.input_with_len::<U32>(leaf_script.script.as_slice());
         Self(engine.finish().into())
     }
@@ -280,27 +280,33 @@ impl StrictTuple for LeafVer {
 }
 impl StrictEncode for LeafVer {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> std::io::Result<W> {
-        writer.write_tuple::<Self>(|w| Ok(w.write_field(&self.to_consensus())?.complete()))
+        writer.write_tuple::<Self>(|w| Ok(w.write_field(&self.to_consensus_u8())?.complete()))
     }
 }
 impl StrictDecode for LeafVer {
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
         reader.read_tuple(|r| {
             let version = r.read_field()?;
-            Self::from_consensus(version)
+            Self::from_consensus_u8(version)
                 .map_err(|err| DecodeError::DataIntegrityError(err.to_string()))
         })
     }
 }
 
 impl LeafVer {
+    #[doc(hidden)]
+    #[deprecated(since = "0.10.9", note = "use from_consensus_u8")]
+    pub fn from_consensus(version: u8) -> Result<Self, InvalidLeafVer> {
+        Self::from_consensus_u8(version)
+    }
+
     /// Creates a [`LeafVer`] from consensus byte representation.
     ///
     /// # Errors
     ///
     /// - If the last bit of the `version` is odd.
     /// - If the `version` is 0x50 ([`TAPROOT_ANNEX_PREFIX`]).
-    pub fn from_consensus(version: u8) -> Result<Self, InvalidLeafVer> {
+    pub fn from_consensus_u8(version: u8) -> Result<Self, InvalidLeafVer> {
         match version {
             TAPROOT_LEAF_TAPSCRIPT => Ok(LeafVer::TapScript),
             TAPROOT_ANNEX_PREFIX => Err(InvalidLeafVer(TAPROOT_ANNEX_PREFIX)),
@@ -308,8 +314,12 @@ impl LeafVer {
         }
     }
 
+    #[doc(hidden)]
+    #[deprecated(since = "0.10.9", note = "use to_consensus_u8")]
+    pub fn to_consensus(self) -> u8 { self.to_consensus_u8() }
+
     /// Returns the consensus representation of this [`LeafVer`].
-    pub fn to_consensus(self) -> u8 {
+    pub fn to_consensus_u8(self) -> u8 {
         match self {
             LeafVer::TapScript => TAPROOT_LEAF_TAPSCRIPT,
             LeafVer::Future(version) => version.to_consensus(),
@@ -318,11 +328,11 @@ impl LeafVer {
 }
 
 impl LowerHex for LeafVer {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result { LowerHex::fmt(&self.to_consensus(), f) }
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result { LowerHex::fmt(&self.to_consensus_u8(), f) }
 }
 
 impl UpperHex for LeafVer {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result { UpperHex::fmt(&self.to_consensus(), f) }
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result { UpperHex::fmt(&self.to_consensus_u8(), f) }
 }
 
 /// Inner type representing future (non-tapscript) leaf versions. See
