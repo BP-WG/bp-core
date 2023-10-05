@@ -25,7 +25,7 @@ use std::borrow::Borrow;
 use std::fmt::{self, Formatter, LowerHex, UpperHex};
 use std::{cmp, io};
 
-use amplify::confinement::{Confined, TinyVec, U32};
+use amplify::confinement::{Confined, U32};
 use amplify::{Bytes32, Wrapper};
 use commit_verify::{DigestExt, Sha256};
 use secp256k1::{Scalar, XOnlyPublicKey};
@@ -221,7 +221,7 @@ impl IntoTapHash for TapNodeHash {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct TapMerklePath(TinyVec<TapBranchHash>);
+pub struct TapMerklePath(Confined<Vec<TapBranchHash>, 0, 128>);
 
 /// Taproot annex prefix.
 pub const TAPROOT_ANNEX_PREFIX: u8 = 0x50;
