@@ -24,14 +24,14 @@ use strict_types::parse_args;
 fn main() {
     let (format, dir) = parse_args();
 
-    bc::stl::bitcoin_stl()
+    bc::stl::bp_tx_stl()
         .serialize(
             format,
             dir.as_ref(),
             "0.1.0",
             Some(
                 "
-  Description: Consensus layer for bitcoin protocol
+  Description: Consensus transaction library for bitcoin protocol
   Author: Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
   Copyright (C) 2023 LNP/BP Standards Association. All rights reserved.
   License: Apache-2.0",
