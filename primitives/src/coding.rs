@@ -26,10 +26,48 @@ use amplify::{confinement, IoError, RawArray, Wrapper};
 
 use crate::{
     LockTime, Outpoint, Sats, ScriptBytes, ScriptPubkey, SeqNo, SigScript, Tx, TxIn, TxOut, TxVer,
-    Txid, VarInt, Vout, Witness,
+    Txid, Vout, Witness, LIB_NAME_BITCOIN,
 };
 
 pub type VarIntArray<T> = Confined<Vec<T>, 0, U32>;
+
+/// A variable-length unsigned integer.
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Default)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
+pub struct VarInt(pub u64);
+
+#[allow(clippy::len_without_is_empty)] // VarInt has no concept of 'is_empty'.
+impl VarInt {
+    pub const fn new(u: u64) -> Self { VarInt(u) }
+
+    pub fn with(u: impl Into<usize>) -> Self { VarInt(u.into() as u64) }
+
+    /// Gets the length of this VarInt when encoded.
+    ///
+    /// Returns 1 for 0..=0xFC, 3 for 0xFD..=(2^16-1), 5 for 0x10000..=(2^32-1),
+    /// and 9 otherwise.
+    #[inline]
+    pub const fn len(&self) -> usize {
+        match self.0 {
+            0..=0xFC => 1,
+            0xFD..=0xFFFF => 3,
+            0x10000..=0xFFFFFFFF => 5,
+            _ => 9,
+        }
+    }
+
+    pub const fn to_u64(&self) -> u64 { self.0 }
+    pub const fn into_u64(self) -> u64 { self.0 }
+    pub fn to_usize(&self) -> usize {
+        usize::try_from(self.0).expect("transaction too large for a non-64 bit platform")
+    }
+    pub fn into_usize(self) -> usize { self.to_usize() }
+}
+
+impl<U: Into<u64> + Copy> PartialEq<U> for VarInt {
+    fn eq(&self, other: &U) -> bool { self.0.eq(&(*other).into()) }
+}
 
 pub trait VarIntSize {
     fn var_int_size(&self) -> VarInt;

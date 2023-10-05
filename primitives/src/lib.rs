@@ -60,8 +60,8 @@ mod coding;
 
 pub use block::{BlockHash, BlockHeader};
 pub use coding::{
-    ConsensusDataError, ConsensusDecode, ConsensusDecodeError, ConsensusEncode, VarIntArray,
-    VarIntSize,
+    ConsensusDataError, ConsensusDecode, ConsensusDecodeError, ConsensusEncode, VarInt,
+    VarIntArray, VarIntSize,
 };
 pub use script::{OpCode, RedeemScript, ScriptBytes, ScriptPubkey, SigScript};
 pub use segwit::{SegwitError, Witness, WitnessProgram, WitnessScript, WitnessVer, Wtxid};
@@ -77,7 +77,7 @@ pub use tx::{
     LockTime, Outpoint, OutpointParseError, Sats, SeqNo, Tx, TxIn, TxOut, TxParseError, TxVer,
     Txid, Vout, LOCKTIME_THRESHOLD,
 };
-pub use util::{Chain, ChainParseError, NonStandardValue, VarInt};
+pub use util::{Chain, ChainParseError, NonStandardValue};
 pub use weights::{VBytes, Weight, WeightUnits};
 
 pub const LIB_NAME_BITCOIN: &str = "Bitcoin";
