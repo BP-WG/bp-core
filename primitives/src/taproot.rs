@@ -29,7 +29,7 @@ use std::{cmp, io, slice, vec};
 use amplify::confinement::{Confined, U32};
 use amplify::{confinement, Bytes32, Wrapper};
 use commit_verify::{DigestExt, Sha256};
-use secp256k1::{Scalar, XOnlyPublicKey};
+use secp256k1::{PublicKey, Scalar, XOnlyPublicKey};
 use strict_encoding::{
     DecodeError, ReadTuple, StrictDecode, StrictEncode, StrictProduct, StrictTuple, StrictType,
     TypeName, TypedRead, TypedWrite, WriteTuple,
@@ -79,6 +79,10 @@ impl TaprootPk {
     }
 
     pub fn to_byte_array(&self) -> [u8; 32] { self.0.serialize() }
+}
+
+impl From<PublicKey> for TaprootPk {
+    fn from(pubkey: PublicKey) -> Self { TaprootPk(pubkey.x_only_public_key().0) }
 }
 
 impl From<TaprootPk> for [u8; 32] {
