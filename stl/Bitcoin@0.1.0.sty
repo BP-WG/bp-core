@@ -1,5 +1,5 @@
 {-
-  Id: urn:ubideco:stl:A6tfQFthqmb39wR5sWvrfgf3oiAyazm8rh7ff35ruioi#russian-emerald-extra
+  Id: urn:ubideco:stl:DxmVFuGffDNS1w5tBAhWS798qXBCqDtpmVPQanLbmBRX#vendor-inside-forum
   Name: Bitcoin
   Version: 0.1.0
   Description: Consensus library for bitcoin protocol
@@ -32,15 +32,15 @@ data ByteStr          :: [Byte ^ ..0xffffffff]
 -- urn:ubideco:semid:6aRP3odHaTGySvSWHjreC8HsbX5ss9LxkQqwcjaoxhpv#aspirin-brown-alpine
 data Chain            :: bitcoin:0 | regtest:128 | testnet3:131 | signet:132
 
--- urn:ubideco:semid:C7rC7icVsoUF43k8QpzxWSx6BAbT8uyY2PWGjsQuf2kd#mega-optic-type
+-- urn:ubideco:semid:BPzqzv3DN65MTwzbTXJbHFyiKeYvmX1VExcqvk5FUb5c#nuclear-coral-gilbert
 data ControlBlock     :: leafVersion LeafVer
                        , outputKeyParity Parity
-                       , internalKey InternalPk
+                       , internalPk InternalPk
                        , merkleBranch TapMerklePath
 -- urn:ubideco:semid:CvDS9EgqtBkWLvADynNeR7VGwVAy14EXViKnLaBkqtac#student-formula-circus
 data FutureLeafVer    :: U8
--- urn:ubideco:semid:G5HFVaWwWNYSzqk548JgGZ8WKy6dQ2ftVgkJvHjgRudZ#horse-major-vienna
-data InternalPk       :: [Byte ^ 32]
+-- urn:ubideco:semid:FKSMf7xnPBKRaY67CP9nNbVMV8ZscunJeLmqgzLk2h7N#pinball-culture-salt
+data InternalPk       :: TaprootPk
 -- urn:ubideco:semid:Birr99aCTGqzwnuBou79KNhyLLBTNQvoTAkTbMu7C4y5#anvil-arctic-cloud
 data LeafScript       :: version LeafVer, script ScriptBytes
 -- urn:ubideco:semid:DGELfUvcU62GNQRo7HaMbKDzYQwdYRMW3b91JHd4d3WY#tunnel-lagoon-cowboy
@@ -58,6 +58,8 @@ data OpCode           :: pushBytes0:0 | pushBytes32:32 | pushData1:76 | pushData
 
 -- urn:ubideco:semid:FWt2MSo8A4nsYgYbuBqMRNLiKgtzvLBgUn774iKzTcuf#pocket-pegasus-frank
 data Outpoint         :: txid Txid, vout Vout
+-- urn:ubideco:semid:8xqfr5BJ4FJ9Sv7wYEhz9a5gen2wyYpEAUqbBDngjuth#video-flex-harbor
+data OutputPk         :: TaprootPk
 -- urn:ubideco:semid:AgJ5n58hrH761B4MV7giZ1FhMipaDrUmnFYCLno74HDy#method-editor-echo
 data Parity           :: even:0 | odd:1
 
@@ -92,6 +94,8 @@ data TapMerklePath    :: [TapBranchHash ^ ..0x80]
 data TapNodeHash      :: [Byte ^ 32]
 -- urn:ubideco:semid:71AxyLFsoRG6hJ1c11gxad65nEbWfzkQBjWCPPrgCyjX#telecom-quest-helium
 data TapScript        :: ScriptBytes
+-- urn:ubideco:semid:DufbiodesBkHAgaCpqgXzZYoJa97fEMjmTBxr6JoVATF#sound-humor-adam
+data TaprootPk        :: [Byte ^ 32]
 -- urn:ubideco:semid:DynChojW1sfr8VjSoZbmReHhZoU8u9KCiuwijgEGdToe#milk-gloria-prize
 data Tx               :: version TxVer
                        , inputs [TxIn ^ ..0xffffffff]

@@ -661,7 +661,24 @@ pub struct ControlBlock {
     /// XONLY).
     pub output_key_parity: Parity,
     /// The internal key.
-    pub internal_key: InternalPk,
+    pub internal_pk: InternalPk,
     /// The merkle proof of a script associated with this leaf.
     pub merkle_branch: TapMerklePath,
+}
+
+impl ControlBlock {
+    #[inline]
+    pub fn with(
+        leaf_version: LeafVer,
+        internal_pk: InternalPk,
+        output_key_parity: Parity,
+        merkle_branch: TapMerklePath,
+    ) -> Self {
+        ControlBlock {
+            leaf_version,
+            output_key_parity,
+            internal_pk,
+            merkle_branch,
+        }
+    }
 }

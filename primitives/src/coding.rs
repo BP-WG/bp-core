@@ -496,7 +496,7 @@ impl ConsensusEncode for ControlBlock {
             self.leaf_version.to_consensus_u8() & self.output_key_parity.to_consensus_u8();
         first_byte.consensus_encode(writer)?;
 
-        counter += self.internal_key.consensus_encode(writer)?;
+        counter += self.internal_pk.consensus_encode(writer)?;
         for step in &self.merkle_branch {
             counter += step.consensus_encode(writer)?;
         }
@@ -526,7 +526,7 @@ impl ConsensusDecode for ControlBlock {
         Ok(ControlBlock {
             leaf_version,
             output_key_parity,
-            internal_key,
+            internal_pk: internal_key,
             merkle_branch,
         })
     }
