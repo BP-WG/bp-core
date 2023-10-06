@@ -27,9 +27,9 @@ use amplify::hex::{self, FromHex, ToHex};
 use amplify::{confinement, ByteArray, Bytes32, IoError, Wrapper};
 
 use crate::{
-    ControlBlock, InternalPk, LockTime, Outpoint, RedeemScript, Sats, ScriptBytes, ScriptPubkey,
-    SeqNo, SigScript, TapBranchHash, TapScript, Tx, TxIn, TxOut, TxVer, Txid, Vout, Witness,
-    WitnessScript, LIB_NAME_BITCOIN,
+    ControlBlock, InternalPk, InvalidLeafVer, LeafVer, LockTime, Outpoint, Parity, RedeemScript,
+    Sats, ScriptBytes, ScriptPubkey, SeqNo, SigScript, TapBranchHash, TapMerklePath, TapScript, Tx,
+    TxIn, TxOut, TxVer, Txid, Vout, Witness, WitnessScript, LIB_NAME_BITCOIN,
 };
 
 pub type VarIntArray<T> = Confined<Vec<T>, 0, U32>;
@@ -133,7 +133,9 @@ pub enum ConsensusDecodeError {
     #[from(io::Error)]
     Io(IoError),
 
+    #[display(inner)]
     #[from]
+    #[from(InvalidLeafVer)]
     #[from(confinement::Error)]
     Data(ConsensusDataError),
 }
@@ -149,6 +151,17 @@ pub enum ConsensusDataError {
 
     /// invalid BIP340 (x-only) pubkey data.
     InvalidXonlyPubkey(Bytes32),
+
+    /// taproot Merkle path length exceeds BIP-341 consensus limit of 128
+    /// elements.
+    LongTapMerklePath,
+
+    /// Merkle path in the `PSBT_IN_TAP_TREE` is not encoded correctly.
+    InvalidTapMerklePath,
+
+    #[from]
+    #[display(inner)]
+    InvalidLeafVer(InvalidLeafVer),
 
     #[from]
     #[display(inner)]
@@ -489,6 +502,33 @@ impl ConsensusEncode for ControlBlock {
         }
 
         Ok(counter)
+    }
+}
+
+impl ConsensusDecode for ControlBlock {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        let first_byte = u8::consensus_decode(reader)?;
+        let leaf_version = LeafVer::from_consensus_u8(first_byte & 0xFE)?;
+        let output_key_parity = Parity::from_consensus_u8(first_byte & 0x01).expect("binary value");
+
+        let internal_key = InternalPk::consensus_decode(reader)?;
+
+        let mut buf = vec![];
+        reader.read_to_end(&mut buf)?;
+        let mut iter = buf.chunks_exact(32);
+        let merkle_branch = iter.by_ref().map(TapBranchHash::from_slice_unsafe);
+        let merkle_branch = TapMerklePath::try_from_iter(merkle_branch)
+            .map_err(|_| ConsensusDataError::LongTapMerklePath)?;
+        if !iter.remainder().is_empty() {
+            return Err(ConsensusDataError::InvalidTapMerklePath.into());
+        }
+
+        Ok(ControlBlock {
+            leaf_version,
+            output_key_parity,
+            internal_key,
+            merkle_branch,
+        })
     }
 }
 

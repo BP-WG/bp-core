@@ -27,7 +27,7 @@ use std::ops::BitXor;
 use std::{cmp, io, slice, vec};
 
 use amplify::confinement::{Confined, U32};
-use amplify::{Bytes32, Wrapper};
+use amplify::{confinement, Bytes32, Wrapper};
 use commit_verify::{DigestExt, Sha256};
 use secp256k1::{Scalar, XOnlyPublicKey};
 use strict_encoding::{
@@ -236,6 +236,27 @@ impl<'a> IntoIterator for &'a TapMerklePath {
     type IntoIter = slice::Iter<'a, TapBranchHash>;
 
     fn into_iter(self) -> Self::IntoIter { self.0.iter() }
+}
+
+impl TapMerklePath {
+    /// Tries to construct a confinement over a collection. Fails if the number
+    /// of items in the collection exceeds one of the confinement bounds.
+    // We can't use `impl TryFrom` due to the conflict with core library blanked
+    // implementation
+    #[inline]
+    pub fn try_from(path: Vec<TapBranchHash>) -> Result<Self, confinement::Error> {
+        Confined::try_from(path).map(Self::from_inner)
+    }
+
+    /// Tries to construct a confinement with a collection of elements taken
+    /// from an iterator. Fails if the number of items in the collection
+    /// exceeds one of the confinement bounds.
+    #[inline]
+    pub fn try_from_iter<I: IntoIterator<Item = TapBranchHash>>(
+        iter: I,
+    ) -> Result<Self, confinement::Error> {
+        Confined::try_from_iter(iter).map(Self::from_inner)
+    }
 }
 
 /// Taproot annex prefix.
