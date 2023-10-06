@@ -417,7 +417,18 @@ impl From<TapScript> for LeafScript {
 }
 
 impl LeafScript {
+    #[inline]
+    pub fn new(version: LeafVer, script: ScriptBytes) -> Self { LeafScript { version, script } }
+    #[inline]
+    pub fn with_bytes(version: LeafVer, script: Vec<u8>) -> Result<Self, confinement::Error> {
+        Ok(LeafScript {
+            version,
+            script: ScriptBytes::from(script),
+        })
+    }
+    #[inline]
     pub fn from_tap_script(tap_script: TapScript) -> Self { Self::from(tap_script) }
+    #[inline]
     pub fn tap_leaf_hash(&self) -> TapLeafHash { TapLeafHash::with_leaf_script(self) }
 }
 
