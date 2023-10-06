@@ -490,7 +490,7 @@ impl ConsensusDecode for InternalPk {
 
 impl ConsensusEncode for ControlBlock {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
-        let mut counter = 0;
+        let mut counter = 1;
 
         let first_byte =
             self.leaf_version.to_consensus_u8() & self.output_key_parity.to_consensus_u8();
