@@ -30,7 +30,7 @@ use strict_types::{CompileError, LibBuilder, TypeLib};
 /// Strict types id for the library providing data types from [`dbc`] and
 /// [`seals`] crates.
 pub const LIB_ID_BPCORE: &str =
-    "urn:ubideco:stl:2YsxMW6xygK2FxFSbbBLqmzaUSytmLHHNF9DRio5zNr2#sultan-data-copy";
+    "urn:ubideco:stl:5cbnbTwuKKKpRqh9WJejEKXcWahnHc3jgwBeJCNr48cL#gyro-minute-maestro";
 
 fn _bp_core_stl() -> Result<TypeLib, CompileError> {
     LibBuilder::new(libname!(LIB_NAME_BPCORE), tiny_bset! {

@@ -19,9 +19,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use bc::{InternalPk, TapBranchHash, TapLeafHash, TapNodeHash, TapScript};
+use bc::{InternalPk, OutputPk, TapBranchHash, TapLeafHash, TapNodeHash, TapScript};
 use commit_verify::{mpc, CommitVerify, ConvolveCommit, ConvolveCommitProof};
-use secp256k1::XOnlyPublicKey;
 
 use super::{Lnpbp12, TapretNodePartner, TapretPathProof, TapretProof};
 use crate::tapret::tapscript::TapretCommitment;
@@ -46,20 +45,20 @@ pub enum TapretKeyError {
 impl ConvolveCommitProof<mpc::Commitment, InternalPk, Lnpbp12> for TapretProof {
     type Suppl = TapretPathProof;
 
-    fn restore_original(&self, _: &XOnlyPublicKey) -> InternalPk { self.internal_pk }
+    fn restore_original(&self, _: &OutputPk) -> InternalPk { self.internal_pk }
 
     fn extract_supplement(&self) -> &Self::Suppl { &self.path_proof }
 }
 
 impl ConvolveCommit<mpc::Commitment, TapretProof, Lnpbp12> for InternalPk {
-    type Commitment = XOnlyPublicKey;
+    type Commitment = OutputPk;
     type CommitError = TapretKeyError;
 
     fn convolve_commit(
         &self,
         supplement: &TapretPathProof,
         msg: &mpc::Commitment,
-    ) -> Result<(XOnlyPublicKey, TapretProof), Self::CommitError> {
+    ) -> Result<(OutputPk, TapretProof), Self::CommitError> {
         let tapret_commitment = TapretCommitment::with(*msg, supplement.nonce);
         let script_commitment = TapScript::commit(&tapret_commitment);
 

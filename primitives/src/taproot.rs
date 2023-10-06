@@ -69,9 +69,9 @@ pub struct InvalidPubkey;
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct InternalPk(XOnlyPublicKey);
+pub struct TaprootPk(XOnlyPublicKey);
 
-impl InternalPk {
+impl TaprootPk {
     pub fn from_byte_array(data: [u8; 32]) -> Result<Self, InvalidPubkey> {
         XOnlyPublicKey::from_slice(data.as_ref())
             .map(Self)
@@ -79,8 +79,54 @@ impl InternalPk {
     }
 
     pub fn to_byte_array(&self) -> [u8; 32] { self.0.serialize() }
+}
 
-    pub fn to_output_key(&self, merkle_root: Option<impl IntoTapHash>) -> XOnlyPublicKey {
+impl From<TaprootPk> for [u8; 32] {
+    fn from(pk: TaprootPk) -> [u8; 32] { pk.to_byte_array() }
+}
+
+impl StrictEncode for TaprootPk {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        let bytes = Bytes32::from(self.0.serialize());
+        writer.write_newtype::<Self>(&bytes)
+    }
+}
+
+impl StrictDecode for TaprootPk {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        reader.read_tuple(|r| {
+            let bytes: Bytes32 = r.read_field()?;
+            XOnlyPublicKey::from_slice(bytes.as_slice())
+                .map(Self)
+                .map_err(|_| {
+                    DecodeError::DataIntegrityError(format!(
+                        "invalid x-only public key value '{bytes:x}'"
+                    ))
+                })
+        })
+    }
+}
+
+#[derive(Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
+#[wrapper(Deref, LowerHex, Display, FromStr)]
+#[wrapper_mut(DerefMut)]
+#[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
+#[strict_type(lib = LIB_NAME_BITCOIN, dumb = Self(strict_dumb!()))]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
+pub struct InternalPk(TaprootPk);
+
+impl InternalPk {
+    pub fn from_byte_array(data: [u8; 32]) -> Result<Self, InvalidPubkey> {
+        TaprootPk::from_byte_array(data).map(Self)
+    }
+
+    pub fn to_byte_array(&self) -> [u8; 32] { self.0.to_byte_array() }
+
+    pub fn to_output_key(&self, merkle_root: Option<impl IntoTapHash>) -> OutputPk {
         let mut engine = Sha256::from_tag(MIDSTATE_TAPTWEAK);
         // always hash the key
         engine.input_raw(&self.0.serialize());
@@ -99,30 +145,36 @@ impl InternalPk {
             tweaked_parity,
             tweak
         ));
-        output_key
+        OutputPk(TaprootPk(output_key))
     }
 }
 
-impl StrictEncode for InternalPk {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
-        let bytes = Bytes32::from(self.0.serialize());
-        writer.write_newtype::<Self>(&bytes)
-    }
+impl From<InternalPk> for [u8; 32] {
+    fn from(pk: InternalPk) -> [u8; 32] { pk.to_byte_array() }
 }
 
-impl StrictDecode for InternalPk {
-    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        reader.read_tuple(|r| {
-            let bytes: Bytes32 = r.read_field()?;
-            XOnlyPublicKey::from_slice(bytes.as_slice())
-                .map(Self)
-                .map_err(|_| {
-                    DecodeError::DataIntegrityError(format!(
-                        "invalid x-only public key value '{bytes:x}'"
-                    ))
-                })
-        })
+#[derive(Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
+#[wrapper(Deref, LowerHex, Display, FromStr)]
+#[wrapper_mut(DerefMut)]
+#[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
+#[strict_type(lib = LIB_NAME_BITCOIN, dumb = Self(strict_dumb!()))]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
+pub struct OutputPk(TaprootPk);
+
+impl OutputPk {
+    pub fn from_byte_array(data: [u8; 32]) -> Result<Self, InvalidPubkey> {
+        TaprootPk::from_byte_array(data).map(Self)
     }
+
+    pub fn to_byte_array(&self) -> [u8; 32] { self.0.to_byte_array() }
+}
+
+impl From<OutputPk> for [u8; 32] {
+    fn from(pk: OutputPk) -> [u8; 32] { pk.to_byte_array() }
 }
 
 pub trait IntoTapHash {
@@ -506,7 +558,7 @@ impl ScriptPubkey {
         Self::p2tr_tweaked(output_key)
     }
 
-    pub fn p2tr_tweaked(output_key: XOnlyPublicKey) -> Self {
+    pub fn p2tr_tweaked(output_key: OutputPk) -> Self {
         // output key is 32 bytes long, so it's safe to use
         // `new_witness_program_unchecked` (Segwitv1)
         Self::with_witness_program_unchecked(WitnessVer::V1, &output_key.serialize())

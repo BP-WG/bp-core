@@ -77,8 +77,9 @@ pub use segwit::{SegwitError, Witness, WitnessProgram, WitnessScript, WitnessVer
 pub use sigtypes::{Bip340Sig, LegacySig, SigError, SighashFlag, SighashType};
 pub use taproot::{
     ControlBlock, FutureLeafVer, InternalPk, IntoTapHash, InvalidLeafVer, InvalidParityValue,
-    InvalidPubkey, LeafScript, LeafVer, Parity, TapBranchHash, TapCode, TapLeafHash, TapMerklePath,
-    TapNodeHash, TapScript, TAPROOT_ANNEX_PREFIX, TAPROOT_LEAF_MASK, TAPROOT_LEAF_TAPSCRIPT,
+    InvalidPubkey, LeafScript, LeafVer, OutputPk, Parity, TapBranchHash, TapCode, TapLeafHash,
+    TapMerklePath, TapNodeHash, TapScript, TaprootPk, TAPROOT_ANNEX_PREFIX, TAPROOT_LEAF_MASK,
+    TAPROOT_LEAF_TAPSCRIPT,
 };
 pub use tx::{
     LockTime, Outpoint, OutpointParseError, Sats, SeqNo, Tx, TxIn, TxOut, TxParseError, TxVer,
