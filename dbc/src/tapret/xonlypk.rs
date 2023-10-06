@@ -79,7 +79,7 @@ impl ConvolveCommit<mpc::Commitment, TapretProof, Lnpbp12> for InternalPk {
             TapLeafHash::with_tap_script(&script_commitment).into()
         };
 
-        let output_key = self.to_output_key(Some(merkle_root));
+        let (output_key, _) = self.to_output_pk(Some(merkle_root));
 
         let proof = TapretProof {
             path_proof: supplement.clone(),
@@ -116,7 +116,7 @@ mod test {
         let tapret_commitment = TapretCommitment::with(msg, path_proof.nonce);
         let script_commitment = TapScript::commit(&tapret_commitment);
         let script_leaf = TapLeafHash::with_tap_script(&script_commitment);
-        let real_key = internal_pk.to_output_key(Some(script_leaf));
+        let (real_key, _) = internal_pk.to_output_pk(Some(script_leaf));
 
         assert_eq!(outer_key, real_key);
 

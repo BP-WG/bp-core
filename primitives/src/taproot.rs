@@ -126,7 +126,13 @@ impl InternalPk {
 
     pub fn to_byte_array(&self) -> [u8; 32] { self.0.to_byte_array() }
 
-    pub fn to_output_key(&self, merkle_root: Option<impl IntoTapHash>) -> OutputPk {
+    #[deprecated(since = "0.10.9", note = "use to_output_pk")]
+    pub fn to_output_key(&self, merkle_root: Option<impl IntoTapHash>) -> XOnlyPublicKey {
+        let (pk, _) = self.to_output_pk(merkle_root);
+        pk.0.0
+    }
+
+    pub fn to_output_pk(&self, merkle_root: Option<impl IntoTapHash>) -> (OutputPk, Parity) {
         let mut engine = Sha256::from_tag(MIDSTATE_TAPTWEAK);
         // always hash the key
         engine.input_raw(&self.0.serialize());
@@ -145,7 +151,7 @@ impl InternalPk {
             tweaked_parity,
             tweak
         ));
-        OutputPk(TaprootPk(output_key))
+        (OutputPk(TaprootPk(output_key)), tweaked_parity.into())
     }
 }
 
@@ -544,17 +550,17 @@ impl TapScript {
 
 impl ScriptPubkey {
     pub fn p2tr(internal_key: InternalPk, merkle_root: Option<impl IntoTapHash>) -> Self {
-        let output_key = internal_key.to_output_key(merkle_root);
+        let (output_key, _) = internal_key.to_output_pk(merkle_root);
         Self::p2tr_tweaked(output_key)
     }
 
     pub fn p2tr_key_only(internal_key: InternalPk) -> Self {
-        let output_key = internal_key.to_output_key(None::<TapNodeHash>);
+        let (output_key, _) = internal_key.to_output_pk(None::<TapNodeHash>);
         Self::p2tr_tweaked(output_key)
     }
 
     pub fn p2tr_scripted(internal_key: InternalPk, merkle_root: impl IntoTapHash) -> Self {
-        let output_key = internal_key.to_output_key(Some(merkle_root));
+        let (output_key, _) = internal_key.to_output_pk(Some(merkle_root));
         Self::p2tr_tweaked(output_key)
     }
 
@@ -591,6 +597,15 @@ pub enum Parity {
     Even = 0,
     /// Odd parity.
     Odd = 1,
+}
+
+impl From<secp256k1::Parity> for Parity {
+    fn from(parity: secp256k1::Parity) -> Self {
+        match parity {
+            secp256k1::Parity::Even => Parity::Even,
+            secp256k1::Parity::Odd => Parity::Odd,
+        }
+    }
 }
 
 impl Parity {
