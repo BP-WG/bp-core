@@ -27,7 +27,7 @@ use std::num::ParseIntError;
 use std::str::FromStr;
 
 use amplify::hex::{self, FromHex, ToHex};
-use amplify::{Bytes32StrRev, RawArray, Wrapper};
+use amplify::{ByteArray, Bytes32StrRev, Wrapper};
 use commit_verify::{DigestExt, Sha256};
 
 use crate::{
@@ -57,7 +57,7 @@ impl Txid {
     #[inline]
     pub const fn coinbase() -> Self { Self(Bytes32StrRev::zero()) }
     #[inline]
-    pub fn is_coinbase(&self) -> bool { self.to_raw_array() == [0u8; 32] }
+    pub fn is_coinbase(&self) -> bool { self.to_byte_array() == [0u8; 32] }
 }
 
 impl FromHex for Txid {
@@ -529,7 +529,7 @@ impl Tx {
     ///
     /// This gives a way to identify a transaction that is "the same" as
     /// another in the sense of having same inputs and outputs.
-    pub fn ntxid(&self) -> [u8; 32] { self.to_unsigned_tx().txid().to_raw_array() }
+    pub fn ntxid(&self) -> [u8; 32] { self.to_unsigned_tx().txid().to_byte_array() }
 
     /// Computes the [`Txid`].
     ///
@@ -553,7 +553,7 @@ impl Tx {
             .expect("engines don't error");
         let mut double = Sha256::default();
         double.input_raw(&enc.finish());
-        Txid::from_raw_array(double.finish())
+        Txid::from_byte_array(double.finish())
     }
 
     /// Computes the segwit version of the transaction id.
@@ -568,7 +568,7 @@ impl Tx {
             .expect("engines don't error");
         let mut double = Sha256::default();
         double.input_raw(&enc.finish());
-        Wtxid::from_raw_array(double.finish())
+        Wtxid::from_byte_array(double.finish())
     }
 }
 

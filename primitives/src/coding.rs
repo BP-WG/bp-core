@@ -24,7 +24,7 @@ use std::io::{self, Cursor, Read, Write};
 
 use amplify::confinement::{Confined, U32};
 use amplify::hex::{self, FromHex, ToHex};
-use amplify::{confinement, Bytes32, IoError, RawArray, Wrapper};
+use amplify::{confinement, ByteArray, Bytes32, IoError, Wrapper};
 
 use crate::{
     ControlBlock, InternalPk, LockTime, Outpoint, RedeemScript, Sats, ScriptBytes, ScriptPubkey,
@@ -313,7 +313,7 @@ impl ConsensusDecode for Outpoint {
 
 impl ConsensusEncode for Txid {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
-        writer.write_all(&self.to_raw_array())?;
+        writer.write_all(&self.to_byte_array())?;
         Ok(32)
     }
 }
@@ -453,7 +453,7 @@ impl ConsensusEncode for InternalPk {
 
 impl ConsensusEncode for TapBranchHash {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
-        writer.write_all(&self.to_raw_array())?;
+        writer.write_all(&self.to_byte_array())?;
         Ok(32)
     }
 }
@@ -462,7 +462,7 @@ impl ConsensusDecode for TapBranchHash {
     fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
         let mut buf = [0u8; 32];
         reader.read_exact(&mut buf)?;
-        Ok(TapBranchHash::from_raw_array(buf))
+        Ok(TapBranchHash::from_byte_array(buf))
     }
 }
 

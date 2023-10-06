@@ -118,7 +118,7 @@ impl CommitVerify<TapretCommitment, Lnpbp12> for TapScript {
 
 #[cfg(test)]
 mod test {
-    use amplify::RawArray;
+    use amplify::ByteArray;
     use commit_verify::{Digest, Sha256};
 
     use super::*;
@@ -126,7 +126,7 @@ mod test {
     pub fn commitment() -> TapretCommitment {
         let msg = Sha256::digest("test data");
         TapretCommitment {
-            mpc: mpc::Commitment::from_raw_array(msg),
+            mpc: mpc::Commitment::from_byte_array(msg),
             nonce: 8,
         }
     }
