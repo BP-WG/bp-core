@@ -1,5 +1,5 @@
 {-
-  Id: urn:ubideco:stl:DxmVFuGffDNS1w5tBAhWS798qXBCqDtpmVPQanLbmBRX#vendor-inside-forum
+  Id: urn:ubideco:stl:D42LxJBQokrGJzvoSV3E1HoriGgLzPcxuL61JymwjEqV#arena-complex-husband
   Name: Bitcoin
   Version: 0.1.0
   Description: Consensus library for bitcoin protocol
@@ -39,8 +39,8 @@ data ControlBlock     :: leafVersion LeafVer
                        , merkleBranch TapMerklePath
 -- urn:ubideco:semid:CvDS9EgqtBkWLvADynNeR7VGwVAy14EXViKnLaBkqtac#student-formula-circus
 data FutureLeafVer    :: U8
--- urn:ubideco:semid:FKSMf7xnPBKRaY67CP9nNbVMV8ZscunJeLmqgzLk2h7N#pinball-culture-salt
-data InternalPk       :: TaprootPk
+-- urn:ubideco:semid:G5HFVaWwWNYSzqk548JgGZ8WKy6dQ2ftVgkJvHjgRudZ#horse-major-vienna
+data InternalPk       :: [Byte ^ 32]
 -- urn:ubideco:semid:Birr99aCTGqzwnuBou79KNhyLLBTNQvoTAkTbMu7C4y5#anvil-arctic-cloud
 data LeafScript       :: version LeafVer, script ScriptBytes
 -- urn:ubideco:semid:DGELfUvcU62GNQRo7HaMbKDzYQwdYRMW3b91JHd4d3WY#tunnel-lagoon-cowboy
@@ -58,8 +58,8 @@ data OpCode           :: pushBytes0:0 | pushBytes32:32 | pushData1:76 | pushData
 
 -- urn:ubideco:semid:FWt2MSo8A4nsYgYbuBqMRNLiKgtzvLBgUn774iKzTcuf#pocket-pegasus-frank
 data Outpoint         :: txid Txid, vout Vout
--- urn:ubideco:semid:8xqfr5BJ4FJ9Sv7wYEhz9a5gen2wyYpEAUqbBDngjuth#video-flex-harbor
-data OutputPk         :: TaprootPk
+-- urn:ubideco:semid:BA7caGkXGi42re8gf15M9awB9BwFrnHzxHpB9gMUpDQK#regular-vision-origin
+data OutputPk         :: [Byte ^ 32]
 -- urn:ubideco:semid:AgJ5n58hrH761B4MV7giZ1FhMipaDrUmnFYCLno74HDy#method-editor-echo
 data Parity           :: even:0 | odd:1
 
@@ -94,8 +94,6 @@ data TapMerklePath    :: [TapBranchHash ^ ..0x80]
 data TapNodeHash      :: [Byte ^ 32]
 -- urn:ubideco:semid:71AxyLFsoRG6hJ1c11gxad65nEbWfzkQBjWCPPrgCyjX#telecom-quest-helium
 data TapScript        :: ScriptBytes
--- urn:ubideco:semid:DufbiodesBkHAgaCpqgXzZYoJa97fEMjmTBxr6JoVATF#sound-humor-adam
-data TaprootPk        :: [Byte ^ 32]
 -- urn:ubideco:semid:DynChojW1sfr8VjSoZbmReHhZoU8u9KCiuwijgEGdToe#milk-gloria-prize
 data Tx               :: version TxVer
                        , inputs [TxIn ^ ..0xffffffff]

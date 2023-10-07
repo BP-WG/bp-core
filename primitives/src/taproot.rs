@@ -57,13 +57,25 @@ const MIDSTATE_TAPSIGHASH: [u8; 10] = *b"TapSighash";
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Display, Error)]
 #[display("invalid public key")]
-pub struct InvalidPubkey;
+pub struct InvalidPubkey(pub Bytes32);
+
+impl From<InvalidPubkey> for DecodeError {
+    fn from(e: InvalidPubkey) -> Self {
+        DecodeError::DataIntegrityError(format!("invalid x-only public key value '{:x}'", e.0))
+    }
+}
+
+macro_rules! dumb_key {
+    () => {
+        Self(XOnlyPublicKey::from_slice(&[1u8; 32]).unwrap())
+    };
+}
 
 #[derive(Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, LowerHex, Display, FromStr)]
 #[wrapper_mut(DerefMut)]
 #[derive(StrictType, StrictDumb)]
-#[strict_type(lib = LIB_NAME_BITCOIN, dumb = { Self(XOnlyPublicKey::from_slice(&[1u8; 32]).unwrap()) })]
+#[strict_type(lib = LIB_NAME_BITCOIN, dumb = dumb_key!())]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -75,7 +87,7 @@ impl TaprootPk {
     pub fn from_byte_array(data: [u8; 32]) -> Result<Self, InvalidPubkey> {
         XOnlyPublicKey::from_slice(data.as_ref())
             .map(Self)
-            .map_err(|_| InvalidPubkey)
+            .map_err(|_| InvalidPubkey(data.into()))
     }
 
     pub fn to_byte_array(&self) -> [u8; 32] { self.0.serialize() }
@@ -102,11 +114,7 @@ impl StrictDecode for TaprootPk {
             let bytes: Bytes32 = r.read_field()?;
             XOnlyPublicKey::from_slice(bytes.as_slice())
                 .map(Self)
-                .map_err(|_| {
-                    DecodeError::DataIntegrityError(format!(
-                        "invalid x-only public key value '{bytes:x}'"
-                    ))
-                })
+                .map_err(|_| InvalidPubkey(bytes).into())
         })
     }
 }
@@ -114,26 +122,31 @@ impl StrictDecode for TaprootPk {
 #[derive(Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, LowerHex, Display, FromStr)]
 #[wrapper_mut(DerefMut)]
-#[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
-#[strict_type(lib = LIB_NAME_BITCOIN, dumb = Self(strict_dumb!()))]
+#[derive(StrictType, StrictDumb)]
+#[strict_type(lib = LIB_NAME_BITCOIN, dumb = dumb_key!())]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct InternalPk(TaprootPk);
+pub struct InternalPk(XOnlyPublicKey);
 
 impl InternalPk {
+    #[inline]
+    pub fn from_unchecked(pk: TaprootPk) -> Self { Self(pk.0) }
+
     pub fn from_byte_array(data: [u8; 32]) -> Result<Self, InvalidPubkey> {
-        TaprootPk::from_byte_array(data).map(Self)
+        XOnlyPublicKey::from_slice(&data)
+            .map(Self)
+            .map_err(|_| InvalidPubkey(data.into()))
     }
 
-    pub fn to_byte_array(&self) -> [u8; 32] { self.0.to_byte_array() }
+    pub fn to_byte_array(&self) -> [u8; 32] { self.0.serialize() }
 
     #[deprecated(since = "0.10.9", note = "use to_output_pk")]
     pub fn to_output_key(&self, merkle_root: Option<impl IntoTapHash>) -> XOnlyPublicKey {
         let (pk, _) = self.to_output_pk(merkle_root);
-        pk.0.0
+        pk.0
     }
 
     pub fn to_output_pk(&self, merkle_root: Option<impl IntoTapHash>) -> (OutputPk, Parity) {
@@ -155,7 +168,7 @@ impl InternalPk {
             tweaked_parity,
             tweak
         ));
-        (OutputPk(TaprootPk(output_key)), tweaked_parity.into())
+        (OutputPk(output_key), tweaked_parity.into())
     }
 }
 
@@ -163,28 +176,69 @@ impl From<InternalPk> for [u8; 32] {
     fn from(pk: InternalPk) -> [u8; 32] { pk.to_byte_array() }
 }
 
+impl StrictEncode for InternalPk {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        let bytes = Bytes32::from(self.0.serialize());
+        writer.write_newtype::<Self>(&bytes)
+    }
+}
+
+impl StrictDecode for InternalPk {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        reader.read_tuple(|r| {
+            let bytes: Bytes32 = r.read_field()?;
+            XOnlyPublicKey::from_slice(bytes.as_slice())
+                .map(Self)
+                .map_err(|_| InvalidPubkey(bytes).into())
+        })
+    }
+}
+
 #[derive(Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, LowerHex, Display, FromStr)]
 #[wrapper_mut(DerefMut)]
-#[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
-#[strict_type(lib = LIB_NAME_BITCOIN, dumb = Self(strict_dumb!()))]
+#[derive(StrictType, StrictDumb)]
+#[strict_type(lib = LIB_NAME_BITCOIN, dumb = dumb_key!())]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct OutputPk(TaprootPk);
+pub struct OutputPk(XOnlyPublicKey);
 
 impl OutputPk {
+    #[inline]
+    pub fn from_unchecked(pk: TaprootPk) -> Self { Self(pk.0) }
+
     pub fn from_byte_array(data: [u8; 32]) -> Result<Self, InvalidPubkey> {
-        TaprootPk::from_byte_array(data).map(Self)
+        XOnlyPublicKey::from_slice(&data)
+            .map(Self)
+            .map_err(|_| InvalidPubkey(data.into()))
     }
 
-    pub fn to_byte_array(&self) -> [u8; 32] { self.0.to_byte_array() }
+    pub fn to_byte_array(&self) -> [u8; 32] { self.0.serialize() }
 }
 
 impl From<OutputPk> for [u8; 32] {
     fn from(pk: OutputPk) -> [u8; 32] { pk.to_byte_array() }
+}
+
+impl StrictEncode for OutputPk {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        let bytes = Bytes32::from(self.0.serialize());
+        writer.write_newtype::<Self>(&bytes)
+    }
+}
+
+impl StrictDecode for OutputPk {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        reader.read_tuple(|r| {
+            let bytes: Bytes32 = r.read_field()?;
+            XOnlyPublicKey::from_slice(bytes.as_slice())
+                .map(Self)
+                .map_err(|_| InvalidPubkey(bytes).into())
+        })
+    }
 }
 
 pub trait IntoTapHash {
