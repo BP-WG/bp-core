@@ -101,7 +101,6 @@ impl FromStr for Vout {
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 #[display("{txid}:{vout}")]
 pub struct Outpoint {
     pub txid: Txid,
@@ -159,6 +158,68 @@ impl FromStr for Outpoint {
             .split_once(':')
             .ok_or_else(|| OutpointParseError::MalformedSeparator(s.to_owned()))?;
         Ok(Outpoint::new(txid.parse()?, Vout::from_str(vout)?))
+    }
+}
+
+#[cfg(feature = "serde")]
+mod _serde_outpoint {
+    use std::fmt;
+
+    use serde::de::{SeqAccess, Visitor};
+    use serde::ser::SerializeTuple;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    use super::*;
+
+    impl Serialize for Outpoint {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer {
+            if serializer.is_human_readable() {
+                serializer.serialize_str(&self.to_string())
+            } else {
+                let mut ser = serializer.serialize_tuple(2)?;
+                ser.serialize_element(&self.txid)?;
+                ser.serialize_element(&self.vout)?;
+                ser.end()
+            }
+        }
+    }
+
+    impl<'de> Deserialize<'de> for Outpoint {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de> {
+            use serde::de::Error;
+            if deserializer.is_human_readable() {
+                String::deserialize(deserializer).and_then(|string| {
+                    Self::from_str(&string)
+                        .map_err(|_| D::Error::custom("wrong outpoint string representation"))
+                })
+            } else {
+                struct OutpointVisitor;
+
+                impl<'de> Visitor<'de> for OutpointVisitor {
+                    type Value = Outpoint;
+
+                    fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
+                        write!(formatter, "a transaction outpoint")
+                    }
+
+                    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+                    where A: SeqAccess<'de> {
+                        let mut outpoint = Outpoint::coinbase();
+                        outpoint.txid = seq
+                            .next_element()?
+                            .ok_or_else(|| Error::invalid_length(0, &self))?;
+                        outpoint.vout = seq
+                            .next_element()?
+                            .ok_or_else(|| Error::invalid_length(1, &self))?;
+                        Ok(outpoint)
+                    }
+                }
+
+                deserializer.deserialize_tuple(2, OutpointVisitor)
+            }
+        }
     }
 }
 
