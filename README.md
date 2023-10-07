@@ -1,17 +1,18 @@
 # Bitcoin protocol core library
 
-![Build](https://github.com/LNP-BP/bp-core/workflows/Build/badge.svg)
-![Tests](https://github.com/LNP-BP/bp-core/workflows/Tests/badge.svg)
-![Lints](https://github.com/LNP-BP/bp-core/workflows/Lints/badge.svg)
-[![codecov](https://codecov.io/gh/LNP-BP/bp-core/branch/master/graph/badge.svg)](https://codecov.io/gh/LNP-BP/bp-core)
+![Build](https://github.com/BP-WG/bp-core/workflows/Build/badge.svg)
+![Tests](https://github.com/BP-WG/bp-core/workflows/Tests/badge.svg)
+![Lints](https://github.com/BP-WG/bp-core/workflows/Lints/badge.svg)
+[![codecov](https://codecov.io/gh/BP-WG/bp-core/branch/master/graph/badge.svg)](https://codecov.io/gh/BP-WG/bp-core)
 
 [![crates.io](https://img.shields.io/crates/v/bp-core)](https://crates.io/crates/bp-core)
 [![Docs](https://docs.rs/bp-core/badge.svg)](https://docs.rs/bp-core)
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 [![Apache-2 licensed](https://img.shields.io/crates/l/bp-core)](./LICENSE)
 
-The library implements components necessary for [client-side-validation] in 
-bitcoin protocol, specifically
+The library implements components necessary for working with Bitcoin 
+consensus-level data structures and [client-side-validation] in bitcoin 
+protocol, specifically
 
 - deterministic bitcoin commitments API ([LNPBP-1], [LNPBP-2], [LNPBP-3], [LNPBP-6], [LNPBP-11] & [LNPBP-12] standards)
 - bitcoin-based single-use-seal API ([LNPBP-10] standards)
@@ -21,11 +22,11 @@ proof-of-publication/commitment medium layer, which may be a bitcoin blockchain
 or other type of distributed consensus system.
 
 The development of the library is supported by [LNP/BP Standards Association][lnpbp-web]
-and is performed on its [GitHub page][lnpbp-github].
+([GitHub page][lnpbp-github]).
 
 The original idea of client-side-validation was proposed by Peter Todd with its
 possible applications designed by Giacomo Zucco. It was shaped into the protocol
-design by Dr Maxim Orlovsky with a big input from the community.
+design by Dr Maxim Orlovsky with an input from the community.
 
 Minimum supported rust version for the library (MSRV) is 1.66 and 2021 rust
 edition.
@@ -46,7 +47,8 @@ To learn about the technologies enabled by the library please check
 
 ## Usage
 
-The repository contains rust libraries for client-side validation.
+The repository contains rust libraries for dealing with Bitcoin consensus-level
+data and client-side validation.
 
 ### Use library in other projects
 
@@ -61,17 +63,7 @@ bp-seals = "1" # Bitcoin single-use-seals crate
 bp-core = "1" # Library including both of the previous crates
 ```
 
-`bp-core` crate is an "umbrella" library containing both deterministic bitcoin
-commitments and bitcoin seals crates inside.
-
-## Known applications
-
-The current list of the projects based on the library include:
-
-- [RGB](https://github.com/LNP-BP/rgb-node): Confidential & scalable smart
-  contracts for Bitcoin & Lightning
-- [Bitcoin-based decentralized identity](https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2021-February/018381.html)
-  proposal uses single-use-seals
+`bp-core` crate is an "umbrella" library containing all three libraries inside.
 
 ## Contributing
 
