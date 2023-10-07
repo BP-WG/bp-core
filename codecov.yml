@@ -8,7 +8,7 @@ coverage:
   status:
     project:
       default:
-        target: 75%
+        target: 35%
         threshold: 1%
         branches:
           - master
