@@ -71,6 +71,11 @@ macro_rules! dumb_key {
     };
 }
 
+/// Generic taproot x-only (BIP-340) public key - a wrapper around
+/// [`XOnlyPublicKey`] providing APIs compatible with the rest of the library.
+/// Should be used everywhere when [`InternalPk`] and [`OutputPk`] do not apply:
+/// as an output of BIP32 key derivation functions, inside tapscripts/
+/// leafscripts etc.
 #[derive(Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, LowerHex, Display, FromStr)]
 #[wrapper_mut(DerefMut)]
@@ -119,6 +124,8 @@ impl StrictDecode for TaprootPk {
     }
 }
 
+/// Internal taproot public key, which can be present only in key fragment
+/// inside taproot descriptors.
 #[derive(Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, LowerHex, Display, FromStr)]
 #[wrapper_mut(DerefMut)]
@@ -194,6 +201,9 @@ impl StrictDecode for InternalPk {
     }
 }
 
+/// Output taproot key - an [`InternalPk`] tweaked with merkle root of the
+/// script tree - or its own hash. Used only inside addresses and raw taproot
+/// descriptors.
 #[derive(Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, LowerHex, Display, FromStr)]
 #[wrapper_mut(DerefMut)]
@@ -481,7 +491,11 @@ impl UpperHex for LeafVer {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN, dumb = { Self(0x51) })]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
 pub struct FutureLeafVer(u8);
 
 impl FutureLeafVer {
