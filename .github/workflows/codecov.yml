@@ -14,24 +14,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install latest nightly
+      - name: Set up toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
+          profile: minimal
+          toolchain: stable
           override: true
-      - name: Clean
+          components: rustfmt, llvm-tools-preview
+      - name: Build
         uses: actions-rs/cargo@v1
         with:
-          command: clean
-      - name: Build & test
+          command: build
+          args: --release
+        env:
+          CARGO_INCREMENTAL: "0"
+          RUSTFLAGS: "-Cinstrument-coverage"
+          RUSTDOCFLAGS: "-Cinstrument-coverage"
+      - name: Test
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --workspace --all-features --no-fail-fast
+          args: --all-features --no-fail-fast
         env:
-          CARGO_INCREMENTAL: '0'
-          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
-          RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
+          CARGO_INCREMENTAL: "0"
+          RUSTFLAGS: "-Cinstrument-coverage"
+          RUSTDOCFLAGS: "-Cinstrument-coverage"
       - name: Install grcov
         run: if [[ ! -e ~/.cargo/bin/grcov ]]; then cargo install grcov; fi
       - name: Generate coverage
