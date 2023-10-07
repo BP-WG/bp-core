@@ -53,6 +53,7 @@ pub struct ChainParseError(String);
     serde(crate = "serde_crate", rename_all = "lowercase")
 )]
 #[repr(u8)]
+// TODO: v0.11 make non_exhaustive
 pub enum Chain {
     #[default]
     #[display("mainnet")]
@@ -68,6 +69,16 @@ pub enum Chain {
     Signet = 0x84,
 }
 
+impl Chain {
+    #[inline]
+    pub fn is_test_chain(self) -> bool {
+        match self {
+            Chain::Bitcoin => false,
+            Chain::Testnet3 | Chain::Regtest | Chain::Signet => true,
+        }
+    }
+}
+
 impl FromStr for Chain {
     type Err = ChainParseError;
 
@@ -80,15 +91,5 @@ impl FromStr for Chain {
             "signet" => Chain::Signet,
             _ => return Err(ChainParseError(chain)),
         })
-    }
-}
-
-impl Chain {
-    #[inline]
-    pub fn is_test_chain(self) -> bool {
-        match self {
-            Chain::Bitcoin => false,
-            Chain::Testnet3 | Chain::Regtest | Chain::Signet => true,
-        }
     }
 }
