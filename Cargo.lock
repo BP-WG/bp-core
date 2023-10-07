@@ -165,7 +165,7 @@ dependencies = [
 
 [[package]]
 name = "bp-consensus"
-version = "0.10.9"
+version = "0.10.10"
 dependencies = [
  "amplify",
  "commit_verify",
@@ -177,7 +177,7 @@ dependencies = [
 
 [[package]]
 name = "bp-core"
-version = "0.10.9"
+version = "0.10.10"
 dependencies = [
  "amplify",
  "bp-consensus",
@@ -192,7 +192,7 @@ dependencies = [
 
 [[package]]
 name = "bp-dbc"
-version = "0.10.9"
+version = "0.10.10"
 dependencies = [
  "amplify",
  "base85",
@@ -205,7 +205,7 @@ dependencies = [
 
 [[package]]
 name = "bp-seals"
-version = "0.10.9"
+version = "0.10.10"
 dependencies = [
  "amplify",
  "baid58",
