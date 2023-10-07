@@ -65,6 +65,7 @@ default = []
 all = ["serde", "stl"]
 serde = [
     "serde_crate",
+    "bp-consensus/serde",
     "bp-dbc/serde",
     "bp-seals/serde",
 ]
