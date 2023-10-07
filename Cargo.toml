@@ -1,18 +1,19 @@
 [workspace]
 members = [
-    "primitives",
+    "consensus",
     "dbc",
     "seals",
     "."
 ]
 default-members = [
-    "primitives",
+    "consensus",
     "dbc",
     "seals",
     "."
 ]
 
 [workspace.package]
+version = "0.10.10"
 authors = ["Dr Maxim Orlovsky <orlovsky@lnp-bp.org>"]
 homepage = "https://github.com/BP-WG"
 repository = "https://github.com/BP-WG/bp-core"
@@ -23,12 +24,18 @@ license = "Apache-2.0"
 [workspace.dependencies]
 amplify = "4.2.0"
 strict_encoding = "2.5.0"
+strict_types = "1.6.2"
 commit_verify = "0.10.5"
 single_use_seals = "0.10.0"
+bp-consensus = { version = "0.10.10", path = "consensus" }
+bp-dbc = { version = "0.10.10", path = "./dbc" }
+bp-seals = { version = "0.10.10", path = "./seals" }
+secp256k1 = { version = "0.27.0", features = ["global-context"] }
+serde_crate = { package = "serde", version = "1", features = ["derive"] }
 
 [package]
 name = "bp-core"
-version = "0.10.9"
+version = { workspace = true }
 description = "Bitcoin protocol core library (BP Core Lib)"
 keywords = ["lnp-bp", "smart-contracts", "bitcoin", "blockchain"]
 categories = ["cryptography"]
@@ -52,23 +59,24 @@ required-features = ["stl"]
 [dependencies]
 amplify = { workspace = true }
 strict_encoding = { workspace = true }
-strict_types = { version = "1.6.0", optional = true }
+strict_types = { workspace = true, optional = true }
 commit_verify = { workspace = true }
 single_use_seals = { workspace = true }
-bp-primitives = { version = "0.10.7", path = "./primitives" }
-bp-dbc = { version = "0.10.9", path = "./dbc" }
-bp-seals = { version = "0.10.9", path = "./seals" }
-serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
+bp-consensus = { workspace = true }
+bp-dbc = { workspace = true }
+bp-seals = { workspace = true }
+serde_crate = { workspace = true, optional = true }
 
 [features]
 default = []
 all = ["serde", "stl"]
 serde = [
     "serde_crate",
+    "bp-consensus/serde",
     "bp-dbc/serde",
     "bp-seals/serde",
 ]
-stl = ["strict_types", "strict_types/base64", "bp-primitives/stl", "commit_verify/stl"]
+stl = ["strict_types", "strict_types/base64", "bp-consensus/stl", "commit_verify/stl"]
 
 [package.metadata.docs.rs]
 features = [ "all" ]

@@ -1,6 +1,6 @@
 [package]
 name = "bp-seals"
-version = "0.10.9"
+version = { workspace = true }
 description = "Bitcoin protocol single-use-seals library"
 keywords = ["lnp-bp", "bitcoin", "blockchain", "smart-contracts", "single-use-seals"]
 categories = ["cryptography", "encoding"]
@@ -22,15 +22,21 @@ single_use_seals = { workspace = true }
 commit_verify = { workspace = true }
 strict_encoding = { workspace = true }
 baid58 = "0.4.4"
-bp-primitives = { version = "0.10.7", path = "../primitives" }
-bp-dbc = { version = "0.10.9", path = "../dbc" }
+bp-consensus = { workspace = true }
+bp-dbc = { workspace = true }
 rand = "0.8.5"
-serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
+serde_crate = { workspace = true, optional = true }
 
 [features]
 default = []
 all = ["serde"]
-serde = ["amplify/serde", "commit_verify/serde", "bp-dbc/serde", "serde_crate"]
+serde = [
+    "amplify/serde",
+    "commit_verify/serde",
+    "bp-consensus/serde",
+    "bp-dbc/serde",
+    "serde_crate"
+]
 
 [package.metadata.docs.rs]
 features = [ "all" ]

@@ -38,7 +38,7 @@ Detailed developer & API documentation for all libraries can be accessed at:
 - <https://docs.rs/bp-core/>
 - <https://docs.rs/bp-dbc/>
 - <https://docs.rs/bp-seals/>
-- <https://docs.rs/bp-primitives/>
+- <https://docs.rs/bp-consensus/>
 
 To learn about the technologies enabled by the library please check
 [slides from our tech presentations][presentations] and
@@ -57,7 +57,7 @@ To use libraries, you just need latest version of libraries, published to
 `Cargo.toml`. Here is the full list of available libraries from this repository:
 
 ```toml
-bp-primitives = "1" # Bitcoin protocol primitives crate
+bp-consensus = "1" # Bitcoin protocol consensus crate
 bp-dbc = "1" # Deterministic bitcoin commitments crate
 bp-seals = "1" # Bitcoin single-use-seals crate
 bp-core = "1" # Library including both of the previous crates
