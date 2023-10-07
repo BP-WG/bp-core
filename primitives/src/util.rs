@@ -47,11 +47,6 @@ pub struct ChainParseError(String);
 #[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
 #[derive(CommitEncode)]
 #[commit_encode(strategy = strict)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "lowercase")
-)]
 #[repr(u8)]
 // TODO: v0.11 make non_exhaustive
 pub enum Chain {
@@ -91,5 +86,37 @@ impl FromStr for Chain {
             "signet" => Chain::Signet,
             _ => return Err(ChainParseError(chain)),
         })
+    }
+}
+
+#[cfg(feature = "serde")]
+mod _serde {
+    use serde::de::Error;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    use super::*;
+
+    impl Serialize for Chain {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer {
+            if serializer.is_human_readable() {
+                self.to_string().serialize(serializer)
+            } else {
+                (*self as u8).serialize(serializer)
+            }
+        }
+    }
+
+    impl<'de> Deserialize<'de> for Chain {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de> {
+            if deserializer.is_human_readable() {
+                let s = String::deserialize(deserializer)?;
+                Chain::from_str(&s).map_err(D::Error::custom)
+            } else {
+                let v = u8::deserialize(deserializer)?;
+                Chain::try_from(v).map_err(D::Error::custom)
+            }
+        }
     }
 }
