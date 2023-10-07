@@ -19,6 +19,10 @@ jobs:
         with:
           toolchain: nightly
           override: true
+      - name: Clean
+        uses: actions-rs/cargo@v1
+        with:
+          command: clean
       - name: Build & test
         uses: actions-rs/cargo@v1
         with:
@@ -26,19 +30,11 @@ jobs:
           args: --workspace --all-features --no-fail-fast
         env:
           CARGO_INCREMENTAL: '0'
-          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off'
-          RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off'
+          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
+          RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
       - id: coverage
         name: Generate coverage
-        uses: actions-rs/grcov@0.2-proto
-        with:
-          args: >
-            -t lcov
-            --llvm
-            --ignore-not-existing
-            --ignore "/*"
-            -o ./target/lcov.info
-            ./target/debug/
+        uses: actions-rs/grcov@v0.1
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
