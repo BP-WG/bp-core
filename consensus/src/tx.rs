@@ -1,4 +1,4 @@
-// Bitcoin protocol primitives library.
+// Bitcoin protocol consensus library.
 //
 // SPDX-License-Identifier: Apache-2.0
 //

@@ -22,7 +22,7 @@ single_use_seals = { workspace = true }
 commit_verify = { workspace = true }
 strict_encoding = { workspace = true }
 baid58 = "0.4.4"
-bp-primitives = { version = "0.10.7", path = "../primitives" }
+bp-consensus = { version = "0.10.7", path = "../consensus" }
 bp-dbc = { version = "0.10.9", path = "../dbc" }
 rand = "0.8.5"
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }

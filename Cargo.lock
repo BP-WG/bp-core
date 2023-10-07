@@ -164,12 +164,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "bp-consensus"
+version = "0.10.9"
+dependencies = [
+ "amplify",
+ "commit_verify",
+ "secp256k1",
+ "serde",
+ "strict_encoding",
+ "strict_types",
+]
+
+[[package]]
 name = "bp-core"
 version = "0.10.9"
 dependencies = [
  "amplify",
+ "bp-consensus",
  "bp-dbc",
- "bp-primitives",
  "bp-seals",
  "commit_verify",
  "serde",
@@ -184,23 +196,11 @@ version = "0.10.9"
 dependencies = [
  "amplify",
  "base85",
- "bp-primitives",
+ "bp-consensus",
  "commit_verify",
  "secp256k1",
  "serde",
  "strict_encoding",
-]
-
-[[package]]
-name = "bp-primitives"
-version = "0.10.9"
-dependencies = [
- "amplify",
- "commit_verify",
- "secp256k1",
- "serde",
- "strict_encoding",
- "strict_types",
 ]
 
 [[package]]
@@ -209,8 +209,8 @@ version = "0.10.9"
 dependencies = [
  "amplify",
  "baid58",
+ "bp-consensus",
  "bp-dbc",
- "bp-primitives",
  "commit_verify",
  "rand",
  "serde",

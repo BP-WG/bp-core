@@ -21,7 +21,7 @@ amplify = { workspace = true }
 base85 = "=2.0.0"
 strict_encoding = { workspace = true }
 commit_verify = { workspace = true, features = ["rand"] }
-bp-primitives = { version = "0.10.6", path = "../primitives" }
+bp-consensus = { version = "0.10.6", path = "../consensus" }
 secp256k1 = { version = "0.27.0", features = ["global-context", "rand-std"] }
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
 
@@ -30,7 +30,7 @@ default = []
 all = ["serde"]
 serde = [
     "serde_crate",
-    "bp-primitives/serde",
+    "bp-consensus/serde",
     "commit_verify/serde",
     "secp256k1/serde"
 ]

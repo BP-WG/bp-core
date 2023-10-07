@@ -1,12 +1,12 @@
 [workspace]
 members = [
-    "primitives",
+    "consensus",
     "dbc",
     "seals",
     "."
 ]
 default-members = [
-    "primitives",
+    "consensus",
     "dbc",
     "seals",
     "."
@@ -55,7 +55,7 @@ strict_encoding = { workspace = true }
 strict_types = { version = "1.6.0", optional = true }
 commit_verify = { workspace = true }
 single_use_seals = { workspace = true }
-bp-primitives = { version = "0.10.7", path = "./primitives" }
+bp-consensus = { version = "0.10.7", path = "consensus" }
 bp-dbc = { version = "0.10.9", path = "./dbc" }
 bp-seals = { version = "0.10.9", path = "./seals" }
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
@@ -68,7 +68,7 @@ serde = [
     "bp-dbc/serde",
     "bp-seals/serde",
 ]
-stl = ["strict_types", "strict_types/base64", "bp-primitives/stl", "commit_verify/stl"]
+stl = ["strict_types", "strict_types/base64", "bp-consensus/stl", "commit_verify/stl"]
 
 [package.metadata.docs.rs]
 features = [ "all" ]

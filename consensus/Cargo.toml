@@ -1,7 +1,7 @@
 [package]
-name = "bp-primitives"
+name = "bp-consensus"
 version = "0.10.9"
-description = "Bitcoin protocol primitives library"
+description = "Bitcoin protocol consensus library"
 keywords = ["lnp-bp", "smart-contracts", "bitcoin", "blockchain"]
 categories = ["cryptography"]
 authors = { workspace = true }
