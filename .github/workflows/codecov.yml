@@ -32,13 +32,15 @@ jobs:
           CARGO_INCREMENTAL: '0'
           RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
           RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
-      - id: coverage
-        name: Generate coverage
-        uses: actions-rs/grcov@v0.1
+      - name: Install grcov
+        run: if [[ ! -e ~/.cargo/bin/grcov ]]; then cargo install grcov; fi
+      - name: Generate coverage
+        run: grcov . --binary-path target/debug/deps/ -s . -t lcov --branch --ignore-not-existing --ignore '../**' --ignore '/*' -o coverage.lcov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          file: ${{ steps.coverage.outputs.report }}
-          directory: ./coverage/reports/
+          files: ./coverage.lcov
+          flags: rust
+          fail_ci_if_error: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
