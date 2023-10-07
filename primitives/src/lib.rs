@@ -22,6 +22,8 @@
 // Version 0.10.10:
 // TODO: Ensure all serde uses both string and binary version
 // TODO: Move consensus-level timelocks and sequence locks from other libraries
+// Version 0.11.0:
+// TODO: Ensure script length control doesn't panic for data structures > 4GB
 // Version 1.0:
 // TODO: Complete block data type implementation
 // TODO: Complete OpCode enumeration
