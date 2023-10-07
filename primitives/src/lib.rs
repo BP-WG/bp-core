@@ -19,6 +19,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Version 0.10.10:
+// TODO: Ensure all serde uses both string and binary version
+// TODO: Move consensus-level timelocks and sequence locks from other libraries
+// Version 1.0:
+// TODO: Complete block data type implementation
+// TODO: Complete OpCode enumeration
+// TODO: Do a no-std feature
+
 // Coding conventions
 #![deny(
     non_upper_case_globals,
@@ -33,6 +41,7 @@
 
 #[macro_use]
 extern crate amplify;
+// TODO: Make strict encoding optional dependency
 #[macro_use]
 extern crate strict_encoding;
 #[macro_use]
@@ -51,25 +60,32 @@ mod script;
 mod segwit;
 mod taproot;
 mod tx;
+mod sigtypes;
 mod util;
 mod weights;
 #[cfg(feature = "stl")]
 pub mod stl;
-mod consensus;
+mod coding;
 
 pub use block::{BlockHash, BlockHeader};
-pub use consensus::{
-    ConsensusDataError, ConsensusDecode, ConsensusDecodeError, ConsensusEncode, VarIntArray,
-    VarIntSize,
+pub use coding::{
+    ByteStr, ConsensusDataError, ConsensusDecode, ConsensusDecodeError, ConsensusEncode, LenVarInt,
+    VarInt, VarIntArray,
 };
-pub use script::{OpCode, ScriptBytes, ScriptPubkey, SigScript};
-pub use segwit::*;
-pub use taproot::*;
+pub use script::{OpCode, RedeemScript, ScriptBytes, ScriptPubkey, SigScript};
+pub use segwit::{SegwitError, Witness, WitnessProgram, WitnessScript, WitnessVer, Wtxid};
+pub use sigtypes::{Bip340Sig, LegacySig, SigError, SighashFlag, SighashType};
+pub use taproot::{
+    ControlBlock, FutureLeafVer, InternalPk, IntoTapHash, InvalidLeafVer, InvalidParityValue,
+    InvalidPubkey, LeafScript, LeafVer, OutputPk, Parity, TapBranchHash, TapCode, TapLeafHash,
+    TapMerklePath, TapNodeHash, TapScript, TaprootPk, TAPROOT_ANNEX_PREFIX, TAPROOT_LEAF_MASK,
+    TAPROOT_LEAF_TAPSCRIPT,
+};
 pub use tx::{
     LockTime, Outpoint, OutpointParseError, Sats, SeqNo, Tx, TxIn, TxOut, TxParseError, TxVer,
-    Txid, Vout, Witness, Wtxid, LOCKTIME_THRESHOLD,
+    Txid, Vout, LOCKTIME_THRESHOLD,
 };
-pub use util::{Chain, ChainParseError, NonStandardValue, VarInt};
+pub use util::{Chain, ChainParseError, NonStandardValue};
 pub use weights::{VBytes, Weight, WeightUnits};
 
 pub const LIB_NAME_BITCOIN: &str = "Bitcoin";

@@ -22,26 +22,85 @@
 
 use strict_types::{CompileError, LibBuilder, TypeLib};
 
-use crate::{Tx, LIB_NAME_BITCOIN};
+use crate::{
+    Bip340Sig, BlockHeader, ByteStr, Chain, ControlBlock, FutureLeafVer, InternalPk, LeafScript,
+    LegacySig, OpCode, OutputPk, RedeemScript, TapCode, TapLeafHash, TapNodeHash, TapScript, Tx,
+    VBytes, VarInt, WeightUnits, WitnessProgram, WitnessScript, WitnessVer, Wtxid,
+    LIB_NAME_BITCOIN,
+};
 
+#[deprecated(since = "0.10.8", note = "use LIB_ID_BP_TX instead")]
 pub const LIB_ID_BITCOIN: &str =
     "urn:ubideco:stl:6GgF7biXPVNcus2FfQj2pQuRzau11rXApMQLfCZhojgi#money-pardon-parody";
+pub const LIB_ID_BP_TX: &str =
+    "urn:ubideco:stl:6GgF7biXPVNcus2FfQj2pQuRzau11rXApMQLfCZhojgi#money-pardon-parody";
+pub const LIB_ID_BP_CONSENSUS: &str =
+    "urn:ubideco:stl:D42LxJBQokrGJzvoSV3E1HoriGgLzPcxuL61JymwjEqV#arena-complex-husband";
 
-fn _bitcoin_stl() -> Result<TypeLib, CompileError> {
+#[deprecated(since = "0.10.8", note = "use _bp_tx_stl instead")]
+fn _bitcoin_stl() -> Result<TypeLib, CompileError> { _bp_tx_stl() }
+
+fn _bp_tx_stl() -> Result<TypeLib, CompileError> {
     LibBuilder::new(libname!(LIB_NAME_BITCOIN), None)
         .transpile::<Tx>()
         .compile()
 }
 
-pub fn bitcoin_stl() -> TypeLib { _bitcoin_stl().expect("invalid strict type Bitcoin library") }
+fn _bp_consensus_stl() -> Result<TypeLib, CompileError> {
+    LibBuilder::new(libname!(LIB_NAME_BITCOIN), tiny_bset! {
+        strict_types::stl::std_stl().to_dependency(),
+    })
+    .transpile::<LegacySig>()
+    .transpile::<Bip340Sig>()
+    .transpile::<OpCode>()
+    .transpile::<WitnessScript>()
+    .transpile::<RedeemScript>()
+    .transpile::<Wtxid>()
+    .transpile::<WitnessProgram>()
+    .transpile::<WitnessVer>()
+    .transpile::<InternalPk>()
+    .transpile::<OutputPk>()
+    .transpile::<TapNodeHash>()
+    .transpile::<TapLeafHash>()
+    .transpile::<FutureLeafVer>()
+    .transpile::<LeafScript>()
+    .transpile::<TapCode>()
+    .transpile::<TapScript>()
+    .transpile::<ControlBlock>()
+    .transpile::<BlockHeader>()
+    .transpile::<Tx>()
+    .transpile::<VarInt>()
+    .transpile::<ByteStr>()
+    .transpile::<Chain>()
+    .transpile::<WeightUnits>()
+    .transpile::<VBytes>()
+    .compile()
+}
+
+#[deprecated(since = "0.10.8", note = "use bp_tx_stl instead")]
+pub fn bitcoin_stl() -> TypeLib { bp_tx_stl() }
+
+pub fn bp_tx_stl() -> TypeLib {
+    _bp_tx_stl().expect("invalid strict type Bitcoin transaction library")
+}
+
+pub fn bp_consensus_stl() -> TypeLib {
+    _bp_consensus_stl().expect("invalid strict type Bitcoin consensus library")
+}
 
 #[cfg(test)]
 mod test {
     use super::*;
 
     #[test]
-    fn lib_id() {
-        let lib = bitcoin_stl();
-        assert_eq!(lib.id().to_string(), LIB_ID_BITCOIN);
+    fn lib_id_tx() {
+        let lib = bp_tx_stl();
+        assert_eq!(lib.id().to_string(), LIB_ID_BP_TX);
+    }
+
+    #[test]
+    fn lib_id_consensus() {
+        let lib = bp_consensus_stl();
+        assert_eq!(lib.id().to_string(), LIB_ID_BP_CONSENSUS);
     }
 }

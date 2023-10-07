@@ -19,9 +19,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use bc::{InternalPk, TapBranchHash, TapLeafHash, TapNodeHash, TapScript};
+use bc::{InternalPk, OutputPk, TapBranchHash, TapLeafHash, TapNodeHash, TapScript};
 use commit_verify::{mpc, CommitVerify, ConvolveCommit, ConvolveCommitProof};
-use secp256k1::XOnlyPublicKey;
 
 use super::{Lnpbp12, TapretNodePartner, TapretPathProof, TapretProof};
 use crate::tapret::tapscript::TapretCommitment;
@@ -46,20 +45,20 @@ pub enum TapretKeyError {
 impl ConvolveCommitProof<mpc::Commitment, InternalPk, Lnpbp12> for TapretProof {
     type Suppl = TapretPathProof;
 
-    fn restore_original(&self, _: &XOnlyPublicKey) -> InternalPk { self.internal_pk }
+    fn restore_original(&self, _: &OutputPk) -> InternalPk { self.internal_pk }
 
     fn extract_supplement(&self) -> &Self::Suppl { &self.path_proof }
 }
 
 impl ConvolveCommit<mpc::Commitment, TapretProof, Lnpbp12> for InternalPk {
-    type Commitment = XOnlyPublicKey;
+    type Commitment = OutputPk;
     type CommitError = TapretKeyError;
 
     fn convolve_commit(
         &self,
         supplement: &TapretPathProof,
         msg: &mpc::Commitment,
-    ) -> Result<(XOnlyPublicKey, TapretProof), Self::CommitError> {
+    ) -> Result<(OutputPk, TapretProof), Self::CommitError> {
         let tapret_commitment = TapretCommitment::with(*msg, supplement.nonce);
         let script_commitment = TapScript::commit(&tapret_commitment);
 
@@ -80,7 +79,7 @@ impl ConvolveCommit<mpc::Commitment, TapretProof, Lnpbp12> for InternalPk {
             TapLeafHash::with_tap_script(&script_commitment).into()
         };
 
-        let output_key = self.to_output_key(Some(merkle_root));
+        let (output_key, _) = self.to_output_pk(Some(merkle_root));
 
         let proof = TapretProof {
             path_proof: supplement.clone(),
@@ -117,7 +116,7 @@ mod test {
         let tapret_commitment = TapretCommitment::with(msg, path_proof.nonce);
         let script_commitment = TapScript::commit(&tapret_commitment);
         let script_leaf = TapLeafHash::with_tap_script(&script_commitment);
-        let real_key = internal_pk.to_output_key(Some(script_leaf));
+        let (real_key, _) = internal_pk.to_output_pk(Some(script_leaf));
 
         assert_eq!(outer_key, real_key);
 

@@ -1,0 +1,49 @@
+{-
+  Id: urn:ubideco:stl:5PUqZnqASPU3zKASh2pTHYmfcV4pZfvt4UU8FxPsRt6S#winter-horizon-binary
+  Name: Tx
+  Version: 0.1.0
+  Description: Bitcoin transaction library
+  Author: Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
+  Copyright (C) 2023 LNP/BP Standards Association. All rights reserved.
+  License: Apache-2.0
+-}
+
+typelib Tx
+
+-- no dependencies
+
+-- urn:ubideco:semid:4dDWWU4afiPN3q4AgCMuFRFhL4UDta2u5SrqrBzPvjby#tokyo-inch-program
+data LockTime         :: U32
+-- urn:ubideco:semid:FWt2MSo8A4nsYgYbuBqMRNLiKgtzvLBgUn774iKzTcuf#pocket-pegasus-frank
+data Outpoint         :: txid Txid, vout Vout
+-- urn:ubideco:semid:BEBz6h7AGjYSDRCxVHnjYkkkxzBsjN3EvyNiD4ZrzmRL#pyramid-spray-star
+data Sats             :: U64
+-- urn:ubideco:semid:3Y4AgjkFbDusgo3YqRDWv9BznDeAJEUDEPeEq1mpSkAR#maestro-source-jackson
+data ScriptBytes      :: [Byte ^ ..0xffffffff]
+-- urn:ubideco:semid:2ZAYpWKB2BQxeXXjpQDpYGZ7eXFM9qQxN9TcdTiQqeB8#bingo-maestro-silk
+data ScriptPubkey     :: ScriptBytes
+-- urn:ubideco:semid:5HtymNhYBhjqPkLLw9QVWZ62cLm57cZxgQTDUBBXtmL#rhino-time-rodent
+data SeqNo            :: U32
+-- urn:ubideco:semid:2gTMqAC393rBSGtBhDn8sJq3F3HtDosbqKDQTw9bHFyT#prelude-analyze-think
+data SigScript        :: ScriptBytes
+-- urn:ubideco:semid:DynChojW1sfr8VjSoZbmReHhZoU8u9KCiuwijgEGdToe#milk-gloria-prize
+data Tx               :: version TxVer
+                       , inputs [TxIn ^ ..0xffffffff]
+                       , outputs [TxOut ^ ..0xffffffff]
+                       , lockTime LockTime
+-- urn:ubideco:semid:9Nf4Vvt3im8tFQSGzPWKfjfhsrkB8bf2XsLWfzywiFSv#antenna-crater-planet
+data TxIn             :: prevOutput Outpoint
+                       , sigScript SigScript
+                       , sequence SeqNo
+                       , witness Witness
+-- urn:ubideco:semid:HutVbeKmYYrNun96Pi4T7YfYww7SeWxRFPZGDiZwoGZV#design-jacket-spirit
+data TxOut            :: value Sats, scriptPubkey ScriptPubkey
+-- urn:ubideco:semid:CLhr1zatQBSkCz9SiVrNoKB5igCZfF3hqRizfrviM6NR#english-natasha-virus
+data TxVer            :: I32
+-- urn:ubideco:semid:C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs#cowboy-diego-betty
+data Txid             :: [Byte ^ 32]
+-- urn:ubideco:semid:3HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk#chrome-robin-gallop
+data Vout             :: U32
+-- urn:ubideco:semid:8mjN2CZj3Nhn2HjnKqTmEcN5vmyb3UJK8HSFW1uE3W2p#warning-saddle-period
+data Witness          :: [[Byte ^ ..0xffffffff] ^ ..0xffffffff]
+

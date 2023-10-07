@@ -19,24 +19,111 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::fmt::{Formatter, LowerHex, UpperHex};
 use std::io::{self, Cursor, Read, Write};
 
 use amplify::confinement::{Confined, U32};
-use amplify::{confinement, IoError, RawArray, Wrapper};
+use amplify::hex::{self, FromHex, ToHex};
+use amplify::{confinement, ByteArray, Bytes32, IoError, Wrapper};
 
 use crate::{
-    LockTime, Outpoint, Sats, ScriptBytes, ScriptPubkey, SeqNo, SigScript, Tx, TxIn, TxOut, TxVer,
-    Txid, VarInt, Vout, Witness,
+    ControlBlock, InternalPk, InvalidLeafVer, LeafVer, LockTime, Outpoint, Parity, RedeemScript,
+    Sats, ScriptBytes, ScriptPubkey, SeqNo, SigScript, TapBranchHash, TapMerklePath, TapScript, Tx,
+    TxIn, TxOut, TxVer, Txid, Vout, Witness, WitnessScript, LIB_NAME_BITCOIN,
 };
 
 pub type VarIntArray<T> = Confined<Vec<T>, 0, U32>;
 
-pub trait VarIntSize {
-    fn var_int_size(&self) -> VarInt;
+/// A variable-length unsigned integer.
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Default)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
+pub struct VarInt(pub u64);
+
+#[allow(clippy::len_without_is_empty)] // VarInt has no concept of 'is_empty'.
+impl VarInt {
+    pub const fn new(u: u64) -> Self { VarInt(u) }
+
+    pub fn with(u: impl Into<usize>) -> Self { VarInt(u.into() as u64) }
+
+    /// Gets the length of this VarInt when encoded.
+    ///
+    /// Returns 1 for 0..=0xFC, 3 for 0xFD..=(2^16-1), 5 for 0x10000..=(2^32-1),
+    /// and 9 otherwise.
+    #[inline]
+    pub const fn len(&self) -> usize {
+        match self.0 {
+            0..=0xFC => 1,
+            0xFD..=0xFFFF => 3,
+            0x10000..=0xFFFFFFFF => 5,
+            _ => 9,
+        }
+    }
+
+    pub const fn to_u64(&self) -> u64 { self.0 }
+    pub const fn into_u64(self) -> u64 { self.0 }
+    pub fn to_usize(&self) -> usize {
+        usize::try_from(self.0).expect("transaction too large for a non-64 bit platform")
+    }
+    pub fn into_usize(self) -> usize { self.to_usize() }
 }
 
-impl<T> VarIntSize for VarIntArray<T> {
-    fn var_int_size(&self) -> VarInt { VarInt::with(self.len()) }
+impl<U: Into<u64> + Copy> PartialEq<U> for VarInt {
+    fn eq(&self, other: &U) -> bool { self.0.eq(&(*other).into()) }
+}
+
+pub trait LenVarInt {
+    fn len_var_int(&self) -> VarInt;
+}
+
+impl<T> LenVarInt for VarIntArray<T> {
+    fn len_var_int(&self) -> VarInt { VarInt::with(self.len()) }
+}
+
+#[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default, Debug, From)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
+#[wrapper(Deref, Index, RangeOps, BorrowSlice)]
+#[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
+pub struct ByteStr(VarIntArray<u8>);
+
+impl AsRef<[u8]> for ByteStr {
+    fn as_ref(&self) -> &[u8] { self.0.as_slice() }
+}
+
+impl From<Vec<u8>> for ByteStr {
+    fn from(value: Vec<u8>) -> Self { Self(Confined::try_from(value).expect("u64 >= usize")) }
+}
+
+impl LowerHex for ByteStr {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0.as_inner().to_hex())
+    }
+}
+
+impl UpperHex for ByteStr {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0.as_inner().to_hex().to_uppercase())
+    }
+}
+
+impl FromHex for ByteStr {
+    fn from_hex(s: &str) -> Result<Self, hex::Error> { Vec::<u8>::from_hex(s).map(Self::from) }
+    fn from_byte_iter<I>(_: I) -> Result<Self, hex::Error>
+    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
+        unreachable!()
+    }
+}
+
+impl ByteStr {
+    pub fn len_var_int(&self) -> VarInt { VarInt(self.len() as u64) }
+
+    pub fn into_vec(self) -> Vec<u8> { self.0.into_inner() }
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]
@@ -46,7 +133,9 @@ pub enum ConsensusDecodeError {
     #[from(io::Error)]
     Io(IoError),
 
+    #[display(inner)]
     #[from]
+    #[from(InvalidLeafVer)]
     #[from(confinement::Error)]
     Data(ConsensusDataError),
 }
@@ -59,6 +148,20 @@ pub enum ConsensusDataError {
 
     /// not a minimally-encoded variable integer.
     NonMinimalVarInt,
+
+    /// invalid BIP340 (x-only) pubkey data.
+    InvalidXonlyPubkey(Bytes32),
+
+    /// taproot Merkle path length exceeds BIP-341 consensus limit of 128
+    /// elements.
+    LongTapMerklePath,
+
+    /// Merkle path in the `PSBT_IN_TAP_TREE` is not encoded correctly.
+    InvalidTapMerklePath,
+
+    #[from]
+    #[display(inner)]
+    InvalidLeafVer(InvalidLeafVer),
 
     #[from]
     #[display(inner)]
@@ -223,7 +326,7 @@ impl ConsensusDecode for Outpoint {
 
 impl ConsensusEncode for Txid {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
-        writer.write_all(&self.to_raw_array())?;
+        writer.write_all(&self.to_byte_array())?;
         Ok(32)
     }
 }
@@ -294,6 +397,42 @@ impl ConsensusDecode for ScriptPubkey {
     }
 }
 
+impl ConsensusEncode for WitnessScript {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        self.as_script_bytes().consensus_encode(writer)
+    }
+}
+
+impl ConsensusDecode for WitnessScript {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        ScriptBytes::consensus_decode(reader).map(Self::from_inner)
+    }
+}
+
+impl ConsensusEncode for RedeemScript {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        self.as_script_bytes().consensus_encode(writer)
+    }
+}
+
+impl ConsensusDecode for RedeemScript {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        ScriptBytes::consensus_decode(reader).map(Self::from_inner)
+    }
+}
+
+impl ConsensusEncode for TapScript {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        self.as_script_bytes().consensus_encode(writer)
+    }
+}
+
+impl ConsensusDecode for TapScript {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        ScriptBytes::consensus_decode(reader).map(Self::from_inner)
+    }
+}
+
 impl ConsensusEncode for SigScript {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
         self.as_script_bytes().consensus_encode(writer)
@@ -315,6 +454,81 @@ impl ConsensusEncode for Witness {
 impl ConsensusDecode for Witness {
     fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
         VarIntArray::consensus_decode(reader).map(Self::from_inner)
+    }
+}
+
+impl ConsensusEncode for InternalPk {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        writer.write_all(&self.to_byte_array())?;
+        Ok(32)
+    }
+}
+
+impl ConsensusEncode for TapBranchHash {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        writer.write_all(&self.to_byte_array())?;
+        Ok(32)
+    }
+}
+
+impl ConsensusDecode for TapBranchHash {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        let mut buf = [0u8; 32];
+        reader.read_exact(&mut buf)?;
+        Ok(TapBranchHash::from_byte_array(buf))
+    }
+}
+
+impl ConsensusDecode for InternalPk {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        let mut buf = [0u8; 32];
+        reader.read_exact(&mut buf)?;
+        InternalPk::from_byte_array(buf)
+            .map_err(|_| ConsensusDataError::InvalidXonlyPubkey(buf.into()).into())
+    }
+}
+
+impl ConsensusEncode for ControlBlock {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        let mut counter = 1;
+
+        let first_byte =
+            self.leaf_version.to_consensus_u8() & self.output_key_parity.to_consensus_u8();
+        first_byte.consensus_encode(writer)?;
+
+        counter += self.internal_pk.consensus_encode(writer)?;
+        for step in &self.merkle_branch {
+            counter += step.consensus_encode(writer)?;
+        }
+
+        Ok(counter)
+    }
+}
+
+impl ConsensusDecode for ControlBlock {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        let first_byte = u8::consensus_decode(reader)?;
+        let leaf_version = LeafVer::from_consensus_u8(first_byte & 0xFE)?;
+        let output_key_parity = Parity::from_consensus_u8(first_byte & 0x01).expect("binary value");
+
+        let internal_key = InternalPk::consensus_decode(reader)?;
+
+        let mut buf = vec![];
+        reader.read_to_end(&mut buf)?;
+        let mut iter = buf.chunks_exact(32);
+        let merkle_branch = iter.by_ref().map(TapBranchHash::from_slice_unsafe);
+        let merkle_branch = TapMerklePath::try_from_iter(merkle_branch)
+            .map_err(|_| ConsensusDataError::LongTapMerklePath)?;
+        if !iter.remainder().is_empty() {
+            return Err(ConsensusDataError::InvalidTapMerklePath.into());
+        }
+
+        Ok(ControlBlock {
+            leaf_version,
+            output_key_parity,
+            internal_pk: internal_key,
+            merkle_branch,
+        })
     }
 }
 
@@ -389,9 +603,21 @@ impl ConsensusDecode for VarInt {
     }
 }
 
+impl ConsensusEncode for ByteStr {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        self.0.consensus_encode(writer)
+    }
+}
+
+impl ConsensusDecode for ByteStr {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        VarIntArray::consensus_decode(reader).map(Self::from_inner)
+    }
+}
+
 impl<T: ConsensusEncode> ConsensusEncode for VarIntArray<T> {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
-        let mut counter = self.var_int_size().consensus_encode(writer)?;
+        let mut counter = self.len_var_int().consensus_encode(writer)?;
         for item in self {
             counter += item.consensus_encode(writer)?;
         }

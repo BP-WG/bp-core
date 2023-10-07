@@ -19,19 +19,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use strict_encoding::libname;
 use strict_types::parse_args;
 
 fn main() {
     let (format, dir) = parse_args();
 
-    bc::stl::bitcoin_stl()
+    let mut lib = bc::stl::bp_tx_stl();
+    lib.name = libname!("Tx");
+    lib.serialize(
+        format,
+        dir.as_ref(),
+        "0.1.0",
+        Some(
+            "
+  Description: Bitcoin transaction library
+  Author: Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
+  Copyright (C) 2023 LNP/BP Standards Association. All rights reserved.
+  License: Apache-2.0",
+        ),
+    )
+    .expect("unable to write to the file");
+
+    bc::stl::bp_consensus_stl()
         .serialize(
             format,
             dir.as_ref(),
             "0.1.0",
             Some(
                 "
-  Description: Consensus layer for bitcoin protocol
+  Description: Consensus library for bitcoin protocol
   Author: Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
   Copyright (C) 2023 LNP/BP Standards Association. All rights reserved.
   License: Apache-2.0",

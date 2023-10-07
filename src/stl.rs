@@ -35,7 +35,7 @@ pub const LIB_ID_BPCORE: &str =
 fn _bp_core_stl() -> Result<TypeLib, CompileError> {
     LibBuilder::new(libname!(LIB_NAME_BPCORE), tiny_bset! {
         strict_types::stl::std_stl().to_dependency(),
-        bc::stl::bitcoin_stl().to_dependency(),
+        bc::stl::bp_tx_stl().to_dependency(),
         commit_verify::stl::commit_verify_stl().to_dependency()
     })
     .transpile::<dbc::AnchorId>()

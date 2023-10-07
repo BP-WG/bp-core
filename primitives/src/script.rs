@@ -22,10 +22,10 @@
 use std::fmt::{Formatter, LowerHex, UpperHex};
 
 use amplify::confinement::Confined;
-use amplify::hex::{Error, FromHex, ToHex};
+use amplify::hex::{self, FromHex, ToHex};
 
 use crate::opcodes::*;
-use crate::{VarIntArray, LIB_NAME_BITCOIN};
+use crate::{VarInt, VarIntArray, LIB_NAME_BITCOIN};
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
@@ -125,10 +125,10 @@ pub struct SigScript(
 );
 
 impl FromHex for SigScript {
-    fn from_hex(s: &str) -> Result<Self, Error> { ScriptBytes::from_hex(s).map(Self) }
+    fn from_hex(s: &str) -> Result<Self, hex::Error> { ScriptBytes::from_hex(s).map(Self) }
 
-    fn from_byte_iter<I>(_: I) -> Result<Self, Error>
-    where I: Iterator<Item = Result<u8, Error>> + ExactSizeIterator + DoubleEndedIterator {
+    fn from_byte_iter<I>(_: I) -> Result<Self, hex::Error>
+    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
         unreachable!()
     }
 }
@@ -215,10 +215,48 @@ impl ScriptPubkey {
 }
 
 impl FromHex for ScriptPubkey {
-    fn from_hex(s: &str) -> Result<Self, Error> { ScriptBytes::from_hex(s).map(Self) }
+    fn from_hex(s: &str) -> Result<Self, hex::Error> { ScriptBytes::from_hex(s).map(Self) }
 
-    fn from_byte_iter<I>(_: I) -> Result<Self, Error>
-    where I: Iterator<Item = Result<u8, Error>> + ExactSizeIterator + DoubleEndedIterator {
+    fn from_byte_iter<I>(_: I) -> Result<Self, hex::Error>
+    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
+        unreachable!()
+    }
+}
+
+#[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
+#[wrapper(Deref, Index, RangeOps, BorrowSlice, LowerHex, UpperHex)]
+#[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
+pub struct RedeemScript(
+    #[from]
+    #[from(Vec<u8>)]
+    ScriptBytes,
+);
+
+impl RedeemScript {
+    pub fn new() -> Self { Self::default() }
+
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self(ScriptBytes::from(Confined::with_capacity(capacity)))
+    }
+
+    /// Adds a single opcode to the script.
+    pub fn push_opcode(&mut self, op_code: OpCode) { self.0.push(op_code as u8); }
+
+    pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
+}
+
+impl FromHex for RedeemScript {
+    fn from_hex(s: &str) -> Result<Self, hex::Error> { ScriptBytes::from_hex(s).map(Self) }
+
+    fn from_byte_iter<I>(_: I) -> Result<Self, hex::Error>
+    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
         unreachable!()
     }
 }
@@ -247,9 +285,9 @@ impl UpperHex for ScriptBytes {
 }
 
 impl FromHex for ScriptBytes {
-    fn from_hex(s: &str) -> Result<Self, Error> { Vec::<u8>::from_hex(s).map(Self::from) }
-    fn from_byte_iter<I>(_: I) -> Result<Self, Error>
-    where I: Iterator<Item = Result<u8, Error>> + ExactSizeIterator + DoubleEndedIterator {
+    fn from_hex(s: &str) -> Result<Self, hex::Error> { Vec::<u8>::from_hex(s).map(Self::from) }
+    fn from_byte_iter<I>(_: I) -> Result<Self, hex::Error>
+    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
         unreachable!()
     }
 }
@@ -290,10 +328,10 @@ impl ScriptBytes {
     }
 
     #[inline]
-    fn push(&mut self, data: u8) { self.0.push(data).expect("script exceeds 4GB") }
+    pub(crate) fn push(&mut self, data: u8) { self.0.push(data).expect("script exceeds 4GB") }
 
     #[inline]
-    fn extend(&mut self, data: &[u8]) {
+    pub(crate) fn extend(&mut self, data: &[u8]) {
         self.0
             .extend(data.iter().copied())
             .expect("script exceeds 4GB")
@@ -310,6 +348,8 @@ impl ScriptBytes {
             _ => 5,
         }
     }
+
+    pub fn len_var_int(&self) -> VarInt { VarInt(self.len() as u64) }
 
     pub fn into_vec(self) -> Vec<u8> { self.0.into_inner() }
 
