@@ -27,7 +27,7 @@ use std::ops::BitXor;
 use std::{cmp, io, slice, vec};
 
 use amplify::confinement::{Confined, U32};
-use amplify::{confinement, Bytes32, Wrapper};
+use amplify::{confinement, Array, Bytes32, Wrapper};
 use commit_verify::{DigestExt, Sha256};
 use secp256k1::{PublicKey, Scalar, XOnlyPublicKey};
 use strict_encoding::{
@@ -57,10 +57,10 @@ const MIDSTATE_TAPSIGHASH: [u8; 10] = *b"TapSighash";
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Display, Error)]
 #[display("invalid public key")]
-pub struct InvalidPubkey(pub Bytes32);
+pub struct InvalidPubkey<const LEN: usize>(pub Array<u8, LEN>);
 
-impl From<InvalidPubkey> for DecodeError {
-    fn from(e: InvalidPubkey) -> Self {
+impl<const LEN: usize> From<InvalidPubkey<LEN>> for DecodeError {
+    fn from(e: InvalidPubkey<LEN>) -> Self {
         DecodeError::DataIntegrityError(format!("invalid x-only public key value '{:x}'", e.0))
     }
 }
@@ -89,7 +89,7 @@ macro_rules! dumb_key {
 pub struct TaprootPk(XOnlyPublicKey);
 
 impl TaprootPk {
-    pub fn from_byte_array(data: [u8; 32]) -> Result<Self, InvalidPubkey> {
+    pub fn from_byte_array(data: [u8; 32]) -> Result<Self, InvalidPubkey<32>> {
         XOnlyPublicKey::from_slice(data.as_ref())
             .map(Self)
             .map_err(|_| InvalidPubkey(data.into()))
@@ -142,7 +142,7 @@ impl InternalPk {
     #[inline]
     pub fn from_unchecked(pk: TaprootPk) -> Self { Self(pk.0) }
 
-    pub fn from_byte_array(data: [u8; 32]) -> Result<Self, InvalidPubkey> {
+    pub fn from_byte_array(data: [u8; 32]) -> Result<Self, InvalidPubkey<32>> {
         XOnlyPublicKey::from_slice(&data)
             .map(Self)
             .map_err(|_| InvalidPubkey(data.into()))
@@ -220,7 +220,7 @@ impl OutputPk {
     #[inline]
     pub fn from_unchecked(pk: TaprootPk) -> Self { Self(pk.0) }
 
-    pub fn from_byte_array(data: [u8; 32]) -> Result<Self, InvalidPubkey> {
+    pub fn from_byte_array(data: [u8; 32]) -> Result<Self, InvalidPubkey<32>> {
         XOnlyPublicKey::from_slice(&data)
             .map(Self)
             .map_err(|_| InvalidPubkey(data.into()))
