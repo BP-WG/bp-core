@@ -39,7 +39,8 @@ use strict_encoding::{
 
 use crate::opcodes::*;
 use crate::{
-    InvalidPubkey, PubkeyParseError, ScriptBytes, ScriptPubkey, WitnessVer, LIB_NAME_BITCOIN,
+    CompressedPk, InvalidPubkey, PubkeyParseError, ScriptBytes, ScriptPubkey, WitnessVer,
+    LIB_NAME_BITCOIN,
 };
 
 /// The SHA-256 midstate value for the TapLeaf hash.
@@ -60,7 +61,7 @@ pub const MIDSTATE_TAPSIGHASH: [u8; 10] = *b"TapSighash";
 
 impl<const LEN: usize> From<InvalidPubkey<LEN>> for DecodeError {
     fn from(e: InvalidPubkey<LEN>) -> Self {
-        DecodeError::DataIntegrityError(format!("invalid x-only public key value '{:x}'", e.0))
+        DecodeError::DataIntegrityError(format!("invalid x-only public key value '{e}'"))
     }
 }
 
@@ -87,10 +88,18 @@ impl XOnlyPk {
     pub fn from_byte_array(data: [u8; 32]) -> Result<Self, InvalidPubkey<32>> {
         XOnlyPublicKey::from_slice(data.as_ref())
             .map(Self)
-            .map_err(|_| InvalidPubkey(data.into()))
+            .map_err(|_| InvalidPubkey::Specified(data.into()))
     }
 
     pub fn to_byte_array(&self) -> [u8; 32] { self.0.serialize() }
+
+    pub fn from_bytes(bytes: impl AsRef<[u8]>) -> Result<Self, InvalidPubkey<33>> {
+        Ok(XOnlyPk(XOnlyPublicKey::from_slice(bytes.as_ref())?))
+    }
+}
+
+impl From<CompressedPk> for XOnlyPk {
+    fn from(pubkey: CompressedPk) -> Self { XOnlyPk(pubkey.x_only_public_key().0) }
 }
 
 impl From<PublicKey> for XOnlyPk {
@@ -114,7 +123,7 @@ impl StrictDecode for XOnlyPk {
             let bytes: Bytes32 = r.read_field()?;
             XOnlyPublicKey::from_slice(bytes.as_slice())
                 .map(Self)
-                .map_err(|_| InvalidPubkey(bytes).into())
+                .map_err(|_| InvalidPubkey::Specified(bytes).into())
         })
     }
 }
@@ -150,6 +159,10 @@ impl InternalPk {
     #[inline]
     pub fn from_byte_array(data: [u8; 32]) -> Result<Self, InvalidPubkey<32>> {
         XOnlyPk::from_byte_array(data).map(Self)
+    }
+
+    pub fn from_bytes(bytes: impl AsRef<[u8]>) -> Result<Self, InvalidPubkey<33>> {
+        XOnlyPk::from_bytes(bytes).map(Self)
     }
 
     #[inline]
@@ -228,6 +241,10 @@ impl OutputPk {
     #[inline]
     pub fn from_byte_array(data: [u8; 32]) -> Result<Self, InvalidPubkey<32>> {
         XOnlyPk::from_byte_array(data).map(Self)
+    }
+
+    pub fn from_bytes(bytes: impl AsRef<[u8]>) -> Result<Self, InvalidPubkey<33>> {
+        XOnlyPk::from_bytes(bytes).map(Self)
     }
 
     #[inline]

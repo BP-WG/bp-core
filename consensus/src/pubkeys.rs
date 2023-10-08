@@ -41,9 +41,16 @@ pub enum PubkeyParseError<const LEN: usize> {
     InvalidPubkey(InvalidPubkey<LEN>),
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug, Display, Error)]
-#[display("invalid public key")]
-pub struct InvalidPubkey<const LEN: usize>(pub Bytes<LEN>);
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Display, From, Error)]
+pub enum InvalidPubkey<const LEN: usize> {
+    #[from(secp256k1::Error)]
+    #[display("invalid public key")]
+    Unspecified,
+
+    #[from]
+    #[display("invalid public key {0:x}")]
+    Specified(Bytes<LEN>),
+}
 
 #[derive(Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, LowerHex, Display)]
@@ -63,9 +70,13 @@ impl CompressedPk {
     pub fn from_byte_array(data: [u8; 33]) -> Result<Self, InvalidPubkey<33>> {
         PublicKey::from_slice(&data)
             .map(Self)
-            .map_err(|_| InvalidPubkey(data.into()))
+            .map_err(|_| InvalidPubkey::Specified(data.into()))
     }
     pub fn to_byte_array(&self) -> [u8; 33] { self.0.serialize() }
+
+    pub fn from_bytes(bytes: impl AsRef<[u8]>) -> Result<Self, InvalidPubkey<33>> {
+        Ok(CompressedPk(PublicKey::from_slice(bytes.as_ref())?))
+    }
 }
 
 impl StrictEncode for CompressedPk {
@@ -81,7 +92,7 @@ impl StrictDecode for CompressedPk {
             let bytes: Bytes<33> = r.read_field()?;
             PublicKey::from_slice(bytes.as_slice())
                 .map(Self)
-                .map_err(|_| InvalidPubkey(bytes).into())
+                .map_err(|_| InvalidPubkey::Specified(bytes).into())
         })
     }
 }
@@ -114,7 +125,7 @@ impl UncompressedPk {
     pub fn from_byte_array(data: [u8; 65]) -> Result<Self, InvalidPubkey<65>> {
         PublicKey::from_slice(&data)
             .map(Self)
-            .map_err(|_| InvalidPubkey(data.into()))
+            .map_err(|_| InvalidPubkey::Specified(data.into()))
     }
     pub fn to_byte_array(&self) -> [u8; 65] { self.0.serialize_uncompressed() }
 }
@@ -132,7 +143,7 @@ impl StrictDecode for UncompressedPk {
             let bytes: Bytes<65> = r.read_field()?;
             PublicKey::from_slice(bytes.as_slice())
                 .map(Self)
-                .map_err(|_| InvalidPubkey(bytes).into())
+                .map_err(|_| InvalidPubkey::Specified(bytes).into())
         })
     }
 }
@@ -190,18 +201,11 @@ impl LegacyPk {
 
     pub fn from_bytes(bytes: impl AsRef<[u8]>) -> Result<Self, InvalidPubkey<65>> {
         let bytes = bytes.as_ref();
-        let len = bytes.len().min(65);
-        let mut data = [0u8; 65];
-        data[..len].copy_from_slice(&bytes[..len]);
-
-        let pubkey = PublicKey::from_slice(bytes).map_err(|_| InvalidPubkey(data.into()).into())?;
-
+        let pubkey = PublicKey::from_slice(bytes)?;
         Ok(match bytes.len() {
             33 => Self::compressed(pubkey),
             65 => Self::uncompressed(pubkey),
-            _ => {
-                return Err(InvalidPubkey(data.into()));
-            }
+            _ => unreachable!(),
         })
     }
 }
@@ -222,8 +226,8 @@ impl StrictDecode for LegacyPk {
         reader.read_struct(|r| {
             let compressed = r.read_field(fname!("compressed"))?;
             let bytes: Bytes<33> = r.read_field(fname!("pubkey"))?;
-            let pubkey =
-                PublicKey::from_slice(bytes.as_slice()).map_err(|_| InvalidPubkey(bytes))?;
+            let pubkey = PublicKey::from_slice(bytes.as_slice())
+                .map_err(|_| InvalidPubkey::Specified(bytes))?;
             Ok(LegacyPk { compressed, pubkey })
         })
     }
