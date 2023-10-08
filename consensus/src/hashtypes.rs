@@ -35,7 +35,7 @@ use crate::LIB_NAME_BITCOIN;
 pub struct PubkeyHash(
     #[from]
     #[from([u8; 20])]
-    Bytes20,
+    pub Bytes20,
 );
 
 impl From<PubkeyHash> for [u8; 20] {
@@ -54,7 +54,7 @@ impl From<PubkeyHash> for [u8; 20] {
 pub struct ScriptHash(
     #[from]
     #[from([u8; 20])]
-    Bytes20,
+    pub Bytes20,
 );
 
 impl From<ScriptHash> for [u8; 20] {
@@ -73,7 +73,7 @@ impl From<ScriptHash> for [u8; 20] {
 pub struct WPubkeyHash(
     #[from]
     #[from([u8; 20])]
-    Bytes20,
+    pub Bytes20,
 );
 
 impl From<WPubkeyHash> for [u8; 20] {
@@ -92,7 +92,7 @@ impl From<WPubkeyHash> for [u8; 20] {
 pub struct WScriptHash(
     #[from]
     #[from([u8; 32])]
-    Bytes32,
+    pub Bytes32,
 );
 
 impl From<WScriptHash> for [u8; 32] {
