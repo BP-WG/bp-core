@@ -28,6 +28,25 @@ use chrono::Utc;
 
 use crate::LIB_NAME_BITCOIN;
 
+/// The Threshold for deciding whether a lock time value is a height or a time
+/// (see [Bitcoin Core]).
+///
+/// `LockTime` values _below_ the threshold are interpreted as block heights,
+/// values _above_ (or equal to) the threshold are interpreted as block times
+/// (UNIX timestamp, seconds since epoch).
+///
+/// Bitcoin is able to safely use this value because a block height greater than
+/// 500,000,000 would never occur because it would represent a height in
+/// approximately 9500 years. Conversely, block times under 500,000,000 will
+/// never happen because they would represent times before 1986 which
+/// are, for obvious reasons, not useful within the Bitcoin network.
+///
+/// [Bitcoin Core]: https://github.com/bitcoin/bitcoin/blob/9ccaee1d5e2e4b79b0a7c29aadb41b97e4741332/src/script/script.h#L39
+pub const LOCKTIME_THRESHOLD: u32 = 500_000_000;
+
+pub const SEQ_NO_CSV_DISABLE_MASK: u32 = 0x80000000;
+pub const SEQ_NO_CSV_TYPE_MASK: u32 = 0x00400000;
+
 /// Error constructing timelock from the provided value.
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, Error)]
 #[display("invalid timelock value {0}")]
@@ -53,22 +72,6 @@ pub enum TimelockParseError {
     /// with `rand` feature
     NoRand,
 }
-
-/// The Threshold for deciding whether a lock time value is a height or a time
-/// (see [Bitcoin Core]).
-///
-/// `LockTime` values _below_ the threshold are interpreted as block heights,
-/// values _above_ (or equal to) the threshold are interpreted as block times
-/// (UNIX timestamp, seconds since epoch).
-///
-/// Bitcoin is able to safely use this value because a block height greater than
-/// 500,000,000 would never occur because it would represent a height in
-/// approximately 9500 years. Conversely, block times under 500,000,000 will
-/// never happen because they would represent times before 1986 which
-/// are, for obvious reasons, not useful within the Bitcoin network.
-///
-/// [Bitcoin Core]: https://github.com/bitcoin/bitcoin/blob/9ccaee1d5e2e4b79b0a7c29aadb41b97e4741332/src/script/script.h#L39
-pub const LOCKTIME_THRESHOLD: u32 = 500_000_000;
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
@@ -372,9 +375,52 @@ impl FromStr for LockHeight {
     }
 }
 
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
+pub struct SeqNo(u32);
+
+impl SeqNo {
+    #[inline]
+    pub const fn from_consensus_u32(lock_time: u32) -> Self { SeqNo(lock_time) }
+
+    #[inline]
+    pub const fn to_consensus_u32(&self) -> u32 { self.0 }
+
+    /// Creates relative time lock measured in number of blocks (implies RBF).
+    #[inline]
+    pub const fn from_height(blocks: u16) -> SeqNo { SeqNo(blocks as u32) }
+
+    /// Creates relative time lock measured in number of 512-second intervals
+    /// (implies RBF).
+    #[inline]
+    pub const fn from_intervals(intervals: u16) -> SeqNo {
+        SeqNo(intervals as u32 | SEQ_NO_CSV_TYPE_MASK)
+    }
+
+    /// Gets structured relative time lock information from the `nSeq` value.
+    /// See [`TimeLockInterval`].
+    pub const fn time_lock_interval(self) -> Option<TimeLockInterval> {
+        if self.0 & SEQ_NO_CSV_DISABLE_MASK != 0 {
+            None
+        } else if self.0 & SEQ_NO_CSV_TYPE_MASK != 0 {
+            Some(TimeLockInterval::Time((self.0 & 0xFFFF) as u16))
+        } else {
+            Some(TimeLockInterval::Height((self.0 & 0xFFFF) as u16))
+        }
+    }
+
+    pub const fn is_timelock(self) -> bool { self.0 & SEQ_NO_CSV_DISABLE_MASK > 1 }
+}
+
 /// Time lock interval describing both relative (OP_CHECKSEQUENCEVERIFY) and
 /// absolute (OP_CHECKTIMELOCKVERIFY) timelocks.
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN, tags = order)]
 #[cfg_attr(
@@ -384,12 +430,12 @@ impl FromStr for LockHeight {
 )]
 pub enum TimeLockInterval {
     /// Describes number of blocks for the timelock
-    #[from]
-    Height(LockHeight),
+    #[display("height({0})")]
+    Height(u16),
 
     /// Describes number of 512-second intervals for the timelock
-    #[from]
-    Time(LockTimestamp),
+    #[display("time({0})")]
+    Time(u16),
 }
 
 impl Default for TimeLockInterval {

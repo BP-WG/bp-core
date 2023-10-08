@@ -213,7 +213,7 @@ impl WitnessVer {
 /// Witness program as defined in BIP141.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
-#[strict_type(lib = LIB_NAME_BITCOIN, dumb = {Self::new(strict_dumb!(), vec![0; 32]).unwrap()})]
+#[strict_type(lib = LIB_NAME_BITCOIN, dumb = Self::dumb())]
 pub struct WitnessProgram {
     /// The witness program version.
     version: WitnessVer,
@@ -222,6 +222,8 @@ pub struct WitnessProgram {
 }
 
 impl WitnessProgram {
+    fn dumb() -> Self { Self::new(strict_dumb!(), vec![0; 32]).unwrap() }
+
     /// Creates a new witness program.
     pub fn new(version: WitnessVer, program: Vec<u8>) -> Result<Self, SegwitError> {
         let len = program.len();

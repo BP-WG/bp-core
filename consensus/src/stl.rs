@@ -22,11 +22,13 @@
 
 use strict_types::{CompileError, LibBuilder, TypeLib};
 
+use crate::timelocks::TimeLockInterval;
 use crate::{
     Bip340Sig, BlockHeader, ByteStr, Chain, CompressedPk, ControlBlock, FutureLeafVer, InternalPk,
-    LeafScript, LegacyPk, LegacySig, OpCode, OutputPk, PubkeyHash, RedeemScript, ScriptHash,
-    TapCode, TapLeafHash, TapNodeHash, TapScript, Tx, UncompressedPk, VBytes, VarInt, WPubkeyHash,
-    WScriptHash, WeightUnits, WitnessProgram, WitnessScript, WitnessVer, Wtxid, LIB_NAME_BITCOIN,
+    LeafScript, LegacyPk, LegacySig, LockHeight, LockTimestamp, OpCode, OutputPk, PubkeyHash,
+    RedeemScript, ScriptHash, TapCode, TapLeafHash, TapNodeHash, TapScript, Tx, UncompressedPk,
+    VBytes, VarInt, WPubkeyHash, WScriptHash, WeightUnits, WitnessProgram, WitnessScript,
+    WitnessVer, Wtxid, LIB_NAME_BITCOIN,
 };
 
 #[deprecated(since = "0.10.8", note = "use LIB_ID_BP_TX instead")]
@@ -35,7 +37,7 @@ pub const LIB_ID_BITCOIN: &str =
 pub const LIB_ID_BP_TX: &str =
     "urn:ubideco:stl:6GgF7biXPVNcus2FfQj2pQuRzau11rXApMQLfCZhojgi#money-pardon-parody";
 pub const LIB_ID_BP_CONSENSUS: &str =
-    "urn:ubideco:stl:3NDewC9zBEosrNM82npGstFcvPhjg9E9nLoQZrQq6kwe#remark-shelter-weekend";
+    "urn:ubideco:stl:4AXTqXq8jUDs244XbhvErdsG82Y8r9PiaPBPAmD5y9fQ#cheese-provide-morph";
 
 #[deprecated(since = "0.10.8", note = "use _bp_tx_stl instead")]
 fn _bitcoin_stl() -> Result<TypeLib, CompileError> { _bp_tx_stl() }
@@ -75,6 +77,9 @@ fn _bp_consensus_stl() -> Result<TypeLib, CompileError> {
     .transpile::<TapScript>()
     .transpile::<ControlBlock>()
     .transpile::<BlockHeader>()
+    .transpile::<TimeLockInterval>()
+    .transpile::<LockTimestamp>()
+    .transpile::<LockHeight>()
     .transpile::<Tx>()
     .transpile::<VarInt>()
     .transpile::<ByteStr>()

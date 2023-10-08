@@ -31,7 +31,7 @@ use commit_verify::{DigestExt, Sha256};
 
 use crate::{
     ConsensusDecode, ConsensusDecodeError, ConsensusEncode, LockTime, NonStandardValue,
-    ScriptPubkey, SigScript, VarIntArray, Witness, Wtxid, LIB_NAME_BITCOIN,
+    ScriptPubkey, SeqNo, SigScript, VarIntArray, Witness, Wtxid, LIB_NAME_BITCOIN,
 };
 
 #[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, From)]
@@ -213,24 +213,6 @@ mod _serde_outpoint {
             }
         }
     }
-}
-
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
-pub struct SeqNo(u32);
-
-impl SeqNo {
-    #[inline]
-    pub const fn from_consensus_u32(lock_time: u32) -> Self { SeqNo(lock_time) }
-
-    #[inline]
-    pub const fn to_consensus_u32(&self) -> u32 { self.0 }
 }
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]

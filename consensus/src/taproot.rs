@@ -55,8 +55,7 @@ const MIDSTATE_TAPTWEAK: [u8; 8] = *b"TapTweak";
 // d129a2f3701c655d6583b6c3b941972795f4e23294fd54f4a2ae8d8547ca590b
 
 /// The SHA-256 midstate value for the TapSig hash.
-#[warn(dead_code)]
-const MIDSTATE_TAPSIGHASH: [u8; 10] = *b"TapSighash";
+pub const MIDSTATE_TAPSIGHASH: [u8; 10] = *b"TapSighash";
 // f504a425d7f8783b1363868ae3e556586eee945dbc7888dd02a6e2c31873fe9f
 
 impl<const LEN: usize> From<InvalidPubkey<LEN>> for DecodeError {

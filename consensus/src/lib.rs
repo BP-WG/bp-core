@@ -19,9 +19,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Version 0.10.10:
-// TODO: Ensure all serde uses both string and binary version
-// TODO: Move consensus-level timelocks and sequence locks from other libraries
 // Version 0.11.0:
 // TODO: Ensure script length control doesn't panic for data structures > 4GB
 // Version 1.0:
@@ -85,14 +82,15 @@ pub use sigtypes::{Bip340Sig, LegacySig, SigError, SighashFlag, SighashType};
 pub use taproot::{
     ControlBlock, FutureLeafVer, InternalPk, IntoTapHash, InvalidLeafVer, InvalidParityValue,
     LeafScript, LeafVer, OutputPk, Parity, TapBranchHash, TapCode, TapLeafHash, TapMerklePath,
-    TapNodeHash, TapScript, XOnlyPk, TAPROOT_ANNEX_PREFIX, TAPROOT_LEAF_MASK,
+    TapNodeHash, TapScript, XOnlyPk, MIDSTATE_TAPSIGHASH, TAPROOT_ANNEX_PREFIX, TAPROOT_LEAF_MASK,
     TAPROOT_LEAF_TAPSCRIPT,
 };
 pub use timelocks::{
-    InvalidTimelock, LockHeight, LockTime, LockTimestamp, TimelockParseError, LOCKTIME_THRESHOLD,
+    InvalidTimelock, LockHeight, LockTime, LockTimestamp, SeqNo, TimelockParseError,
+    LOCKTIME_THRESHOLD, SEQ_NO_CSV_DISABLE_MASK, SEQ_NO_CSV_TYPE_MASK,
 };
 pub use tx::{
-    Outpoint, OutpointParseError, Sats, SeqNo, Tx, TxIn, TxOut, TxParseError, TxVer, Txid, Vout,
+    Outpoint, OutpointParseError, Sats, Tx, TxIn, TxOut, TxParseError, TxVer, Txid, Vout,
 };
 pub use util::{Chain, ChainParseError, NonStandardValue};
 pub use weights::{VBytes, Weight, WeightUnits};
