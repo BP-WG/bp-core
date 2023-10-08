@@ -23,10 +23,10 @@
 use strict_types::{CompileError, LibBuilder, TypeLib};
 
 use crate::{
-    Bip340Sig, BlockHeader, ByteStr, Chain, ControlBlock, FutureLeafVer, InternalPk, LeafScript,
-    LegacySig, OpCode, OutputPk, PubkeyHash, RedeemScript, ScriptHash, TapCode, TapLeafHash,
-    TapNodeHash, TapScript, Tx, VBytes, VarInt, WPubkeyHash, WScriptHash, WeightUnits,
-    WitnessProgram, WitnessScript, WitnessVer, Wtxid, LIB_NAME_BITCOIN,
+    Bip340Sig, BlockHeader, ByteStr, Chain, CompressedPk, ControlBlock, FutureLeafVer, InternalPk,
+    LeafScript, LegacyPk, LegacySig, OpCode, OutputPk, PubkeyHash, RedeemScript, ScriptHash,
+    TapCode, TapLeafHash, TapNodeHash, TapScript, Tx, UncompressedPk, VBytes, VarInt, WPubkeyHash,
+    WScriptHash, WeightUnits, WitnessProgram, WitnessScript, WitnessVer, Wtxid, LIB_NAME_BITCOIN,
 };
 
 #[deprecated(since = "0.10.8", note = "use LIB_ID_BP_TX instead")]
@@ -35,7 +35,7 @@ pub const LIB_ID_BITCOIN: &str =
 pub const LIB_ID_BP_TX: &str =
     "urn:ubideco:stl:6GgF7biXPVNcus2FfQj2pQuRzau11rXApMQLfCZhojgi#money-pardon-parody";
 pub const LIB_ID_BP_CONSENSUS: &str =
-    "urn:ubideco:stl:BXLU9v5ByfaCA9usMQZPf4azau1u1gcGaMPicp56ULZ1#nadia-canal-king";
+    "urn:ubideco:stl:3NDewC9zBEosrNM82npGstFcvPhjg9E9nLoQZrQq6kwe#remark-shelter-weekend";
 
 #[deprecated(since = "0.10.8", note = "use _bp_tx_stl instead")]
 fn _bitcoin_stl() -> Result<TypeLib, CompileError> { _bp_tx_stl() }
@@ -62,6 +62,9 @@ fn _bp_consensus_stl() -> Result<TypeLib, CompileError> {
     .transpile::<Wtxid>()
     .transpile::<WitnessProgram>()
     .transpile::<WitnessVer>()
+    .transpile::<CompressedPk>()
+    .transpile::<UncompressedPk>()
+    .transpile::<LegacyPk>()
     .transpile::<InternalPk>()
     .transpile::<OutputPk>()
     .transpile::<TapNodeHash>()

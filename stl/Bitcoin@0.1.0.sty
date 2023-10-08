@@ -1,5 +1,5 @@
 {-
-  Id: urn:ubideco:stl:BXLU9v5ByfaCA9usMQZPf4azau1u1gcGaMPicp56ULZ1#nadia-canal-king
+  Id: urn:ubideco:stl:3NDewC9zBEosrNM82npGstFcvPhjg9E9nLoQZrQq6kwe#remark-shelter-weekend
   Name: Bitcoin
   Version: 0.1.0
   Description: Consensus library for bitcoin protocol
@@ -32,6 +32,8 @@ data ByteStr          :: [Byte ^ ..0xffffffff]
 -- urn:ubideco:semid:6aRP3odHaTGySvSWHjreC8HsbX5ss9LxkQqwcjaoxhpv#aspirin-brown-alpine
 data Chain            :: bitcoin:0 | regtest:128 | testnet3:131 | signet:132
 
+-- urn:ubideco:semid:EoHBsHBYQiRvuKFEJvqwp8FiBPrpoFhkhQ9peLsFxrai#aspect-citrus-nerve
+data CompressedPk     :: [Byte ^ 33]
 -- urn:ubideco:semid:BPzqzv3DN65MTwzbTXJbHFyiKeYvmX1VExcqvk5FUb5c#nuclear-coral-gilbert
 data ControlBlock     :: leafVersion LeafVer
                        , outputKeyParity Parity
@@ -45,6 +47,8 @@ data InternalPk       :: [Byte ^ 32]
 data LeafScript       :: version LeafVer, script ScriptBytes
 -- urn:ubideco:semid:DGELfUvcU62GNQRo7HaMbKDzYQwdYRMW3b91JHd4d3WY#tunnel-lagoon-cowboy
 data LeafVer          :: U8
+-- urn:ubideco:semid:6oujgsJXTqoBmeQThDPW8cJuEG2SJJmbX9BRqsp9zS2L#student-avenue-economy
+data LegacyPk         :: compressed Std.Bool {- urn:ubideco:semid:7ZhBHGSJm9ixmm8Z9vCX7i5Ga7j5xrW8t11nsb1Cgpnx#laser-madam-maxwell -}, pubkey [Byte ^ 33]
 -- urn:ubideco:semid:89ux18kFuT9nT6LEWnvkpFBiWR9GJwBYVVBqFUPvrTuj#gondola-middle-style
 data LegacySig        :: sig [Byte ^ ..0xff], sighash_type SighashType
 -- urn:ubideco:semid:4dDWWU4afiPN3q4AgCMuFRFhL4UDta2u5SrqrBzPvjby#tokyo-inch-program
@@ -58,8 +62,8 @@ data OpCode           :: pushBytes0:0 | pushBytes32:32 | pushData1:76 | pushData
 
 -- urn:ubideco:semid:FWt2MSo8A4nsYgYbuBqMRNLiKgtzvLBgUn774iKzTcuf#pocket-pegasus-frank
 data Outpoint         :: txid Txid, vout Vout
--- urn:ubideco:semid:8xqfr5BJ4FJ9Sv7wYEhz9a5gen2wyYpEAUqbBDngjuth#video-flex-harbor
-data OutputPk         :: TaprootPk
+-- urn:ubideco:semid:6ZEyjfF96enVZgwNdLkdjfqmAeMW5y939Fkf8VyDAaFZ#beach-twist-hotel
+data OutputPk         :: XOnlyPk
 -- urn:ubideco:semid:AgJ5n58hrH761B4MV7giZ1FhMipaDrUmnFYCLno74HDy#method-editor-echo
 data Parity           :: even:0 | odd:1
 
@@ -98,8 +102,6 @@ data TapMerklePath    :: [TapBranchHash ^ ..0x80]
 data TapNodeHash      :: [Byte ^ 32]
 -- urn:ubideco:semid:71AxyLFsoRG6hJ1c11gxad65nEbWfzkQBjWCPPrgCyjX#telecom-quest-helium
 data TapScript        :: ScriptBytes
--- urn:ubideco:semid:DufbiodesBkHAgaCpqgXzZYoJa97fEMjmTBxr6JoVATF#sound-humor-adam
-data TaprootPk        :: [Byte ^ 32]
 -- urn:ubideco:semid:DynChojW1sfr8VjSoZbmReHhZoU8u9KCiuwijgEGdToe#milk-gloria-prize
 data Tx               :: version TxVer
                        , inputs [TxIn ^ ..0xffffffff]
@@ -116,6 +118,8 @@ data TxOut            :: value Sats, scriptPubkey ScriptPubkey
 data TxVer            :: I32
 -- urn:ubideco:semid:C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs#cowboy-diego-betty
 data Txid             :: [Byte ^ 32]
+-- urn:ubideco:semid:CWjhoHVM4EyLcLJthK7fhePqmUpVctdhjdabggJFkig1#yellow-jaguar-pastel
+data UncompressedPk   :: [Byte ^ 65]
 -- urn:ubideco:semid:8ALgmuRBL8YRNWmcFoPdBFCsZwCvDjupXgdq9DjFVnkV#waiter-salad-casino
 data VBytes           :: U32
 -- urn:ubideco:semid:AZqcQMyFBmixEkiDtAqGxB4nM8i9hmxV3mk4vUgNAkWT#conan-avalon-food
@@ -143,4 +147,6 @@ data WitnessVer       :: v0:0 | v1:81 | v2:82 | v3:83
 
 -- urn:ubideco:semid:HZbMnxQ1p2duNgYuYrQn9xtHBwSom63zWtRwy6pmBGfU#sushi-polygon-circus
 data Wtxid            :: [Byte ^ 32]
+-- urn:ubideco:semid:J1BbH2Lx8P3yw9G244d92MMTP5jrkiaVzsr6FzRxpfur#evident-finance-promo
+data XOnlyPk          :: [Byte ^ 32]
 

@@ -59,6 +59,7 @@ pub extern crate secp256k1;
 mod block;
 pub mod opcodes;
 mod script;
+mod pubkeys;
 mod segwit;
 mod taproot;
 mod tx;
@@ -76,14 +77,15 @@ pub use coding::{
     VarInt, VarIntArray,
 };
 pub use hashtypes::{PubkeyHash, ScriptHash, WPubkeyHash, WScriptHash};
+pub use pubkeys::{CompressedPk, InvalidPubkey, LegacyPk, PubkeyParseError, UncompressedPk};
 pub use script::{OpCode, RedeemScript, ScriptBytes, ScriptPubkey, SigScript};
 pub use segwit::{SegwitError, Witness, WitnessProgram, WitnessScript, WitnessVer, Wtxid};
 pub use sigtypes::{Bip340Sig, LegacySig, SigError, SighashFlag, SighashType};
 pub use taproot::{
     ControlBlock, FutureLeafVer, InternalPk, IntoTapHash, InvalidLeafVer, InvalidParityValue,
-    InvalidPubkey, LeafScript, LeafVer, OutputPk, Parity, PubkeyParseError, TapBranchHash, TapCode,
-    TapLeafHash, TapMerklePath, TapNodeHash, TapScript, TaprootPk, TAPROOT_ANNEX_PREFIX,
-    TAPROOT_LEAF_MASK, TAPROOT_LEAF_TAPSCRIPT,
+    LeafScript, LeafVer, OutputPk, Parity, TapBranchHash, TapCode, TapLeafHash, TapMerklePath,
+    TapNodeHash, TapScript, XOnlyPk, TAPROOT_ANNEX_PREFIX, TAPROOT_LEAF_MASK,
+    TAPROOT_LEAF_TAPSCRIPT,
 };
 pub use tx::{
     LockTime, Outpoint, OutpointParseError, Sats, SeqNo, Tx, TxIn, TxOut, TxParseError, TxVer,
