@@ -371,3 +371,27 @@ impl FromStr for LockHeight {
         }
     }
 }
+
+/// Time lock interval describing both relative (OP_CHECKSEQUENCEVERIFY) and
+/// absolute (OP_CHECKTIMELOCKVERIFY) timelocks.
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN, tags = order)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", rename_all = "camelCase")
+)]
+pub enum TimeLockInterval {
+    /// Describes number of blocks for the timelock
+    #[from]
+    Height(LockHeight),
+
+    /// Describes number of 512-second intervals for the timelock
+    #[from]
+    Time(LockTimestamp),
+}
+
+impl Default for TimeLockInterval {
+    fn default() -> Self { TimeLockInterval::Height(default!()) }
+}
