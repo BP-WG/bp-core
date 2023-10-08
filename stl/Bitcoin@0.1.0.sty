@@ -1,5 +1,5 @@
 {-
-  Id: urn:ubideco:stl:D42LxJBQokrGJzvoSV3E1HoriGgLzPcxuL61JymwjEqV#arena-complex-husband
+  Id: urn:ubideco:stl:BXLU9v5ByfaCA9usMQZPf4azau1u1gcGaMPicp56ULZ1#nadia-canal-king
   Name: Bitcoin
   Version: 0.1.0
   Description: Consensus library for bitcoin protocol
@@ -58,17 +58,21 @@ data OpCode           :: pushBytes0:0 | pushBytes32:32 | pushData1:76 | pushData
 
 -- urn:ubideco:semid:FWt2MSo8A4nsYgYbuBqMRNLiKgtzvLBgUn774iKzTcuf#pocket-pegasus-frank
 data Outpoint         :: txid Txid, vout Vout
--- urn:ubideco:semid:BA7caGkXGi42re8gf15M9awB9BwFrnHzxHpB9gMUpDQK#regular-vision-origin
-data OutputPk         :: [Byte ^ 32]
+-- urn:ubideco:semid:8xqfr5BJ4FJ9Sv7wYEhz9a5gen2wyYpEAUqbBDngjuth#video-flex-harbor
+data OutputPk         :: TaprootPk
 -- urn:ubideco:semid:AgJ5n58hrH761B4MV7giZ1FhMipaDrUmnFYCLno74HDy#method-editor-echo
 data Parity           :: even:0 | odd:1
 
+-- urn:ubideco:semid:ENHnWLRrbiPSgpSZMuQ1LaEwQeRjUMmB1bZstaT3F3hm#soviet-senator-wisdom
+data PubkeyHash       :: [Byte ^ 20]
 -- urn:ubideco:semid:85m9Qv56neQKaqiPSZ8G8NPWz5DDeJeeXhBwnUpcZGug#delta-jumbo-clone
 data RedeemScript     :: ScriptBytes
 -- urn:ubideco:semid:BEBz6h7AGjYSDRCxVHnjYkkkxzBsjN3EvyNiD4ZrzmRL#pyramid-spray-star
 data Sats             :: U64
 -- urn:ubideco:semid:3Y4AgjkFbDusgo3YqRDWv9BznDeAJEUDEPeEq1mpSkAR#maestro-source-jackson
 data ScriptBytes      :: [Byte ^ ..0xffffffff]
+-- urn:ubideco:semid:7ExpFpLww6B4ADMMLsw5NtUfRzgJMupAFgYfme5yYMMr#samuel-miami-cave
+data ScriptHash       :: [Byte ^ 20]
 -- urn:ubideco:semid:2ZAYpWKB2BQxeXXjpQDpYGZ7eXFM9qQxN9TcdTiQqeB8#bingo-maestro-silk
 data ScriptPubkey     :: ScriptBytes
 -- urn:ubideco:semid:5HtymNhYBhjqPkLLw9QVWZ62cLm57cZxgQTDUBBXtmL#rhino-time-rodent
@@ -94,6 +98,8 @@ data TapMerklePath    :: [TapBranchHash ^ ..0x80]
 data TapNodeHash      :: [Byte ^ 32]
 -- urn:ubideco:semid:71AxyLFsoRG6hJ1c11gxad65nEbWfzkQBjWCPPrgCyjX#telecom-quest-helium
 data TapScript        :: ScriptBytes
+-- urn:ubideco:semid:DufbiodesBkHAgaCpqgXzZYoJa97fEMjmTBxr6JoVATF#sound-humor-adam
+data TaprootPk        :: [Byte ^ 32]
 -- urn:ubideco:semid:DynChojW1sfr8VjSoZbmReHhZoU8u9KCiuwijgEGdToe#milk-gloria-prize
 data Tx               :: version TxVer
                        , inputs [TxIn ^ ..0xffffffff]
@@ -116,6 +122,10 @@ data VBytes           :: U32
 data VarInt           :: U64
 -- urn:ubideco:semid:3HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk#chrome-robin-gallop
 data Vout             :: U32
+-- urn:ubideco:semid:FyeKxsZ9bQaZG8PDMFjvLxfFTmA2SqUc8TTbS4Wh4daR#plasma-august-marion
+data WPubkeyHash      :: [Byte ^ 20]
+-- urn:ubideco:semid:4QBBHmPiEoFttFq6Tghc1QWDZUqLYnsNiE8gbsFK5hoU#vibrate-charm-spain
+data WScriptHash      :: [Byte ^ 32]
 -- urn:ubideco:semid:EcY6NU6BVRVkgCFwfWmSkbVKpLmWWVfDwBRRiSr6FJUC#bridge-version-voyage
 data WeightUnits      :: U32
 -- urn:ubideco:semid:8mjN2CZj3Nhn2HjnKqTmEcN5vmyb3UJK8HSFW1uE3W2p#warning-saddle-period

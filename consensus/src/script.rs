@@ -19,10 +19,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::fmt::{Formatter, LowerHex, UpperHex};
-
 use amplify::confinement::Confined;
-use amplify::hex::{self, FromHex, ToHex};
+use commit_verify::{DigestExt, Ripemd160};
 
 use crate::opcodes::*;
 use crate::{VarInt, VarIntArray, LIB_NAME_BITCOIN};
@@ -109,8 +107,8 @@ pub enum OpCode {
 }
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
-#[wrapper(Deref, Index, RangeOps, BorrowSlice, LowerHex, UpperHex)]
-#[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
+#[wrapper(Deref, AsSlice, Hex)]
+#[wrapper_mut(DerefMut, AsSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
@@ -124,23 +122,14 @@ pub struct SigScript(
     ScriptBytes,
 );
 
-impl FromHex for SigScript {
-    fn from_hex(s: &str) -> Result<Self, hex::Error> { ScriptBytes::from_hex(s).map(Self) }
-
-    fn from_byte_iter<I>(_: I) -> Result<Self, hex::Error>
-    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
-        unreachable!()
-    }
-}
-
 impl SigScript {
     pub fn empty() -> Self { SigScript::default() }
     pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
 }
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
-#[wrapper(Deref, Index, RangeOps, BorrowSlice, LowerHex, UpperHex)]
-#[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
+#[wrapper(Deref, AsSlice, Hex)]
+#[wrapper_mut(DerefMut, AsSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
@@ -214,18 +203,9 @@ impl ScriptPubkey {
     pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
 }
 
-impl FromHex for ScriptPubkey {
-    fn from_hex(s: &str) -> Result<Self, hex::Error> { ScriptBytes::from_hex(s).map(Self) }
-
-    fn from_byte_iter<I>(_: I) -> Result<Self, hex::Error>
-    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
-        unreachable!()
-    }
-}
-
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
-#[wrapper(Deref, Index, RangeOps, BorrowSlice, LowerHex, UpperHex)]
-#[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
+#[wrapper(Deref, AsSlice, Hex)]
+#[wrapper_mut(DerefMut, AsSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
@@ -249,47 +229,24 @@ impl RedeemScript {
     /// Adds a single opcode to the script.
     pub fn push_opcode(&mut self, op_code: OpCode) { self.0.push(op_code as u8); }
 
-    pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
-}
-
-impl FromHex for RedeemScript {
-    fn from_hex(s: &str) -> Result<Self, hex::Error> { ScriptBytes::from_hex(s).map(Self) }
-
-    fn from_byte_iter<I>(_: I) -> Result<Self, hex::Error>
-    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
-        unreachable!()
+    pub fn to_script_pubkey(&self) -> ScriptPubkey {
+        let mut engine = Ripemd160::default();
+        engine.input_raw(self.as_slice());
+        ScriptPubkey::p2sh(engine.finish())
     }
+
+    pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
 }
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default, Debug, From)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[wrapper(Deref, Index, RangeOps, BorrowSlice)]
-#[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
+#[wrapper(Deref, AsSlice, Hex)]
+#[wrapper_mut(DerefMut, AsSliceMut)]
 pub struct ScriptBytes(VarIntArray<u8>);
 
 impl From<Vec<u8>> for ScriptBytes {
     fn from(value: Vec<u8>) -> Self { Self(Confined::try_from(value).expect("u64 >= usize")) }
-}
-
-impl LowerHex for ScriptBytes {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.0.as_inner().to_hex())
-    }
-}
-
-impl UpperHex for ScriptBytes {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.0.as_inner().to_hex().to_uppercase())
-    }
-}
-
-impl FromHex for ScriptBytes {
-    fn from_hex(s: &str) -> Result<Self, hex::Error> { Vec::<u8>::from_hex(s).map(Self::from) }
-    fn from_byte_iter<I>(_: I) -> Result<Self, hex::Error>
-    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
-        unreachable!()
-    }
 }
 
 impl ScriptBytes {
@@ -358,6 +315,7 @@ impl ScriptBytes {
 
 #[cfg(feature = "serde")]
 mod _serde {
+    use amplify::hex::{FromHex, ToHex};
     use serde::{Deserialize, Serialize};
     use serde_crate::de::Error;
     use serde_crate::{Deserializer, Serializer};
@@ -386,5 +344,39 @@ mod _serde {
                 Vec::<u8>::deserialize(deserializer).map(ScriptBytes::from)
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use amplify::hex::ToHex;
+
+    use super::*;
+
+    #[test]
+    fn script_index() {
+        let mut script = ScriptPubkey::op_return(&[0u8; 40]);
+        assert_eq!(script[0], OP_RETURN);
+        assert_eq!(&script[..2], &[OP_RETURN, OP_PUSHBYTES_40]);
+        assert_eq!(&script[40..], &[0u8, 0u8]);
+        assert_eq!(&script[2..4], &[0u8, 0u8]);
+        assert_eq!(&script[2..=3], &[0u8, 0u8]);
+
+        script[0] = 0xFF;
+        script[..2].copy_from_slice(&[0xFF, 0xFF]);
+        script[40..].copy_from_slice(&[0xFF, 0xFF]);
+        script[2..4].copy_from_slice(&[0xFF, 0xFF]);
+        script[2..=3].copy_from_slice(&[0xFF, 0xFF]);
+
+        assert_eq!(script[0], 0xFF);
+        assert_eq!(&script[..2], &[0xFF, 0xFF]);
+        assert_eq!(&script[40..], &[0xFF, 0xFF]);
+        assert_eq!(&script[2..4], &[0xFF, 0xFF]);
+        assert_eq!(&script[2..=3], &[0xFF, 0xFF]);
+
+        assert_eq!(
+            &script.to_hex(),
+            "ffffffff000000000000000000000000000000000000000000000000000000000000000000000000ffff"
+        );
     }
 }

@@ -22,7 +22,6 @@
 use std::vec;
 
 use amplify::confinement::Confined;
-use amplify::hex::{self, FromHex};
 use amplify::Bytes32StrRev;
 
 use crate::opcodes::*;
@@ -302,8 +301,8 @@ impl ScriptPubkey {
 }
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
-#[wrapper(Deref, Index, RangeOps, BorrowSlice, LowerHex, UpperHex)]
-#[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
+#[wrapper(Deref, AsSlice, Hex)]
+#[wrapper_mut(DerefMut, AsSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
@@ -330,15 +329,6 @@ impl WitnessScript {
     pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
 }
 
-impl FromHex for WitnessScript {
-    fn from_hex(s: &str) -> Result<Self, hex::Error> { ScriptBytes::from_hex(s).map(Self) }
-
-    fn from_byte_iter<I>(_: I) -> Result<Self, hex::Error>
-    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
-        unreachable!()
-    }
-}
-
 #[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, From)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
@@ -349,19 +339,12 @@ impl FromHex for WitnessScript {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-#[wrapper(BorrowSlice, Index, RangeOps, Debug, LowerHex, UpperHex, Display, FromStr)]
+#[wrapper(BorrowSlice, Index, RangeOps, Debug, Hex, Display, FromStr)]
 pub struct Wtxid(
     #[from]
     #[from([u8; 32])]
     Bytes32StrRev,
 );
-
-impl FromHex for Wtxid {
-    fn from_byte_iter<I>(iter: I) -> Result<Self, hex::Error>
-    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
-        Bytes32StrRev::from_byte_iter(iter).map(Self)
-    }
-}
 
 #[derive(Wrapper, Clone, Eq, PartialEq, Hash, Debug, From, Default)]
 #[wrapper(Deref, Index, RangeOps)]

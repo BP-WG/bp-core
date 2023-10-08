@@ -22,7 +22,7 @@ edition = "2021"
 license = "Apache-2.0"
 
 [workspace.dependencies]
-amplify = "4.2.0"
+amplify = "4.4.0"
 strict_encoding = "2.5.0"
 strict_types = "1.6.2"
 commit_verify = "0.10.5"
@@ -80,3 +80,7 @@ stl = ["strict_types", "strict_types/base64", "bp-consensus/stl", "commit_verify
 
 [package.metadata.docs.rs]
 features = [ "all" ]
+
+[patch.crates-io]
+amplify_derive = { git = "https://github.com/rust-amplify/amplify-derive", branch = "wrapper" }
+commit_verify = { git = "https://github.com/LNP-BP/client_side_validation", branch = "develop" }

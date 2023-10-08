@@ -24,9 +24,9 @@ use strict_types::{CompileError, LibBuilder, TypeLib};
 
 use crate::{
     Bip340Sig, BlockHeader, ByteStr, Chain, ControlBlock, FutureLeafVer, InternalPk, LeafScript,
-    LegacySig, OpCode, OutputPk, RedeemScript, TapCode, TapLeafHash, TapNodeHash, TapScript, Tx,
-    VBytes, VarInt, WeightUnits, WitnessProgram, WitnessScript, WitnessVer, Wtxid,
-    LIB_NAME_BITCOIN,
+    LegacySig, OpCode, OutputPk, PubkeyHash, RedeemScript, ScriptHash, TapCode, TapLeafHash,
+    TapNodeHash, TapScript, Tx, VBytes, VarInt, WPubkeyHash, WScriptHash, WeightUnits,
+    WitnessProgram, WitnessScript, WitnessVer, Wtxid, LIB_NAME_BITCOIN,
 };
 
 #[deprecated(since = "0.10.8", note = "use LIB_ID_BP_TX instead")]
@@ -35,7 +35,7 @@ pub const LIB_ID_BITCOIN: &str =
 pub const LIB_ID_BP_TX: &str =
     "urn:ubideco:stl:6GgF7biXPVNcus2FfQj2pQuRzau11rXApMQLfCZhojgi#money-pardon-parody";
 pub const LIB_ID_BP_CONSENSUS: &str =
-    "urn:ubideco:stl:D42LxJBQokrGJzvoSV3E1HoriGgLzPcxuL61JymwjEqV#arena-complex-husband";
+    "urn:ubideco:stl:BXLU9v5ByfaCA9usMQZPf4azau1u1gcGaMPicp56ULZ1#nadia-canal-king";
 
 #[deprecated(since = "0.10.8", note = "use _bp_tx_stl instead")]
 fn _bitcoin_stl() -> Result<TypeLib, CompileError> { _bp_tx_stl() }
@@ -53,6 +53,10 @@ fn _bp_consensus_stl() -> Result<TypeLib, CompileError> {
     .transpile::<LegacySig>()
     .transpile::<Bip340Sig>()
     .transpile::<OpCode>()
+    .transpile::<PubkeyHash>()
+    .transpile::<WPubkeyHash>()
+    .transpile::<ScriptHash>()
+    .transpile::<WScriptHash>()
     .transpile::<WitnessScript>()
     .transpile::<RedeemScript>()
     .transpile::<Wtxid>()

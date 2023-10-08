@@ -45,7 +45,7 @@ use crate::{
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-#[wrapper(BorrowSlice, Index, RangeOps, Debug, LowerHex, UpperHex, Display, FromStr)]
+#[wrapper(BorrowSlice, Index, RangeOps, Debug, Hex, Display, FromStr)]
 // all-zeros used in coinbase
 pub struct Txid(
     #[from]
@@ -58,13 +58,6 @@ impl Txid {
     pub const fn coinbase() -> Self { Self(Bytes32StrRev::zero()) }
     #[inline]
     pub fn is_coinbase(&self) -> bool { self.to_byte_array() == [0u8; 32] }
-}
-
-impl FromHex for Txid {
-    fn from_byte_iter<I>(iter: I) -> Result<Self, hex::Error>
-    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
-        Bytes32StrRev::from_byte_iter(iter).map(Self)
-    }
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display, From)]

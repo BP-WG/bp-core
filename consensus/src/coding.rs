@@ -19,11 +19,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::fmt::{Formatter, LowerHex, UpperHex};
 use std::io::{self, Cursor, Read, Write};
 
 use amplify::confinement::{Confined, U32};
-use amplify::hex::{self, FromHex, ToHex};
 use amplify::{confinement, ByteArray, Bytes32, IoError, Wrapper};
 
 use crate::{
@@ -83,7 +81,7 @@ impl<T> LenVarInt for VarIntArray<T> {
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default, Debug, From)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[wrapper(Deref, Index, RangeOps, BorrowSlice)]
+#[wrapper(Deref, Index, RangeOps, BorrowSlice, Hex)]
 #[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
 #[cfg_attr(
     feature = "serde",
@@ -98,26 +96,6 @@ impl AsRef<[u8]> for ByteStr {
 
 impl From<Vec<u8>> for ByteStr {
     fn from(value: Vec<u8>) -> Self { Self(Confined::try_from(value).expect("u64 >= usize")) }
-}
-
-impl LowerHex for ByteStr {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.0.as_inner().to_hex())
-    }
-}
-
-impl UpperHex for ByteStr {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.0.as_inner().to_hex().to_uppercase())
-    }
-}
-
-impl FromHex for ByteStr {
-    fn from_hex(s: &str) -> Result<Self, hex::Error> { Vec::<u8>::from_hex(s).map(Self::from) }
-    fn from_byte_iter<I>(_: I) -> Result<Self, hex::Error>
-    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
-        unreachable!()
-    }
 }
 
 impl ByteStr {

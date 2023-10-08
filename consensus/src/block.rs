@@ -19,7 +19,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use amplify::hex::{self, FromHex};
 use amplify::{Bytes32, Bytes32StrRev, Wrapper};
 
 use crate::LIB_NAME_BITCOIN;
@@ -32,19 +31,12 @@ use crate::LIB_NAME_BITCOIN;
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-#[wrapper(BorrowSlice, Index, RangeOps, Debug, LowerHex, UpperHex, Display, FromStr)]
+#[wrapper(BorrowSlice, Index, RangeOps, Debug, Hex, Display, FromStr)]
 pub struct BlockHash(
     #[from]
     #[from([u8; 32])]
     Bytes32StrRev,
 );
-
-impl FromHex for BlockHash {
-    fn from_byte_iter<I>(iter: I) -> Result<Self, hex::Error>
-    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
-        Bytes32StrRev::from_byte_iter(iter).map(Self)
-    }
-}
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
