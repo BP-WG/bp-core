@@ -20,8 +20,11 @@
 // limitations under the License.
 
 use amplify::{Bytes20, Bytes32, Wrapper};
+use commit_verify::{DigestExt, Ripemd160, Sha256};
 
-use crate::LIB_NAME_BITCOIN;
+use crate::{
+    CompressedPk, LegacyPk, RedeemScript, UncompressedPk, WitnessScript, LIB_NAME_BITCOIN,
+};
 
 #[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Index, RangeOps, AsSlice, BorrowSlice, Hex, Display, FromStr)]
@@ -40,6 +43,36 @@ pub struct PubkeyHash(
 
 impl From<PubkeyHash> for [u8; 20] {
     fn from(value: PubkeyHash) -> Self { value.0.into_inner() }
+}
+
+impl From<CompressedPk> for PubkeyHash {
+    fn from(pk: CompressedPk) -> Self {
+        let mut engine = Sha256::default();
+        engine.input_raw(&pk.to_byte_array());
+        let mut engine2 = Ripemd160::default();
+        engine2.input_raw(&engine.finish());
+        Self(engine2.finish().into())
+    }
+}
+
+impl From<UncompressedPk> for PubkeyHash {
+    fn from(pk: UncompressedPk) -> Self {
+        let mut engine = Sha256::default();
+        engine.input_raw(&pk.to_byte_array());
+        let mut engine2 = Ripemd160::default();
+        engine2.input_raw(&engine.finish());
+        Self(engine2.finish().into())
+    }
+}
+
+impl From<LegacyPk> for PubkeyHash {
+    fn from(pk: LegacyPk) -> Self {
+        let mut engine = Sha256::default();
+        engine.input_raw(&pk.to_vec());
+        let mut engine2 = Ripemd160::default();
+        engine2.input_raw(&engine.finish());
+        Self(engine2.finish().into())
+    }
 }
 
 #[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
@@ -61,6 +94,16 @@ impl From<ScriptHash> for [u8; 20] {
     fn from(value: ScriptHash) -> Self { value.0.into_inner() }
 }
 
+impl From<&RedeemScript> for ScriptHash {
+    fn from(redeem_script: &RedeemScript) -> Self {
+        let mut engine = Sha256::default();
+        engine.input_raw(redeem_script.as_slice());
+        let mut engine2 = Ripemd160::default();
+        engine2.input_raw(&engine.finish());
+        Self(engine2.finish().into())
+    }
+}
+
 #[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Index, RangeOps, AsSlice, BorrowSlice, Hex, Display, FromStr)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
@@ -80,6 +123,16 @@ impl From<WPubkeyHash> for [u8; 20] {
     fn from(value: WPubkeyHash) -> Self { value.0.into_inner() }
 }
 
+impl From<CompressedPk> for WPubkeyHash {
+    fn from(pk: CompressedPk) -> Self {
+        let mut engine = Sha256::default();
+        engine.input_raw(&pk.to_byte_array());
+        let mut engine2 = Ripemd160::default();
+        engine2.input_raw(&engine.finish());
+        Self(engine2.finish().into())
+    }
+}
+
 #[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Index, RangeOps, AsSlice, BorrowSlice, Hex, Display, FromStr)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
@@ -97,4 +150,14 @@ pub struct WScriptHash(
 
 impl From<WScriptHash> for [u8; 32] {
     fn from(value: WScriptHash) -> Self { value.0.into_inner() }
+}
+
+impl From<&WitnessScript> for WScriptHash {
+    fn from(witness_script: &WitnessScript) -> Self {
+        let mut engine = Sha256::default();
+        engine.input_raw(witness_script.as_slice());
+        let mut engine2 = Sha256::default();
+        engine2.input_raw(&engine.finish());
+        Self(engine2.finish().into())
+    }
 }

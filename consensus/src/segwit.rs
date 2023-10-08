@@ -22,10 +22,12 @@
 use std::vec;
 
 use amplify::confinement::Confined;
-use amplify::Bytes32StrRev;
+use amplify::{Bytes32StrRev, Wrapper};
 
 use crate::opcodes::*;
-use crate::{OpCode, ScriptBytes, ScriptPubkey, VarIntArray, LIB_NAME_BITCOIN};
+use crate::{
+    OpCode, RedeemScript, ScriptBytes, ScriptPubkey, VarIntArray, WScriptHash, LIB_NAME_BITCOIN,
+};
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display, Error)]
 #[display(doc_comments)]
@@ -327,6 +329,13 @@ impl WitnessScript {
 
     /// Adds a single opcode to the script.
     pub fn push_opcode(&mut self, op_code: OpCode) { self.0.push(op_code as u8); }
+
+    pub fn to_redeem_script(&self) -> RedeemScript {
+        let script = ScriptPubkey::p2wsh(WScriptHash::from(self));
+        RedeemScript::from_inner(script.into_inner())
+    }
+
+    pub fn to_script_pubkey(&self) -> ScriptPubkey { ScriptPubkey::p2wsh(WScriptHash::from(self)) }
 
     pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
 }

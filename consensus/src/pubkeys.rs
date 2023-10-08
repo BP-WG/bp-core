@@ -208,6 +208,13 @@ impl LegacyPk {
             _ => unreachable!(),
         })
     }
+
+    pub fn to_vec(&self) -> Vec<u8> {
+        match self.compressed {
+            true => self.pubkey.serialize().to_vec(),
+            false => self.pubkey.serialize_uncompressed().to_vec(),
+        }
+    }
 }
 
 impl StrictEncode for LegacyPk {

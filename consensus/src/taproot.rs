@@ -247,6 +247,8 @@ impl OutputPk {
         XOnlyPk::from_bytes(bytes).map(Self)
     }
 
+    pub fn to_script_pubkey(&self) -> ScriptPubkey { ScriptPubkey::p2tr_tweaked(*self) }
+
     #[inline]
     pub fn to_byte_array(&self) -> [u8; 32] { self.0.to_byte_array() }
 }
