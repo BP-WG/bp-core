@@ -22,10 +22,11 @@ strict_types = { workspace = true, optional = true }
 commit_verify = { workspace = true }
 secp256k1 = { workspace = true }
 serde_crate = { workspace = true, optional = true }
+chrono = { version = "0.4.31", optional = true }
 
 [features]
-default = []
-all = ["stl", "serde"]
+default = ["chrono"]
+all = ["chrono", "stl", "serde"]
 stl = ["strict_types"]
 serde = [
     "serde_crate",

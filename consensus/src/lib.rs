@@ -65,6 +65,7 @@ mod taproot;
 mod tx;
 mod hashtypes;
 mod sigtypes;
+mod timelocks;
 mod util;
 mod weights;
 #[cfg(feature = "stl")]
@@ -87,9 +88,11 @@ pub use taproot::{
     TapNodeHash, TapScript, XOnlyPk, TAPROOT_ANNEX_PREFIX, TAPROOT_LEAF_MASK,
     TAPROOT_LEAF_TAPSCRIPT,
 };
+pub use timelocks::{
+    InvalidTimelock, LockHeight, LockTime, LockTimestamp, TimelockParseError, LOCKTIME_THRESHOLD,
+};
 pub use tx::{
-    LockTime, Outpoint, OutpointParseError, Sats, SeqNo, Tx, TxIn, TxOut, TxParseError, TxVer,
-    Txid, Vout, LOCKTIME_THRESHOLD,
+    Outpoint, OutpointParseError, Sats, SeqNo, Tx, TxIn, TxOut, TxParseError, TxVer, Txid, Vout,
 };
 pub use util::{Chain, ChainParseError, NonStandardValue};
 pub use weights::{VBytes, Weight, WeightUnits};

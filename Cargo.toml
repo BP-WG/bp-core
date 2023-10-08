@@ -69,7 +69,8 @@ serde_crate = { workspace = true, optional = true }
 
 [features]
 default = []
-all = ["serde", "stl"]
+all = ["chrono", "serde", "stl"]
+chrono = ["bp-consensus/chrono"]
 serde = [
     "serde_crate",
     "bp-consensus/serde",
