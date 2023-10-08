@@ -62,6 +62,7 @@ mod script;
 mod segwit;
 mod taproot;
 mod tx;
+mod hashtypes;
 mod sigtypes;
 mod util;
 mod weights;
@@ -74,6 +75,7 @@ pub use coding::{
     ByteStr, ConsensusDataError, ConsensusDecode, ConsensusDecodeError, ConsensusEncode, LenVarInt,
     VarInt, VarIntArray,
 };
+pub use hashtypes::{PubkeyHash, ScriptHash, WPubkeyHash, WScriptHash};
 pub use script::{OpCode, RedeemScript, ScriptBytes, ScriptPubkey, SigScript};
 pub use segwit::{SegwitError, Witness, WitnessProgram, WitnessScript, WitnessVer, Wtxid};
 pub use sigtypes::{Bip340Sig, LegacySig, SigError, SighashFlag, SighashType};
