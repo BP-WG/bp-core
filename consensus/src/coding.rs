@@ -715,10 +715,10 @@ mod tests {
         d: impl AsRef<[u8]>,
     ) -> Result<T, ConsensusDataError> {
         let mut cursor = Cursor::new(d.as_ref());
-        Ok(T::consensus_decode(&mut cursor).map_err(|err| match err {
+        T::consensus_decode(&mut cursor).map_err(|err| match err {
             ConsensusDecodeError::Data(e) => e,
             ConsensusDecodeError::Io(_) => unreachable!(),
-        })?)
+        })
     }
 
     #[test]
@@ -860,44 +860,44 @@ mod tests {
     #[test]
     fn deserialize_int_test() {
         // u8
-        assert_eq!(deserialize(&[58u8]).ok(), Some(58u8));
+        assert_eq!(deserialize([58u8]).ok(), Some(58u8));
 
         // u16
-        assert_eq!(deserialize(&[0x01u8, 0x02]).ok(), Some(0x0201u16));
-        assert_eq!(deserialize(&[0xABu8, 0xCD]).ok(), Some(0xCDABu16));
-        assert_eq!(deserialize(&[0xA0u8, 0x0D]).ok(), Some(0xDA0u16));
-        let failure16: Result<u16, _> = deserialize(&[1u8]);
+        assert_eq!(deserialize([0x01u8, 0x02]).ok(), Some(0x0201u16));
+        assert_eq!(deserialize([0xABu8, 0xCD]).ok(), Some(0xCDABu16));
+        assert_eq!(deserialize([0xA0u8, 0x0D]).ok(), Some(0xDA0u16));
+        let failure16: Result<u16, _> = deserialize([1u8]);
         assert!(failure16.is_err());
 
         // u32
-        assert_eq!(deserialize(&[0xABu8, 0xCD, 0, 0]).ok(), Some(0xCDABu32));
-        assert_eq!(deserialize(&[0xA0u8, 0x0D, 0xAB, 0xCD]).ok(), Some(0xCDAB0DA0u32));
+        assert_eq!(deserialize([0xABu8, 0xCD, 0, 0]).ok(), Some(0xCDABu32));
+        assert_eq!(deserialize([0xA0u8, 0x0D, 0xAB, 0xCD]).ok(), Some(0xCDAB0DA0u32));
 
-        let failure32: Result<u32, _> = deserialize(&[1u8, 2, 3]);
+        let failure32: Result<u32, _> = deserialize([1u8, 2, 3]);
         assert!(failure32.is_err());
 
         // i32
-        assert_eq!(deserialize(&[0xABu8, 0xCD, 0, 0]).ok(), Some(0xCDABi32));
-        assert_eq!(deserialize(&[0xA0u8, 0x0D, 0xAB, 0x2D]).ok(), Some(0x2DAB0DA0i32));
+        assert_eq!(deserialize([0xABu8, 0xCD, 0, 0]).ok(), Some(0xCDABi32));
+        assert_eq!(deserialize([0xA0u8, 0x0D, 0xAB, 0x2D]).ok(), Some(0x2DAB0DA0i32));
 
-        assert_eq!(deserialize(&[0, 0, 0, 0]).ok(), Some(-0_i32));
-        assert_eq!(deserialize(&[0, 0, 0, 0]).ok(), Some(0_i32));
+        assert_eq!(deserialize([0, 0, 0, 0]).ok(), Some(-0_i32));
+        assert_eq!(deserialize([0, 0, 0, 0]).ok(), Some(0_i32));
 
-        assert_eq!(deserialize(&[0xFF, 0xFF, 0xFF, 0xFF]).ok(), Some(-1_i32));
-        assert_eq!(deserialize(&[0xFE, 0xFF, 0xFF, 0xFF]).ok(), Some(-2_i32));
-        assert_eq!(deserialize(&[0x01, 0xFF, 0xFF, 0xFF]).ok(), Some(-255_i32));
-        assert_eq!(deserialize(&[0x02, 0xFF, 0xFF, 0xFF]).ok(), Some(-254_i32));
+        assert_eq!(deserialize([0xFF, 0xFF, 0xFF, 0xFF]).ok(), Some(-1_i32));
+        assert_eq!(deserialize([0xFE, 0xFF, 0xFF, 0xFF]).ok(), Some(-2_i32));
+        assert_eq!(deserialize([0x01, 0xFF, 0xFF, 0xFF]).ok(), Some(-255_i32));
+        assert_eq!(deserialize([0x02, 0xFF, 0xFF, 0xFF]).ok(), Some(-254_i32));
 
-        let failurei32: Result<i32, _> = deserialize(&[1u8, 2, 3]);
+        let failurei32: Result<i32, _> = deserialize([1u8, 2, 3]);
         assert!(failurei32.is_err());
 
         // u64
-        assert_eq!(deserialize(&[0xABu8, 0xCD, 0, 0, 0, 0, 0, 0]).ok(), Some(0xCDABu64));
+        assert_eq!(deserialize([0xABu8, 0xCD, 0, 0, 0, 0, 0, 0]).ok(), Some(0xCDABu64));
         assert_eq!(
-            deserialize(&[0xA0u8, 0x0D, 0xAB, 0xCD, 0x99, 0, 0, 0x99]).ok(),
+            deserialize([0xA0u8, 0x0D, 0xAB, 0xCD, 0x99, 0, 0, 0x99]).ok(),
             Some(0x99000099CDAB0DA0u64)
         );
-        let failure64: Result<u64, _> = deserialize(&[1u8, 2, 3, 4, 5, 6, 7]);
+        let failure64: Result<u64, _> = deserialize([1u8, 2, 3, 4, 5, 6, 7]);
         assert!(failure64.is_err());
     }
 }

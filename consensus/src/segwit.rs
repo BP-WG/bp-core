@@ -297,8 +297,7 @@ impl ScriptPubkey {
         };
         let push_opbyte = self[1]; // Second byte push opcode 2-40 bytes
         WitnessVer::from_op_code(ver_opcode).is_ok()
-            && push_opbyte >= OP_PUSHBYTES_2
-            && push_opbyte <= OP_PUSHBYTES_40
+            && (OP_PUSHBYTES_2..=OP_PUSHBYTES_40).contains(&push_opbyte)
             // Check that the rest of the script has the correct size
             && script_len - 2 == push_opbyte as usize
     }

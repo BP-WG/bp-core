@@ -252,6 +252,7 @@ pub struct Sats(
 
 impl Sats {
     pub const ZERO: Self = Sats(0);
+    #[allow(clippy::inconsistent_digit_grouping)]
     pub const BTC: Self = Sats(1_000_000_00);
 
     pub const fn from_btc(btc: u32) -> Self { Self(btc as u64 * Self::BTC.0) }
@@ -443,7 +444,7 @@ impl FromStr for Tx {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let data = Vec::<u8>::from_hex(s)?;
-        Tx::consensus_deserialize(&data).map_err(TxParseError::from)
+        Tx::consensus_deserialize(data).map_err(TxParseError::from)
     }
 }
 
