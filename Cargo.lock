@@ -4,14 +4,14 @@ version = 3
 
 [[package]]
 name = "amplify"
-version = "4.4.0"
+version = "4.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "213783efd41ed08b2861e86dd5aac633cf612f861e9222ace8b3621bd58af5c6"
+checksum = "8629db306c0bbeb0a402e2918bdcf0026b5ddb24c46460f3bf5410b350d98710"
 dependencies = [
  "amplify_apfloat",
- "amplify_derive 3.0.1",
+ "amplify_derive",
  "amplify_num",
- "amplify_syn 2.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "amplify_syn",
  "ascii",
  "serde",
  "serde_json",
@@ -33,22 +33,11 @@ dependencies = [
 
 [[package]]
 name = "amplify_derive"
-version = "3.0.1"
-source = "git+https://github.com/rust-amplify/amplify-derive?branch=wrapper#9ca1b8af3269a24a1aa75c158ce1e672aa56cdec"
-dependencies = [
- "amplify_syn 2.0.1 (git+https://github.com/rust-amplify/amplify-derive?branch=wrapper)",
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "amplify_derive"
-version = "4.0.0-alpha.6"
+version = "4.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01c4835e964725149d7961ec5af2ca1302f6f68c8c738b4acb06185f596c3333"
+checksum = "759dcbfaf94d838367a86d493ec34ccc8aa6fe365cb7880d6bf89006de24d9c1"
 dependencies = [
- "amplify_syn 2.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "amplify_syn",
  "proc-macro2",
  "quote",
  "syn 1.0.109",
@@ -68,16 +57,6 @@ name = "amplify_syn"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7736fb8d473c0d83098b5bac44df6a561e20470375cd8bcae30516dc889fd62a"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "amplify_syn"
-version = "2.0.1"
-source = "git+https://github.com/rust-amplify/amplify-derive?branch=wrapper#9ca1b8af3269a24a1aa75c158ce1e672aa56cdec"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -287,10 +266,11 @@ dependencies = [
 [[package]]
 name = "commit_encoding_derive"
 version = "0.10.0"
-source = "git+https://github.com/LNP-BP/client_side_validation?branch=develop#23b7c189e2b5eed08f89d304381fb42c10e86c6e"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00033f14d67c4169d588f085ea2faeb7b610cf03a74d42ea09eeba31abef2047"
 dependencies = [
  "amplify",
- "amplify_syn 2.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "amplify_syn",
  "proc-macro2",
  "quote",
  "syn 1.0.109",
@@ -299,7 +279,8 @@ dependencies = [
 [[package]]
 name = "commit_verify"
 version = "0.10.6"
-source = "git+https://github.com/LNP-BP/client_side_validation?branch=develop#23b7c189e2b5eed08f89d304381fb42c10e86c6e"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "91d9d6e86f6cec8d4af19a0e418bac9cb266a6dc70660bcdcdac1e0fa924e0d1"
 dependencies = [
  "amplify",
  "commit_encoding_derive",
@@ -396,12 +377,6 @@ dependencies = [
 
 [[package]]
 name = "hashbrown"
-version = "0.12.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
-
-[[package]]
-name = "hashbrown"
 version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7dfda62a12f55daeae5015f81b0baea145391cb4520f86c248fc615d72640d12"
@@ -437,22 +412,12 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "1.9.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd070e393353796e801d209ad339e89596eb4c8d430d18ede6a1cced8fafbd99"
-dependencies = [
- "autocfg",
- "hashbrown 0.12.3",
-]
-
-[[package]]
-name = "indexmap"
 version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8adf3ddd720272c6ea8bf59463c04e0f93d0bbf7c5439b691bca2987e0270897"
 dependencies = [
  "equivalent",
- "hashbrown 0.14.1",
+ "hashbrown",
 ]
 
 [[package]]
@@ -533,9 +498,9 @@ checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.68"
+version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b1106fec09662ec6dd98ccac0f81cef56984d0b49f75c92d8cbad76e20c005c"
+checksum = "134c189feb4956b20f6f547d2cf727d4c0fe06722b20a0eec87ed445a97f92da"
 dependencies = [
  "unicode-ident",
 ]
@@ -670,7 +635,7 @@ version = "0.9.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a49e178e4452f45cb61d0cd8cebc1b0fafd3e41929e996cef79aa3aca91f574"
 dependencies = [
- "indexmap 2.0.2",
+ "indexmap",
  "itoa",
  "ryu",
  "serde",
@@ -690,18 +655,18 @@ dependencies = [
 
 [[package]]
 name = "single_use_seals"
-version = "0.10.0"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ae7f7cb6a68cfc99674a70a47ab790c6ede965107cd0823ed814b5e73b3bee2"
+checksum = "ed7655b4b597fca10d2cf7579d3dfee1987a45342bdeecf90cab5affec1c7197"
 dependencies = [
- "amplify_derive 4.0.0-alpha.6",
+ "amplify_derive",
 ]
 
 [[package]]
 name = "strict_encoding"
-version = "2.6.0"
+version = "2.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c5667c167479cd4abf9f4e02a86fcc45b0d59cd1dbef97f341ecd31b7bcd320"
+checksum = "ab7b75b4af0aff9dd97b68df262bf0e807b7d007cc860fa217943f898a05a5ab"
 dependencies = [
  "amplify",
  "half",
@@ -710,11 +675,11 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding_derive"
-version = "2.0.0"
+version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f5adae55367464f5a229bfd539682c94f870b98a220be6e61dc43f85d612e7e"
+checksum = "37064ec285e2a633465eb525c8698eea51373dee889fe310e0d32df8343e7f4f"
 dependencies = [
- "amplify_syn 2.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "amplify_syn",
  "heck",
  "proc-macro2",
  "quote",
@@ -723,15 +688,15 @@ dependencies = [
 
 [[package]]
 name = "strict_types"
-version = "1.6.2"
+version = "1.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c41eb7f3d2da6b413204be9605fd27de10a440875695246cf5e000eecf6d08ed"
+checksum = "d10cc45e67d452cfe0d87d4714c3250190d97479af3502bbd823651bfe0f505f"
 dependencies = [
  "amplify",
  "baid58",
  "base64",
  "half",
- "indexmap 1.9.3",
+ "indexmap",
  "sha2",
  "strict_encoding",
 ]
@@ -815,7 +780,7 @@ version = "0.20.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "396e4d48bbb2b7554c944bde63101b5ae446cff6ec4a24227428f15eb72ef338"
 dependencies = [
- "indexmap 2.0.2",
+ "indexmap",
  "serde",
  "serde_spanned",
  "toml_datetime",
