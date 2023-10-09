@@ -13,7 +13,7 @@ default-members = [
 ]
 
 [workspace.package]
-version = "0.10.10"
+version = "0.10.11"
 authors = ["Dr Maxim Orlovsky <orlovsky@lnp-bp.org>"]
 homepage = "https://github.com/BP-WG"
 repository = "https://github.com/BP-WG/bp-core"
