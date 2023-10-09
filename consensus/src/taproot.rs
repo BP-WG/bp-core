@@ -150,7 +150,11 @@ impl FromStr for XOnlyPk {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct InternalPk(XOnlyPk);
+pub struct InternalPk(
+    #[from]
+    #[from(XOnlyPublicKey)]
+    XOnlyPk,
+);
 
 impl InternalPk {
     #[inline]
