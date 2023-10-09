@@ -20,7 +20,6 @@
 // limitations under the License.
 
 use core::slice;
-use std::cmp::Ordering;
 use std::fmt::{self, Debug, Display, Formatter, LowerHex};
 use std::iter::Sum;
 use std::num::ParseIntError;
@@ -31,8 +30,8 @@ use amplify::{ByteArray, Bytes32StrRev, Wrapper};
 use commit_verify::{DigestExt, Sha256};
 
 use crate::{
-    ConsensusDecode, ConsensusDecodeError, ConsensusEncode, NonStandardValue, ScriptPubkey,
-    SigScript, VarIntArray, Witness, Wtxid, LIB_NAME_BITCOIN,
+    ConsensusDecode, ConsensusDecodeError, ConsensusEncode, LockTime, NonStandardValue,
+    ScriptPubkey, SeqNo, SigScript, VarIntArray, Witness, Wtxid, LIB_NAME_BITCOIN,
 };
 
 #[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, From)]
@@ -45,7 +44,7 @@ use crate::{
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-#[wrapper(BorrowSlice, Index, RangeOps, Debug, LowerHex, UpperHex, Display, FromStr)]
+#[wrapper(BorrowSlice, Index, RangeOps, Debug, Hex, Display, FromStr)]
 // all-zeros used in coinbase
 pub struct Txid(
     #[from]
@@ -58,13 +57,6 @@ impl Txid {
     pub const fn coinbase() -> Self { Self(Bytes32StrRev::zero()) }
     #[inline]
     pub fn is_coinbase(&self) -> bool { self.to_byte_array() == [0u8; 32] }
-}
-
-impl FromHex for Txid {
-    fn from_byte_iter<I>(iter: I) -> Result<Self, hex::Error>
-    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
-        Bytes32StrRev::from_byte_iter(iter).map(Self)
-    }
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display, From)]
@@ -223,24 +215,6 @@ mod _serde_outpoint {
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
-pub struct SeqNo(u32);
-
-impl SeqNo {
-    #[inline]
-    pub const fn from_consensus_u32(lock_time: u32) -> Self { SeqNo(lock_time) }
-
-    #[inline]
-    pub const fn to_consensus_u32(&self) -> u32 { self.0 }
-}
-
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
@@ -278,6 +252,7 @@ pub struct Sats(
 
 impl Sats {
     pub const ZERO: Self = Sats(0);
+    #[allow(clippy::inconsistent_digit_grouping)]
     pub const BTC: Self = Sats(1_000_000_00);
 
     pub const fn from_btc(btc: u32) -> Self { Self(btc as u64 * Self::BTC.0) }
@@ -433,99 +408,6 @@ impl TxVer {
     pub const fn to_consensus_i32(&self) -> i32 { self.0 }
 }
 
-/// The Threshold for deciding whether a lock time value is a height or a time
-/// (see [Bitcoin Core]).
-///
-/// `LockTime` values _below_ the threshold are interpreted as block heights,
-/// values _above_ (or equal to) the threshold are interpreted as block times
-/// (UNIX timestamp, seconds since epoch).
-///
-/// Bitcoin is able to safely use this value because a block height greater than
-/// 500,000,000 would never occur because it would represent a height in
-/// approximately 9500 years. Conversely, block times under 500,000,000 will
-/// never happen because they would represent times before 1986 which
-/// are, for obvious reasons, not useful within the Bitcoin network.
-///
-/// [Bitcoin Core]: https://github.com/bitcoin/bitcoin/blob/9ccaee1d5e2e4b79b0a7c29aadb41b97e4741332/src/script/script.h#L39
-pub const LOCKTIME_THRESHOLD: u32 = 500_000_000;
-
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
-pub struct LockTime(u32);
-
-impl PartialOrd for LockTime {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        if self.is_height_based() != other.is_height_based() {
-            None
-        } else {
-            Some(self.0.cmp(&other.0))
-        }
-    }
-}
-
-impl LockTime {
-    /// Zero time lock
-    pub const ZERO: Self = Self(0);
-
-    /// Create zero time lock
-    #[inline]
-    #[deprecated(since = "0.10.8", note = "use LockTime::ZERO")]
-    pub const fn zero() -> Self { Self(0) }
-
-    /// Creates absolute time lock with the given block height.
-    ///
-    /// Block height must be strictly less than `0x1DCD6500`, otherwise
-    /// `None` is returned.
-    #[inline]
-    pub const fn from_height(height: u32) -> Option<Self> {
-        if height < LOCKTIME_THRESHOLD {
-            Some(Self(height))
-        } else {
-            None
-        }
-    }
-
-    /// Creates absolute time lock with the given UNIX timestamp value.
-    ///
-    /// Timestamp value must be greater or equal to `0x1DCD6500`, otherwise
-    /// `None` is returned.
-    #[inline]
-    pub const fn from_unix_timestamp(timestamp: u32) -> Option<Self> {
-        if timestamp < LOCKTIME_THRESHOLD {
-            None
-        } else {
-            Some(Self(timestamp))
-        }
-    }
-
-    /// Converts into full u32 representation of `nLockTime` value as it is
-    /// serialized in bitcoin transaction.
-    #[inline]
-    pub const fn from_consensus_u32(lock_time: u32) -> Self { LockTime(lock_time) }
-
-    #[inline]
-    pub const fn to_consensus_u32(&self) -> u32 { self.0 }
-
-    #[inline]
-    pub const fn into_consensus_u32(self) -> u32 { self.0 }
-
-    /// Checks if the absolute timelock provided by the `nLockTime` value
-    /// specifies height-based lock
-    #[inline]
-    pub const fn is_height_based(self) -> bool { self.0 < LOCKTIME_THRESHOLD }
-
-    /// Checks if the absolute timelock provided by the `nLockTime` value
-    /// specifies time-based lock
-    #[inline]
-    pub const fn is_time_based(self) -> bool { !self.is_height_based() }
-}
-
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
@@ -562,7 +444,7 @@ impl FromStr for Tx {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let data = Vec::<u8>::from_hex(s)?;
-        Tx::consensus_deserialize(&data).map_err(TxParseError::from)
+        Tx::consensus_deserialize(data).map_err(TxParseError::from)
     }
 }
 

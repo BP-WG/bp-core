@@ -19,11 +19,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::fmt::{Formatter, LowerHex, UpperHex};
 use std::io::{self, Cursor, Read, Write};
 
 use amplify::confinement::{Confined, U32};
-use amplify::hex::{self, FromHex, ToHex};
 use amplify::{confinement, ByteArray, Bytes32, IoError, Wrapper};
 
 use crate::{
@@ -83,7 +81,7 @@ impl<T> LenVarInt for VarIntArray<T> {
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default, Debug, From)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[wrapper(Deref, Index, RangeOps, BorrowSlice)]
+#[wrapper(Deref, Index, RangeOps, BorrowSlice, Hex)]
 #[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
 #[cfg_attr(
     feature = "serde",
@@ -98,26 +96,6 @@ impl AsRef<[u8]> for ByteStr {
 
 impl From<Vec<u8>> for ByteStr {
     fn from(value: Vec<u8>) -> Self { Self(Confined::try_from(value).expect("u64 >= usize")) }
-}
-
-impl LowerHex for ByteStr {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.0.as_inner().to_hex())
-    }
-}
-
-impl UpperHex for ByteStr {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.0.as_inner().to_hex().to_uppercase())
-    }
-}
-
-impl FromHex for ByteStr {
-    fn from_hex(s: &str) -> Result<Self, hex::Error> { Vec::<u8>::from_hex(s).map(Self::from) }
-    fn from_byte_iter<I>(_: I) -> Result<Self, hex::Error>
-    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
-        unreachable!()
-    }
 }
 
 impl ByteStr {
@@ -737,10 +715,10 @@ mod tests {
         d: impl AsRef<[u8]>,
     ) -> Result<T, ConsensusDataError> {
         let mut cursor = Cursor::new(d.as_ref());
-        Ok(T::consensus_decode(&mut cursor).map_err(|err| match err {
+        T::consensus_decode(&mut cursor).map_err(|err| match err {
             ConsensusDecodeError::Data(e) => e,
             ConsensusDecodeError::Io(_) => unreachable!(),
-        })?)
+        })
     }
 
     #[test]
@@ -882,44 +860,44 @@ mod tests {
     #[test]
     fn deserialize_int_test() {
         // u8
-        assert_eq!(deserialize(&[58u8]).ok(), Some(58u8));
+        assert_eq!(deserialize([58u8]).ok(), Some(58u8));
 
         // u16
-        assert_eq!(deserialize(&[0x01u8, 0x02]).ok(), Some(0x0201u16));
-        assert_eq!(deserialize(&[0xABu8, 0xCD]).ok(), Some(0xCDABu16));
-        assert_eq!(deserialize(&[0xA0u8, 0x0D]).ok(), Some(0xDA0u16));
-        let failure16: Result<u16, _> = deserialize(&[1u8]);
+        assert_eq!(deserialize([0x01u8, 0x02]).ok(), Some(0x0201u16));
+        assert_eq!(deserialize([0xABu8, 0xCD]).ok(), Some(0xCDABu16));
+        assert_eq!(deserialize([0xA0u8, 0x0D]).ok(), Some(0xDA0u16));
+        let failure16: Result<u16, _> = deserialize([1u8]);
         assert!(failure16.is_err());
 
         // u32
-        assert_eq!(deserialize(&[0xABu8, 0xCD, 0, 0]).ok(), Some(0xCDABu32));
-        assert_eq!(deserialize(&[0xA0u8, 0x0D, 0xAB, 0xCD]).ok(), Some(0xCDAB0DA0u32));
+        assert_eq!(deserialize([0xABu8, 0xCD, 0, 0]).ok(), Some(0xCDABu32));
+        assert_eq!(deserialize([0xA0u8, 0x0D, 0xAB, 0xCD]).ok(), Some(0xCDAB0DA0u32));
 
-        let failure32: Result<u32, _> = deserialize(&[1u8, 2, 3]);
+        let failure32: Result<u32, _> = deserialize([1u8, 2, 3]);
         assert!(failure32.is_err());
 
         // i32
-        assert_eq!(deserialize(&[0xABu8, 0xCD, 0, 0]).ok(), Some(0xCDABi32));
-        assert_eq!(deserialize(&[0xA0u8, 0x0D, 0xAB, 0x2D]).ok(), Some(0x2DAB0DA0i32));
+        assert_eq!(deserialize([0xABu8, 0xCD, 0, 0]).ok(), Some(0xCDABi32));
+        assert_eq!(deserialize([0xA0u8, 0x0D, 0xAB, 0x2D]).ok(), Some(0x2DAB0DA0i32));
 
-        assert_eq!(deserialize(&[0, 0, 0, 0]).ok(), Some(-0_i32));
-        assert_eq!(deserialize(&[0, 0, 0, 0]).ok(), Some(0_i32));
+        assert_eq!(deserialize([0, 0, 0, 0]).ok(), Some(-0_i32));
+        assert_eq!(deserialize([0, 0, 0, 0]).ok(), Some(0_i32));
 
-        assert_eq!(deserialize(&[0xFF, 0xFF, 0xFF, 0xFF]).ok(), Some(-1_i32));
-        assert_eq!(deserialize(&[0xFE, 0xFF, 0xFF, 0xFF]).ok(), Some(-2_i32));
-        assert_eq!(deserialize(&[0x01, 0xFF, 0xFF, 0xFF]).ok(), Some(-255_i32));
-        assert_eq!(deserialize(&[0x02, 0xFF, 0xFF, 0xFF]).ok(), Some(-254_i32));
+        assert_eq!(deserialize([0xFF, 0xFF, 0xFF, 0xFF]).ok(), Some(-1_i32));
+        assert_eq!(deserialize([0xFE, 0xFF, 0xFF, 0xFF]).ok(), Some(-2_i32));
+        assert_eq!(deserialize([0x01, 0xFF, 0xFF, 0xFF]).ok(), Some(-255_i32));
+        assert_eq!(deserialize([0x02, 0xFF, 0xFF, 0xFF]).ok(), Some(-254_i32));
 
-        let failurei32: Result<i32, _> = deserialize(&[1u8, 2, 3]);
+        let failurei32: Result<i32, _> = deserialize([1u8, 2, 3]);
         assert!(failurei32.is_err());
 
         // u64
-        assert_eq!(deserialize(&[0xABu8, 0xCD, 0, 0, 0, 0, 0, 0]).ok(), Some(0xCDABu64));
+        assert_eq!(deserialize([0xABu8, 0xCD, 0, 0, 0, 0, 0, 0]).ok(), Some(0xCDABu64));
         assert_eq!(
-            deserialize(&[0xA0u8, 0x0D, 0xAB, 0xCD, 0x99, 0, 0, 0x99]).ok(),
+            deserialize([0xA0u8, 0x0D, 0xAB, 0xCD, 0x99, 0, 0, 0x99]).ok(),
             Some(0x99000099CDAB0DA0u64)
         );
-        let failure64: Result<u64, _> = deserialize(&[1u8, 2, 3, 4, 5, 6, 7]);
+        let failure64: Result<u64, _> = deserialize([1u8, 2, 3, 4, 5, 6, 7]);
         assert!(failure64.is_err());
     }
 }

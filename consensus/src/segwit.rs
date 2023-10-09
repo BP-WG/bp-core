@@ -22,11 +22,12 @@
 use std::vec;
 
 use amplify::confinement::Confined;
-use amplify::hex::{self, FromHex};
-use amplify::Bytes32StrRev;
+use amplify::{Bytes32StrRev, Wrapper};
 
 use crate::opcodes::*;
-use crate::{OpCode, ScriptBytes, ScriptPubkey, VarIntArray, LIB_NAME_BITCOIN};
+use crate::{
+    OpCode, RedeemScript, ScriptBytes, ScriptPubkey, VarIntArray, WScriptHash, LIB_NAME_BITCOIN,
+};
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display, Error)]
 #[display(doc_comments)]
@@ -214,7 +215,7 @@ impl WitnessVer {
 /// Witness program as defined in BIP141.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
-#[strict_type(lib = LIB_NAME_BITCOIN, dumb = {Self::new(strict_dumb!(), vec![0; 32]).unwrap()})]
+#[strict_type(lib = LIB_NAME_BITCOIN, dumb = Self::dumb())]
 pub struct WitnessProgram {
     /// The witness program version.
     version: WitnessVer,
@@ -223,6 +224,8 @@ pub struct WitnessProgram {
 }
 
 impl WitnessProgram {
+    fn dumb() -> Self { Self::new(strict_dumb!(), vec![0; 32]).unwrap() }
+
     /// Creates a new witness program.
     pub fn new(version: WitnessVer, program: Vec<u8>) -> Result<Self, SegwitError> {
         let len = program.len();
@@ -294,16 +297,15 @@ impl ScriptPubkey {
         };
         let push_opbyte = self[1]; // Second byte push opcode 2-40 bytes
         WitnessVer::from_op_code(ver_opcode).is_ok()
-            && push_opbyte >= OP_PUSHBYTES_2
-            && push_opbyte <= OP_PUSHBYTES_40
+            && (OP_PUSHBYTES_2..=OP_PUSHBYTES_40).contains(&push_opbyte)
             // Check that the rest of the script has the correct size
             && script_len - 2 == push_opbyte as usize
     }
 }
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
-#[wrapper(Deref, Index, RangeOps, BorrowSlice, LowerHex, UpperHex)]
-#[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
+#[wrapper(Deref, AsSlice, Hex)]
+#[wrapper_mut(DerefMut, AsSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
@@ -327,16 +329,14 @@ impl WitnessScript {
     /// Adds a single opcode to the script.
     pub fn push_opcode(&mut self, op_code: OpCode) { self.0.push(op_code as u8); }
 
-    pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
-}
-
-impl FromHex for WitnessScript {
-    fn from_hex(s: &str) -> Result<Self, hex::Error> { ScriptBytes::from_hex(s).map(Self) }
-
-    fn from_byte_iter<I>(_: I) -> Result<Self, hex::Error>
-    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
-        unreachable!()
+    pub fn to_redeem_script(&self) -> RedeemScript {
+        let script = ScriptPubkey::p2wsh(WScriptHash::from(self));
+        RedeemScript::from_inner(script.into_inner())
     }
+
+    pub fn to_script_pubkey(&self) -> ScriptPubkey { ScriptPubkey::p2wsh(WScriptHash::from(self)) }
+
+    pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
 }
 
 #[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, From)]
@@ -349,19 +349,12 @@ impl FromHex for WitnessScript {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-#[wrapper(BorrowSlice, Index, RangeOps, Debug, LowerHex, UpperHex, Display, FromStr)]
+#[wrapper(BorrowSlice, Index, RangeOps, Debug, Hex, Display, FromStr)]
 pub struct Wtxid(
     #[from]
     #[from([u8; 32])]
     Bytes32StrRev,
 );
-
-impl FromHex for Wtxid {
-    fn from_byte_iter<I>(iter: I) -> Result<Self, hex::Error>
-    where I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator {
-        Bytes32StrRev::from_byte_iter(iter).map(Self)
-    }
-}
 
 #[derive(Wrapper, Clone, Eq, PartialEq, Hash, Debug, From, Default)]
 #[wrapper(Deref, Index, RangeOps)]

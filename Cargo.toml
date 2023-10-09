@@ -22,11 +22,11 @@ edition = "2021"
 license = "Apache-2.0"
 
 [workspace.dependencies]
-amplify = "4.2.0"
-strict_encoding = "2.5.0"
-strict_types = "1.6.2"
-commit_verify = "0.10.5"
-single_use_seals = "0.10.0"
+amplify = "4.5.0"
+strict_encoding = "2.6.1"
+strict_types = "1.6.3"
+commit_verify = "0.10.6"
+single_use_seals = "0.10.1"
 bp-consensus = { version = "0.10.10", path = "consensus" }
 bp-dbc = { version = "0.10.10", path = "./dbc" }
 bp-seals = { version = "0.10.10", path = "./seals" }
@@ -69,7 +69,8 @@ serde_crate = { workspace = true, optional = true }
 
 [features]
 default = []
-all = ["serde", "stl"]
+all = ["chrono", "serde", "stl"]
+chrono = ["bp-consensus/chrono"]
 serde = [
     "serde_crate",
     "bp-consensus/serde",

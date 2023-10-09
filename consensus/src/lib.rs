@@ -19,9 +19,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Version 0.10.10:
-// TODO: Ensure all serde uses both string and binary version
-// TODO: Move consensus-level timelocks and sequence locks from other libraries
 // Version 0.11.0:
 // TODO: Ensure script length control doesn't panic for data structures > 4GB
 // Version 1.0:
@@ -59,10 +56,13 @@ pub extern crate secp256k1;
 mod block;
 pub mod opcodes;
 mod script;
+mod pubkeys;
 mod segwit;
 mod taproot;
 mod tx;
+mod hashtypes;
 mod sigtypes;
+mod timelocks;
 mod util;
 mod weights;
 #[cfg(feature = "stl")]
@@ -74,18 +74,23 @@ pub use coding::{
     ByteStr, ConsensusDataError, ConsensusDecode, ConsensusDecodeError, ConsensusEncode, LenVarInt,
     VarInt, VarIntArray,
 };
+pub use hashtypes::{PubkeyHash, ScriptHash, WPubkeyHash, WScriptHash};
+pub use pubkeys::{CompressedPk, InvalidPubkey, LegacyPk, PubkeyParseError, UncompressedPk};
 pub use script::{OpCode, RedeemScript, ScriptBytes, ScriptPubkey, SigScript};
 pub use segwit::{SegwitError, Witness, WitnessProgram, WitnessScript, WitnessVer, Wtxid};
 pub use sigtypes::{Bip340Sig, LegacySig, SigError, SighashFlag, SighashType};
 pub use taproot::{
     ControlBlock, FutureLeafVer, InternalPk, IntoTapHash, InvalidLeafVer, InvalidParityValue,
-    InvalidPubkey, LeafScript, LeafVer, OutputPk, Parity, TapBranchHash, TapCode, TapLeafHash,
-    TapMerklePath, TapNodeHash, TapScript, TaprootPk, TAPROOT_ANNEX_PREFIX, TAPROOT_LEAF_MASK,
+    LeafScript, LeafVer, OutputPk, Parity, TapBranchHash, TapCode, TapLeafHash, TapMerklePath,
+    TapNodeHash, TapScript, XOnlyPk, MIDSTATE_TAPSIGHASH, TAPROOT_ANNEX_PREFIX, TAPROOT_LEAF_MASK,
     TAPROOT_LEAF_TAPSCRIPT,
 };
+pub use timelocks::{
+    InvalidTimelock, LockHeight, LockTime, LockTimestamp, SeqNo, TimelockParseError,
+    LOCKTIME_THRESHOLD, SEQ_NO_CSV_DISABLE_MASK, SEQ_NO_CSV_TYPE_MASK,
+};
 pub use tx::{
-    LockTime, Outpoint, OutpointParseError, Sats, SeqNo, Tx, TxIn, TxOut, TxParseError, TxVer,
-    Txid, Vout, LOCKTIME_THRESHOLD,
+    Outpoint, OutpointParseError, Sats, Tx, TxIn, TxOut, TxParseError, TxVer, Txid, Vout,
 };
 pub use util::{Chain, ChainParseError, NonStandardValue};
 pub use weights::{VBytes, Weight, WeightUnits};
