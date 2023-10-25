@@ -266,7 +266,7 @@ impl BlindSeal<Txid> {
 }
 
 impl BlindSeal<TxPtr> {
-    /// Converts `BlindSeal<Txid>` into `BlindSeal<TxPtr>`.
+    /// Converts `BlindSeal<TxPtr>` into `BlindSeal<Txid>`.
     pub fn resolve(self, txid: Txid) -> BlindSeal<Txid> {
         BlindSeal::with_blinding(self.method, self.txid().unwrap_or(txid), self.vout, self.blinding)
     }
