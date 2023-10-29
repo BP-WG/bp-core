@@ -25,8 +25,8 @@ license = "Apache-2.0"
 amplify = "4.5.0"
 strict_encoding = "2.6.1"
 strict_types = "1.6.3"
-commit_verify = "0.10.6"
-single_use_seals = "0.10.1"
+commit_verify = "0.11.0-beta.1"
+single_use_seals = "0.11.0-beta.1"
 bp-consensus = { version = "0.10.11", path = "consensus" }
 bp-dbc = { version = "0.10.11", path = "./dbc" }
 bp-seals = { version = "0.10.11", path = "./seals" }
@@ -81,3 +81,7 @@ stl = ["strict_types", "strict_types/base64", "bp-consensus/stl", "commit_verify
 
 [package.metadata.docs.rs]
 features = [ "all" ]
+
+[patch.crates-io]
+commit_verify = { git = "https://github.com/LNP-BP/client_side_validation", branch = "v0.11" }
+single_use_seals = { git = "https://github.com/LNP-BP/client_side_validation", branch = "v0.11" }
