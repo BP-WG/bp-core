@@ -90,7 +90,7 @@ pub use timelocks::{
 pub use tx::{
     Outpoint, OutpointParseError, Sats, Tx, TxIn, TxOut, TxParseError, TxVer, Txid, Vout,
 };
-pub use util::{Chain, ChainParseError, NonStandardValue};
+pub use util::NonStandardValue;
 pub use weights::{VBytes, Weight, WeightUnits};
 
 pub const LIB_NAME_BITCOIN: &str = "Bitcoin";
