@@ -143,7 +143,7 @@ impl FromStr for XOnlyPk {
 #[derive(Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, LowerHex, Display, FromStr)]
 #[wrapper_mut(DerefMut)]
-#[derive(StrictType, StrictDumb)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
     feature = "serde",
@@ -203,24 +203,6 @@ impl InternalPk {
 
 impl From<InternalPk> for [u8; 32] {
     fn from(pk: InternalPk) -> [u8; 32] { pk.to_byte_array() }
-}
-
-// TODO: Remove custom implementation in v0.11
-impl StrictEncode for InternalPk {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
-        let bytes = Bytes32::from(self.0.serialize());
-        writer.write_newtype::<Self>(&bytes)
-    }
-}
-
-impl StrictDecode for InternalPk {
-    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        reader.read_tuple(|r| {
-            let bytes: Bytes32 = r.read_field()?;
-            let pk = XOnlyPk::from_byte_array(bytes.to_byte_array())?;
-            Ok(InternalPk(pk))
-        })
-    }
 }
 
 /// Output taproot key - an [`InternalPk`] tweaked with merkle root of the
