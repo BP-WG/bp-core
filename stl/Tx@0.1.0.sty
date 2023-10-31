@@ -1,5 +1,5 @@
 {-
-  Id: urn:ubideco:stl:5PUqZnqASPU3zKASh2pTHYmfcV4pZfvt4UU8FxPsRt6S#winter-horizon-binary
+  Id: urn:ubideco:stl:9zw1koriNSQRJBdHbXnTqjCdShzASm915rWgnCBgnKJ4#delphi-magnum-flame
   Name: Tx
   Version: 0.1.0
   Description: Bitcoin transaction library
@@ -12,6 +12,8 @@ typelib Tx
 
 -- no dependencies
 
+-- urn:ubideco:semid:EDr6wurh4X1tMNGqA7mRkyrAY6ngPGyRSEufTGSUtySJ#kinetic-avenue-escort
+data ByteStr          :: [Byte ^ ..0xffffffff]
 -- urn:ubideco:semid:4dDWWU4afiPN3q4AgCMuFRFhL4UDta2u5SrqrBzPvjby#tokyo-inch-program
 data LockTime         :: U32
 -- urn:ubideco:semid:FWt2MSo8A4nsYgYbuBqMRNLiKgtzvLBgUn774iKzTcuf#pocket-pegasus-frank
@@ -44,6 +46,6 @@ data TxVer            :: I32
 data Txid             :: [Byte ^ 32]
 -- urn:ubideco:semid:3HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk#chrome-robin-gallop
 data Vout             :: U32
--- urn:ubideco:semid:8mjN2CZj3Nhn2HjnKqTmEcN5vmyb3UJK8HSFW1uE3W2p#warning-saddle-period
-data Witness          :: [[Byte ^ ..0xffffffff] ^ ..0xffffffff]
+-- urn:ubideco:semid:Gg9XBkAqDafziCYdzoJYMrjP6ziSxQckFaEBmbPLLgPD#sonata-local-slow
+data Witness          :: [ByteStr ^ ..0xffffffff]
 

@@ -21,7 +21,6 @@
 
 use amplify::confinement;
 use amplify::confinement::Confined;
-use amplify::hex::{FromHex, ToHex};
 
 use crate::opcodes::*;
 use crate::{VarInt, VarIntArray, LIB_NAME_BITCOIN};
@@ -370,6 +369,7 @@ impl ScriptBytes {
 
 #[cfg(feature = "serde")]
 mod _serde {
+    use amplify::hex::{FromHex, ToHex};
     use serde::{Deserialize, Serialize};
     use serde_crate::de::Error;
     use serde_crate::{Deserializer, Serializer};
