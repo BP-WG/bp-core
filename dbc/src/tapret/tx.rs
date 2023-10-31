@@ -92,6 +92,7 @@ mod test {
     use amplify::Bytes32;
     use bc::InternalPk;
     use commit_verify::mpc::Commitment;
+    use commit_verify::ConvolveVerifyError;
     use secp256k1::{ffi, XOnlyPublicKey};
 
     use super::*;
@@ -117,6 +118,9 @@ mod test {
         };
 
         let msg = Commitment::from(Bytes32::zero());
-        assert!(!ConvolveCommitProof::<_, Tx, _>::verify(&proof, &msg, &tx).unwrap())
+        assert_eq!(
+            ConvolveCommitProof::<_, Tx, _>::verify(&proof, &msg, &tx),
+            Err(ConvolveVerifyError::CommitmentMismatch)
+        );
     }
 }
