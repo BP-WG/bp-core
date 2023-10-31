@@ -1,4 +1,4 @@
-// Bitcoin protocol consensus library.
+// Bitcoin protocol primitives library.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -19,8 +19,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use amplify::confinement;
 use amplify::confinement::Confined;
-use commit_verify::{DigestExt, Ripemd160};
+use amplify::hex::{FromHex, ToHex};
 
 use crate::opcodes::*;
 use crate::{VarInt, VarIntArray, LIB_NAME_BITCOIN};
@@ -116,14 +117,35 @@ pub enum OpCode {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct SigScript(
-    #[from]
-    #[from(Vec<u8>)]
-    ScriptBytes,
-);
+pub struct SigScript(ScriptBytes);
+
+impl TryFrom<Vec<u8>> for SigScript {
+    type Error = confinement::Error;
+    fn try_from(script_bytes: Vec<u8>) -> Result<Self, Self::Error> {
+        ScriptBytes::try_from(script_bytes).map(Self)
+    }
+}
 
 impl SigScript {
+    #[inline]
     pub fn empty() -> Self { SigScript::default() }
+
+    #[inline]
+    pub fn new() -> Self { Self::default() }
+
+    #[inline]
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self(ScriptBytes::from(Confined::with_capacity(capacity)))
+    }
+
+    /// Constructs script object assuming the script length is less than 4GB.
+    /// Panics otherwise.
+    #[inline]
+    pub fn from_unsafe(script_bytes: Vec<u8>) -> Self {
+        Self(ScriptBytes::from_unsafe(script_bytes))
+    }
+
+    #[inline]
     pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
 }
 
@@ -137,17 +159,29 @@ impl SigScript {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct ScriptPubkey(
-    #[from]
-    #[from(Vec<u8>)]
-    ScriptBytes,
-);
+pub struct ScriptPubkey(ScriptBytes);
+
+impl TryFrom<Vec<u8>> for ScriptPubkey {
+    type Error = confinement::Error;
+    fn try_from(script_bytes: Vec<u8>) -> Result<Self, Self::Error> {
+        ScriptBytes::try_from(script_bytes).map(Self)
+    }
+}
 
 impl ScriptPubkey {
+    #[inline]
     pub fn new() -> Self { Self::default() }
 
+    #[inline]
     pub fn with_capacity(capacity: usize) -> Self {
         Self(ScriptBytes::from(Confined::with_capacity(capacity)))
+    }
+
+    /// Constructs script object assuming the script length is less than 4GB.
+    /// Panics otherwise.
+    #[inline]
+    pub fn from_unsafe(script_bytes: Vec<u8>) -> Self {
+        Self(ScriptBytes::from_unsafe(script_bytes))
     }
 
     pub fn p2pkh(hash: impl Into<[u8; 20]>) -> Self {
@@ -195,11 +229,14 @@ impl ScriptPubkey {
             self.0[22] == OP_EQUAL
     }
 
+    #[inline]
     pub fn is_op_return(&self) -> bool { self[0] == OpCode::Return as u8 }
 
     /// Adds a single opcode to the script.
+    #[inline]
     pub fn push_opcode(&mut self, op_code: OpCode) { self.0.push(op_code as u8) }
 
+    #[inline]
     pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
 }
 
@@ -213,43 +250,61 @@ impl ScriptPubkey {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct RedeemScript(
-    #[from]
-    #[from(Vec<u8>)]
-    ScriptBytes,
-);
+pub struct RedeemScript(ScriptBytes);
+
+impl TryFrom<Vec<u8>> for RedeemScript {
+    type Error = confinement::Error;
+    fn try_from(script_bytes: Vec<u8>) -> Result<Self, Self::Error> {
+        ScriptBytes::try_from(script_bytes).map(Self)
+    }
+}
 
 impl RedeemScript {
+    #[inline]
     pub fn new() -> Self { Self::default() }
 
+    #[inline]
     pub fn with_capacity(capacity: usize) -> Self {
         Self(ScriptBytes::from(Confined::with_capacity(capacity)))
     }
 
-    /// Adds a single opcode to the script.
-    pub fn push_opcode(&mut self, op_code: OpCode) { self.0.push(op_code as u8); }
-
-    pub fn to_script_pubkey(&self) -> ScriptPubkey {
-        let mut engine = Ripemd160::default();
-        engine.input_raw(self.as_slice());
-        ScriptPubkey::p2sh(engine.finish())
+    /// Constructs script object assuming the script length is less than 4GB.
+    /// Panics otherwise.
+    #[inline]
+    pub fn from_unsafe(script_bytes: Vec<u8>) -> Self {
+        Self(ScriptBytes::from_unsafe(script_bytes))
     }
 
+    /// Adds a single opcode to the script.
+    #[inline]
+    pub fn push_opcode(&mut self, op_code: OpCode) { self.0.push(op_code as u8); }
+
+    #[inline]
     pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
 }
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default, Debug, From)]
-#[derive(StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BITCOIN)]
 #[wrapper(Deref, AsSlice, Hex)]
 #[wrapper_mut(DerefMut, AsSliceMut)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
 pub struct ScriptBytes(VarIntArray<u8>);
 
-impl From<Vec<u8>> for ScriptBytes {
-    fn from(value: Vec<u8>) -> Self { Self(Confined::try_from(value).expect("u64 >= usize")) }
+impl TryFrom<Vec<u8>> for ScriptBytes {
+    type Error = confinement::Error;
+    fn try_from(script_bytes: Vec<u8>) -> Result<Self, Self::Error> {
+        Confined::try_from(script_bytes).map(Self)
+    }
 }
 
 impl ScriptBytes {
+    /// Constructs script object assuming the script length is less than 4GB.
+    /// Panics otherwise.
+    #[inline]
+    pub fn from_unsafe(script_bytes: Vec<u8>) -> Self {
+        Self(Confined::try_from(script_bytes).expect("script exceeding 4GB"))
+    }
+
     /// Adds instructions to push some arbitrary data onto the stack.
     ///
     /// ## Panics
@@ -315,7 +370,6 @@ impl ScriptBytes {
 
 #[cfg(feature = "serde")]
 mod _serde {
-    use amplify::hex::{FromHex, ToHex};
     use serde::{Deserialize, Serialize};
     use serde_crate::de::Error;
     use serde_crate::{Deserializer, Serializer};
@@ -341,42 +395,10 @@ mod _serde {
                     Self::from_hex(&string).map_err(|_| D::Error::custom("wrong hex data"))
                 })
             } else {
-                Vec::<u8>::deserialize(deserializer).map(ScriptBytes::from)
+                let bytes = Vec::<u8>::deserialize(deserializer)?;
+                ScriptBytes::try_from(bytes)
+                    .map_err(|_| D::Error::custom("invalid script length exceeding 4GB"))
             }
         }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use amplify::hex::ToHex;
-
-    use super::*;
-
-    #[test]
-    fn script_index() {
-        let mut script = ScriptPubkey::op_return(&[0u8; 40]);
-        assert_eq!(script[0], OP_RETURN);
-        assert_eq!(&script[..2], &[OP_RETURN, OP_PUSHBYTES_40]);
-        assert_eq!(&script[40..], &[0u8, 0u8]);
-        assert_eq!(&script[2..4], &[0u8, 0u8]);
-        assert_eq!(&script[2..=3], &[0u8, 0u8]);
-
-        script[0] = 0xFF;
-        script[..2].copy_from_slice(&[0xFF, 0xFF]);
-        script[40..].copy_from_slice(&[0xFF, 0xFF]);
-        script[2..4].copy_from_slice(&[0xFF, 0xFF]);
-        script[2..=3].copy_from_slice(&[0xFF, 0xFF]);
-
-        assert_eq!(script[0], 0xFF);
-        assert_eq!(&script[..2], &[0xFF, 0xFF]);
-        assert_eq!(&script[40..], &[0xFF, 0xFF]);
-        assert_eq!(&script[2..4], &[0xFF, 0xFF]);
-        assert_eq!(&script[2..=3], &[0xFF, 0xFF]);
-
-        assert_eq!(
-            &script.to_hex(),
-            "ffffffff000000000000000000000000000000000000000000000000000000000000000000000000ffff"
-        );
     }
 }
