@@ -48,7 +48,7 @@ pub struct ChainParseError(String);
 #[derive(CommitEncode)]
 #[commit_encode(strategy = strict)]
 #[repr(u8)]
-// TODO: v0.11 make non_exhaustive
+#[non_exhaustive]
 pub enum Chain {
     #[default]
     #[display("mainnet")]
