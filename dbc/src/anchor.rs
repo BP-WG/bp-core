@@ -29,10 +29,10 @@ use std::cmp::Ordering;
 use amplify::{Bytes32, Wrapper};
 use bc::{ScriptPubkey, Tx, Txid};
 use commit_verify::mpc::{self, Message, ProtocolId};
-use commit_verify::{CommitmentId, ConvolveCommitProof};
+use commit_verify::{CommitmentId, ConvolveCommitProof, ConvolveVerifyError};
 use strict_encoding::{StrictDumb, StrictEncode};
 
-use crate::tapret::{TapretError, TapretProof};
+use crate::tapret::TapretProof;
 use crate::LIB_NAME_BPCORE;
 
 /// Default depth of LNPBP-4 commitment tree
@@ -65,9 +65,9 @@ pub struct AnchorId(
     serde(crate = "serde_crate", rename_all = "camelCase")
 )]
 pub enum VerifyError {
-    /// Tapret commitment verification failure.
+    /// invalid deterministic bitcoin commitment. Details: {0}
     #[from]
-    Tapret(TapretError),
+    Dbc(AnchorError),
 
     /// LNPBP-4 invalid proof. Details: {0}
     #[from]
@@ -174,7 +174,7 @@ impl Anchor<mpc::MerkleProof> {
         protocol_id: impl Into<ProtocolId>,
         message: Message,
         tx: &Tx,
-    ) -> Result<bool, VerifyError> {
+    ) -> Result<(), VerifyError> {
         self.dbc_proof
             .verify(&self.mpc_proof.convolve(protocol_id.into(), message)?, tx)
             .map_err(VerifyError::from)
@@ -236,6 +236,35 @@ impl Anchor<mpc::MerkleBlock> {
     }
 }
 
+/// Errors covering failed anchor validation.
+#[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", rename_all = "camelCase")
+)]
+#[display(doc_comments)]
+pub enum AnchorError {
+    /// witness transaction {txid} contains invalid OP_RETURN commitment
+    /// {present:x} instead of {expected:x}.
+    OpretMismatch {
+        /// Transaction id
+        txid: Txid,
+        /// Commitment from the first OP_RETURN transaction output
+        present: ScriptPubkey,
+        /// Expected commitment absent in the first OP_RETURN transaction output
+        expected: ScriptPubkey,
+    },
+
+    /// witness transaction {0} does not contain any OP_RETURN commitment
+    /// required by the seal definition.
+    OpretAbsent(Txid),
+
+    #[from]
+    /// witness transaction does not contain a valid tapret commitment. {0}.
+    Tapret(ConvolveVerifyError),
+}
+
 /// Type and type-specific proof information of a deterministic bitcoin
 /// commitment.
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -260,17 +289,28 @@ pub enum Proof {
 
 impl Proof {
     /// Verifies validity of the proof.
-    pub fn verify(&self, msg: &mpc::Commitment, tx: &Tx) -> Result<bool, TapretError> {
+    pub fn verify(&self, msg: &mpc::Commitment, tx: &Tx) -> Result<(), AnchorError> {
         match self {
             Proof::OpretFirst => {
                 for txout in &tx.outputs {
                     if txout.script_pubkey.is_op_return() {
-                        return Ok(txout.script_pubkey == ScriptPubkey::op_return(msg.as_slice()));
+                        let expected = ScriptPubkey::op_return(msg.as_slice());
+                        if txout.script_pubkey == expected {
+                            return Ok(());
+                        } else {
+                            return Err(AnchorError::OpretMismatch {
+                                txid: tx.txid(),
+                                present: txout.script_pubkey.clone(),
+                                expected,
+                            });
+                        }
                     }
                 }
-                Ok(false)
+                Err(AnchorError::OpretAbsent(tx.txid()))
             }
-            Proof::TapretFirst(proof) => ConvolveCommitProof::<_, Tx, _>::verify(proof, msg, tx),
+            Proof::TapretFirst(proof) => {
+                ConvolveCommitProof::<_, Tx, _>::verify(proof, msg, tx).map_err(AnchorError::from)
+            }
         }
     }
 }

@@ -20,6 +20,7 @@
 // limitations under the License.
 
 use bc::Outpoint;
+use dbc::anchor::AnchorError;
 
 /// Seal verification errors.
 #[derive(Clone, PartialEq, Eq, Debug, Display, From, Error)]
@@ -39,11 +40,10 @@ pub enum VerifyError {
     /// seal lacks witness transaction id information.
     NoWitnessTxid,
 
-    /// tapret commitment is invalid.
-    ///
-    /// Details: {0}
+    /// invalid anchor.
     #[from]
-    InvalidTapretCommitment(dbc::tapret::TapretError),
+    #[display(inner)]
+    InvalidAnchor(AnchorError),
 }
 
 /// Error happening if the seal data holds only witness transaction output

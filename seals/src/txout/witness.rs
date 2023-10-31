@@ -56,7 +56,7 @@ impl<Seal: TxoSeal> SealWitness<Seal> for Witness {
     type Message = mpc::Commitment;
     type Error = VerifyError;
 
-    fn verify_seal(&self, seal: &Seal, msg: &Self::Message) -> Result<bool, Self::Error> {
+    fn verify_seal(&self, seal: &Seal, msg: &Self::Message) -> Result<(), Self::Error> {
         // 1. The seal must match tx inputs
         let outpoint = seal.outpoint().ok_or(VerifyError::NoWitnessTxid)?;
         if !self
@@ -76,7 +76,7 @@ impl<Seal: TxoSeal> SealWitness<Seal> for Witness {
         &self,
         seals: impl IntoIterator<Item = &'seal Seal>,
         msg: &Self::Message,
-    ) -> Result<bool, Self::Error>
+    ) -> Result<(), Self::Error>
     where
         Seal: 'seal,
     {
