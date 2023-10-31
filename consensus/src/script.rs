@@ -402,3 +402,37 @@ mod _serde {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use amplify::hex::ToHex;
+
+    use super::*;
+
+    #[test]
+    fn script_index() {
+        let mut script = ScriptPubkey::op_return(&[0u8; 40]);
+        assert_eq!(script[0], OP_RETURN);
+        assert_eq!(&script[..2], &[OP_RETURN, OP_PUSHBYTES_40]);
+        assert_eq!(&script[40..], &[0u8, 0u8]);
+        assert_eq!(&script[2..4], &[0u8, 0u8]);
+        assert_eq!(&script[2..=3], &[0u8, 0u8]);
+
+        script[0] = 0xFF;
+        script[..2].copy_from_slice(&[0xFF, 0xFF]);
+        script[40..].copy_from_slice(&[0xFF, 0xFF]);
+        script[2..4].copy_from_slice(&[0xFF, 0xFF]);
+        script[2..=3].copy_from_slice(&[0xFF, 0xFF]);
+
+        assert_eq!(script[0], 0xFF);
+        assert_eq!(&script[..2], &[0xFF, 0xFF]);
+        assert_eq!(&script[40..], &[0xFF, 0xFF]);
+        assert_eq!(&script[2..4], &[0xFF, 0xFF]);
+        assert_eq!(&script[2..=3], &[0xFF, 0xFF]);
+
+        assert_eq!(
+            &script.to_hex(),
+            "ffffffff000000000000000000000000000000000000000000000000000000000000000000000000ffff"
+        );
+    }
+}
