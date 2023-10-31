@@ -30,7 +30,7 @@
 )]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
-//! Primitives module defines core strict interfaces from informational LNPBP
+//! Core module defines core strict interfaces from informational LNPBP
 //! standards specifying secure and robust practices for function calls
 //! used in main bitcoin protocols:
 //! - consensus-level primitives;
