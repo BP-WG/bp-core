@@ -22,11 +22,12 @@
 use std::vec;
 
 use amplify::confinement::Confined;
-use amplify::{Bytes32StrRev, Wrapper};
+use amplify::{confinement, Bytes32StrRev, Wrapper};
 
 use crate::opcodes::*;
 use crate::{
-    OpCode, RedeemScript, ScriptBytes, ScriptPubkey, VarIntArray, WScriptHash, LIB_NAME_BITCOIN,
+    ByteStr, OpCode, RedeemScript, ScriptBytes, ScriptPubkey, VarIntArray, WScriptHash,
+    LIB_NAME_BITCOIN,
 };
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display, Error)]
@@ -313,20 +314,33 @@ impl ScriptPubkey {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct WitnessScript(
-    #[from]
-    #[from(Vec<u8>)]
-    ScriptBytes,
-);
+pub struct WitnessScript(ScriptBytes);
+
+impl TryFrom<Vec<u8>> for WitnessScript {
+    type Error = confinement::Error;
+    fn try_from(script_bytes: Vec<u8>) -> Result<Self, Self::Error> {
+        ScriptBytes::try_from(script_bytes).map(Self)
+    }
+}
 
 impl WitnessScript {
+    #[inline]
     pub fn new() -> Self { Self::default() }
 
+    #[inline]
     pub fn with_capacity(capacity: usize) -> Self {
         Self(ScriptBytes::from(Confined::with_capacity(capacity)))
     }
 
+    /// Constructs script object assuming the script length is less than 4GB.
+    /// Panics otherwise.
+    #[inline]
+    pub fn from_unsafe(script_bytes: Vec<u8>) -> Self {
+        Self(ScriptBytes::from_unsafe(script_bytes))
+    }
+
     /// Adds a single opcode to the script.
+    #[inline]
     pub fn push_opcode(&mut self, op_code: OpCode) { self.0.push(op_code as u8); }
 
     pub fn to_redeem_script(&self) -> RedeemScript {
@@ -336,10 +350,12 @@ impl WitnessScript {
 
     pub fn to_script_pubkey(&self) -> ScriptPubkey { ScriptPubkey::p2wsh(WScriptHash::from(self)) }
 
+    #[inline]
     pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
 }
 
 #[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, From)]
+#[wrapper(BorrowSlice, Index, RangeOps, Debug, Hex, Display, FromStr)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[derive(CommitEncode)]
@@ -349,7 +365,6 @@ impl WitnessScript {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-#[wrapper(BorrowSlice, Index, RangeOps, Debug, Hex, Display, FromStr)]
 pub struct Wtxid(
     #[from]
     #[from([u8; 32])]
@@ -360,32 +375,35 @@ pub struct Wtxid(
 #[wrapper(Deref, Index, RangeOps)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-pub struct Witness(VarIntArray<VarIntArray<u8>>);
+pub struct Witness(VarIntArray<ByteStr>);
 
 impl IntoIterator for Witness {
-    type Item = VarIntArray<u8>;
-    type IntoIter = vec::IntoIter<VarIntArray<u8>>;
+    type Item = ByteStr;
+    type IntoIter = vec::IntoIter<ByteStr>;
 
     fn into_iter(self) -> Self::IntoIter { self.0.into_iter() }
 }
 
 impl Witness {
+    #[inline]
     pub fn new() -> Self { default!() }
 
+    #[inline]
     pub fn elements(&self) -> impl Iterator<Item = &'_ [u8]> {
         self.0.iter().map(|el| el.as_slice())
     }
 
     pub fn from_consensus_stack(witness: impl IntoIterator<Item = Vec<u8>>) -> Witness {
         let iter = witness.into_iter().map(|vec| {
-            VarIntArray::try_from(vec).expect("witness stack element length exceeds 2^64 bytes")
+            ByteStr::try_from(vec).expect("witness stack element length exceeds 2^32 bytes")
         });
         let stack =
-            VarIntArray::try_from_iter(iter).expect("witness stack size exceeds 2^64 bytes");
+            VarIntArray::try_from_iter(iter).expect("witness stack size exceeds 2^32 elements");
         Witness(stack)
     }
 
-    pub(crate) fn as_var_int_array(&self) -> &VarIntArray<VarIntArray<u8>> { &self.0 }
+    #[inline]
+    pub(crate) fn as_var_int_array(&self) -> &VarIntArray<ByteStr> { &self.0 }
 }
 
 #[cfg(feature = "serde")]
@@ -395,14 +413,13 @@ mod _serde {
     use serde_crate::{Deserializer, Serializer};
 
     use super::*;
-    use crate::ScriptBytes;
 
     impl Serialize for Witness {
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer {
             let mut ser = serializer.serialize_seq(Some(self.len()))?;
             for el in &self.0 {
-                ser.serialize_element(&ScriptBytes::from(el.to_inner()))?;
+                ser.serialize_element(&el)?;
             }
             ser.end()
         }
@@ -411,8 +428,8 @@ mod _serde {
     impl<'de> Deserialize<'de> for Witness {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: Deserializer<'de> {
-            let data = Vec::<ScriptBytes>::deserialize(deserializer)?;
-            Ok(Witness::from_consensus_stack(data.into_iter().map(ScriptBytes::into_vec)))
+            let data = Vec::<ByteStr>::deserialize(deserializer)?;
+            Ok(Witness::from_consensus_stack(data.into_iter().map(ByteStr::into_vec)))
         }
     }
 }

@@ -33,11 +33,11 @@ use crate::{
 
 #[deprecated(since = "0.10.8", note = "use LIB_ID_BP_TX instead")]
 pub const LIB_ID_BITCOIN: &str =
-    "urn:ubideco:stl:6GgF7biXPVNcus2FfQj2pQuRzau11rXApMQLfCZhojgi#money-pardon-parody";
+    "urn:ubideco:stl:HX2UBak8vPsTokug1DGMDvTpzns3xUdwZ7QJdyt4qBA9#speed-atlanta-trilogy";
 pub const LIB_ID_BP_TX: &str =
-    "urn:ubideco:stl:6GgF7biXPVNcus2FfQj2pQuRzau11rXApMQLfCZhojgi#money-pardon-parody";
+    "urn:ubideco:stl:HX2UBak8vPsTokug1DGMDvTpzns3xUdwZ7QJdyt4qBA9#speed-atlanta-trilogy";
 pub const LIB_ID_BP_CONSENSUS: &str =
-    "urn:ubideco:stl:4AXTqXq8jUDs244XbhvErdsG82Y8r9PiaPBPAmD5y9fQ#cheese-provide-morph";
+    "urn:ubideco:stl:8nFxDqDPmHD15hQf1npGQbDfpRX4Y9hXoo7VfarMJX11#urgent-viva-ninja";
 
 #[deprecated(since = "0.10.8", note = "use _bp_tx_stl instead")]
 fn _bitcoin_stl() -> Result<TypeLib, CompileError> { _bp_tx_stl() }

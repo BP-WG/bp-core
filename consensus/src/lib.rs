@@ -19,8 +19,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Version 0.11.0:
-// TODO: Ensure script length control doesn't panic for data structures > 4GB
 // Version 1.0:
 // TODO: Complete block data type implementation
 // TODO: Complete OpCode enumeration

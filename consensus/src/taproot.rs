@@ -564,7 +564,7 @@ impl LeafScript {
     pub fn with_bytes(version: LeafVer, script: Vec<u8>) -> Result<Self, confinement::Error> {
         Ok(LeafScript {
             version,
-            script: ScriptBytes::from(script),
+            script: ScriptBytes::try_from(script)?,
         })
     }
     #[inline]
@@ -618,16 +618,34 @@ pub enum TapCode {
 pub struct TapScript(ScriptBytes);
 // TODO: impl Display/FromStr for TapScript providing correct opcodes
 
+impl TryFrom<Vec<u8>> for TapScript {
+    type Error = confinement::Error;
+    fn try_from(script_bytes: Vec<u8>) -> Result<Self, Self::Error> {
+        ScriptBytes::try_from(script_bytes).map(Self)
+    }
+}
+
 impl TapScript {
+    #[inline]
     pub fn new() -> Self { Self::default() }
 
+    #[inline]
     pub fn with_capacity(capacity: usize) -> Self {
         Self(ScriptBytes::from(Confined::with_capacity(capacity)))
     }
 
+    /// Constructs script object assuming the script length is less than 4GB.
+    /// Panics otherwise.
+    #[inline]
+    pub fn from_unsafe(script_bytes: Vec<u8>) -> Self {
+        Self(ScriptBytes::from_unsafe(script_bytes))
+    }
+
     /// Adds a single opcode to the script.
+    #[inline]
     pub fn push_opcode(&mut self, op_code: TapCode) { self.0.push(op_code as u8); }
 
+    #[inline]
     pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
 }
 

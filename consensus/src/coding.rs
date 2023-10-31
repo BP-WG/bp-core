@@ -30,6 +30,11 @@ use crate::{
     TxIn, TxOut, TxVer, Txid, Vout, Witness, WitnessScript, LIB_NAME_BITCOIN,
 };
 
+/// Bitcoin consensus allows arrays which length is encoded as VarInt to grow up
+/// to 64-bit values. However, at the same time no consensus rule allows any
+/// block data structure to exceed 2^32 bytes (4GB), and any change to that rule
+/// will be a hardfork. So for practical reasons we are safe to restrict the
+/// maximum size here with just 32 bits.
 pub type VarIntArray<T> = Confined<Vec<T>, 0, U32>;
 
 /// A variable-length unsigned integer.
@@ -95,7 +100,7 @@ impl AsRef<[u8]> for ByteStr {
 }
 
 impl From<Vec<u8>> for ByteStr {
-    fn from(value: Vec<u8>) -> Self { Self(Confined::try_from(value).expect("u64 >= usize")) }
+    fn from(value: Vec<u8>) -> Self { Self(Confined::try_from(value).expect("u32 >= usize")) }
 }
 
 impl ByteStr {
