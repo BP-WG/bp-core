@@ -266,7 +266,8 @@ dependencies = [
 [[package]]
 name = "commit_encoding_derive"
 version = "0.10.0"
-source = "git+https://github.com/LNP-BP/client_side_validation?branch=v0.11#5d1e05803158dc6a59599dcf43657d31ff6911e8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00033f14d67c4169d588f085ea2faeb7b610cf03a74d42ea09eeba31abef2047"
 dependencies = [
  "amplify",
  "amplify_syn",
@@ -278,7 +279,8 @@ dependencies = [
 [[package]]
 name = "commit_verify"
 version = "0.11.0-beta.1"
-source = "git+https://github.com/LNP-BP/client_side_validation?branch=v0.11#5d1e05803158dc6a59599dcf43657d31ff6911e8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "82c1a7d13181451d927abcc477d4565f23eb06ab36820599cc75ed3161147daa"
 dependencies = [
  "amplify",
  "commit_encoding_derive",
@@ -654,7 +656,8 @@ dependencies = [
 [[package]]
 name = "single_use_seals"
 version = "0.11.0-beta.1"
-source = "git+https://github.com/LNP-BP/client_side_validation?branch=v0.11#5d1e05803158dc6a59599dcf43657d31ff6911e8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a46b0f289450dc06e7b94f048a55ac437177532f2c6c9bed12c1de7ac948f5a5"
 dependencies = [
  "amplify_derive",
 ]
