@@ -1,5 +1,5 @@
 {-
-  Id: urn:ubideco:stl:8RW9jc3Za592QYvum2jiPDtXjpjVdBzT8J2nurNmKX2o#change-mango-survive
+  Id: urn:ubideco:stl:E4xYrMV4cHgYhTPzrjG3DxzAyLEMnbvnsrBsGhQP4anV#quest-harlem-mirror
   Name: BPCore
   Version: 0.1.0
   Description: Bitcoin client-side-validation library
@@ -31,8 +31,9 @@ import urn:ubideco:stl:HX2UBak8vPsTokug1DGMDvTpzns3xUdwZ7QJdyt4qBA9#speed-atlant
 -- TapNodeHash := urn:ubideco:semid:4M8xyvABKKKJseN6Pme5eKrAuusMNMXoY5s6ifsEcreC#crash-culture-jamaica
 -- LeafScript := urn:ubideco:semid:7SUbonQ62tSaBTPpbZPACQo2NogXodi2mW5WEEDfBvp4#brenda-round-micro
 -- Txid := urn:ubideco:semid:C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs#cowboy-diego-betty
+-- InternalPk := urn:ubideco:semid:CQjz6cdRfD4cr8oUKmgBUEVkjbcNJ5L8eLc7qGeNHQVu#meter-nerve-chicken
 -- LeafVer := urn:ubideco:semid:DGELfUvcU62GNQRo7HaMbKDzYQwdYRMW3b91JHd4d3WY#tunnel-lagoon-cowboy
--- InternalPk := urn:ubideco:semid:G5HFVaWwWNYSzqk548JgGZ8WKy6dQ2ftVgkJvHjgRudZ#horse-major-vienna
+-- XOnlyPk := urn:ubideco:semid:J1BbH2Lx8P3yw9G244d92MMTP5jrkiaVzsr6FzRxpfur#evident-finance-promo
 
 
 
@@ -82,8 +83,8 @@ data TapretNodePartner :: leftNode Bitcoin.TapNodeHash {- urn:ubideco:semid:4M8x
                        | rightBranch TapretRightBranch
 -- urn:ubideco:semid:BPYcTtbxvzWp8h7SMapT14FzLCnrnGzSShHTWGHCSD4C#clark-magic-salon
 data TapretPathProof  :: partnerNode TapretNodePartner?, nonce U8
--- urn:ubideco:semid:7QQkknWxkJLkef2AJrPSH3q165rB8ZTAUofNwW3ia5im#helena-wizard-podium
-data TapretProof      :: pathProof TapretPathProof, internalPk Bitcoin.InternalPk {- urn:ubideco:semid:G5HFVaWwWNYSzqk548JgGZ8WKy6dQ2ftVgkJvHjgRudZ#horse-major-vienna -}
+-- urn:ubideco:semid:FWHkxMrhDjzsvWwKAxEDaXsiPsHZ5iAWK6pZYCABbn3V#aurora-bonjour-dinner
+data TapretProof      :: pathProof TapretPathProof, internalPk Bitcoin.InternalPk {- urn:ubideco:semid:CQjz6cdRfD4cr8oUKmgBUEVkjbcNJ5L8eLc7qGeNHQVu#meter-nerve-chicken -}
 -- urn:ubideco:semid:4nZtVVw7QJaMDHYffkHBWhxXSkLXLcJ89qTLZH4Z3xck#basket-prelude-bridge
 data TapretRightBranch :: leftNodeHash Bitcoin.TapNodeHash {- urn:ubideco:semid:4M8xyvABKKKJseN6Pme5eKrAuusMNMXoY5s6ifsEcreC#crash-culture-jamaica -}, rightNodeHash Bitcoin.TapNodeHash {- urn:ubideco:semid:4M8xyvABKKKJseN6Pme5eKrAuusMNMXoY5s6ifsEcreC#crash-culture-jamaica -}
 -- urn:ubideco:semid:CyRtMpPJkKLX3AdhgY7ZyA7PnYAzCo7yFTeYwwGsUBhn#strange-source-father
