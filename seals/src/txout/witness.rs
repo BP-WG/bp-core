@@ -27,7 +27,8 @@ use strict_encoding::StrictDumb;
 
 use crate::txout::{TxoSeal, VerifyError};
 
-/// Witness of a seal being closed.
+/// Witness of a bitcoin-based seal being closed. Includes both transaction and
+/// extra-transaction data.
 pub struct Witness {
     /// Witness transaction: transaction which contains commitment to the
     /// message over which the seal is closed.
@@ -36,7 +37,7 @@ pub struct Witness {
     /// Transaction id of the witness transaction above.
     pub txid: Txid,
 
-    /// Multi-protocol commitment proof from MPC anchor.
+    /// Deterministic bitcoin commitment proof from the anchor.
     pub proof: Proof,
 }
 
