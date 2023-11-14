@@ -23,7 +23,7 @@ use amplify::confinement;
 use amplify::confinement::Confined;
 
 use crate::opcodes::*;
-use crate::{VarInt, VarIntArray, LIB_NAME_BITCOIN};
+use crate::{ScriptHash, VarInt, VarIntArray, LIB_NAME_BITCOIN};
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
@@ -277,6 +277,8 @@ impl RedeemScript {
     /// Adds a single opcode to the script.
     #[inline]
     pub fn push_opcode(&mut self, op_code: OpCode) { self.0.push(op_code as u8); }
+
+    pub fn to_script_pubkey(&self) -> ScriptPubkey { ScriptPubkey::p2sh(ScriptHash::from(self)) }
 
     #[inline]
     pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
