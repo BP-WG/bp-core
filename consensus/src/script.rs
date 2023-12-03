@@ -348,7 +348,7 @@ impl ScriptBytes {
             .expect("script exceeds 4GB")
     }
 
-    /// Computes the sum of `len` and the lenght of an appropriate push
+    /// Computes the sum of `len` and the length of an appropriate push
     /// opcode.
     pub fn len_for_slice(len: usize) -> usize {
         len + match len {
