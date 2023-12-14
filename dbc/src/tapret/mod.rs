@@ -75,11 +75,12 @@ pub use xonlypk::TapretKeyError;
 /// protocol.
 pub enum Lnpbp12 {}
 
-use bc::{InternalPk, IntoTapHash, LeafScript, ScriptPubkey, TapBranchHash, TapNodeHash};
-use commit_verify::CommitmentProtocol;
+use bc::{InternalPk, IntoTapHash, LeafScript, ScriptPubkey, TapBranchHash, TapNodeHash, Tx};
+use commit_verify::mpc::Commitment;
+use commit_verify::{CommitmentProtocol, ConvolveCommitProof, ConvolveVerifyError};
 use strict_encoding::{StrictDeserialize, StrictSerialize};
 
-use crate::LIB_NAME_BPCORE;
+use crate::{Proof, LIB_NAME_BPCORE};
 
 impl CommitmentProtocol for Lnpbp12 {}
 
@@ -347,6 +348,8 @@ impl<'data> IntoIterator for &'data TapretPathProof {
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BPCORE)]
+#[derive(CommitEncode)]
+#[commit_encode(strategy = strict)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -372,5 +375,13 @@ impl TapretProof {
     pub fn original_pubkey_script(&self) -> ScriptPubkey {
         let merkle_root = self.path_proof.original_merkle_root();
         ScriptPubkey::p2tr(self.internal_pk, merkle_root)
+    }
+}
+
+impl Proof for TapretProof {
+    type Error = ConvolveVerifyError;
+
+    fn verify(&self, msg: &Commitment, tx: &Tx) -> Result<(), ConvolveVerifyError> {
+        ConvolveCommitProof::<_, Tx, _>::verify(self, msg, tx)
     }
 }

@@ -1,4 +1,4 @@
-// Bitcoin protocol single-use-seals library.
+// Deterministic bitcoin commitments library.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -19,30 +19,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::convert::Infallible;
+use std::error::Error;
+use std::fmt::Debug;
 
-use bc::Txid;
-use commit_verify::mpc;
-use single_use_seals::{SealProtocol, SealStatus};
+use bc::Tx;
+use commit_verify::{mpc, CommitEncode};
+use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
 
-use crate::resolver::Resolver;
-use crate::txout::{TxoSeal, Witness};
-
-/// Txo single-use-seal engine.
-pub struct TxoProtocol<R: Resolver> {
-    #[allow(dead_code)]
-    resolver: R,
-}
-
-impl<Seal, R> SealProtocol<Seal> for TxoProtocol<R>
-where
-    Seal: TxoSeal,
-    R: Resolver,
+/// Deterministic bitcoin commitment proof types.
+pub trait Proof:
+    Clone + Eq + CommitEncode + Debug + StrictEncode + StrictDecode + StrictDumb
 {
-    type Witness = Witness;
-    type Message = mpc::Commitment;
-    type PublicationId = Txid;
-    type Error = Infallible;
+    /// Verification error.
+    type Error: Error;
 
-    fn get_seal_status(&self, _seal: &Seal) -> Result<SealStatus, Self::Error> { todo!() }
+    /// Verifies DBC proof against the provided transaction.
+    fn verify(&self, msg: &mpc::Commitment, tx: &Tx) -> Result<(), Self::Error>;
 }

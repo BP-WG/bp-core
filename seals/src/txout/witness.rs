@@ -21,7 +21,7 @@
 
 use bc::{Tx, Txid};
 use commit_verify::mpc;
-use dbc::{Anchor, Proof};
+use dbc::Anchor;
 use single_use_seals::SealWitness;
 use strict_encoding::StrictDumb;
 
@@ -29,7 +29,7 @@ use crate::txout::{TxoSeal, VerifyError};
 
 /// Witness of a bitcoin-based seal being closed. Includes both transaction and
 /// extra-transaction data.
-pub struct Witness {
+pub struct Witness<D: dbc::Proof> {
     /// Witness transaction: transaction which contains commitment to the
     /// message over which the seal is closed.
     pub tx: Tx,
@@ -38,13 +38,13 @@ pub struct Witness {
     pub txid: Txid,
 
     /// Deterministic bitcoin commitment proof from the anchor.
-    pub proof: Proof,
+    pub proof: D,
 }
 
-impl Witness {
+impl<D: dbc::Proof> Witness<D> {
     /// Constructs witness from a witness transaction and extra-transaction
     /// proof, taken from an anchor.
-    pub fn with<L: mpc::Proof + StrictDumb>(tx: Tx, anchor: Anchor<L>) -> Witness {
+    pub fn with<L: mpc::Proof + StrictDumb>(tx: Tx, anchor: Anchor<L, D>) -> Witness<D> {
         Witness {
             tx,
             txid: anchor.txid,
@@ -53,9 +53,9 @@ impl Witness {
     }
 }
 
-impl<Seal: TxoSeal> SealWitness<Seal> for Witness {
+impl<Seal: TxoSeal, Dbc: dbc::Proof> SealWitness<Seal> for Witness<Dbc> {
     type Message = mpc::Commitment;
-    type Error = VerifyError;
+    type Error = VerifyError<Dbc::Error>;
 
     fn verify_seal(&self, seal: &Seal, msg: &Self::Message) -> Result<(), Self::Error> {
         // 1. The seal must match tx inputs
@@ -70,7 +70,7 @@ impl<Seal: TxoSeal> SealWitness<Seal> for Witness {
         }
 
         // 2. Verify DBC with the giving closing method
-        self.proof.verify(msg, &self.tx).map_err(VerifyError::from)
+        self.proof.verify(msg, &self.tx).map_err(VerifyError::Dbc)
     }
 
     fn verify_many_seals<'seal>(
@@ -105,6 +105,6 @@ impl<Seal: TxoSeal> SealWitness<Seal> for Witness {
         }
 
         // 3. Verify DBC with the giving closing method
-        self.proof.verify(msg, &self.tx).map_err(VerifyError::from)
+        self.proof.verify(msg, &self.tx).map_err(VerifyError::Dbc)
     }
 }

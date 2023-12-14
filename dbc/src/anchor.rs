@@ -25,15 +25,19 @@
 //! defined by LNPBP-4.
 
 use std::cmp::Ordering;
+use std::error::Error;
 
 use amplify::{Bytes32, Wrapper};
-use bc::{ScriptPubkey, Tx, Txid};
+use bc::{Tx, Txid};
 use commit_verify::mpc::{self, Message, ProtocolId};
-use commit_verify::{CommitmentId, ConvolveCommitProof, ConvolveVerifyError};
+use commit_verify::CommitmentId;
 use strict_encoding::{StrictDumb, StrictEncode};
 
-use crate::tapret::TapretProof;
 use crate::LIB_NAME_BPCORE;
+
+mod dbc {
+    pub use crate::Proof;
+}
 
 /// Default depth of LNPBP-4 commitment tree
 pub const ANCHOR_MIN_LNPBP4_DEPTH: u8 = 3;
@@ -64,14 +68,14 @@ pub struct AnchorId(
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", rename_all = "camelCase")
 )]
-pub enum VerifyError {
-    /// invalid deterministic bitcoin commitment. Details: {0}
-    #[from]
-    Dbc(AnchorError),
+pub enum VerifyError<E: Error> {
+    /// Deterministic commitment error.
+    #[display(inner)]
+    Dbc(E),
 
-    /// LNPBP-4 invalid proof. Details: {0}
+    /// invalid MPC proof. Details: {0}
     #[from]
-    Lnpbp4InvalidProof(mpc::InvalidProof),
+    Mpc(mpc::InvalidProof),
 }
 
 /// Anchor is a data structure used in deterministic bitcoin commitments for
@@ -87,7 +91,7 @@ pub enum VerifyError {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", rename_all = "camelCase")
 )]
-pub struct Anchor<L: mpc::Proof + StrictDumb> {
+pub struct Anchor<L: mpc::Proof + StrictDumb, D: dbc::Proof> {
     /// Transaction containing deterministic bitcoin commitment.
     pub txid: Txid,
 
@@ -95,19 +99,19 @@ pub struct Anchor<L: mpc::Proof + StrictDumb> {
     pub mpc_proof: L,
 
     /// Proof of the DBC commitment.
-    pub dbc_proof: Proof,
+    pub dbc_proof: D,
 }
 
-impl CommitmentId for Anchor<mpc::MerkleBlock> {
+impl<D: dbc::Proof> CommitmentId for Anchor<mpc::MerkleBlock, D> {
     const TAG: [u8; 32] = *b"urn:lnpbp:lnpbp0011:anchor:v01#A";
     type Id = AnchorId;
 }
 
-impl Ord for Anchor<mpc::MerkleBlock> {
+impl<D: dbc::Proof> Ord for Anchor<mpc::MerkleBlock, D> {
     fn cmp(&self, other: &Self) -> Ordering { self.anchor_id().cmp(&other.anchor_id()) }
 }
 
-impl PartialOrd for Anchor<mpc::MerkleBlock> {
+impl<D: dbc::Proof> PartialOrd for Anchor<mpc::MerkleBlock, D> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> { Some(self.cmp(other)) }
 }
 
@@ -127,13 +131,13 @@ pub enum MergeError {
     ProofMismatch,
 }
 
-impl Anchor<mpc::MerkleBlock> {
+impl<D: dbc::Proof> Anchor<mpc::MerkleBlock, D> {
     /// Returns id of the anchor (commitment hash).
     #[inline]
     pub fn anchor_id(&self) -> AnchorId { self.commitment_id() }
 }
 
-impl Anchor<mpc::MerkleProof> {
+impl<D: dbc::Proof> Anchor<mpc::MerkleProof, D> {
     /// Returns id of the anchor (commitment hash).
     #[inline]
     pub fn anchor_id(
@@ -149,7 +153,7 @@ impl Anchor<mpc::MerkleProof> {
         self,
         protocol_id: impl Into<ProtocolId>,
         message: Message,
-    ) -> Result<Anchor<mpc::MerkleBlock>, mpc::InvalidProof> {
+    ) -> Result<Anchor<mpc::MerkleBlock, D>, mpc::InvalidProof> {
         let lnpbp4_proof = mpc::MerkleBlock::with(&self.mpc_proof, protocol_id.into(), message)?;
         Ok(Anchor {
             txid: self.txid,
@@ -163,7 +167,7 @@ impl Anchor<mpc::MerkleProof> {
         &self,
         protocol_id: impl Into<ProtocolId>,
         message: Message,
-    ) -> Result<Anchor<mpc::MerkleBlock>, mpc::InvalidProof> {
+    ) -> Result<Anchor<mpc::MerkleBlock, D>, mpc::InvalidProof> {
         self.clone().into_merkle_block(protocol_id, message)
     }
 
@@ -174,10 +178,10 @@ impl Anchor<mpc::MerkleProof> {
         protocol_id: impl Into<ProtocolId>,
         message: Message,
         tx: &Tx,
-    ) -> Result<(), VerifyError> {
+    ) -> Result<(), VerifyError<D::Error>> {
         self.dbc_proof
             .verify(&self.mpc_proof.convolve(protocol_id.into(), message)?, tx)
-            .map_err(VerifyError::from)
+            .map_err(VerifyError::Dbc)
     }
 
     /// Verifies that the anchor commits to the given message under the given
@@ -191,13 +195,13 @@ impl Anchor<mpc::MerkleProof> {
     }
 }
 
-impl Anchor<mpc::MerkleBlock> {
+impl<D: dbc::Proof> Anchor<mpc::MerkleBlock, D> {
     /// Conceals all LNPBP-4 data except specific protocol and produces merkle
     /// proof anchor.
     pub fn to_merkle_proof(
         &self,
         protocol: impl Into<ProtocolId>,
-    ) -> Result<Anchor<mpc::MerkleProof>, mpc::LeafNotKnown> {
+    ) -> Result<Anchor<mpc::MerkleProof, D>, mpc::LeafNotKnown> {
         self.clone().into_merkle_proof(protocol)
     }
 
@@ -206,7 +210,7 @@ impl Anchor<mpc::MerkleBlock> {
     pub fn into_merkle_proof(
         self,
         protocol: impl Into<ProtocolId>,
-    ) -> Result<Anchor<mpc::MerkleProof>, mpc::LeafNotKnown> {
+    ) -> Result<Anchor<mpc::MerkleProof, D>, mpc::LeafNotKnown> {
         let lnpbp4_proof = self.mpc_proof.to_merkle_proof(protocol.into())?;
         Ok(Anchor {
             txid: self.txid,
@@ -233,83 +237,5 @@ impl Anchor<mpc::MerkleBlock> {
         }
         self.mpc_proof.merge_reveal(other.mpc_proof)?;
         Ok(self)
-    }
-}
-
-/// Errors covering failed anchor validation.
-#[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
-#[display(doc_comments)]
-pub enum AnchorError {
-    /// witness transaction {txid} contains invalid OP_RETURN commitment
-    /// {present:x} instead of {expected:x}.
-    OpretMismatch {
-        /// Transaction id
-        txid: Txid,
-        /// Commitment from the first OP_RETURN transaction output
-        present: ScriptPubkey,
-        /// Expected commitment absent in the first OP_RETURN transaction output
-        expected: ScriptPubkey,
-    },
-
-    /// witness transaction {0} does not contain any OP_RETURN commitment
-    /// required by the seal definition.
-    OpretAbsent(Txid),
-
-    #[from]
-    /// witness transaction does not contain a valid tapret commitment. {0}.
-    Tapret(ConvolveVerifyError),
-}
-
-/// Type and type-specific proof information of a deterministic bitcoin
-/// commitment.
-#[derive(Clone, PartialEq, Eq, Debug)]
-#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BPCORE, tags = order)]
-#[derive(CommitEncode)]
-#[commit_encode(strategy = strict)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
-pub enum Proof {
-    /// Opret commitment (no extra-transaction proof is required).
-    #[strict_type(dumb)]
-    OpretFirst,
-
-    /// Tapret commitment and a proof of it.
-    TapretFirst(TapretProof),
-}
-
-impl Proof {
-    /// Verifies validity of the proof.
-    pub fn verify(&self, msg: &mpc::Commitment, tx: &Tx) -> Result<(), AnchorError> {
-        match self {
-            Proof::OpretFirst => {
-                for txout in &tx.outputs {
-                    if txout.script_pubkey.is_op_return() {
-                        let expected = ScriptPubkey::op_return(msg.as_slice());
-                        if txout.script_pubkey == expected {
-                            return Ok(());
-                        } else {
-                            return Err(AnchorError::OpretMismatch {
-                                txid: tx.txid(),
-                                present: txout.script_pubkey.clone(),
-                                expected,
-                            });
-                        }
-                    }
-                }
-                Err(AnchorError::OpretAbsent(tx.txid()))
-            }
-            Proof::TapretFirst(proof) => {
-                ConvolveCommitProof::<_, Tx, _>::verify(proof, msg, tx).map_err(AnchorError::from)
-            }
-        }
     }
 }

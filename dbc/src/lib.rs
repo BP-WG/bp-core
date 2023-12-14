@@ -57,5 +57,7 @@ pub mod keytweak;
 pub mod opret;
 pub mod sigtweak;
 pub mod tapret;
+mod proof;
 
-pub use anchor::{Anchor, AnchorId, Proof};
+pub use anchor::{Anchor, AnchorId};
+pub use proof::Proof;

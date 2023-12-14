@@ -19,8 +19,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::error::Error;
+
 use bc::Outpoint;
-use dbc::anchor::AnchorError;
+use commit_verify::ConvolveVerifyError;
 
 /// Seal verification errors.
 #[derive(Clone, PartialEq, Eq, Debug, Display, From, Error)]
@@ -30,7 +32,7 @@ use dbc::anchor::AnchorError;
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", rename_all = "camelCase")
 )]
-pub enum VerifyError {
+pub enum VerifyError<E: Error> {
     /// seals provided for a batch verification have inconsistent close method.
     InconsistentCloseMethod,
 
@@ -40,10 +42,13 @@ pub enum VerifyError {
     /// seal lacks witness transaction id information.
     NoWitnessTxid,
 
-    /// invalid anchor.
-    #[from]
+    /// invalid DBC commitment.
     #[display(inner)]
-    InvalidAnchor(AnchorError),
+    Dbc(E),
+
+    /// invalid tapret commitment. {0}
+    #[from]
+    Tapret(ConvolveVerifyError),
 }
 
 /// Error happening if the seal data holds only witness transaction output
