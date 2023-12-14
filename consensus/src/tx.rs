@@ -293,6 +293,8 @@ impl Sats {
 
     pub const fn sats_rem(&self) -> u64 { self.0 % Self::BTC.0 }
 
+    pub const fn btc_sats(&self) -> (u64, u64) { (self.btc_floor(), self.sats_rem()) }
+
     #[must_use]
     pub fn checked_add(&self, other: impl Into<Self>) -> Option<Self> {
         self.0.checked_add(other.into().0).map(Self)
