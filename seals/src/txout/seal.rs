@@ -62,7 +62,6 @@ pub trait TxoSeal: From<Outpoint> {
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE, tags = repr, into_u8, try_from_u8)]
 #[repr(u8)]
-#[non_exhaustive]
 pub enum CloseMethod {
     /// Seal is closed over the message in form of OP_RETURN commitment present
     /// in the first OP_RETURN-containing transaction output.

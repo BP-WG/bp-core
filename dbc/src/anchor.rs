@@ -277,7 +277,6 @@ pub enum AnchorError {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", rename_all = "camelCase")
 )]
-#[non_exhaustive]
 pub enum Proof {
     /// Opret commitment (no extra-transaction proof is required).
     #[strict_type(dumb)]
