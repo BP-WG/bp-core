@@ -32,5 +32,5 @@ mod witness;
 pub use error::{MethodParseError, VerifyError, WitnessVoutError};
 pub use explicit::ExplicitSeal;
 pub use proto::TxoProtocol;
-pub use seal::{CloseMethod, TxPtr, TxoSeal};
+pub use seal::{CloseMethod, SealTxid, TxPtr, TxoSeal};
 pub use witness::Witness;
