@@ -37,7 +37,7 @@ pub const LIB_ID_BITCOIN: &str =
 pub const LIB_ID_BP_TX: &str =
     "urn:ubideco:stl:HX2UBak8vPsTokug1DGMDvTpzns3xUdwZ7QJdyt4qBA9#speed-atlanta-trilogy";
 pub const LIB_ID_BP_CONSENSUS: &str =
-    "urn:ubideco:stl:DQtzB8Kcfm7XeuhWf8sv3n31c5V2qK6VS1Zbye76haUQ#erosion-quiet-kinetic";
+    "urn:ubideco:stl:H6wk6SV9j8Up16osC9q3AsQkkA41i7E2qodEfUf5JRPz#mustang-europe-melon";
 
 #[deprecated(since = "0.10.8", note = "use _bp_tx_stl instead")]
 fn _bitcoin_stl() -> Result<TypeLib, CompileError> { _bp_tx_stl() }

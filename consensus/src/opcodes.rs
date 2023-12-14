@@ -19,6 +19,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::LIB_NAME_BITCOIN;
+
 /// Push an empty array onto the stack.
 pub const OP_PUSHBYTES_0: u8 = 0x00;
 /// Push the next byte as an array onto the stack.
@@ -548,3 +550,207 @@ pub const OP_RETURN_253: u8 = 0xfd;
 pub const OP_RETURN_254: u8 = 0xfe;
 /// Synonym for OP_RETURN.
 pub const OP_INVALIDOPCODE: u8 = 0xff;
+
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
+#[non_exhaustive]
+#[repr(u8)]
+pub enum OpCode {
+    /// Push an empty array onto the stack.
+    #[display("OP_PUSH_BYTES0")]
+    PushBytes0 = OP_PUSHBYTES_0,
+
+    /// Push the next byte as an array onto the stack.
+    #[display("OP_PUSH_BYTES1")]
+    PushBytes1 = OP_PUSHBYTES_1,
+
+    /// Push the next 2 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES2")]
+    PushBytes2 = OP_PUSHBYTES_2,
+
+    /// Push the next 3 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES3")]
+    PushBytes3 = OP_PUSHBYTES_3,
+
+    /// Push the next 4 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES4")]
+    PushBytes4 = OP_PUSHBYTES_4,
+
+    /// Push the next 5 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES5")]
+    PushBytes5 = OP_PUSHBYTES_5,
+
+    /// Push the next 6 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES6")]
+    PushBytes6 = OP_PUSHBYTES_6,
+
+    /// Push the next 7 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES7")]
+    PushBytes7 = OP_PUSHBYTES_7,
+
+    /// Push the next 8 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES8")]
+    PushBytes8 = OP_PUSHBYTES_8,
+
+    /// Push the next 9 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES9")]
+    PushBytes9 = OP_PUSHBYTES_9,
+
+    /// Push the next 10 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES10")]
+    PushBytes10 = OP_PUSHBYTES_10,
+
+    /// Push the next 11 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES11")]
+    PushBytes11 = OP_PUSHBYTES_11,
+
+    /// Push the next 12 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES12")]
+    PushBytes12 = OP_PUSHBYTES_12,
+
+    /// Push the next 13 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES13")]
+    PushBytes13 = OP_PUSHBYTES_13,
+
+    /// Push the next 14 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES14")]
+    PushBytes14 = OP_PUSHBYTES_14,
+
+    /// Push the next 15 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES15")]
+    PushBytes15 = OP_PUSHBYTES_15,
+
+    /// Push the next 16 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES16")]
+    PushBytes16 = OP_PUSHBYTES_16,
+
+    /// Push the next 17 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES17")]
+    PushBytes17 = OP_PUSHBYTES_17,
+
+    /// Push the next 18 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES18")]
+    PushBytes18 = OP_PUSHBYTES_18,
+
+    /// Push the next 19 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES19")]
+    PushBytes19 = OP_PUSHBYTES_19,
+
+    /// Push the next 20 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES20")]
+    PushBytes20 = OP_PUSHBYTES_20,
+
+    /// Push the next 21 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES21")]
+    PushBytes21 = OP_PUSHBYTES_21,
+
+    /// Push the next 22 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES22")]
+    PushBytes22 = OP_PUSHBYTES_22,
+
+    /// Push the next 23 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES23")]
+    PushBytes23 = OP_PUSHBYTES_23,
+
+    /// Push the next 24 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES24")]
+    PushBytes24 = OP_PUSHBYTES_24,
+
+    /// Push the next 25 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES25")]
+    PushBytes25 = OP_PUSHBYTES_25,
+
+    /// Push the next 26 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES26")]
+    PushBytes26 = OP_PUSHBYTES_26,
+
+    /// Push the next 27 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES27")]
+    PushBytes27 = OP_PUSHBYTES_27,
+
+    /// Push the next 28 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES28")]
+    PushBytes28 = OP_PUSHBYTES_28,
+
+    /// Push the next 29 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES29")]
+    PushBytes29 = OP_PUSHBYTES_29,
+
+    /// Push the next 30 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES30")]
+    PushBytes30 = OP_PUSHBYTES_30,
+
+    /// Push the next 30 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES31")]
+    PushBytes31 = OP_PUSHBYTES_31,
+
+    /// Push the next 32 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES32")]
+    PushBytes32 = OP_PUSHBYTES_32,
+
+    /// Read the next byte as N; push the next N bytes as an array onto the
+    /// stack.
+    #[display("OP_PUSH_DATA1")]
+    PushData1 = OP_PUSHDATA1,
+    /// Read the next 2 bytes as N; push the next N bytes as an array onto the
+    /// stack.
+    #[display("OP_PUSH_DATA2")]
+    PushData2 = OP_PUSHDATA2,
+    /// Read the next 4 bytes as N; push the next N bytes as an array onto the
+    /// stack.
+    #[display("OP_PUSH_DATA3")]
+    PushData4 = OP_PUSHDATA4,
+
+    /// Push the array `0x01` onto the stack.
+    #[display("OP_PUSHNUM_1")]
+    PushNum1 = OP_PUSHNUM_1,
+
+    /// Synonym for OP_RETURN.
+    Reserved = OP_RESERVED,
+
+    /// Fail the script immediately.
+    #[display("OP_RETURN")]
+    #[strict_type(dumb)]
+    Return = OP_RETURN,
+
+    /// Duplicates the top stack item.
+    #[display("OP_DUP")]
+    Dup = OP_DUP,
+
+    /// Pushes 1 if the inputs are exactly equal, 0 otherwise.
+    #[display("OP_EQUAL")]
+    Equal = OP_EQUAL,
+
+    /// Returns success if the inputs are exactly equal, failure otherwise.
+    #[display("OP_EQUALVERIFY")]
+    EqualVerify = OP_EQUALVERIFY,
+
+    /// Pop the top stack item and push its RIPEMD160 hash.
+    #[display("OP_RIPEMD160")]
+    Ripemd160 = OP_RIPEMD160,
+
+    /// Pop the top stack item and push its SHA1 hash.
+    #[display("OP_SHA1")]
+    Sha1 = OP_SHA1,
+
+    /// Pop the top stack item and push its SHA256 hash.
+    #[display("OP_SHA256")]
+    Sha256 = OP_SHA256,
+
+    /// Pop the top stack item and push its RIPEMD(SHA256) hash.
+    #[display("OP_HASH160")]
+    Hash160 = OP_HASH160,
+
+    /// Pop the top stack item and push its SHA256(SHA256) hash.
+    #[display("OP_HASH256")]
+    Hash256 = OP_HASH256,
+
+    /// <https://en.bitcoin.it/wiki/OP_CHECKSIG> pushing 1/0 for success/failure.
+    #[display("OP_CHECKSIG")]
+    CheckSig = OP_CHECKSIG,
+
+    /// <https://en.bitcoin.it/wiki/OP_CHECKSIG> returning success/failure.
+    #[display("OP_CHECKSIGVERIFY")]
+    CheckSigVerify = OP_CHECKSIGVERIFY,
+}
