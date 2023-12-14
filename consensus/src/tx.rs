@@ -292,33 +292,33 @@ impl Sats {
 
     pub const fn sats_rem(&self) -> u64 { self.0 % Self::BTC.0 }
 
+    #[must_use]
     pub fn checked_add(&self, other: impl Into<Self>) -> Option<Self> {
         self.0.checked_add(other.into().0).map(Self)
     }
+    #[must_use]
     pub fn checked_sub(&self, other: impl Into<Self>) -> Option<Self> {
         self.0.checked_sub(other.into().0).map(Self)
     }
 
-    pub fn checked_add_assign(&mut self, other: impl Into<Self>) -> bool {
-        self.0
-            .checked_add(other.into().0)
-            .map(Self)
-            .map(|sum| *self = sum)
-            .map(|_| true)
-            .unwrap_or_default()
-    }
-    pub fn checked_sub_assign(&mut self, other: impl Into<Self>) -> bool {
-        self.0
-            .checked_sub(other.into().0)
-            .map(Self)
-            .map(|sum| *self = sum)
-            .map(|_| true)
-            .unwrap_or_default()
+    #[must_use]
+    pub fn checked_add_assign(&mut self, other: impl Into<Self>) -> Option<Self> {
+        *self = Self(self.0.checked_add(other.into().0)?);
+        Some(*self)
     }
 
+    #[must_use]
+    pub fn checked_sub_assign(&mut self, other: impl Into<Self>) -> Option<Self> {
+        *self = Self(self.0.checked_sub(other.into().0)?);
+        Some(*self)
+    }
+
+    #[must_use]
     pub fn saturating_add(&self, other: impl Into<Self>) -> Self {
         self.0.saturating_add(other.into().0).into()
     }
+
+    #[must_use]
     pub fn saturating_sub(&self, other: impl Into<Self>) -> Self {
         self.0.saturating_sub(other.into().0).into()
     }
