@@ -23,6 +23,7 @@ use core::slice;
 use std::fmt::{self, Debug, Display, Formatter, LowerHex};
 use std::iter::Sum;
 use std::num::ParseIntError;
+use std::ops::{Div, Rem};
 use std::str::FromStr;
 
 use amplify::hex::{self, FromHex, ToHex};
@@ -345,6 +346,16 @@ impl Sum<u64> for Sats {
     fn sum<I: Iterator<Item = u64>>(iter: I) -> Self {
         iter.fold(Sats::ZERO, |sum, value| sum.saturating_add(value))
     }
+}
+
+impl Div<usize> for Sats {
+    type Output = Sats;
+    fn div(self, rhs: usize) -> Self::Output { Sats(self.0 / rhs as u64) }
+}
+
+impl Rem<usize> for Sats {
+    type Output = Sats;
+    fn rem(self, rhs: usize) -> Self::Output { Sats(self.0 % rhs as u64) }
 }
 
 impl Display for Sats {
