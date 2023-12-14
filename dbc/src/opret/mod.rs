@@ -21,12 +21,23 @@
 
 //! ScriptPubkey-based OP_RETURN commitments.
 
-use bc::{ScriptPubkey, Tx, Txid};
+mod tx;
+mod txout;
+mod spk;
+
+use bc::Tx;
 use commit_verify::mpc::Commitment;
+use commit_verify::{CommitmentProtocol, EmbedCommitVerify, EmbedVerifyError};
 
 use crate::{Proof, LIB_NAME_BPCORE};
 
-/// Errors covering failed anchor validation.
+/// Marker non-instantiable enum defining LNPBP-12 taproot OP_RETURN (`tapret`)
+/// protocol.
+pub enum Opret {}
+
+impl CommitmentProtocol for Opret {}
+
+/// Errors during tapret commitment.
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
 #[cfg_attr(
     feature = "serde",
@@ -34,21 +45,13 @@ use crate::{Proof, LIB_NAME_BPCORE};
     serde(crate = "serde_crate", rename_all = "camelCase")
 )]
 #[display(doc_comments)]
-pub enum OpretVerifyError {
-    /// witness transaction {txid} contains invalid OP_RETURN commitment
-    /// {present:x} instead of {expected:x}.
-    OpretMismatch {
-        /// Transaction id
-        txid: Txid,
-        /// Commitment from the first OP_RETURN transaction output
-        present: ScriptPubkey,
-        /// Expected commitment absent in the first OP_RETURN transaction output
-        expected: ScriptPubkey,
-    },
+pub enum OpretError {
+    /// transaction doesn't contain OP_RETURN output.
+    NoOpretOutput,
 
-    /// witness transaction {0} does not contain any OP_RETURN commitment
-    /// required by the seal definition.
-    OpretAbsent(Txid),
+    /// first OP_RETURN output inside the transaction already contains some
+    /// data.
+    InvalidOpretScript,
 }
 
 /// Empty type for use inside [`crate::Anchor`] for opret commitment scheme.
@@ -65,24 +68,9 @@ pub enum OpretVerifyError {
 pub struct OpretProof(());
 
 impl Proof for OpretProof {
-    type Error = OpretVerifyError;
+    type Error = EmbedVerifyError<OpretError>;
 
-    fn verify(&self, msg: &Commitment, tx: &Tx) -> Result<(), OpretVerifyError> {
-        // TODO: Use embed-commit-verify
-        for txout in &tx.outputs {
-            if txout.script_pubkey.is_op_return() {
-                let expected = ScriptPubkey::op_return(msg.as_slice());
-                if txout.script_pubkey == expected {
-                    return Ok(());
-                } else {
-                    return Err(OpretVerifyError::OpretMismatch {
-                        txid: tx.txid(),
-                        present: txout.script_pubkey.clone(),
-                        expected,
-                    });
-                }
-            }
-        }
-        Err(OpretVerifyError::OpretAbsent(tx.txid()))
+    fn verify(&self, msg: &Commitment, tx: &Tx) -> Result<(), EmbedVerifyError<OpretError>> {
+        tx.verify(msg, self)
     }
 }

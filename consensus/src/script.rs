@@ -148,7 +148,7 @@ impl ScriptPubkey {
     }
 
     #[inline]
-    pub fn is_op_return(&self) -> bool { self[0] == OpCode::Return as u8 }
+    pub fn is_op_return(&self) -> bool { !self.is_empty() && self[0] == OpCode::Return as u8 }
 
     /// Adds a single opcode to the script.
     #[inline]

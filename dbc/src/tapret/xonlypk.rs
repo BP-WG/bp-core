@@ -22,7 +22,7 @@
 use bc::{InternalPk, OutputPk, TapBranchHash, TapLeafHash, TapNodeHash, TapScript};
 use commit_verify::{mpc, CommitVerify, ConvolveCommit, ConvolveCommitProof};
 
-use super::{Lnpbp12, TapretNodePartner, TapretPathProof, TapretProof};
+use super::{Tapret, TapretNodePartner, TapretPathProof, TapretProof};
 use crate::tapret::tapscript::TapretCommitment;
 
 /// Errors during tapret commitment embedding into x-only public key.
@@ -42,7 +42,7 @@ pub enum TapretKeyError {
     IncorrectOrdering(TapretNodePartner, TapLeafHash),
 }
 
-impl ConvolveCommitProof<mpc::Commitment, InternalPk, Lnpbp12> for TapretProof {
+impl ConvolveCommitProof<mpc::Commitment, InternalPk, Tapret> for TapretProof {
     type Suppl = TapretPathProof;
 
     fn restore_original(&self, _: &OutputPk) -> InternalPk { self.internal_pk }
@@ -50,7 +50,7 @@ impl ConvolveCommitProof<mpc::Commitment, InternalPk, Lnpbp12> for TapretProof {
     fn extract_supplement(&self) -> &Self::Suppl { &self.path_proof }
 }
 
-impl ConvolveCommit<mpc::Commitment, TapretProof, Lnpbp12> for InternalPk {
+impl ConvolveCommit<mpc::Commitment, TapretProof, Tapret> for InternalPk {
     type Commitment = OutputPk;
     type CommitError = TapretKeyError;
 
@@ -125,7 +125,7 @@ mod test {
             internal_pk
         });
 
-        ConvolveCommitProof::<Commitment, InternalPk, Lnpbp12>::verify(&proof, &msg, &outer_key)
+        ConvolveCommitProof::<Commitment, InternalPk, Tapret>::verify(&proof, &msg, &outer_key)
             .unwrap();
     }
 
@@ -149,7 +149,7 @@ mod test {
             internal_pk
         });
 
-        ConvolveCommitProof::<Commitment, InternalPk, Lnpbp12>::verify(&proof, &msg, &outer_key)
+        ConvolveCommitProof::<Commitment, InternalPk, Tapret>::verify(&proof, &msg, &outer_key)
             .unwrap();
     }
 
@@ -174,7 +174,7 @@ mod test {
             internal_pk
         });
 
-        ConvolveCommitProof::<Commitment, InternalPk, Lnpbp12>::verify(&proof, &msg, &outer_key)
+        ConvolveCommitProof::<Commitment, InternalPk, Tapret>::verify(&proof, &msg, &outer_key)
             .unwrap();
     }
 }

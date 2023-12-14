@@ -119,16 +119,16 @@ impl<D: dbc::Proof> PartialOrd for Anchor<mpc::MerkleBlock, D> {
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
 #[display(doc_comments)]
 pub enum MergeError {
-    /// Error merging two LNPBP-4 proofs, which are unrelated.
+    /// Error merging two MPC proofs, which are unrelated.
     #[display(inner)]
     #[from]
-    Lnpbp4Mismatch(mpc::MergeError),
+    MpcMismatch(mpc::MergeError),
 
     /// anchors can't be merged since they have different witness transactions
     TxidMismatch,
 
-    /// anchors can't be merged since they have different proofs
-    ProofMismatch,
+    /// anchors can't be merged since they have different DBC proofs
+    DbcMismatch,
 }
 
 impl<D: dbc::Proof> Anchor<mpc::MerkleBlock, D> {
@@ -178,10 +178,12 @@ impl<D: dbc::Proof> Anchor<mpc::MerkleProof, D> {
         protocol_id: impl Into<ProtocolId>,
         message: Message,
         tx: &Tx,
-    ) -> Result<(), VerifyError<D::Error>> {
+    ) -> Result<mpc::Commitment, VerifyError<D::Error>> {
+        let mpc_commitment = self.convolve(protocol_id, message)?;
         self.dbc_proof
-            .verify(&self.mpc_proof.convolve(protocol_id.into(), message)?, tx)
-            .map_err(VerifyError::Dbc)
+            .verify(&mpc_commitment, tx)
+            .map_err(VerifyError::Dbc)?;
+        Ok(mpc_commitment)
     }
 
     /// Verifies that the anchor commits to the given message under the given
@@ -233,7 +235,7 @@ impl<D: dbc::Proof> Anchor<mpc::MerkleBlock, D> {
             return Err(MergeError::TxidMismatch);
         }
         if self.dbc_proof != other.dbc_proof {
-            return Err(MergeError::ProofMismatch);
+            return Err(MergeError::DbcMismatch);
         }
         self.mpc_proof.merge_reveal(other.mpc_proof)?;
         Ok(self)

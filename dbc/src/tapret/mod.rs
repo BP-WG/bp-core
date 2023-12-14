@@ -67,22 +67,21 @@ mod txout;
 mod spk;
 mod xonlypk;
 
-pub use tapscript::{TapretCommitment, TAPRET_SCRIPT_COMMITMENT_PREFIX};
-pub use tx::TapretError;
-pub use xonlypk::TapretKeyError;
-
-/// Marker non-instantiable enum defining LNPBP-12 taproot OP_RETURN (`tapret`)
-/// protocol.
-pub enum Lnpbp12 {}
-
 use bc::{InternalPk, IntoTapHash, LeafScript, ScriptPubkey, TapBranchHash, TapNodeHash, Tx};
 use commit_verify::mpc::Commitment;
 use commit_verify::{CommitmentProtocol, ConvolveCommitProof, ConvolveVerifyError};
 use strict_encoding::{StrictDeserialize, StrictSerialize};
+pub use tapscript::{TapretCommitment, TAPRET_SCRIPT_COMMITMENT_PREFIX};
+pub use tx::TapretError;
+pub use xonlypk::TapretKeyError;
 
 use crate::{Proof, LIB_NAME_BPCORE};
 
-impl CommitmentProtocol for Lnpbp12 {}
+/// Marker non-instantiable enum defining LNPBP-12 taproot OP_RETURN (`tapret`)
+/// protocol.
+pub enum Tapret {}
+
+impl CommitmentProtocol for Tapret {}
 
 /// Errors in constructing tapret path proof [`TapretPathProof`].
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Display, Error)]
