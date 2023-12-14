@@ -40,7 +40,7 @@ use crate::txout::{CloseMethod, MethodParseError, TxoSeal, WitnessVoutError};
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
-pub struct ExplicitSeal<Id: SealTxid> {
+pub struct ExplicitSeal<Id: SealTxid = Txid> {
     /// Commitment to the specific seal close method [`CloseMethod`] which must
     /// be used to close this seal.
     pub method: CloseMethod,
