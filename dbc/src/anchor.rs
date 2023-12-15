@@ -99,9 +99,10 @@ impl<D: dbc::Proof> Anchor<mpc::MerkleProof, D> {
     pub fn into_merkle_block(
         self,
         protocol_id: impl Into<ProtocolId>,
-        message: Message,
+        message: impl Into<Message>,
     ) -> Result<Anchor<mpc::MerkleBlock, D>, mpc::InvalidProof> {
-        let lnpbp4_proof = mpc::MerkleBlock::with(&self.mpc_proof, protocol_id.into(), message)?;
+        let lnpbp4_proof =
+            mpc::MerkleBlock::with(&self.mpc_proof, protocol_id.into(), message.into())?;
         Ok(Anchor {
             txid: self.txid,
             mpc_proof: lnpbp4_proof,
@@ -113,7 +114,7 @@ impl<D: dbc::Proof> Anchor<mpc::MerkleProof, D> {
     pub fn to_merkle_block(
         &self,
         protocol_id: impl Into<ProtocolId>,
-        message: Message,
+        message: impl Into<Message>,
     ) -> Result<Anchor<mpc::MerkleBlock, D>, mpc::InvalidProof> {
         self.clone().into_merkle_block(protocol_id, message)
     }
@@ -123,7 +124,7 @@ impl<D: dbc::Proof> Anchor<mpc::MerkleProof, D> {
     pub fn verify(
         &self,
         protocol_id: impl Into<ProtocolId>,
-        message: Message,
+        message: impl Into<Message>,
         tx: &Tx,
     ) -> Result<mpc::Commitment, VerifyError<D::Error>> {
         let mpc_commitment = self.convolve(protocol_id, message)?;
@@ -138,9 +139,9 @@ impl<D: dbc::Proof> Anchor<mpc::MerkleProof, D> {
     pub fn convolve(
         &self,
         protocol_id: impl Into<ProtocolId>,
-        message: Message,
+        message: impl Into<Message>,
     ) -> Result<mpc::Commitment, mpc::InvalidProof> {
-        self.mpc_proof.convolve(protocol_id.into(), message)
+        self.mpc_proof.convolve(protocol_id.into(), message.into())
     }
 }
 
