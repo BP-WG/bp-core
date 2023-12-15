@@ -22,7 +22,6 @@
 use std::error::Error;
 
 use bc::Outpoint;
-use commit_verify::ConvolveVerifyError;
 
 /// Seal verification errors.
 #[derive(Clone, PartialEq, Eq, Debug, Display, From, Error)]
@@ -45,10 +44,6 @@ pub enum VerifyError<E: Error> {
     /// invalid DBC commitment.
     #[display(inner)]
     Dbc(E),
-
-    /// invalid tapret commitment. {0}
-    #[from]
-    Tapret(ConvolveVerifyError),
 }
 
 /// Error happening if the seal data holds only witness transaction output
