@@ -21,7 +21,7 @@
 
 use std::io::{self, Cursor, Read, Write};
 
-use amplify::confinement::{Confined, U32};
+use amplify::confinement::{Confined, MediumBlob, SmallBlob, TinyBlob, U32};
 use amplify::{confinement, ByteArray, Bytes32, IoError, Wrapper};
 
 use crate::{
@@ -101,6 +101,18 @@ impl AsRef<[u8]> for ByteStr {
 
 impl From<Vec<u8>> for ByteStr {
     fn from(value: Vec<u8>) -> Self { Self(Confined::try_from(value).expect("u32 >= usize")) }
+}
+
+impl From<TinyBlob> for ByteStr {
+    fn from(vec: TinyBlob) -> Self { ByteStr(Confined::from_collection_unsafe(vec.into_inner())) }
+}
+
+impl From<SmallBlob> for ByteStr {
+    fn from(vec: SmallBlob) -> Self { ByteStr(Confined::from_collection_unsafe(vec.into_inner())) }
+}
+
+impl From<MediumBlob> for ByteStr {
+    fn from(vec: MediumBlob) -> Self { ByteStr(Confined::from_collection_unsafe(vec.into_inner())) }
 }
 
 impl ByteStr {
