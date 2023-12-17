@@ -75,6 +75,7 @@ pub use tapscript::{TapretCommitment, TAPRET_SCRIPT_COMMITMENT_PREFIX};
 pub use tx::TapretError;
 pub use xonlypk::TapretKeyError;
 
+use crate::proof::Method;
 use crate::{Proof, LIB_NAME_BPCORE};
 
 /// Marker non-instantiable enum defining LNPBP-12 taproot OP_RETURN (`tapret`)
@@ -382,6 +383,7 @@ impl TapretProof {
 
 impl Proof for TapretProof {
     type Error = ConvolveVerifyError;
+    const METHOD: Method = Method::TapretFirst;
 
     fn verify(&self, msg: &Commitment, tx: &Tx) -> Result<(), ConvolveVerifyError> {
         ConvolveCommitProof::<_, Tx, _>::verify(self, msg, tx)

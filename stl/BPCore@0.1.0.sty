@@ -1,5 +1,5 @@
 {-
-  Id: urn:ubideco:stl:5Nyd3BhfDAEfc5th2httogefZGzMftfcJNh5Lo9guuTx#father-soviet-mercy
+  Id: urn:ubideco:stl:JAeer3PsTTQRrGttsnPXJKdBTJqQwQ5ZwWHiABEDoCyd#simple-lava-lady
   Name: BPCore
   Version: 0.1.0
   Description: Bitcoin client-side-validation library
@@ -61,27 +61,27 @@ data AnchorMerkleTreeOpretProof :: txid Bitcoin.Txid {- urn:ubideco:semid:C1GfCr
 data AnchorMerkleTreeTapretProof :: txid Bitcoin.Txid {- urn:ubideco:semid:C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs#cowboy-diego-betty -}
                        , mpcProof CommitVerify.MerkleTree {- urn:ubideco:semid:EhTy77DCCxuuKR1ixPLPRna1yc8LjDREYyxCcfdkQGo8#puzzle-quick-madrid -}
                        , dbcProof TapretProof
--- urn:ubideco:semid:9CaqxtyKgdyBbm5EQF2JWEQshsrgteDDjhv1sAPVNWwJ#john-hydro-sport
-data BlindSealTxPtr   :: method CloseMethod
+-- urn:ubideco:semid:8Tsxfmx9QLZGAMSJ6bgiMyhBvEdUipK2yNMhnnf4gHTP#explore-aspect-ranger
+data BlindSealTxPtr   :: method Method
                        , txid TxPtr
                        , vout Bitcoin.Vout {- urn:ubideco:semid:3HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk#chrome-robin-gallop -}
                        , blinding U64
--- urn:ubideco:semid:6d2rxUg3JDxJFdpYQwFoqQrxSPvd9tqJ6Uy2oxbRaDqD#russian-empty-alfonso
-data BlindSealTxid    :: method CloseMethod
+-- urn:ubideco:semid:7t5ZVb1xKgQLQYJ3ubrginXkucdWnCyNKuFcsrHF482i#prepare-pluto-cactus
+data BlindSealTxid    :: method Method
                        , txid Bitcoin.Txid {- urn:ubideco:semid:C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs#cowboy-diego-betty -}
                        , vout Bitcoin.Vout {- urn:ubideco:semid:3HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk#chrome-robin-gallop -}
                        , blinding U64
--- urn:ubideco:semid:FA1JhsEFKi2LLpuAjuvLA3qiBuEJrwpKyypB9J2aPicr#july-salmon-contact
-data CloseMethod      :: opretFirst:0 | tapretFirst:1
+-- urn:ubideco:semid:Cx5JvbZGztYoTiCQPH1QvVHsFJynJ1za7ss7kGwdYZUM#fidel-boris-sunday
+data ExplicitSeal     :: method Method
+                       , txid Bitcoin.Txid {- urn:ubideco:semid:C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs#cowboy-diego-betty -}
+                       , vout Bitcoin.Vout {- urn:ubideco:semid:3HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk#chrome-robin-gallop -}
+-- urn:ubideco:semid:J3RzHp689A6jBj6mLDvwe6xQqvThjxxucy9akuGoi9b4#british-aloha-mimosa
+data ExplicitSealTxPtr :: method Method
+                       , txid TxPtr
+                       , vout Bitcoin.Vout {- urn:ubideco:semid:3HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk#chrome-robin-gallop -}
+-- urn:ubideco:semid:49Mf3pFa3gZNQXJarv9nKCMrZ3NFn2ME9Q3dCAsXhpAe#trilogy-tahiti-valid
+data Method           :: opretFirst:0 | tapretFirst:1
 
--- urn:ubideco:semid:GU7nhPPGaLEh1EwdZSZckDbQoE47vmR9Yi7veSyJkzHQ#dispute-bazaar-quebec
-data ExplicitSeal     :: method CloseMethod
-                       , txid Bitcoin.Txid {- urn:ubideco:semid:C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs#cowboy-diego-betty -}
-                       , vout Bitcoin.Vout {- urn:ubideco:semid:3HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk#chrome-robin-gallop -}
--- urn:ubideco:semid:ECRgZ1GreJifMMSP4kFSGyLsGZdoaxRRwd1GSUnaMa6S#drum-broken-numeric
-data ExplicitSealTxPtr :: method CloseMethod
-                       , txid TxPtr
-                       , vout Bitcoin.Vout {- urn:ubideco:semid:3HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk#chrome-robin-gallop -}
 -- urn:ubideco:semid:5oMeVsXXeicrdvrCCEZQiKWcrDHy4nQPbaQGhtnwM3ug#segment-ambient-totem
 data OpretProof       :: ()
 -- urn:ubideco:semid:81NKrdc9pBoBjsKaGBVN9wXLG4tKjkK4f8DLj7TNMZxh#santana-domingo-needle

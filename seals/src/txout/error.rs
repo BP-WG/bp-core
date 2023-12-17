@@ -22,6 +22,7 @@
 use std::error::Error;
 
 use bc::Outpoint;
+pub use dbc::MethodParseError;
 
 /// Seal verification errors.
 #[derive(Clone, PartialEq, Eq, Debug, Display, From, Error)]
@@ -53,8 +54,3 @@ pub enum VerifyError<E: Error> {
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display, Error)]
 #[display("witness txid is unknown; unable to reconstruct full outpoint data")]
 pub struct WitnessVoutError;
-
-/// wrong transaction output-based single-use-seal closing method id '{0}'.
-#[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]
-#[display(doc_comments)]
-pub struct MethodParseError(pub String);

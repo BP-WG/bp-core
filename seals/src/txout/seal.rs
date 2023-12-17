@@ -27,7 +27,8 @@ use amplify::hex;
 use bc::{Outpoint, Txid, Vout};
 use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
 
-use super::MethodParseError;
+/// Method for closing single-use-seals.
+pub type CloseMethod = dbc::Method;
 
 /// Methods common for all transaction-output based seal types.
 pub trait TxoSeal: From<Outpoint> {
@@ -50,41 +51,6 @@ pub trait TxoSeal: From<Outpoint> {
     /// Returns [`Outpoint`] defining the seal, if txid is known, or constructs
     /// one using the provided `default_txid`.
     fn outpoint_or(&self, default_txid: Txid) -> Outpoint;
-}
-
-/// Method of single-use-seal closing.
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
-#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = dbc::LIB_NAME_BPCORE, tags = repr, into_u8, try_from_u8)]
-#[repr(u8)]
-pub enum CloseMethod {
-    /// Seal is closed over the message in form of OP_RETURN commitment present
-    /// in the first OP_RETURN-containing transaction output.
-    #[display("opret1st")]
-    #[strict_type(dumb)]
-    OpretFirst = 0x00,
-
-    /// Seal is closed over the message in form of Taproot-based OP_RETURN
-    /// commitment present in the first Taproot transaction output.
-    #[display("tapret1st")]
-    TapretFirst = 0x01,
-}
-
-impl FromStr for CloseMethod {
-    type Err = MethodParseError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s.to_lowercase() {
-            s if s == CloseMethod::OpretFirst.to_string() => CloseMethod::OpretFirst,
-            s if s == CloseMethod::TapretFirst.to_string() => CloseMethod::TapretFirst,
-            _ => return Err(MethodParseError(s.to_owned())),
-        })
-    }
 }
 
 /// Marker trait for variants of seal transaction id.
