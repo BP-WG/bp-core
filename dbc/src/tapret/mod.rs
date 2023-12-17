@@ -367,6 +367,9 @@ pub struct TapretProof {
     pub internal_pk: InternalPk,
 }
 
+impl StrictSerialize for TapretProof {}
+impl StrictDeserialize for TapretProof {}
+
 impl TapretProof {
     /// Restores original scripPubkey before deterministic bitcoin commitment
     /// applied.
