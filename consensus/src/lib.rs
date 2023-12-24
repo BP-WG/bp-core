@@ -70,7 +70,7 @@ mod coding;
 pub use block::{BlockHash, BlockHeader};
 pub use coding::{
     ByteStr, ConsensusDataError, ConsensusDecode, ConsensusDecodeError, ConsensusEncode, LenVarInt,
-    VarInt, VarIntArray,
+    VarInt, VarIntArray, VarIntBytes,
 };
 pub use hashtypes::{PubkeyHash, ScriptHash, WPubkeyHash, WScriptHash};
 pub use opcodes::OpCode;

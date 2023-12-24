@@ -37,6 +37,8 @@ use crate::{
 /// maximum size here with just 32 bits.
 pub type VarIntArray<T> = Confined<Vec<T>, 0, U32>;
 
+pub type VarIntBytes = Confined<Vec<u8>, 0, U32>;
+
 /// A variable-length unsigned integer.
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Default)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
@@ -93,7 +95,7 @@ impl<T> LenVarInt for VarIntArray<T> {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct ByteStr(VarIntArray<u8>);
+pub struct ByteStr(VarIntBytes);
 
 impl AsRef<[u8]> for ByteStr {
     fn as_ref(&self) -> &[u8] { self.0.as_slice() }

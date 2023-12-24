@@ -23,7 +23,7 @@ use amplify::confinement;
 use amplify::confinement::Confined;
 
 use crate::opcodes::*;
-use crate::{ScriptHash, VarInt, VarIntArray, LIB_NAME_BITCOIN};
+use crate::{ScriptHash, VarInt, VarIntArray, VarIntBytes, LIB_NAME_BITCOIN};
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
 #[wrapper(Deref, AsSlice, Hex)]
@@ -208,7 +208,7 @@ impl RedeemScript {
 #[wrapper_mut(DerefMut, AsSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-pub struct ScriptBytes(VarIntArray<u8>);
+pub struct ScriptBytes(VarIntBytes);
 
 impl TryFrom<Vec<u8>> for ScriptBytes {
     type Error = confinement::Error;
