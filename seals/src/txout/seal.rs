@@ -28,7 +28,7 @@ use bc::{Outpoint, Txid, Vout};
 use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
 
 /// Method for closing single-use-seals.
-pub type CloseMethod = dbc::Method;
+pub type CloseMethod = dbc::FirstTapOpRet;
 
 /// Methods common for all transaction-output based seal types.
 pub trait TxoSeal: From<Outpoint> {

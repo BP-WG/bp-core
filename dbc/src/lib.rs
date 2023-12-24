@@ -60,4 +60,4 @@ pub mod tapret;
 mod proof;
 
 pub use anchor::Anchor;
-pub use proof::{Method, MethodParseError, Proof};
+pub use proof::{FirstTapOpRet, MethodParseError, Proof};
