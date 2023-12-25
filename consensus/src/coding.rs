@@ -21,7 +21,7 @@
 
 use std::io::{self, Cursor, Read, Write};
 
-use amplify::confinement::{Confined, U32};
+use amplify::confinement::{Confined, MediumBlob, SmallBlob, TinyBlob, U32};
 use amplify::{confinement, ByteArray, Bytes32, IoError, Wrapper};
 
 use crate::{
@@ -36,6 +36,8 @@ use crate::{
 /// will be a hardfork. So for practical reasons we are safe to restrict the
 /// maximum size here with just 32 bits.
 pub type VarIntArray<T> = Confined<Vec<T>, 0, U32>;
+
+pub type VarIntBytes = Confined<Vec<u8>, 0, U32>;
 
 /// A variable-length unsigned integer.
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Default)]
@@ -88,12 +90,7 @@ impl<T> LenVarInt for VarIntArray<T> {
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[wrapper(Deref, Index, RangeOps, BorrowSlice, Hex)]
 #[wrapper_mut(DerefMut, IndexMut, RangeMut, BorrowSliceMut)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
-pub struct ByteStr(VarIntArray<u8>);
+pub struct ByteStr(VarIntBytes);
 
 impl AsRef<[u8]> for ByteStr {
     fn as_ref(&self) -> &[u8] { self.0.as_slice() }
@@ -103,10 +100,57 @@ impl From<Vec<u8>> for ByteStr {
     fn from(value: Vec<u8>) -> Self { Self(Confined::try_from(value).expect("u32 >= usize")) }
 }
 
+impl From<TinyBlob> for ByteStr {
+    fn from(vec: TinyBlob) -> Self { ByteStr(Confined::from_collection_unsafe(vec.into_inner())) }
+}
+
+impl From<SmallBlob> for ByteStr {
+    fn from(vec: SmallBlob) -> Self { ByteStr(Confined::from_collection_unsafe(vec.into_inner())) }
+}
+
+impl From<MediumBlob> for ByteStr {
+    fn from(vec: MediumBlob) -> Self { ByteStr(Confined::from_collection_unsafe(vec.into_inner())) }
+}
+
 impl ByteStr {
     pub fn len_var_int(&self) -> VarInt { VarInt(self.len() as u64) }
 
     pub fn into_vec(self) -> Vec<u8> { self.0.into_inner() }
+}
+
+#[cfg(feature = "serde")]
+mod _serde {
+    use amplify::hex::{FromHex, ToHex};
+    use serde_crate::de::Error;
+    use serde_crate::{Deserialize, Deserializer, Serialize, Serializer};
+
+    use super::*;
+
+    impl Serialize for ByteStr {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer {
+            if serializer.is_human_readable() {
+                serializer.serialize_str(&self.to_hex())
+            } else {
+                serializer.serialize_bytes(self.as_slice())
+            }
+        }
+    }
+
+    impl<'de> Deserialize<'de> for ByteStr {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de> {
+            if deserializer.is_human_readable() {
+                String::deserialize(deserializer).and_then(|string| {
+                    Self::from_hex(&string).map_err(|_| D::Error::custom("wrong hex data"))
+                })
+            } else {
+                let bytes = Vec::<u8>::deserialize(deserializer)?;
+                Self::try_from(bytes)
+                    .map_err(|_| D::Error::custom("invalid script length exceeding 4GB"))
+            }
+        }
+    }
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]

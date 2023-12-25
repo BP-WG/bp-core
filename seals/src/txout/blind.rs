@@ -29,7 +29,7 @@ use amplify::{hex, Bytes32, Wrapper};
 use baid58::{Baid58ParseError, Chunking, FromBaid58, ToBaid58, CHUNKING_32CHECKSUM};
 use bc::{Outpoint, Txid, Vout};
 use commit_verify::{CommitVerify, Conceal};
-use dbc::tapret::Lnpbp12;
+use dbc::tapret::TapretFirst;
 use rand::{thread_rng, RngCore};
 use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
 
@@ -389,7 +389,7 @@ impl From<Outpoint> for SecretSeal {
     fn from(outpoint: Outpoint) -> Self { BlindSeal::<Txid>::from(outpoint).conceal() }
 }
 
-impl<Id: SealTxid> CommitVerify<BlindSeal<Id>, Lnpbp12> for SecretSeal {
+impl<Id: SealTxid> CommitVerify<BlindSeal<Id>, TapretFirst> for SecretSeal {
     fn commit(reveal: &BlindSeal<Id>) -> Self { Bytes32::commit(reveal).into() }
 }
 

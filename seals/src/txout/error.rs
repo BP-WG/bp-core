@@ -19,8 +19,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::error::Error;
+
 use bc::Outpoint;
-use dbc::anchor::AnchorError;
+pub use dbc::MethodParseError;
 
 /// Seal verification errors.
 #[derive(Clone, PartialEq, Eq, Debug, Display, From, Error)]
@@ -30,7 +32,7 @@ use dbc::anchor::AnchorError;
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", rename_all = "camelCase")
 )]
-pub enum VerifyError {
+pub enum VerifyError<E: Error> {
     /// seals provided for a batch verification have inconsistent close method.
     InconsistentCloseMethod,
 
@@ -40,10 +42,9 @@ pub enum VerifyError {
     /// seal lacks witness transaction id information.
     NoWitnessTxid,
 
-    /// invalid anchor.
-    #[from]
+    /// invalid DBC commitment.
     #[display(inner)]
-    InvalidAnchor(AnchorError),
+    Dbc(E),
 }
 
 /// Error happening if the seal data holds only witness transaction output
@@ -53,8 +54,3 @@ pub enum VerifyError {
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display, Error)]
 #[display("witness txid is unknown; unable to reconstruct full outpoint data")]
 pub struct WitnessVoutError;
-
-/// wrong transaction output-based single-use-seal closing method id '{0}'.
-#[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]
-#[display(doc_comments)]
-pub struct MethodParseError(pub String);

@@ -67,21 +67,22 @@ mod txout;
 mod spk;
 mod xonlypk;
 
+use bc::{InternalPk, IntoTapHash, LeafScript, ScriptPubkey, TapBranchHash, TapNodeHash, Tx};
+use commit_verify::mpc::Commitment;
+use commit_verify::{CommitmentProtocol, ConvolveCommitProof, ConvolveVerifyError};
+use strict_encoding::{StrictDeserialize, StrictSerialize};
 pub use tapscript::{TapretCommitment, TAPRET_SCRIPT_COMMITMENT_PREFIX};
 pub use tx::TapretError;
 pub use xonlypk::TapretKeyError;
 
+use crate::proof::Method;
+use crate::{Proof, LIB_NAME_BPCORE};
+
 /// Marker non-instantiable enum defining LNPBP-12 taproot OP_RETURN (`tapret`)
 /// protocol.
-pub enum Lnpbp12 {}
+pub enum TapretFirst {}
 
-use bc::{InternalPk, IntoTapHash, LeafScript, ScriptPubkey, TapBranchHash, TapNodeHash};
-use commit_verify::CommitmentProtocol;
-use strict_encoding::{StrictDeserialize, StrictSerialize};
-
-use crate::LIB_NAME_BPCORE;
-
-impl CommitmentProtocol for Lnpbp12 {}
+impl CommitmentProtocol for TapretFirst {}
 
 /// Errors in constructing tapret path proof [`TapretPathProof`].
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Display, Error)]
@@ -347,6 +348,8 @@ impl<'data> IntoIterator for &'data TapretPathProof {
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BPCORE)]
+#[derive(CommitEncode)]
+#[commit_encode(strategy = strict)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -365,6 +368,9 @@ pub struct TapretProof {
     pub internal_pk: InternalPk,
 }
 
+impl StrictSerialize for TapretProof {}
+impl StrictDeserialize for TapretProof {}
+
 impl TapretProof {
     /// Restores original scripPubkey before deterministic bitcoin commitment
     /// applied.
@@ -372,5 +378,14 @@ impl TapretProof {
     pub fn original_pubkey_script(&self) -> ScriptPubkey {
         let merkle_root = self.path_proof.original_merkle_root();
         ScriptPubkey::p2tr(self.internal_pk, merkle_root)
+    }
+}
+
+impl Proof for TapretProof {
+    type Error = ConvolveVerifyError;
+    const METHOD: Method = Method::TapretFirst;
+
+    fn verify(&self, msg: &Commitment, tx: &Tx) -> Result<(), ConvolveVerifyError> {
+        ConvolveCommitProof::<_, Tx, _>::verify(self, msg, tx)
     }
 }

@@ -23,7 +23,7 @@ use amplify::confinement;
 use amplify::confinement::Confined;
 
 use crate::opcodes::*;
-use crate::{ScriptHash, VarInt, VarIntArray, LIB_NAME_BITCOIN};
+use crate::{ScriptHash, VarInt, VarIntArray, VarIntBytes, LIB_NAME_BITCOIN};
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
 #[wrapper(Deref, AsSlice, Hex)]
@@ -148,7 +148,7 @@ impl ScriptPubkey {
     }
 
     #[inline]
-    pub fn is_op_return(&self) -> bool { self[0] == OpCode::Return as u8 }
+    pub fn is_op_return(&self) -> bool { !self.is_empty() && self[0] == OpCode::Return as u8 }
 
     /// Adds a single opcode to the script.
     #[inline]
@@ -208,7 +208,7 @@ impl RedeemScript {
 #[wrapper_mut(DerefMut, AsSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-pub struct ScriptBytes(VarIntArray<u8>);
+pub struct ScriptBytes(VarIntBytes);
 
 impl TryFrom<Vec<u8>> for ScriptBytes {
     type Error = confinement::Error;
@@ -317,7 +317,7 @@ mod _serde {
                 })
             } else {
                 let bytes = Vec::<u8>::deserialize(deserializer)?;
-                ScriptBytes::try_from(bytes)
+                Self::try_from(bytes)
                     .map_err(|_| D::Error::custom("invalid script length exceeding 4GB"))
             }
         }

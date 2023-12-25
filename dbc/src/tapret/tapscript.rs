@@ -28,7 +28,7 @@ use bc::{TapCode, TapScript};
 use commit_verify::{mpc, CommitEncode, CommitVerify};
 use strict_encoding::{DecodeError, DeserializeError, StrictDeserialize, StrictSerialize};
 
-use super::Lnpbp12;
+use super::TapretFirst;
 use crate::LIB_NAME_BPCORE;
 
 /// Hardcoded tapret script prefix consisting of 29 `OP_RESERVED` pushes,
@@ -99,7 +99,7 @@ impl TapretCommitment {
     pub fn with(mpc: mpc::Commitment, nonce: u8) -> Self { Self { mpc, nonce } }
 }
 
-impl CommitVerify<TapretCommitment, Lnpbp12> for TapScript {
+impl CommitVerify<TapretCommitment, TapretFirst> for TapScript {
     /// Tapret script consists of 29 `OP_RESERVED` pushes, followed by
     /// `OP_RETURN`, `OP_PUSHBYTES_33` and serialized commitment data (MPC
     /// commitment + nonce as a single slice).
