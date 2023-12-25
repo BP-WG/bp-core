@@ -35,9 +35,9 @@ use crate::{Proof, LIB_NAME_BPCORE};
 
 /// Marker non-instantiable enum defining LNPBP-12 taproot OP_RETURN (`tapret`)
 /// protocol.
-pub enum Opret {}
+pub enum OpretFirst {}
 
-impl CommitmentProtocol for Opret {}
+impl CommitmentProtocol for OpretFirst {}
 
 /// Errors during tapret commitment.
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]

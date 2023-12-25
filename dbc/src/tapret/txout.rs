@@ -22,9 +22,9 @@
 use bc::{ScriptPubkey, TxOut};
 use commit_verify::{mpc, ConvolveCommit, ConvolveCommitProof};
 
-use super::{Tapret, TapretKeyError, TapretProof};
+use super::{TapretFirst, TapretKeyError, TapretProof};
 
-impl ConvolveCommitProof<mpc::Commitment, TxOut, Tapret> for TapretProof {
+impl ConvolveCommitProof<mpc::Commitment, TxOut, TapretFirst> for TapretProof {
     type Suppl = Self;
 
     fn restore_original(&self, commitment: &TxOut) -> TxOut {
@@ -37,7 +37,7 @@ impl ConvolveCommitProof<mpc::Commitment, TxOut, Tapret> for TapretProof {
     fn extract_supplement(&self) -> &Self::Suppl { self }
 }
 
-impl ConvolveCommit<mpc::Commitment, TapretProof, Tapret> for TxOut {
+impl ConvolveCommit<mpc::Commitment, TapretProof, TapretFirst> for TxOut {
     type Commitment = TxOut;
     type CommitError = TapretKeyError;
 

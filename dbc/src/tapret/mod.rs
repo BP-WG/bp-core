@@ -80,9 +80,9 @@ use crate::{Proof, LIB_NAME_BPCORE};
 
 /// Marker non-instantiable enum defining LNPBP-12 taproot OP_RETURN (`tapret`)
 /// protocol.
-pub enum Tapret {}
+pub enum TapretFirst {}
 
-impl CommitmentProtocol for Tapret {}
+impl CommitmentProtocol for TapretFirst {}
 
 /// Errors in constructing tapret path proof [`TapretPathProof`].
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Display, Error)]

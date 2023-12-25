@@ -23,9 +23,9 @@ use bc::TxOut;
 use commit_verify::mpc::Commitment;
 use commit_verify::{EmbedCommitProof, EmbedCommitVerify, EmbedVerifyError};
 
-use crate::opret::{Opret, OpretError, OpretProof};
+use crate::opret::{OpretError, OpretFirst, OpretProof};
 
-impl EmbedCommitProof<Commitment, TxOut, Opret> for OpretProof {
+impl EmbedCommitProof<Commitment, TxOut, OpretFirst> for OpretProof {
     fn restore_original_container(
         &self,
         commit_container: &TxOut,
@@ -36,7 +36,7 @@ impl EmbedCommitProof<Commitment, TxOut, Opret> for OpretProof {
     }
 }
 
-impl EmbedCommitVerify<Commitment, Opret> for TxOut {
+impl EmbedCommitVerify<Commitment, OpretFirst> for TxOut {
     type Proof = OpretProof;
     type CommitError = OpretError;
 

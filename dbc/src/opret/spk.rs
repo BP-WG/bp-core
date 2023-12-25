@@ -24,9 +24,9 @@ use bc::ScriptPubkey;
 use commit_verify::mpc::Commitment;
 use commit_verify::{EmbedCommitProof, EmbedCommitVerify, EmbedVerifyError};
 
-use crate::opret::{Opret, OpretError, OpretProof};
+use crate::opret::{OpretError, OpretFirst, OpretProof};
 
-impl EmbedCommitProof<Commitment, ScriptPubkey, Opret> for OpretProof {
+impl EmbedCommitProof<Commitment, ScriptPubkey, OpretFirst> for OpretProof {
     fn restore_original_container(
         &self,
         commit_container: &ScriptPubkey,
@@ -41,7 +41,7 @@ impl EmbedCommitProof<Commitment, ScriptPubkey, Opret> for OpretProof {
     }
 }
 
-impl EmbedCommitVerify<Commitment, Opret> for ScriptPubkey {
+impl EmbedCommitVerify<Commitment, OpretFirst> for ScriptPubkey {
     type Proof = OpretProof;
     type CommitError = OpretError;
 

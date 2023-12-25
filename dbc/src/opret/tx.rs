@@ -23,9 +23,9 @@ use bc::Tx;
 use commit_verify::mpc::Commitment;
 use commit_verify::{EmbedCommitProof, EmbedCommitVerify, EmbedVerifyError};
 
-use super::{Opret, OpretError, OpretProof};
+use super::{OpretError, OpretFirst, OpretProof};
 
-impl EmbedCommitProof<Commitment, Tx, Opret> for OpretProof {
+impl EmbedCommitProof<Commitment, Tx, OpretFirst> for OpretProof {
     fn restore_original_container(
         &self,
         commit_container: &Tx,
@@ -41,7 +41,7 @@ impl EmbedCommitProof<Commitment, Tx, Opret> for OpretProof {
     }
 }
 
-impl EmbedCommitVerify<Commitment, Opret> for Tx {
+impl EmbedCommitVerify<Commitment, OpretFirst> for Tx {
     type Proof = OpretProof;
     type CommitError = OpretError;
 
