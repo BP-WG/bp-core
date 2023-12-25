@@ -51,6 +51,7 @@ impl ConvolveCommitProof<mpc::Commitment, Tx, Tapret> for TapretProof {
         for txout in &mut tx.outputs {
             if txout.script_pubkey.is_p2tr() {
                 txout.script_pubkey = self.original_pubkey_script();
+                break;
             }
         }
         tx
