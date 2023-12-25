@@ -1,5 +1,5 @@
 {-
-  Id: urn:ubideco:stl:DQtzB8Kcfm7XeuhWf8sv3n31c5V2qK6VS1Zbye76haUQ#erosion-quiet-kinetic
+  Id: urn:ubideco:stl:H6wk6SV9j8Up16osC9q3AsQkkA41i7E2qodEfUf5JRPz#mustang-europe-melon
   Name: Bitcoin
   Version: 0.1.0
   Description: Consensus library for bitcoin protocol
@@ -54,12 +54,20 @@ data LockHeight       :: U32
 data LockTime         :: U32
 -- urn:ubideco:semid:8h25q8Va3Sx3csGvq4reMPqG7w4QrEowpYxdMAwaErmF#compass-protein-barcode
 data LockTimestamp    :: U32
--- urn:ubideco:semid:F8WJfUNUgyVDSX6zXjrdi2pWBa54zLWorawtahJf33Hw#shampoo-rufus-tobacco
-data OpCode           :: pushBytes0:0 | pushBytes32:32 | pushData1:76 | pushData2:77
-                       | pushData4:78 | reserved:80 | pushNum1:81 | return:106
-                       | dup:118 | equal:135 | equalVerify:136 | ripemd160:166
-                       | sha1:167 | sha256:168 | hash160:169 | hash256:170
-                       | checkSig:172 | checkSigVerify:173
+-- urn:ubideco:semid:9G21BTSC1kjkfh3hirjQvRcRkC6fwL5VtcUUobGAT9bu#bless-hippie-shirt
+data OpCode           :: pushBytes0:0 | pushBytes1:1 | pushBytes2:2 | pushBytes3:3
+                       | pushBytes4:4 | pushBytes5:5 | pushBytes6:6 | pushBytes7:7
+                       | pushBytes8:8 | pushBytes9:9 | pushBytes10:10 | pushBytes11:11
+                       | pushBytes12:12 | pushBytes13:13 | pushBytes14:14 | pushBytes15:15
+                       | pushBytes16:16 | pushBytes17:17 | pushBytes18:18 | pushBytes19:19
+                       | pushBytes20:20 | pushBytes21:21 | pushBytes22:22 | pushBytes23:23
+                       | pushBytes24:24 | pushBytes25:25 | pushBytes26:26 | pushBytes27:27
+                       | pushBytes28:28 | pushBytes29:29 | pushBytes30:30 | pushBytes31:31
+                       | pushBytes32:32 | pushData1:76 | pushData2:77 | pushData4:78
+                       | reserved:80 | pushNum1:81 | return:106 | dup:118
+                       | equal:135 | equalVerify:136 | ripemd160:166 | sha1:167
+                       | sha256:168 | hash160:169 | hash256:170 | checkSig:172
+                       | checkSigVerify:173
 
 -- urn:ubideco:semid:FWt2MSo8A4nsYgYbuBqMRNLiKgtzvLBgUn774iKzTcuf#pocket-pegasus-frank
 data Outpoint         :: txid Txid, vout Vout

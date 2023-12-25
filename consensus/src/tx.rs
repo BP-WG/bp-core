@@ -23,6 +23,7 @@ use core::slice;
 use std::fmt::{self, Debug, Display, Formatter, LowerHex};
 use std::iter::Sum;
 use std::num::ParseIntError;
+use std::ops::{Div, Rem};
 use std::str::FromStr;
 
 use amplify::hex::{self, FromHex, ToHex};
@@ -292,33 +293,35 @@ impl Sats {
 
     pub const fn sats_rem(&self) -> u64 { self.0 % Self::BTC.0 }
 
+    pub const fn btc_sats(&self) -> (u64, u64) { (self.btc_floor(), self.sats_rem()) }
+
+    #[must_use]
     pub fn checked_add(&self, other: impl Into<Self>) -> Option<Self> {
         self.0.checked_add(other.into().0).map(Self)
     }
+    #[must_use]
     pub fn checked_sub(&self, other: impl Into<Self>) -> Option<Self> {
         self.0.checked_sub(other.into().0).map(Self)
     }
 
-    pub fn checked_add_assign(&mut self, other: impl Into<Self>) -> bool {
-        self.0
-            .checked_add(other.into().0)
-            .map(Self)
-            .map(|sum| *self = sum)
-            .map(|_| true)
-            .unwrap_or_default()
-    }
-    pub fn checked_sub_assign(&mut self, other: impl Into<Self>) -> bool {
-        self.0
-            .checked_sub(other.into().0)
-            .map(Self)
-            .map(|sum| *self = sum)
-            .map(|_| true)
-            .unwrap_or_default()
+    #[must_use]
+    pub fn checked_add_assign(&mut self, other: impl Into<Self>) -> Option<Self> {
+        *self = Self(self.0.checked_add(other.into().0)?);
+        Some(*self)
     }
 
+    #[must_use]
+    pub fn checked_sub_assign(&mut self, other: impl Into<Self>) -> Option<Self> {
+        *self = Self(self.0.checked_sub(other.into().0)?);
+        Some(*self)
+    }
+
+    #[must_use]
     pub fn saturating_add(&self, other: impl Into<Self>) -> Self {
         self.0.saturating_add(other.into().0).into()
     }
+
+    #[must_use]
     pub fn saturating_sub(&self, other: impl Into<Self>) -> Self {
         self.0.saturating_sub(other.into().0).into()
     }
@@ -345,6 +348,16 @@ impl Sum<u64> for Sats {
     fn sum<I: Iterator<Item = u64>>(iter: I) -> Self {
         iter.fold(Sats::ZERO, |sum, value| sum.saturating_add(value))
     }
+}
+
+impl Div<usize> for Sats {
+    type Output = Sats;
+    fn div(self, rhs: usize) -> Self::Output { Sats(self.0 / rhs as u64) }
+}
+
+impl Rem<usize> for Sats {
+    type Output = Sats;
+    fn rem(self, rhs: usize) -> Self::Output { Sats(self.0 % rhs as u64) }
 }
 
 impl Display for Sats {

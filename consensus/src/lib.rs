@@ -70,11 +70,12 @@ mod coding;
 pub use block::{BlockHash, BlockHeader};
 pub use coding::{
     ByteStr, ConsensusDataError, ConsensusDecode, ConsensusDecodeError, ConsensusEncode, LenVarInt,
-    VarInt, VarIntArray,
+    VarInt, VarIntArray, VarIntBytes,
 };
 pub use hashtypes::{PubkeyHash, ScriptHash, WPubkeyHash, WScriptHash};
+pub use opcodes::OpCode;
 pub use pubkeys::{CompressedPk, InvalidPubkey, LegacyPk, PubkeyParseError, UncompressedPk};
-pub use script::{OpCode, RedeemScript, ScriptBytes, ScriptPubkey, SigScript};
+pub use script::{RedeemScript, ScriptBytes, ScriptPubkey, SigScript};
 pub use segwit::{SegwitError, Witness, WitnessProgram, WitnessScript, WitnessVer, Wtxid};
 pub use sigtypes::{Bip340Sig, LegacySig, SigError, SighashFlag, SighashType};
 pub use taproot::{

@@ -23,88 +23,7 @@ use amplify::confinement;
 use amplify::confinement::Confined;
 
 use crate::opcodes::*;
-use crate::{VarInt, VarIntArray, LIB_NAME_BITCOIN};
-
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display)]
-#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-// TODO: Replace `try_from` with `from` since opcodes cover whole range of u8
-#[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
-#[non_exhaustive]
-#[repr(u8)]
-pub enum OpCode {
-    /// Push an empty array onto the stack.
-    #[display("OP_PUSH_BYTES0")]
-    PushBytes0 = OP_PUSHBYTES_0,
-
-    /// Push the next 32 bytes as an array onto the stack.
-    #[display("OP_PUSH_BYTES32")]
-    PushBytes32 = OP_PUSHBYTES_32,
-
-    /// Synonym for OP_RETURN.
-    Reserved = OP_RESERVED,
-
-    /// Fail the script immediately.
-    #[display("OP_RETURN")]
-    #[strict_type(dumb)]
-    Return = OP_RETURN,
-
-    /// Read the next byte as N; push the next N bytes as an array onto the
-    /// stack.
-    #[display("OP_PUSH_DATA1")]
-    PushData1 = OP_PUSHDATA1,
-    /// Read the next 2 bytes as N; push the next N bytes as an array onto the
-    /// stack.
-    #[display("OP_PUSH_DATA2")]
-    PushData2 = OP_PUSHDATA2,
-    /// Read the next 4 bytes as N; push the next N bytes as an array onto the
-    /// stack.
-    #[display("OP_PUSH_DATA3")]
-    PushData4 = OP_PUSHDATA4,
-
-    /// Push the array `0x01` onto the stack.
-    #[display("OP_PUSHNUM_1")]
-    PushNum1 = OP_PUSHNUM_1,
-
-    /// Duplicates the top stack item.
-    #[display("OP_DUP")]
-    Dup = OP_DUP,
-
-    /// Pushes 1 if the inputs are exactly equal, 0 otherwise.
-    #[display("OP_EQUAL")]
-    Equal = OP_EQUAL,
-
-    /// Returns success if the inputs are exactly equal, failure otherwise.
-    #[display("OP_EQUALVERIFY")]
-    EqualVerify = OP_EQUALVERIFY,
-
-    /// Pop the top stack item and push its RIPEMD160 hash.
-    #[display("OP_RIPEMD160")]
-    Ripemd160 = OP_RIPEMD160,
-
-    /// Pop the top stack item and push its SHA1 hash.
-    #[display("OP_SHA1")]
-    Sha1 = OP_SHA1,
-
-    /// Pop the top stack item and push its SHA256 hash.
-    #[display("OP_SHA256")]
-    Sha256 = OP_SHA256,
-
-    /// Pop the top stack item and push its RIPEMD(SHA256) hash.
-    #[display("OP_HASH160")]
-    Hash160 = OP_HASH160,
-
-    /// Pop the top stack item and push its SHA256(SHA256) hash.
-    #[display("OP_HASH256")]
-    Hash256 = OP_HASH256,
-
-    /// <https://en.bitcoin.it/wiki/OP_CHECKSIG> pushing 1/0 for success/failure.
-    #[display("OP_CHECKSIG")]
-    CheckSig = OP_CHECKSIG,
-
-    /// <https://en.bitcoin.it/wiki/OP_CHECKSIG> returning success/failure.
-    #[display("OP_CHECKSIGVERIFY")]
-    CheckSigVerify = OP_CHECKSIGVERIFY,
-}
+use crate::{ScriptHash, VarInt, VarIntArray, VarIntBytes, LIB_NAME_BITCOIN};
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
 #[wrapper(Deref, AsSlice, Hex)]
@@ -229,7 +148,7 @@ impl ScriptPubkey {
     }
 
     #[inline]
-    pub fn is_op_return(&self) -> bool { self[0] == OpCode::Return as u8 }
+    pub fn is_op_return(&self) -> bool { !self.is_empty() && self[0] == OpCode::Return as u8 }
 
     /// Adds a single opcode to the script.
     #[inline]
@@ -278,6 +197,8 @@ impl RedeemScript {
     #[inline]
     pub fn push_opcode(&mut self, op_code: OpCode) { self.0.push(op_code as u8); }
 
+    pub fn to_script_pubkey(&self) -> ScriptPubkey { ScriptPubkey::p2sh(ScriptHash::from(self)) }
+
     #[inline]
     pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
 }
@@ -287,7 +208,7 @@ impl RedeemScript {
 #[wrapper_mut(DerefMut, AsSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-pub struct ScriptBytes(VarIntArray<u8>);
+pub struct ScriptBytes(VarIntBytes);
 
 impl TryFrom<Vec<u8>> for ScriptBytes {
     type Error = confinement::Error;
@@ -396,7 +317,7 @@ mod _serde {
                 })
             } else {
                 let bytes = Vec::<u8>::deserialize(deserializer)?;
-                ScriptBytes::try_from(bytes)
+                Self::try_from(bytes)
                     .map_err(|_| D::Error::custom("invalid script length exceeding 4GB"))
             }
         }

@@ -22,7 +22,7 @@
 use bc::Tx;
 use commit_verify::{mpc, ConvolveCommit, ConvolveCommitProof};
 
-use super::{Lnpbp12, TapretKeyError, TapretProof};
+use super::{TapretFirst, TapretKeyError, TapretProof};
 
 /// Errors during tapret commitment.
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
@@ -42,7 +42,7 @@ pub enum TapretError {
     NoTaprootOutput,
 }
 
-impl ConvolveCommitProof<mpc::Commitment, Tx, Lnpbp12> for TapretProof {
+impl ConvolveCommitProof<mpc::Commitment, Tx, TapretFirst> for TapretProof {
     type Suppl = Self;
 
     fn restore_original(&self, commitment: &Tx) -> Tx {
@@ -51,6 +51,7 @@ impl ConvolveCommitProof<mpc::Commitment, Tx, Lnpbp12> for TapretProof {
         for txout in &mut tx.outputs {
             if txout.script_pubkey.is_p2tr() {
                 txout.script_pubkey = self.original_pubkey_script();
+                break;
             }
         }
         tx
@@ -59,7 +60,7 @@ impl ConvolveCommitProof<mpc::Commitment, Tx, Lnpbp12> for TapretProof {
     fn extract_supplement(&self) -> &Self::Suppl { self }
 }
 
-impl ConvolveCommit<mpc::Commitment, TapretProof, Lnpbp12> for Tx {
+impl ConvolveCommit<mpc::Commitment, TapretProof, TapretFirst> for Tx {
     type Commitment = Tx;
     type CommitError = TapretError;
 
