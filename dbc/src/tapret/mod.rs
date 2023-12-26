@@ -255,7 +255,7 @@ impl TapretNodePartner {
 ///
 /// Holds information about the sibling at level 1 of the tree in form of
 /// [`TapretNodePartner`].
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(Getters, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BPCORE)]
 #[cfg_attr(
@@ -269,6 +269,7 @@ pub struct TapretPathProof {
 
     /// A nonce value used to put the tapret commitment into the right side of
     /// the tree.
+    #[getter(as_copy)]
     nonce: u8,
 }
 
