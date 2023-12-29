@@ -48,9 +48,9 @@ fn _bp_core_stl() -> Result<TypeLib, CompileError> {
     .transpile::<dbc::Anchor<mpc::MerkleProof, TapretProof>>()
     .transpile::<seals::txout::ExplicitSeal<TxPtr>>()
     .transpile::<seals::txout::ExplicitSeal<Txid>>()
-    .transpile::<seals::txout::blind::SecretSeal>()
-    .transpile::<seals::txout::blind::BlindSeal<TxPtr>>()
-    .transpile::<seals::txout::blind::BlindSeal<Txid>>()
+    .transpile::<seals::SecretSeal>()
+    .transpile::<seals::txout::BlindSeal<TxPtr>>()
+    .transpile::<seals::txout::BlindSeal<Txid>>()
     .compile()
 }
 

@@ -28,6 +28,7 @@ pub mod explicit;
 mod seal;
 mod witness;
 
+pub use blind::{BlindSeal, ChainBlindSeal, SingleBlindSeal};
 pub use error::{MethodParseError, VerifyError, WitnessVoutError};
 pub use explicit::ExplicitSeal;
 pub use seal::{CloseMethod, SealTxid, TxPtr, TxoSeal};
