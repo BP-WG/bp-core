@@ -56,6 +56,7 @@ extern crate strict_encoding;
 
 #[cfg(feature = "stl")]
 pub mod stl;
+mod bp;
 
 pub use ::bc::*;
 #[cfg(feature = "stl")]
