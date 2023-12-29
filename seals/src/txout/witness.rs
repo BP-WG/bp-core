@@ -23,7 +23,7 @@ use std::marker::PhantomData;
 
 use bc::{Tx, Txid};
 use commit_verify::mpc;
-use dbc::{Anchor, DbcMethod};
+use dbc::{Anchor, DbcMethod, Method};
 use single_use_seals::SealWitness;
 use strict_encoding::StrictDumb;
 
@@ -32,7 +32,7 @@ use crate::SealCloseMethod;
 
 /// Witness of a bitcoin-based seal being closed. Includes both transaction and
 /// extra-transaction data.
-pub struct Witness<D: dbc::Proof<M>, M: DbcMethod> {
+pub struct Witness<D: dbc::Proof<M>, M: DbcMethod = Method> {
     /// Witness transaction: transaction which contains commitment to the
     /// message over which the seal is closed.
     pub tx: Tx,

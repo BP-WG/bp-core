@@ -85,7 +85,7 @@ impl FromStr for Method {
 }
 
 /// Deterministic bitcoin commitment proof types.
-pub trait Proof<M: DbcMethod>:
+pub trait Proof<M: DbcMethod = Method>:
     Clone + Eq + Debug + CommitEncode + StrictSerialize + StrictDeserialize + StrictDumb
 {
     /// Verification error.

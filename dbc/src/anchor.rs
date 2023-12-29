@@ -31,7 +31,7 @@ use bc::{Tx, Txid};
 use commit_verify::mpc::{self, Message, ProtocolId};
 use strict_encoding::{StrictDumb, StrictEncode};
 
-use crate::{DbcMethod, LIB_NAME_BPCORE};
+use crate::{DbcMethod, Method, LIB_NAME_BPCORE};
 
 mod dbc {
     pub use crate::Proof;
@@ -68,7 +68,7 @@ pub enum VerifyError<E: Error> {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", rename_all = "camelCase")
 )]
-pub struct Anchor<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod> {
+pub struct Anchor<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod = Method> {
     /// Transaction containing deterministic bitcoin commitment.
     pub txid: Txid,
 

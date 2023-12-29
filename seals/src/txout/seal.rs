@@ -33,7 +33,7 @@ use crate::SealCloseMethod;
 pub type CloseMethod = dbc::Method;
 
 /// Methods common for all transaction-output based seal types.
-pub trait TxoSeal<M: SealCloseMethod> {
+pub trait TxoSeal<M: SealCloseMethod = CloseMethod> {
     /// Returns method which must be used for seal closing.
     fn method(&self) -> M;
 

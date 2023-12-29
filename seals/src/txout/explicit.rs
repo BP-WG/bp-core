@@ -29,7 +29,7 @@ use bc::{Outpoint, Txid, Vout};
 use dbc::MethodParseError;
 
 use crate::txout::seal::{SealTxid, TxPtr};
-use crate::txout::{TxoSeal, WitnessVoutError};
+use crate::txout::{CloseMethod, TxoSeal, WitnessVoutError};
 use crate::SealCloseMethod;
 
 /// Revealed seal definition which may point to a witness transactions and does
@@ -42,7 +42,7 @@ use crate::SealCloseMethod;
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
-pub struct ExplicitSeal<Id: SealTxid, M: SealCloseMethod> {
+pub struct ExplicitSeal<Id: SealTxid, M: SealCloseMethod = CloseMethod> {
     /// Commitment to the specific seal close method [`CloseMethod`] which must
     /// be used to close this seal.
     pub method: M,

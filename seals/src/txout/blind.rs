@@ -51,7 +51,7 @@ pub type SingleBlindSeal<M> = BlindSeal<Txid, M>;
 #[derive(CommitEncode)]
 #[commit_encode(conceal, strategy = strict)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
-pub struct BlindSeal<Id: SealTxid, M: SealCloseMethod> {
+pub struct BlindSeal<Id: SealTxid, M: SealCloseMethod = CloseMethod> {
     /// Commitment to the specific seal close method [`CloseMethod`] which must
     /// be used to close this seal.
     pub method: M,
