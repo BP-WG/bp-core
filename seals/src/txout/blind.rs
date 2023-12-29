@@ -31,8 +31,7 @@ use rand::{thread_rng, RngCore};
 use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
 
 use super::{CloseMethod, MethodParseError, WitnessVoutError};
-use crate::txout::seal::{SealTxid, TxPtr};
-use crate::txout::TxoSeal;
+use crate::txout::{SealTxid, TxPtr, TxoSeal};
 
 /// Seal type which can be blinded and chained with other seals.
 pub type ChainBlindSeal = BlindSeal<TxPtr>;
@@ -105,7 +104,9 @@ impl From<BlindSeal<Txid>> for Outpoint {
 
 impl<Id: SealTxid> From<&Outpoint> for BlindSeal<Id> {
     #[inline]
-    fn from(outpoint: &Outpoint) -> Self { BlindSeal::tapret_first(outpoint.txid, outpoint.vout) }
+    fn from(outpoint: &Outpoint) -> Self {
+        BlindSeal::tapret_first_rand(outpoint.txid, outpoint.vout)
+    }
 }
 
 impl<Id: SealTxid> TxoSeal for BlindSeal<Id> {
@@ -133,31 +134,31 @@ impl<Id: SealTxid> TxoSeal for BlindSeal<Id> {
 impl<Id: SealTxid> BlindSeal<Id> {
     /// Creates new seal for the provided outpoint and seal closing method. Uses
     /// `thread_rng` to initialize blinding factor.
-    pub fn new(method: CloseMethod, txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
+    pub fn new_random(method: CloseMethod, txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
         BlindSeal::with_rng(method, txid, vout, &mut thread_rng())
     }
 
     /// Creates new seal using TapretFirst closing method for the provided
     /// outpoint. Uses `thread_rng` to initialize blinding factor.
-    pub fn tapret_first_from(outpoint: Outpoint) -> Self {
-        BlindSeal::tapret_first(outpoint.txid, outpoint.vout)
+    pub fn tapret_first_rand_from(outpoint: Outpoint) -> Self {
+        BlindSeal::tapret_first_rand(outpoint.txid, outpoint.vout)
     }
 
     /// Creates new seal using OpretFirst closing method for the provided
     /// outpoint. Uses `thread_rng` to initialize blinding factor.
-    pub fn opret_first_from(outpoint: Outpoint) -> Self {
-        BlindSeal::opret_first(outpoint.txid, outpoint.vout)
+    pub fn opret_first_rand_from(outpoint: Outpoint) -> Self {
+        BlindSeal::opret_first_rand(outpoint.txid, outpoint.vout)
     }
 
     /// Creates new seal using TapretFirst closing method for the provided
     /// outpoint. Uses `thread_rng` to initialize blinding factor.
-    pub fn tapret_first(txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
+    pub fn tapret_first_rand(txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
         BlindSeal::with_rng(CloseMethod::TapretFirst, txid, vout, &mut thread_rng())
     }
 
     /// Creates new seal using OpretFirst closing method for the provided
     /// outpoint. Uses `thread_rng` to initialize blinding factor.
-    pub fn opret_first(txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
+    pub fn opret_first_rand(txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
         BlindSeal::with_rng(CloseMethod::OpretFirst, txid, vout, &mut thread_rng())
     }
 
@@ -200,7 +201,7 @@ impl BlindSeal<TxPtr> {
     /// Takes seal closing method and witness transaction output number as
     /// arguments. Uses `thread_rng` to initialize blinding factor.
     #[inline]
-    pub fn new_vout(method: CloseMethod, vout: impl Into<Vout>) -> Self {
+    pub fn new_random_vout(method: CloseMethod, vout: impl Into<Vout>) -> Self {
         Self {
             method,
             blinding: thread_rng().next_u64(),
@@ -212,7 +213,7 @@ impl BlindSeal<TxPtr> {
     /// Reconstructs previously defined seal pointing to a witness transaction
     /// of another seal with a given method, witness transaction output number
     /// and previously generated blinding factor value..
-    pub fn with_vout(method: CloseMethod, vout: impl Into<Vout>, blinding: u64) -> Self {
+    pub fn with_blinded_vout(method: CloseMethod, vout: impl Into<Vout>, blinding: u64) -> Self {
         BlindSeal {
             method,
             txid: TxPtr::WitnessTx,
