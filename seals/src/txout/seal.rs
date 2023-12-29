@@ -31,7 +31,7 @@ use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
 pub type CloseMethod = dbc::Method;
 
 /// Methods common for all transaction-output based seal types.
-pub trait TxoSeal: From<Outpoint> {
+pub trait TxoSeal {
     /// Returns method which must be used for seal closing.
     fn method(&self) -> CloseMethod;
 

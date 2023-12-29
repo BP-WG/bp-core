@@ -32,7 +32,7 @@ use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
 
 use super::{CloseMethod, MethodParseError, WitnessVoutError};
 use crate::txout::seal::{SealTxid, TxPtr};
-use crate::txout::{ExplicitSeal, TxoSeal};
+use crate::txout::TxoSeal;
 
 /// Seal type which can be blinded and chained with other seals.
 pub type ChainBlindSeal = BlindSeal<TxPtr>;
@@ -106,28 +106,6 @@ impl From<BlindSeal<Txid>> for Outpoint {
 impl<Id: SealTxid> From<&Outpoint> for BlindSeal<Id> {
     #[inline]
     fn from(outpoint: &Outpoint) -> Self { BlindSeal::tapret_first(outpoint.txid, outpoint.vout) }
-}
-
-impl<Id: SealTxid> From<Outpoint> for BlindSeal<Id> {
-    #[inline]
-    fn from(outpoint: Outpoint) -> Self { BlindSeal::from(&outpoint) }
-}
-
-impl<Id: SealTxid> From<&ExplicitSeal<Id>> for BlindSeal<Id> {
-    #[inline]
-    fn from(seal: &ExplicitSeal<Id>) -> Self {
-        Self {
-            method: seal.method,
-            blinding: thread_rng().next_u64(),
-            txid: seal.txid,
-            vout: seal.vout,
-        }
-    }
-}
-
-impl<Id: SealTxid> From<ExplicitSeal<Id>> for BlindSeal<Id> {
-    #[inline]
-    fn from(seal: ExplicitSeal<Id>) -> Self { BlindSeal::<Id>::from(&seal) }
 }
 
 impl<Id: SealTxid> TxoSeal for BlindSeal<Id> {
