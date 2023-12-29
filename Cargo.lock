@@ -267,8 +267,7 @@ dependencies = [
 [[package]]
 name = "commit_encoding_derive"
 version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00033f14d67c4169d588f085ea2faeb7b610cf03a74d42ea09eeba31abef2047"
+source = "git+https://github.com/LNP-BP/client_side_validation?branch=v0.11#2d3a0a2981409c493067edfc94338088884b1aa7"
 dependencies = [
  "amplify",
  "amplify_syn",
@@ -280,8 +279,7 @@ dependencies = [
 [[package]]
 name = "commit_verify"
 version = "0.11.0-beta.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5598661b1d90b149f0b944faef8c1d1d131f847678a6c450b9540b629ac11291"
+source = "git+https://github.com/LNP-BP/client_side_validation?branch=v0.11#2d3a0a2981409c493067edfc94338088884b1aa7"
 dependencies = [
  "amplify",
  "commit_encoding_derive",
@@ -666,8 +664,7 @@ dependencies = [
 [[package]]
 name = "strict_encoding"
 version = "2.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab7b75b4af0aff9dd97b68df262bf0e807b7d007cc860fa217943f898a05a5ab"
+source = "git+https://github.com/strict-types/strict-encoding?branch=phantom#2123237a512bbe28e8e419e7d4f899dfedfa758c"
 dependencies = [
  "amplify",
  "half",
@@ -677,8 +674,7 @@ dependencies = [
 [[package]]
 name = "strict_encoding_derive"
 version = "2.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37064ec285e2a633465eb525c8698eea51373dee889fe310e0d32df8343e7f4f"
+source = "git+https://github.com/strict-types/strict-encoding?branch=phantom#2123237a512bbe28e8e419e7d4f899dfedfa758c"
 dependencies = [
  "amplify_syn",
  "heck",

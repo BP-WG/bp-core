@@ -19,7 +19,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use serde_crate::{Deserialize, Serialize};
 use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
 
 /// Enumeration over types related to bitcoin protocol-compatible chains.

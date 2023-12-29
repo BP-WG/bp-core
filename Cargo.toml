@@ -81,3 +81,7 @@ stl = ["strict_types", "strict_types/base64", "bp-consensus/stl", "commit_verify
 
 [package.metadata.docs.rs]
 features = [ "all" ]
+
+[patch.crates-io]
+strict_encoding = { git = "https://github.com/strict-types/strict-encoding", branch = "phantom" }
+commit_verify = { git = "https://github.com/LNP-BP/client_side_validation", branch = "v0.11" }

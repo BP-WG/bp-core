@@ -72,7 +72,7 @@ pub struct OpretProof(());
 impl StrictSerialize for OpretProof {}
 impl StrictDeserialize for OpretProof {}
 
-impl Proof for OpretProof {
+impl Proof<Method> for OpretProof {
     type Error = EmbedVerifyError<OpretError>;
     const METHOD: Method = Method::OpretFirst;
 

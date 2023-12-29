@@ -27,13 +27,15 @@ use amplify::hex;
 use bc::{Outpoint, Txid, Vout};
 use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
 
+use crate::SealCloseMethod;
+
 /// Method for closing single-use-seals.
 pub type CloseMethod = dbc::Method;
 
 /// Methods common for all transaction-output based seal types.
-pub trait TxoSeal {
+pub trait TxoSeal<M: SealCloseMethod> {
     /// Returns method which must be used for seal closing.
-    fn method(&self) -> CloseMethod;
+    fn method(&self) -> M;
 
     /// Returns [`Txid`] part of the seal definition, if known.
     fn txid(&self) -> Option<Txid>;

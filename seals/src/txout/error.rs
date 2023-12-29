@@ -22,7 +22,6 @@
 use std::error::Error;
 
 use bc::Outpoint;
-pub use dbc::MethodParseError;
 
 /// Seal verification errors.
 #[derive(Clone, PartialEq, Eq, Debug, Display, From, Error)]
