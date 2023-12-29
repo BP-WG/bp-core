@@ -19,32 +19,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Coding conventions
-#![deny(
-    non_upper_case_globals,
-    non_camel_case_types,
-    non_snake_case,
-    unused_mut,
-    unused_imports,
-    dead_code,
-    missing_docs
+use amplify::Bytes32;
+
+/// Confidential version of transaction outpoint-based single-use-seal
+#[derive(Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, From)]
+#[wrapper(Index, RangeOps, BorrowSlice, Hex)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = dbc::LIB_NAME_BPCORE)]
+#[derive(CommitEncode)]
+#[commit_encode(strategy = strict)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
 )]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
-
-//! The library provides single-use-seal implementations for bitcoin protocol.
-
-#[macro_use]
-extern crate amplify;
-#[macro_use]
-extern crate strict_encoding;
-#[macro_use]
-extern crate commit_verify;
-#[cfg(feature = "serde")]
-#[macro_use]
-extern crate serde_crate as serde;
-
-pub mod resolver;
-pub mod txout;
-mod secret;
-
-pub use secret::SecretSeal;
+pub struct SecretSeal(
+    #[from]
+    #[from([u8; 32])]
+    Bytes32,
+);

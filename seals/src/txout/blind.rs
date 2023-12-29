@@ -25,7 +25,7 @@ use std::fmt::{self, Debug, Display, Formatter};
 use std::hash::Hash;
 use std::str::FromStr;
 
-use amplify::{hex, Bytes32, Wrapper};
+use amplify::hex;
 use bc::{Outpoint, Txid, Vout};
 use rand::{thread_rng, RngCore};
 use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
@@ -328,24 +328,6 @@ where Self: TxoSeal
         write!(f, "{}:{}:{}#{:#010x}", self.method, self.txid, self.vout, self.blinding)
     }
 }
-
-/// Blind version of transaction outpoint-based single-use-seal
-#[derive(Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, From)]
-#[wrapper(Index, RangeOps, BorrowSlice, Hex)]
-#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = dbc::LIB_NAME_BPCORE)]
-#[derive(CommitEncode)]
-#[commit_encode(strategy = strict)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
-pub struct SecretSeal(
-    #[from]
-    #[from([u8; 32])]
-    Bytes32,
-);
 
 #[cfg(test)]
 mod test {
