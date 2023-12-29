@@ -25,7 +25,7 @@ use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
 /// Enumeration over types related to bitcoin protocol-compatible chains.
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = super::LIB_NAME_RGB, tags = custom, dumb = Self::Bitcoin(strict_dumb!()))]
+#[strict_type(lib = dbc::LIB_NAME_BPCORE, tags = custom, dumb = Self::Bitcoin(strict_dumb!()))]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -34,34 +34,46 @@ use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
 pub enum Bp<T>
 where T: StrictDumb + StrictEncode + StrictDecode
 {
+    /// Bitcoin blockchain-based.
+    ///
+    /// NB: The type does not distinguish mainnet from testnets.
     #[strict_type(tag = 0x00)]
     Bitcoin(T),
 
+    /// Liquid blockchain-based
+    ///
+    /// NB: The type does not distinguish mainnet from testnets.
     #[strict_type(tag = 0x01)]
     Liquid(T),
 }
 
 impl<T: StrictDumb + StrictEncode + StrictDecode> Bp<T> {
+    /// Detects if the variant matches bitcoin blockchain.
     pub fn is_bitcoin(&self) -> bool { matches!(self, Bp::Bitcoin(_)) }
+    /// Detects if the variant matches liquid blockchain.
     pub fn is_liquid(&self) -> bool { matches!(self, Bp::Liquid(_)) }
+    /// Returns bitcoin blockchain variant as an optional.
     pub fn as_bitcoin(&self) -> Option<&T> {
         match self {
             Bp::Bitcoin(t) => Some(t),
             Bp::Liquid(_) => None,
         }
     }
+    /// Returns liquid blockchain variant as an optional.
     pub fn as_liquid(&self) -> Option<&T> {
         match self {
             Bp::Bitcoin(_) => None,
             Bp::Liquid(t) => Some(t),
         }
     }
+    /// Converts into bitcoin blockchain optional.
     pub fn into_bitcoin(self) -> Option<T> {
         match self {
             Bp::Bitcoin(t) => Some(t),
             Bp::Liquid(_) => None,
         }
     }
+    /// Converts into liquid blockchain optional.
     pub fn into_liquid(self) -> Option<T> {
         match self {
             Bp::Bitcoin(_) => None,
@@ -69,6 +81,7 @@ impl<T: StrictDumb + StrictEncode + StrictDecode> Bp<T> {
         }
     }
 
+    /// Maps the value from one internal type into another.
     pub fn map<U: StrictDumb + StrictEncode + StrictDecode>(self, f: impl FnOnce(T) -> U) -> Bp<U> {
         match self {
             Bp::Bitcoin(t) => Bp::Bitcoin(f(t)),
@@ -76,6 +89,8 @@ impl<T: StrictDumb + StrictEncode + StrictDecode> Bp<T> {
         }
     }
 
+    /// Maps the value from one internal type into another, covering cases which
+    /// may error.
     pub fn try_map<U: StrictDumb + StrictEncode + StrictDecode, E>(
         self,
         f: impl FnOnce(T) -> Result<U, E>,
@@ -86,6 +101,8 @@ impl<T: StrictDumb + StrictEncode + StrictDecode> Bp<T> {
         }
     }
 
+    /// Maps the value from one internal type into another, covering cases which
+    /// may result in an optional value.
     pub fn maybe_map<U: StrictDumb + StrictEncode + StrictDecode>(
         self,
         f: impl FnOnce(T) -> Option<U>,
