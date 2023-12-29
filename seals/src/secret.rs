@@ -24,6 +24,9 @@ use std::str::FromStr;
 
 use amplify::{Bytes32, Wrapper};
 use baid58::{Baid58ParseError, Chunking, FromBaid58, ToBaid58, CHUNKING_32CHECKSUM};
+use commit_verify::{CommitmentId, Conceal};
+
+use crate::txout::{BlindSeal, SealTxid};
 
 /// Confidential version of transaction outpoint-based single-use-seal
 #[derive(Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, From)]
@@ -42,6 +45,13 @@ pub struct SecretSeal(
     #[from([u8; 32])]
     Bytes32,
 );
+
+impl<Id: SealTxid> Conceal for BlindSeal<Id> {
+    type Concealed = SecretSeal;
+
+    #[inline]
+    fn conceal(&self) -> Self::Concealed { self.commitment_id() }
+}
 
 impl ToBaid58<32> for SecretSeal {
     const HRI: &'static str = "utxob";
