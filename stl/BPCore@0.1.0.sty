@@ -1,5 +1,5 @@
 {-
-  Id: urn:ubideco:stl:JAeer3PsTTQRrGttsnPXJKdBTJqQwQ5ZwWHiABEDoCyd#simple-lava-lady
+  Id: urn:ubideco:stl:8wHziC7Bxa3BwctUh6EVBanosrvRHecCTPUjkZT4btNd#ruby-heaven-madrid
   Name: BPCore
   Version: 0.1.0
   Description: Bitcoin client-side-validation library
@@ -71,13 +71,13 @@ data BlindSealTxid    :: method Method
                        , txid Bitcoin.Txid {- urn:ubideco:semid:C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs#cowboy-diego-betty -}
                        , vout Bitcoin.Vout {- urn:ubideco:semid:3HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk#chrome-robin-gallop -}
                        , blinding U64
--- urn:ubideco:semid:Cx5JvbZGztYoTiCQPH1QvVHsFJynJ1za7ss7kGwdYZUM#fidel-boris-sunday
-data ExplicitSeal     :: method Method
-                       , txid Bitcoin.Txid {- urn:ubideco:semid:C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs#cowboy-diego-betty -}
-                       , vout Bitcoin.Vout {- urn:ubideco:semid:3HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk#chrome-robin-gallop -}
 -- urn:ubideco:semid:J3RzHp689A6jBj6mLDvwe6xQqvThjxxucy9akuGoi9b4#british-aloha-mimosa
 data ExplicitSealTxPtr :: method Method
                        , txid TxPtr
+                       , vout Bitcoin.Vout {- urn:ubideco:semid:3HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk#chrome-robin-gallop -}
+-- urn:ubideco:semid:2FntXjC5uPaUYZewpkJPRyJyS19BmiCS3XVaitYDqtoR#think-convert-temple
+data ExplicitSealTxid :: method Method
+                       , txid Bitcoin.Txid {- urn:ubideco:semid:C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs#cowboy-diego-betty -}
                        , vout Bitcoin.Vout {- urn:ubideco:semid:3HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk#chrome-robin-gallop -}
 -- urn:ubideco:semid:49Mf3pFa3gZNQXJarv9nKCMrZ3NFn2ME9Q3dCAsXhpAe#trilogy-tahiti-valid
 data Method           :: opretFirst:0 | tapretFirst:1

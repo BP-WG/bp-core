@@ -382,7 +382,7 @@ impl TapretProof {
     }
 }
 
-impl Proof for TapretProof {
+impl Proof<Method> for TapretProof {
     type Error = ConvolveVerifyError;
     const METHOD: Method = Method::TapretFirst;
 

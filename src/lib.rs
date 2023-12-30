@@ -50,12 +50,15 @@ pub extern crate seals;
 #[cfg(feature = "stl")]
 #[macro_use]
 extern crate amplify;
-#[cfg(feature = "stl")]
 #[macro_use]
 extern crate strict_encoding;
+#[cfg(feature = "serde")]
+#[macro_use]
+extern crate serde_crate as serde;
 
 #[cfg(feature = "stl")]
 pub mod stl;
+mod bp;
 
 pub use ::bc::*;
 #[cfg(feature = "stl")]
@@ -63,3 +66,4 @@ pub use ::bc::*;
 pub mod bc {
     pub use bc::stl;
 }
+pub use bp::Bp;

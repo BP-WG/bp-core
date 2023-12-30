@@ -25,22 +25,21 @@ use std::fmt::{self, Debug, Display, Formatter};
 use std::hash::Hash;
 use std::str::FromStr;
 
-use amplify::{hex, Bytes32, Wrapper};
-use baid58::{Baid58ParseError, Chunking, FromBaid58, ToBaid58, CHUNKING_32CHECKSUM};
+use amplify::hex;
 use bc::{Outpoint, Txid, Vout};
-use commit_verify::{CommitVerify, Conceal};
-use dbc::tapret::TapretFirst;
+use commit_verify::{CommitStrategy, CommitmentId};
+use dbc::MethodParseError;
 use rand::{thread_rng, RngCore};
 use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
 
-use super::{CloseMethod, MethodParseError, WitnessVoutError};
-use crate::txout::seal::{SealTxid, TxPtr};
-use crate::txout::{ExplicitSeal, TxoSeal};
+use super::{CloseMethod, WitnessVoutError};
+use crate::txout::{SealTxid, TxPtr, TxoSeal};
+use crate::{SealCloseMethod, SecretSeal};
 
 /// Seal type which can be blinded and chained with other seals.
-pub type ChainBlindSeal = BlindSeal<TxPtr>;
+pub type ChainBlindSeal<M> = BlindSeal<TxPtr, M>;
 /// Seal type which can be blinded, but can't be chained with other seals.
-pub type SingleBlindSeal = BlindSeal<Txid>;
+pub type SingleBlindSeal<M> = BlindSeal<Txid, M>;
 
 /// Revealed seal definition which may point to a witness transactions and
 /// contains blinding data.
@@ -50,13 +49,11 @@ pub type SingleBlindSeal = BlindSeal<Txid>;
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
-#[derive(CommitEncode)]
-#[commit_encode(conceal, strategy = strict)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
-pub struct BlindSeal<Id: SealTxid> {
+pub struct BlindSeal<Id: SealTxid, M: SealCloseMethod = CloseMethod> {
     /// Commitment to the specific seal close method [`CloseMethod`] which must
     /// be used to close this seal.
-    pub method: CloseMethod,
+    pub method: M,
 
     /// Txid of the seal definition.
     ///
@@ -75,11 +72,20 @@ pub struct BlindSeal<Id: SealTxid> {
     pub blinding: u64,
 }
 
-impl TryFrom<&BlindSeal<TxPtr>> for Outpoint {
+impl<Id: SealTxid, M: SealCloseMethod> CommitStrategy for BlindSeal<Id, M> {
+    type Strategy = commit_verify::strategies::Strict;
+}
+
+impl<Id: SealTxid, M: SealCloseMethod> CommitmentId for BlindSeal<Id, M> {
+    const TAG: [u8; 32] = *b"urn:lnpbp:bp:seal:blind#29122023";
+    type Id = SecretSeal;
+}
+
+impl<M: SealCloseMethod> TryFrom<&BlindSeal<TxPtr, M>> for Outpoint {
     type Error = WitnessVoutError;
 
     #[inline]
-    fn try_from(reveal: &BlindSeal<TxPtr>) -> Result<Self, Self::Error> {
+    fn try_from(reveal: &BlindSeal<TxPtr, M>) -> Result<Self, Self::Error> {
         reveal
             .txid
             .map_to_outpoint(reveal.vout)
@@ -87,62 +93,28 @@ impl TryFrom<&BlindSeal<TxPtr>> for Outpoint {
     }
 }
 
-impl TryFrom<BlindSeal<TxPtr>> for Outpoint {
+impl<M: SealCloseMethod> TryFrom<BlindSeal<TxPtr, M>> for Outpoint {
     type Error = WitnessVoutError;
 
     #[inline]
-    fn try_from(reveal: BlindSeal<TxPtr>) -> Result<Self, Self::Error> {
+    fn try_from(reveal: BlindSeal<TxPtr, M>) -> Result<Self, Self::Error> {
         Outpoint::try_from(&reveal)
     }
 }
 
-impl From<&BlindSeal<Txid>> for Outpoint {
+impl<M: SealCloseMethod> From<&BlindSeal<Txid, M>> for Outpoint {
     #[inline]
-    fn from(reveal: &BlindSeal<Txid>) -> Self { Outpoint::new(reveal.txid, reveal.vout) }
+    fn from(reveal: &BlindSeal<Txid, M>) -> Self { Outpoint::new(reveal.txid, reveal.vout) }
 }
 
-impl From<BlindSeal<Txid>> for Outpoint {
+impl<M: SealCloseMethod> From<BlindSeal<Txid, M>> for Outpoint {
     #[inline]
-    fn from(reveal: BlindSeal<Txid>) -> Self { Outpoint::from(&reveal) }
+    fn from(reveal: BlindSeal<Txid, M>) -> Self { Outpoint::from(&reveal) }
 }
 
-impl<Id: SealTxid> From<&Outpoint> for BlindSeal<Id> {
+impl<Id: SealTxid, M: SealCloseMethod> TxoSeal<M> for BlindSeal<Id, M> {
     #[inline]
-    fn from(outpoint: &Outpoint) -> Self { BlindSeal::tapret_first(outpoint.txid, outpoint.vout) }
-}
-
-impl<Id: SealTxid> From<Outpoint> for BlindSeal<Id> {
-    #[inline]
-    fn from(outpoint: Outpoint) -> Self { BlindSeal::from(&outpoint) }
-}
-
-impl<Id: SealTxid> From<&ExplicitSeal<Id>> for BlindSeal<Id> {
-    #[inline]
-    fn from(seal: &ExplicitSeal<Id>) -> Self {
-        Self {
-            method: seal.method,
-            blinding: thread_rng().next_u64(),
-            txid: seal.txid,
-            vout: seal.vout,
-        }
-    }
-}
-
-impl<Id: SealTxid> From<ExplicitSeal<Id>> for BlindSeal<Id> {
-    #[inline]
-    fn from(seal: ExplicitSeal<Id>) -> Self { BlindSeal::<Id>::from(&seal) }
-}
-
-impl<Id: SealTxid> Conceal for BlindSeal<Id> {
-    type Concealed = SecretSeal;
-
-    #[inline]
-    fn conceal(&self) -> Self::Concealed { SecretSeal::commit(self) }
-}
-
-impl<Id: SealTxid> TxoSeal for BlindSeal<Id> {
-    #[inline]
-    fn method(&self) -> CloseMethod { self.method }
+    fn method(&self) -> M { self.method }
 
     #[inline]
     fn txid(&self) -> Option<Txid> { self.txid.txid() }
@@ -162,41 +134,43 @@ impl<Id: SealTxid> TxoSeal for BlindSeal<Id> {
     }
 }
 
-impl<Id: SealTxid> BlindSeal<Id> {
-    /// Creates new seal for the provided outpoint and seal closing method. Uses
-    /// `thread_rng` to initialize blinding factor.
-    pub fn new(method: CloseMethod, txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
-        BlindSeal::with_rng(method, txid, vout, &mut thread_rng())
-    }
-
+impl<Id: SealTxid> BlindSeal<Id, CloseMethod> {
     /// Creates new seal using TapretFirst closing method for the provided
     /// outpoint. Uses `thread_rng` to initialize blinding factor.
-    pub fn tapret_first_from(outpoint: Outpoint) -> Self {
-        BlindSeal::tapret_first(outpoint.txid, outpoint.vout)
+    pub fn tapret_first_rand_from(outpoint: Outpoint) -> Self {
+        BlindSeal::tapret_first_rand(outpoint.txid, outpoint.vout)
     }
 
     /// Creates new seal using OpretFirst closing method for the provided
     /// outpoint. Uses `thread_rng` to initialize blinding factor.
-    pub fn opret_first_from(outpoint: Outpoint) -> Self {
-        BlindSeal::opret_first(outpoint.txid, outpoint.vout)
+    pub fn opret_first_rand_from(outpoint: Outpoint) -> Self {
+        BlindSeal::opret_first_rand(outpoint.txid, outpoint.vout)
     }
 
     /// Creates new seal using TapretFirst closing method for the provided
     /// outpoint. Uses `thread_rng` to initialize blinding factor.
-    pub fn tapret_first(txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
+    pub fn tapret_first_rand(txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
         BlindSeal::with_rng(CloseMethod::TapretFirst, txid, vout, &mut thread_rng())
     }
 
     /// Creates new seal using OpretFirst closing method for the provided
     /// outpoint. Uses `thread_rng` to initialize blinding factor.
-    pub fn opret_first(txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
+    pub fn opret_first_rand(txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
         BlindSeal::with_rng(CloseMethod::OpretFirst, txid, vout, &mut thread_rng())
+    }
+}
+
+impl<Id: SealTxid, M: SealCloseMethod> BlindSeal<Id, M> {
+    /// Creates new seal for the provided outpoint and seal closing method. Uses
+    /// `thread_rng` to initialize blinding factor.
+    pub fn new_random(method: M, txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
+        BlindSeal::with_rng(method, txid, vout, &mut thread_rng())
     }
 
     /// Creates new seal for the provided outpoint and seal closing method. Uses
     /// provided random number generator to create a new blinding factor.
     pub fn with_rng(
-        method: CloseMethod,
+        method: M,
         txid: impl Into<Id>,
         vout: impl Into<Vout>,
         rng: &mut impl RngCore,
@@ -213,7 +187,7 @@ impl<Id: SealTxid> BlindSeal<Id> {
     /// of another seal with a given method, witness transaction output number
     /// and previously generated blinding factor value..
     pub fn with_blinding(
-        method: CloseMethod,
+        method: M,
         txid: impl Into<Id>,
         vout: impl Into<Vout>,
         blinding: u64,
@@ -225,18 +199,14 @@ impl<Id: SealTxid> BlindSeal<Id> {
             blinding,
         }
     }
-
-    /// Converts revealed seal into concealed.
-    #[inline]
-    pub fn to_concealed_seal(&self) -> SecretSeal { self.conceal() }
 }
 
-impl BlindSeal<TxPtr> {
+impl<M: SealCloseMethod> BlindSeal<TxPtr, M> {
     /// Creates new seal pointing to a witness transaction of another seal.
     /// Takes seal closing method and witness transaction output number as
     /// arguments. Uses `thread_rng` to initialize blinding factor.
     #[inline]
-    pub fn new_vout(method: CloseMethod, vout: impl Into<Vout>) -> Self {
+    pub fn new_random_vout(method: M, vout: impl Into<Vout>) -> Self {
         Self {
             method,
             blinding: thread_rng().next_u64(),
@@ -248,7 +218,7 @@ impl BlindSeal<TxPtr> {
     /// Reconstructs previously defined seal pointing to a witness transaction
     /// of another seal with a given method, witness transaction output number
     /// and previously generated blinding factor value..
-    pub fn with_vout(method: CloseMethod, vout: impl Into<Vout>, blinding: u64) -> Self {
+    pub fn with_blinded_vout(method: M, vout: impl Into<Vout>, blinding: u64) -> Self {
         BlindSeal {
             method,
             txid: TxPtr::WitnessTx,
@@ -258,16 +228,16 @@ impl BlindSeal<TxPtr> {
     }
 }
 
-impl BlindSeal<Txid> {
+impl<M: SealCloseMethod> BlindSeal<Txid, M> {
     /// Converts `BlindSeal<Txid>` into `BlindSeal<TxPtr>`.
-    pub fn transmutate(self) -> BlindSeal<TxPtr> {
+    pub fn transmutate(self) -> BlindSeal<TxPtr, M> {
         BlindSeal::with_blinding(self.method, self.txid, self.vout, self.blinding)
     }
 }
 
-impl BlindSeal<TxPtr> {
+impl<M: SealCloseMethod> BlindSeal<TxPtr, M> {
     /// Converts `BlindSeal<TxPtr>` into `BlindSeal<Txid>`.
-    pub fn resolve(self, txid: Txid) -> BlindSeal<Txid> {
+    pub fn resolve(self, txid: Txid) -> BlindSeal<Txid, M> {
         BlindSeal::with_blinding(self.method, self.txid().unwrap_or(txid), self.vout, self.blinding)
     }
 }
@@ -311,7 +281,9 @@ pub enum ParseError {
     NonHexBlinding,
 }
 
-impl<Id: SealTxid> FromStr for BlindSeal<Id> {
+impl<Id: SealTxid, M: SealCloseMethod> FromStr for BlindSeal<Id, M>
+where M: FromStr<Err = MethodParseError>
+{
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -335,106 +307,19 @@ impl<Id: SealTxid> FromStr for BlindSeal<Id> {
     }
 }
 
-impl<Id: SealTxid> Display for BlindSeal<Id>
-where Self: TxoSeal
+impl<Id: SealTxid, M: SealCloseMethod> Display for BlindSeal<Id, M>
+where
+    Self: TxoSeal<M>,
+    M: Display,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}:{}:{}#{:#010x}", self.method, self.txid, self.vout, self.blinding)
     }
 }
 
-/// Blind version of transaction outpoint-based single-use-seal
-#[derive(Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, From)]
-#[wrapper(Index, RangeOps, BorrowSlice, Hex)]
-#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = dbc::LIB_NAME_BPCORE)]
-#[derive(CommitEncode)]
-#[commit_encode(strategy = strict)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
-pub struct SecretSeal(
-    #[from]
-    #[from([u8; 32])]
-    Bytes32,
-);
-
-impl ToBaid58<32> for SecretSeal {
-    const HRI: &'static str = "utxob";
-    const CHUNKING: Option<Chunking> = CHUNKING_32CHECKSUM;
-    fn to_baid58_payload(&self) -> [u8; 32] { self.0.into_inner() }
-    fn to_baid58_string(&self) -> String { self.to_string() }
-}
-impl FromBaid58<32> for SecretSeal {}
-impl FromStr for SecretSeal {
-    type Err = Baid58ParseError;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        SecretSeal::from_baid58_maybe_chunked_str(s, ':', ' ')
-    }
-}
-impl Display for SecretSeal {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        if f.alternate() {
-            write!(f, "{::^}", self.to_baid58())
-        } else {
-            write!(f, "{::^.3}", self.to_baid58())
-        }
-    }
-}
-
-impl From<Outpoint> for SecretSeal {
-    #[inline]
-    fn from(outpoint: Outpoint) -> Self { BlindSeal::<Txid>::from(outpoint).conceal() }
-}
-
-impl<Id: SealTxid> CommitVerify<BlindSeal<Id>, TapretFirst> for SecretSeal {
-    fn commit(reveal: &BlindSeal<Id>) -> Self { Bytes32::commit(reveal).into() }
-}
-
 #[cfg(test)]
 mod test {
-    use amplify::hex::FromHex;
-
     use super::*;
-
-    #[test]
-    fn secret_seal_is_sha256d() {
-        let reveal = BlindSeal {
-            method: CloseMethod::TapretFirst,
-            blinding: 54683213134637,
-            txid: TxPtr::Txid(
-                Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839")
-                    .unwrap(),
-            ),
-            vout: Vout::from(2),
-        };
-        assert_eq!(reveal.to_concealed_seal(), reveal.conceal())
-    }
-
-    #[test]
-    fn secret_seal_baid58() {
-        let seal = BlindSeal {
-            method: CloseMethod::TapretFirst,
-            blinding: 54683213134637,
-            txid: TxPtr::Txid(
-                Txid::from_hex("646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839")
-                    .unwrap(),
-            ),
-            vout: Vout::from(2),
-        }
-        .to_concealed_seal();
-
-        let baid58 = "utxob:2eFrirU-RjqLnqR74-AKRfdnc9M-DpvSRjmZG-mFPrw7nvu-Te1wy83";
-        assert_eq!(baid58, seal.to_string());
-        assert_eq!(baid58.replace('-', ""), format!("{seal:#}"));
-        assert_eq!(seal.to_string(), seal.to_baid58_string());
-        let reconstructed = SecretSeal::from_str(baid58).unwrap();
-        assert_eq!(reconstructed, seal);
-        let reconstructed = SecretSeal::from_str(&baid58.replace('-', "")).unwrap();
-        assert_eq!(reconstructed, seal);
-    }
 
     #[test]
     fn blind_seal_str() {
@@ -465,7 +350,7 @@ mod test {
 
         // wrong method
         assert_eq!(
-            ChainBlindSeal::from_str(
+            ChainBlindSeal::<CloseMethod>::from_str(
                 "tapret:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:0x765#\
                  0x78ca95"
             ),
@@ -474,21 +359,21 @@ mod test {
 
         // wrong vout value
         assert_eq!(
-            ChainBlindSeal::from_str(
+            ChainBlindSeal::<CloseMethod>::from_str(
                 "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:0x765#\
                  0x78ca95"
             ),
             Err(ParseError::WrongVout)
         );
         assert_eq!(
-            ChainBlindSeal::from_str(
+            ChainBlindSeal::<CloseMethod>::from_str(
                 "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:i9#\
                  0x78ca95"
             ),
             Err(ParseError::WrongVout)
         );
         assert_eq!(
-            ChainBlindSeal::from_str(
+            ChainBlindSeal::<CloseMethod>::from_str(
                 "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:-5#\
                  0x78ca95"
             ),
@@ -497,27 +382,27 @@ mod test {
 
         // wrong blinding secret value
         assert_eq!(
-            ChainBlindSeal::from_str(
+            ChainBlindSeal::<CloseMethod>::from_str(
                 "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#\
                  0x78cs"
             ),
             Err(ParseError::WrongBlinding)
         );
         assert_eq!(
-            ChainBlindSeal::from_str(
+            ChainBlindSeal::<CloseMethod>::from_str(
                 "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#\
                  78ca95"
             ),
             Err(ParseError::NonHexBlinding)
         );
         assert_eq!(
-            ChainBlindSeal::from_str(
+            ChainBlindSeal::<CloseMethod>::from_str(
                 "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#857"
             ),
             Err(ParseError::NonHexBlinding)
         );
         assert_eq!(
-            ChainBlindSeal::from_str(
+            ChainBlindSeal::<CloseMethod>::from_str(
                 "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#-5"
             ),
             Err(ParseError::NonHexBlinding)
@@ -525,18 +410,18 @@ mod test {
 
         // wrong txid value
         assert_eq!(
-            ChainBlindSeal::from_str(
+            ChainBlindSeal::<CloseMethod>::from_str(
                 "tapret1st:646ca5c1062619e2a2d607719dfd820551fb773e4dc8c4ed67965a8d1fae839:5#\
                  0x78ca69"
             ),
             Err(ParseError::WrongTxid(hex::Error::OddLengthString(63)))
         );
         assert_eq!(
-            ChainBlindSeal::from_str("tapret1st:rvgbdg:5#0x78ca69"),
+            ChainBlindSeal::<CloseMethod>::from_str("tapret1st:rvgbdg:5#0x78ca69"),
             Err(ParseError::WrongTxid(hex::Error::InvalidChar(b'r')))
         );
         assert_eq!(
-            ChainBlindSeal::from_str(
+            ChainBlindSeal::<CloseMethod>::from_str(
                 "tapret1st:10@646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#\
                  0x78ca69"
             ),
@@ -545,42 +430,48 @@ mod test {
 
         // wrong structure
         assert_eq!(
-            ChainBlindSeal::from_str(
+            ChainBlindSeal::<CloseMethod>::from_str(
                 "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:1"
             ),
             Err(ParseError::WrongStructure)
         );
         assert_eq!(
-            ChainBlindSeal::from_str(
+            ChainBlindSeal::<CloseMethod>::from_str(
                 "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839#0x78ca"
             ),
             Err(ParseError::WrongStructure)
         );
         assert_eq!(
-            ChainBlindSeal::from_str(
+            ChainBlindSeal::<CloseMethod>::from_str(
                 "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839"
             ),
             Err(ParseError::BlindingRequired)
         );
         assert_eq!(
-            ChainBlindSeal::from_str(
+            ChainBlindSeal::<CloseMethod>::from_str(
                 "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839##\
                  0x78ca"
             ),
             Err(ParseError::WrongVout)
         );
         assert_eq!(
-            ChainBlindSeal::from_str(
+            ChainBlindSeal::<CloseMethod>::from_str(
                 "tapret1st:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:#\
                  0x78ca95"
             ),
             Err(ParseError::WrongVout)
         );
         assert_eq!(
-            ChainBlindSeal::from_str("tapret1st:_:5#0x78ca"),
+            ChainBlindSeal::<CloseMethod>::from_str("tapret1st:_:5#0x78ca"),
             Err(ParseError::WrongTxid(hex::Error::OddLengthString(1)))
         );
-        assert_eq!(ChainBlindSeal::from_str(":5#0x78ca"), Err(ParseError::MethodRequired));
-        assert_eq!(ChainBlindSeal::from_str("~:5#0x78ca"), Err(ParseError::MethodRequired));
+        assert_eq!(
+            ChainBlindSeal::<CloseMethod>::from_str(":5#0x78ca"),
+            Err(ParseError::MethodRequired)
+        );
+        assert_eq!(
+            ChainBlindSeal::<CloseMethod>::from_str("~:5#0x78ca"),
+            Err(ParseError::MethodRequired)
+        );
     }
 }

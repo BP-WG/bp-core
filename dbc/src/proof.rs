@@ -29,6 +29,19 @@ use strict_encoding::{StrictDecode, StrictDeserialize, StrictDumb, StrictEncode,
 
 use crate::LIB_NAME_BPCORE;
 
+/// Trait defining DBC method - or enumberation of allowed DBC methods used by
+/// proofs, single-use-seals etc.
+pub trait DbcMethod:
+    Copy
+    + Eq
+    + Ord
+    + std::hash::Hash
+    + strict_encoding::StrictDumb
+    + strict_encoding::StrictEncode
+    + strict_encoding::StrictDecode
+{
+}
+
 /// wrong deterministic bitcoin commitment closing method id '{0}'.
 #[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]
 #[display(doc_comments)]
@@ -57,6 +70,8 @@ pub enum Method {
     TapretFirst = 0x01,
 }
 
+impl DbcMethod for Method {}
+
 impl FromStr for Method {
     type Err = MethodParseError;
 
@@ -70,14 +85,14 @@ impl FromStr for Method {
 }
 
 /// Deterministic bitcoin commitment proof types.
-pub trait Proof:
+pub trait Proof<M: DbcMethod = Method>:
     Clone + Eq + Debug + CommitEncode + StrictSerialize + StrictDeserialize + StrictDumb
 {
     /// Verification error.
     type Error: Error;
 
     /// Returns DBC method used by the proof.
-    const METHOD: Method;
+    const METHOD: M;
 
     /// Verifies DBC proof against the provided transaction.
     fn verify(&self, msg: &mpc::Commitment, tx: &Tx) -> Result<(), Self::Error>;

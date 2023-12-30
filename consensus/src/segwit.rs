@@ -394,9 +394,7 @@ impl Witness {
     }
 
     pub fn from_consensus_stack(witness: impl IntoIterator<Item = Vec<u8>>) -> Witness {
-        let iter = witness.into_iter().map(|vec| {
-            ByteStr::try_from(vec).expect("witness stack element length exceeds 2^32 bytes")
-        });
+        let iter = witness.into_iter().map(ByteStr::from);
         let stack =
             VarIntArray::try_from_iter(iter).expect("witness stack size exceeds 2^32 elements");
         Witness(stack)
