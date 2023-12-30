@@ -146,8 +146,7 @@ mod _serde {
                 })
             } else {
                 let bytes = Vec::<u8>::deserialize(deserializer)?;
-                Self::try_from(bytes)
-                    .map_err(|_| D::Error::custom("invalid script length exceeding 4GB"))
+                Ok(Self::from(bytes))
             }
         }
     }
