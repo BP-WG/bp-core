@@ -50,7 +50,6 @@ pub extern crate seals;
 #[cfg(feature = "stl")]
 #[macro_use]
 extern crate amplify;
-#[cfg(feature = "stl")]
 #[macro_use]
 extern crate strict_encoding;
 #[cfg(feature = "serde")]
