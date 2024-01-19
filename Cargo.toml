@@ -79,5 +79,13 @@ serde = [
 ]
 stl = ["strict_types", "strict_types/base64", "bp-consensus/stl", "commit_verify/stl"]
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+rand = { version = "0.8.4", optional = true }
+getrandom = { version = "0.2", features = ["js"] }
+
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+wasm-bindgen-test = "0.3"
+
 [package.metadata.docs.rs]
 features = [ "all" ]
