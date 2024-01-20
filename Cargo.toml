@@ -30,7 +30,7 @@ single_use_seals = "0.11.0-beta.3"
 bp-consensus = { version = "0.11.0-beta.3", path = "consensus" }
 bp-dbc = { version = "0.11.0-beta.3", path = "./dbc" }
 bp-seals = { version = "0.11.0-beta.3", path = "./seals" }
-secp256k1 = { version = "0.28.0", features = ["global-context"] }
+secp256k1 = { version = ">=0.28.1", features = ["global-context"] }
 serde_crate = { package = "serde", version = "1", features = ["derive"] }
 
 [package]
@@ -78,6 +78,14 @@ serde = [
     "bp-seals/serde",
 ]
 stl = ["strict_types", "strict_types/base64", "bp-consensus/stl", "commit_verify/stl"]
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+rand = { version = "0.8.4", optional = true }
+getrandom = { version = "0.2", features = ["js"] }
+
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+wasm-bindgen-test = "0.3"
 
 [package.metadata.docs.rs]
 features = [ "all" ]
