@@ -41,7 +41,6 @@ extern crate amplify;
 // TODO: Make strict encoding optional dependency
 #[macro_use]
 extern crate strict_encoding;
-#[macro_use]
 extern crate commit_verify;
 #[cfg(feature = "serde")]
 #[macro_use]

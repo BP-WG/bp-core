@@ -25,8 +25,10 @@ use std::str::FromStr;
 
 use amplify::confinement::Confined;
 use bc::{TapCode, TapScript};
-use commit_verify::{mpc, CommitEncode, CommitVerify};
-use strict_encoding::{DecodeError, DeserializeError, StrictDeserialize, StrictSerialize};
+use commit_verify::{mpc, CommitVerify};
+use strict_encoding::{
+    DecodeError, DeserializeError, StrictDeserialize, StrictEncode, StrictSerialize,
+};
 
 use super::TapretFirst;
 use crate::LIB_NAME_BPCORE;
@@ -42,7 +44,6 @@ pub const TAPRET_SCRIPT_COMMITMENT_PREFIX: [u8; 31] = [
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BPCORE)]
-#[derive(CommitEncode)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -110,7 +111,10 @@ impl CommitVerify<TapretCommitment, TapretFirst> for TapScript {
         }
         tapret.push_opcode(TapCode::Return);
         let mut data = io::Cursor::new([0u8; 33]);
-        commitment.commit_encode(&mut data);
+        commitment
+            .strict_write(33, &mut data)
+            .expect("tapret commitment must be fitting 33 bytes");
+        debug_assert_eq!(data.position(), 33, "tapret commitment must take exactly 33 bytes");
         tapret.push_slice(&data.into_inner());
         tapret
     }

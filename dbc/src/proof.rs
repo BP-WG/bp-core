@@ -24,7 +24,7 @@ use std::fmt::Debug;
 use std::str::FromStr;
 
 use bc::Tx;
-use commit_verify::{mpc, CommitEncode};
+use commit_verify::mpc;
 use strict_encoding::{StrictDecode, StrictDeserialize, StrictDumb, StrictEncode, StrictSerialize};
 
 use crate::LIB_NAME_BPCORE;
@@ -86,7 +86,7 @@ impl FromStr for Method {
 
 /// Deterministic bitcoin commitment proof types.
 pub trait Proof<M: DbcMethod = Method>:
-    Clone + Eq + Debug + CommitEncode + StrictSerialize + StrictDeserialize + StrictDumb
+    Clone + Eq + Debug + StrictSerialize + StrictDeserialize + StrictDumb
 {
     /// Verification error.
     type Error: Error;

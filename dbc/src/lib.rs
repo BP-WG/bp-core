@@ -46,7 +46,6 @@ extern crate amplify;
 extern crate serde_crate as serde;
 #[macro_use]
 extern crate strict_encoding;
-#[macro_use]
 extern crate commit_verify;
 
 /// Name of the strict type library generated from the data types in this crate.
