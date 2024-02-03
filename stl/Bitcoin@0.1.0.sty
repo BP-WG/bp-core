@@ -1,5 +1,5 @@
 {-
-  Id: urn:ubideco:stl:H6wk6SV9j8Up16osC9q3AsQkkA41i7E2qodEfUf5JRPz#mustang-europe-melon
+  Id: urn:ubideco:stl:5sEWBARVLN53k9Q4vf8JLPgSxcfUgrxfYYWF8B42vL2q#gamma-quebec-talent
   Name: Bitcoin
   Version: 0.1.0
   Description: Consensus library for bitcoin protocol
@@ -8,157 +8,210 @@
   License: Apache-2.0
 -}
 
+@context
 typelib Bitcoin
 
-import urn:ubideco:stl:9KALDYR8Nyjq4FdMW6kYoL7vdkWnqPqNuFnmE9qHpNjZ#justice-rocket-type as Std
--- Imports:
--- Bool := urn:ubideco:semid:7ZhBHGSJm9ixmm8Z9vCX7i5Ga7j5xrW8t11nsb1Cgpnx#laser-madam-maxwell
+import Std#55f8bsTvyh7zAeYAiNwL9G1DxgwXzDvE8edcTFJz3Q9H#milan-poncho-gray
+  use Bool#laser-madam-maxwell
 
 
+@mnemonic(politic-cactus-salon)
+data Bip340Sig         : sig [Byte ^ 64], sighash_type SighashType?
 
--- urn:ubideco:semid:8NDnad1DezNcQSjq85QMxnDhsBbLwxLCFUfMHEJpnFnH#politic-cactus-salon
-data Bip340Sig        :: sig [Byte ^ 64], sighash_type SighashType?
--- urn:ubideco:semid:FWCcWgBQCGQw8FX5Z4P3etje6e92qWpVPgXBonNrTM7C#canada-sharp-traffic
-data BlockHash        :: [Byte ^ 32]
--- urn:ubideco:semid:HHzmwexZQY4G1YKWB6mWwk7rJW8KKb1CaeuRw8xHV1tm#rose-apropos-join
-data BlockHeader      :: version I32
+@mnemonic(canada-sharp-traffic)
+data BlockHash         : [Byte ^ 32]
+
+@mnemonic(rose-apropos-join)
+data BlockHeader       : version I32
                        , prevBlockHash BlockHash
                        , merkleRoot [Byte ^ 32]
                        , time U32
                        , bits U32
                        , nonce U32
--- urn:ubideco:semid:EDr6wurh4X1tMNGqA7mRkyrAY6ngPGyRSEufTGSUtySJ#kinetic-avenue-escort
-data ByteStr          :: [Byte ^ ..0xffffffff]
--- urn:ubideco:semid:EoHBsHBYQiRvuKFEJvqwp8FiBPrpoFhkhQ9peLsFxrai#aspect-citrus-nerve
-data CompressedPk     :: [Byte ^ 33]
--- urn:ubideco:semid:BPzqzv3DN65MTwzbTXJbHFyiKeYvmX1VExcqvk5FUb5c#nuclear-coral-gilbert
-data ControlBlock     :: leafVersion LeafVer
+
+@mnemonic(kinetic-avenue-escort)
+data ByteStr           : [Byte ^ ..0xffffffff]
+
+@mnemonic(aspect-citrus-nerve)
+data CompressedPk      : [Byte ^ 33]
+
+@mnemonic(nuclear-coral-gilbert)
+data ControlBlock      : leafVersion LeafVer
                        , outputKeyParity Parity
                        , internalPk InternalPk
                        , merkleBranch TapMerklePath
--- urn:ubideco:semid:CvDS9EgqtBkWLvADynNeR7VGwVAy14EXViKnLaBkqtac#student-formula-circus
-data FutureLeafVer    :: U8
--- urn:ubideco:semid:G8TPMhnwckPwtSQ9dBzFXESZ2aBCXmH62iDBR9ffsek8#anita-tactic-bikini
-data InternalPk       :: XOnlyPk
--- urn:ubideco:semid:Birr99aCTGqzwnuBou79KNhyLLBTNQvoTAkTbMu7C4y5#anvil-arctic-cloud
-data LeafScript       :: version LeafVer, script ScriptBytes
--- urn:ubideco:semid:DGELfUvcU62GNQRo7HaMbKDzYQwdYRMW3b91JHd4d3WY#tunnel-lagoon-cowboy
-data LeafVer          :: U8
--- urn:ubideco:semid:6oujgsJXTqoBmeQThDPW8cJuEG2SJJmbX9BRqsp9zS2L#student-avenue-economy
-data LegacyPk         :: compressed Std.Bool {- urn:ubideco:semid:7ZhBHGSJm9ixmm8Z9vCX7i5Ga7j5xrW8t11nsb1Cgpnx#laser-madam-maxwell -}, pubkey [Byte ^ 33]
--- urn:ubideco:semid:89ux18kFuT9nT6LEWnvkpFBiWR9GJwBYVVBqFUPvrTuj#gondola-middle-style
-data LegacySig        :: sig [Byte ^ ..0xff], sighash_type SighashType
--- urn:ubideco:semid:Gm9B1aVGcLG8MQ27bZrVg4mteg1AuKoFn1aFNkZ72Y2Y#greek-support-hawaii
-data LockHeight       :: U32
--- urn:ubideco:semid:4dDWWU4afiPN3q4AgCMuFRFhL4UDta2u5SrqrBzPvjby#tokyo-inch-program
-data LockTime         :: U32
--- urn:ubideco:semid:8h25q8Va3Sx3csGvq4reMPqG7w4QrEowpYxdMAwaErmF#compass-protein-barcode
-data LockTimestamp    :: U32
--- urn:ubideco:semid:9G21BTSC1kjkfh3hirjQvRcRkC6fwL5VtcUUobGAT9bu#bless-hippie-shirt
-data OpCode           :: pushBytes0:0 | pushBytes1:1 | pushBytes2:2 | pushBytes3:3
-                       | pushBytes4:4 | pushBytes5:5 | pushBytes6:6 | pushBytes7:7
-                       | pushBytes8:8 | pushBytes9:9 | pushBytes10:10 | pushBytes11:11
-                       | pushBytes12:12 | pushBytes13:13 | pushBytes14:14 | pushBytes15:15
-                       | pushBytes16:16 | pushBytes17:17 | pushBytes18:18 | pushBytes19:19
-                       | pushBytes20:20 | pushBytes21:21 | pushBytes22:22 | pushBytes23:23
-                       | pushBytes24:24 | pushBytes25:25 | pushBytes26:26 | pushBytes27:27
-                       | pushBytes28:28 | pushBytes29:29 | pushBytes30:30 | pushBytes31:31
-                       | pushBytes32:32 | pushData1:76 | pushData2:77 | pushData4:78
-                       | reserved:80 | pushNum1:81 | return:106 | dup:118
-                       | equal:135 | equalVerify:136 | ripemd160:166 | sha1:167
-                       | sha256:168 | hash160:169 | hash256:170 | checkSig:172
-                       | checkSigVerify:173
 
--- urn:ubideco:semid:FWt2MSo8A4nsYgYbuBqMRNLiKgtzvLBgUn774iKzTcuf#pocket-pegasus-frank
-data Outpoint         :: txid Txid, vout Vout
--- urn:ubideco:semid:6ZEyjfF96enVZgwNdLkdjfqmAeMW5y939Fkf8VyDAaFZ#beach-twist-hotel
-data OutputPk         :: XOnlyPk
--- urn:ubideco:semid:AgJ5n58hrH761B4MV7giZ1FhMipaDrUmnFYCLno74HDy#method-editor-echo
-data Parity           :: even:0 | odd:1
+@mnemonic(student-formula-circus)
+data FutureLeafVer     : U8
 
--- urn:ubideco:semid:ENHnWLRrbiPSgpSZMuQ1LaEwQeRjUMmB1bZstaT3F3hm#soviet-senator-wisdom
-data PubkeyHash       :: [Byte ^ 20]
--- urn:ubideco:semid:85m9Qv56neQKaqiPSZ8G8NPWz5DDeJeeXhBwnUpcZGug#delta-jumbo-clone
-data RedeemScript     :: ScriptBytes
--- urn:ubideco:semid:BEBz6h7AGjYSDRCxVHnjYkkkxzBsjN3EvyNiD4ZrzmRL#pyramid-spray-star
-data Sats             :: U64
--- urn:ubideco:semid:3Y4AgjkFbDusgo3YqRDWv9BznDeAJEUDEPeEq1mpSkAR#maestro-source-jackson
-data ScriptBytes      :: [Byte ^ ..0xffffffff]
--- urn:ubideco:semid:7ExpFpLww6B4ADMMLsw5NtUfRzgJMupAFgYfme5yYMMr#samuel-miami-cave
-data ScriptHash       :: [Byte ^ 20]
--- urn:ubideco:semid:2ZAYpWKB2BQxeXXjpQDpYGZ7eXFM9qQxN9TcdTiQqeB8#bingo-maestro-silk
-data ScriptPubkey     :: ScriptBytes
--- urn:ubideco:semid:5HtymNhYBhjqPkLLw9QVWZ62cLm57cZxgQTDUBBXtmL#rhino-time-rodent
-data SeqNo            :: U32
--- urn:ubideco:semid:2gTMqAC393rBSGtBhDn8sJq3F3HtDosbqKDQTw9bHFyT#prelude-analyze-think
-data SigScript        :: ScriptBytes
--- urn:ubideco:semid:JBNAWau3wDWa66fxnSyRJLkcUXSovZLxQJxERoUMNCbD#prefix-pioneer-remark
-data SighashFlag      :: all:1 | none:2 | single:3
+@mnemonic(anita-tactic-bikini)
+data InternalPk        : XOnlyPk
 
--- urn:ubideco:semid:6mjKj9hdk5HzS8XR6SwsyAvzzaEfXmuXqmLuWq2EfayQ#balsa-equator-ground
-data SighashType      :: flag SighashFlag, anyoneCanPay Std.Bool {- urn:ubideco:semid:7ZhBHGSJm9ixmm8Z9vCX7i5Ga7j5xrW8t11nsb1Cgpnx#laser-madam-maxwell -}
--- urn:ubideco:semid:CqisAtFLQku77z3HbB1rBe9EjuctxLqcojV8p4THe3Uj#europe-welcome-phone
-data TapBranchHash    :: [Byte ^ 32]
--- urn:ubideco:semid:5WjBwSuKQwoTq6eXRtXwFrAmcPP1vLpBJ94AWpUgEsPe#weekend-boris-import
-data TapCode          :: pushBytes32:32 | pushData1:76 | pushData2:77 | pushData4:78
-                       | reserved:80 | return:106
+@mnemonic(anvil-arctic-cloud)
+data LeafScript        : version LeafVer, script ScriptBytes
 
--- urn:ubideco:semid:FHWiTycy1JvN5CvVJ3ibyAhtXfr21t3BDNuLFnqYPQ2j#middle-jazz-basket
-data TapLeafHash      :: [Byte ^ 32]
--- urn:ubideco:semid:2Cy61crHEVHKfCSix5WhmS9ms6J4FFE9wCC6pLsyondh#dublin-chemist-version
-data TapMerklePath    :: [TapBranchHash ^ ..0x80]
--- urn:ubideco:semid:4M8xyvABKKKJseN6Pme5eKrAuusMNMXoY5s6ifsEcreC#crash-culture-jamaica
-data TapNodeHash      :: [Byte ^ 32]
--- urn:ubideco:semid:71AxyLFsoRG6hJ1c11gxad65nEbWfzkQBjWCPPrgCyjX#telecom-quest-helium
-data TapScript        :: ScriptBytes
--- urn:ubideco:semid:EjaLfxk1qE5LgYWBnrg1tcYHAcmMnCXd2S1S3szJw666#texas-tommy-geneva
-data TimeLockInterval :: height U16
+@mnemonic(tunnel-lagoon-cowboy)
+data LeafVer           : U8
+
+@mnemonic(student-avenue-economy)
+data LegacyPk          : compressed Std.Bool#laser-madam-maxwell, pubkey [Byte ^ 33]
+
+@mnemonic(gondola-middle-style)
+data LegacySig         : sig [Byte ^ ..0xff], sighash_type SighashType
+
+@mnemonic(greek-support-hawaii)
+data LockHeight        : U32
+
+@mnemonic(tokyo-inch-program)
+data LockTime          : U32
+
+@mnemonic(compass-protein-barcode)
+data LockTimestamp     : U32
+
+@mnemonic(bless-hippie-shirt)
+data OpCode            : pushBytes0 | pushBytes1 | pushBytes2 | pushBytes3
+                       | pushBytes4 | pushBytes5 | pushBytes6 | pushBytes7
+                       | pushBytes8 | pushBytes9 | pushBytes10 | pushBytes11
+                       | pushBytes12 | pushBytes13 | pushBytes14 | pushBytes15
+                       | pushBytes16 | pushBytes17 | pushBytes18 | pushBytes19
+                       | pushBytes20 | pushBytes21 | pushBytes22 | pushBytes23
+                       | pushBytes24 | pushBytes25 | pushBytes26 | pushBytes27
+                       | pushBytes28 | pushBytes29 | pushBytes30 | pushBytes31
+                       | pushBytes32 | pushData1#76 | pushData2 | pushData4
+                       | reserved#80 | pushNum1 | return#106 | dup#118
+                       | equal#135 | equalVerify | ripemd160#166 | sha1
+                       | sha256 | hash160 | hash256 | checkSig#172
+                       | checkSigVerify
+
+
+@mnemonic(pocket-pegasus-frank)
+data Outpoint          : txid Txid, vout Vout
+
+@mnemonic(beach-twist-hotel)
+data OutputPk          : XOnlyPk
+
+@mnemonic(method-editor-echo)
+data Parity            : even | odd
+
+
+@mnemonic(soviet-senator-wisdom)
+data PubkeyHash        : [Byte ^ 20]
+
+@mnemonic(delta-jumbo-clone)
+data RedeemScript      : ScriptBytes
+
+@mnemonic(pyramid-spray-star)
+data Sats              : U64
+
+@mnemonic(maestro-source-jackson)
+data ScriptBytes       : [Byte ^ ..0xffffffff]
+
+@mnemonic(samuel-miami-cave)
+data ScriptHash        : [Byte ^ 20]
+
+@mnemonic(bingo-maestro-silk)
+data ScriptPubkey      : ScriptBytes
+
+@mnemonic(rhino-time-rodent)
+data SeqNo             : U32
+
+@mnemonic(prelude-analyze-think)
+data SigScript         : ScriptBytes
+
+@mnemonic(prefix-pioneer-remark)
+data SighashFlag       : all#1 | none | single
+
+
+@mnemonic(balsa-equator-ground)
+data SighashType       : flag SighashFlag, anyoneCanPay Std.Bool#laser-madam-maxwell
+
+@mnemonic(europe-welcome-phone)
+data TapBranchHash     : [Byte ^ 32]
+
+@mnemonic(weekend-boris-import)
+data TapCode           : pushBytes32#32 | pushData1#76 | pushData2 | pushData4
+                       | reserved#80 | return#106
+
+
+@mnemonic(middle-jazz-basket)
+data TapLeafHash       : [Byte ^ 32]
+
+@mnemonic(dublin-chemist-version)
+data TapMerklePath     : [TapBranchHash ^ ..0x80]
+
+@mnemonic(crash-culture-jamaica)
+data TapNodeHash       : [Byte ^ 32]
+
+@mnemonic(telecom-quest-helium)
+data TapScript         : ScriptBytes
+
+@mnemonic(texas-tommy-geneva)
+data TimeLockInterval  : height U16
                        | time U16
--- urn:ubideco:semid:DynChojW1sfr8VjSoZbmReHhZoU8u9KCiuwijgEGdToe#milk-gloria-prize
-data Tx               :: version TxVer
+
+@mnemonic(milk-gloria-prize)
+data Tx                : version TxVer
                        , inputs [TxIn ^ ..0xffffffff]
                        , outputs [TxOut ^ ..0xffffffff]
                        , lockTime LockTime
--- urn:ubideco:semid:9Nf4Vvt3im8tFQSGzPWKfjfhsrkB8bf2XsLWfzywiFSv#antenna-crater-planet
-data TxIn             :: prevOutput Outpoint
+
+@mnemonic(antenna-crater-planet)
+data TxIn              : prevOutput Outpoint
                        , sigScript SigScript
                        , sequence SeqNo
                        , witness Witness
--- urn:ubideco:semid:HutVbeKmYYrNun96Pi4T7YfYww7SeWxRFPZGDiZwoGZV#design-jacket-spirit
-data TxOut            :: value Sats, scriptPubkey ScriptPubkey
--- urn:ubideco:semid:CLhr1zatQBSkCz9SiVrNoKB5igCZfF3hqRizfrviM6NR#english-natasha-virus
-data TxVer            :: I32
--- urn:ubideco:semid:C1GfCrG7AXu2sFhRBspd7KpJK2YgyTkVy6pty5rZynRs#cowboy-diego-betty
-data Txid             :: [Byte ^ 32]
--- urn:ubideco:semid:CWjhoHVM4EyLcLJthK7fhePqmUpVctdhjdabggJFkig1#yellow-jaguar-pastel
-data UncompressedPk   :: [Byte ^ 65]
--- urn:ubideco:semid:8ALgmuRBL8YRNWmcFoPdBFCsZwCvDjupXgdq9DjFVnkV#waiter-salad-casino
-data VBytes           :: U32
--- urn:ubideco:semid:AZqcQMyFBmixEkiDtAqGxB4nM8i9hmxV3mk4vUgNAkWT#conan-avalon-food
-data VarInt           :: U64
--- urn:ubideco:semid:3HHRtSJW5fnGkdVW1EVDH7B97Y79WhwvKyyfsaBkuQkk#chrome-robin-gallop
-data Vout             :: U32
--- urn:ubideco:semid:FyeKxsZ9bQaZG8PDMFjvLxfFTmA2SqUc8TTbS4Wh4daR#plasma-august-marion
-data WPubkeyHash      :: [Byte ^ 20]
--- urn:ubideco:semid:4QBBHmPiEoFttFq6Tghc1QWDZUqLYnsNiE8gbsFK5hoU#vibrate-charm-spain
-data WScriptHash      :: [Byte ^ 32]
--- urn:ubideco:semid:EcY6NU6BVRVkgCFwfWmSkbVKpLmWWVfDwBRRiSr6FJUC#bridge-version-voyage
-data WeightUnits      :: U32
--- urn:ubideco:semid:Gg9XBkAqDafziCYdzoJYMrjP6ziSxQckFaEBmbPLLgPD#sonata-local-slow
-data Witness          :: [ByteStr ^ ..0xffffffff]
--- urn:ubideco:semid:FK7h8D8X6BTAuh8q4NdkdAGgF9vwAZRyYcUpFzR3fcDG#scholar-juice-titanic
-data WitnessProgram   :: version WitnessVer, program [Byte ^ 2..0x28]
--- urn:ubideco:semid:Bd2bXQc2D6YmMFpupKnFGvjBiZNcGKrhaxS9omUUedcS#boris-harbor-equal
-data WitnessScript    :: ScriptBytes
--- urn:ubideco:semid:F8Tgd8G4vQdBtiF8nnC46tANuaBcp9jnkaSeYxjREwEU#richard-average-unit
-data WitnessVer       :: v0:0 | v1:81 | v2:82 | v3:83
-                       | v4:84 | v5:85 | v6:86 | v7:87
-                       | v8:88 | v9:89 | v10:90 | v11:91
-                       | v12:92 | v13:93 | v14:94 | v15:95
-                       | v16:96
 
--- urn:ubideco:semid:HZbMnxQ1p2duNgYuYrQn9xtHBwSom63zWtRwy6pmBGfU#sushi-polygon-circus
-data Wtxid            :: [Byte ^ 32]
--- urn:ubideco:semid:J1BbH2Lx8P3yw9G244d92MMTP5jrkiaVzsr6FzRxpfur#evident-finance-promo
-data XOnlyPk          :: [Byte ^ 32]
+@mnemonic(design-jacket-spirit)
+data TxOut             : value Sats, scriptPubkey ScriptPubkey
+
+@mnemonic(english-natasha-virus)
+data TxVer             : I32
+
+@mnemonic(cowboy-diego-betty)
+data Txid              : [Byte ^ 32]
+
+@mnemonic(yellow-jaguar-pastel)
+data UncompressedPk    : [Byte ^ 65]
+
+@mnemonic(waiter-salad-casino)
+data VBytes            : U32
+
+@mnemonic(conan-avalon-food)
+data VarInt            : U64
+
+@mnemonic(chrome-robin-gallop)
+data Vout              : U32
+
+@mnemonic(plasma-august-marion)
+data WPubkeyHash       : [Byte ^ 20]
+
+@mnemonic(vibrate-charm-spain)
+data WScriptHash       : [Byte ^ 32]
+
+@mnemonic(bridge-version-voyage)
+data WeightUnits       : U32
+
+@mnemonic(sonata-local-slow)
+data Witness           : [ByteStr ^ ..0xffffffff]
+
+@mnemonic(scholar-juice-titanic)
+data WitnessProgram    : version WitnessVer, program [Byte ^ 2..0x28]
+
+@mnemonic(boris-harbor-equal)
+data WitnessScript     : ScriptBytes
+
+@mnemonic(richard-average-unit)
+data WitnessVer        : v0 | v1#81 | v2 | v3
+                       | v4 | v5 | v6 | v7
+                       | v8 | v9 | v10 | v11
+                       | v12 | v13 | v14 | v15
+                       | v16
+
+
+@mnemonic(sushi-polygon-circus)
+data Wtxid             : [Byte ^ 32]
+
+@mnemonic(evident-finance-promo)
+data XOnlyPk           : [Byte ^ 32]
+
 
