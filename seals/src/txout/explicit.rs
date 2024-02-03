@@ -132,6 +132,12 @@ impl<Id: SealTxid, M: SealCloseMethod> ExplicitSeal<Id, M> {
     }
 }
 
+impl<M: SealCloseMethod> ExplicitSeal<Txid, M> {
+    /// Converts seal into a transaction outpoint.
+    #[inline]
+    pub fn to_outpoint(&self) -> Outpoint { Outpoint::new(self.txid, self.vout) }
+}
+
 /// Errors happening during parsing string representation of different forms of
 /// single-use-seals
 #[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]

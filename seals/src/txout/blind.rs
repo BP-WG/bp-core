@@ -233,6 +233,10 @@ impl<M: SealCloseMethod> BlindSeal<Txid, M> {
     pub fn transmutate(self) -> BlindSeal<TxPtr, M> {
         BlindSeal::with_blinding(self.method, self.txid, self.vout, self.blinding)
     }
+
+    /// Converts seal into a transaction outpoint.
+    #[inline]
+    pub fn to_outpoint(&self) -> Outpoint { Outpoint::new(self.txid, self.vout) }
 }
 
 impl<M: SealCloseMethod> BlindSeal<TxPtr, M> {
