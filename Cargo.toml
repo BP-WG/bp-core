@@ -17,7 +17,7 @@ version = "0.11.0-beta.3"
 authors = ["Dr Maxim Orlovsky <orlovsky@lnp-bp.org>"]
 homepage = "https://github.com/BP-WG"
 repository = "https://github.com/BP-WG/bp-core"
-rust-version = "1.67" # Due to strict encoding library
+rust-version = "1.69" # Due to TOML in amplify crate
 edition = "2021"
 license = "Apache-2.0"
 

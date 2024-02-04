@@ -265,7 +265,7 @@ dependencies = [
 [[package]]
 name = "commit_encoding_derive"
 version = "0.11.0-beta.3"
-source = "git+https://github.com/LNP-BP/client_side_validation?branch=v0.11#ca6866221b9cdcd9d68297753cf75af57aa7ef86"
+source = "git+https://github.com/LNP-BP/client_side_validation?branch=v0.11#4dcaae2c36c4cc7691021e02bb9e29f4e9de6d50"
 dependencies = [
  "amplify",
  "amplify_syn",
@@ -277,7 +277,7 @@ dependencies = [
 [[package]]
 name = "commit_verify"
 version = "0.11.0-beta.3"
-source = "git+https://github.com/LNP-BP/client_side_validation?branch=v0.11#ca6866221b9cdcd9d68297753cf75af57aa7ef86"
+source = "git+https://github.com/LNP-BP/client_side_validation?branch=v0.11#4dcaae2c36c4cc7691021e02bb9e29f4e9de6d50"
 dependencies = [
  "amplify",
  "commit_encoding_derive",
@@ -679,8 +679,8 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding"
-version = "2.6.2"
-source = "git+https://github.com/strict-types/strict-encoding?branch=ident#9c20b327178b449cbb24a18c7db65edeb50a9d5b"
+version = "2.7.0"
+source = "git+https://github.com/strict-types/strict-encoding#c5c120b74d52fcc6a2e1ac66211741be4e470740"
 dependencies = [
  "amplify",
  "half",
@@ -689,8 +689,8 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding_derive"
-version = "2.0.1"
-source = "git+https://github.com/strict-types/strict-encoding?branch=ident#9c20b327178b449cbb24a18c7db65edeb50a9d5b"
+version = "2.7.0"
+source = "git+https://github.com/strict-types/strict-encoding#c5c120b74d52fcc6a2e1ac66211741be4e470740"
 dependencies = [
  "amplify_syn",
  "heck",
@@ -701,8 +701,8 @@ dependencies = [
 
 [[package]]
 name = "strict_types"
-version = "1.6.3"
-source = "git+https://github.com/strict-types/strict-types?branch=vesper#b424b47eff526088417eccf85441211db4f953a1"
+version = "2.7.0"
+source = "git+https://github.com/strict-types/strict-types#907c02c2b39675b57a127c31caabeb656017b35e"
 dependencies = [
  "amplify",
  "baid58",
