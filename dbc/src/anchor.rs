@@ -82,6 +82,19 @@ pub struct Anchor<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod = M
     pub _method: PhantomData<M>,
 }
 
+impl<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod> Anchor<L, D, M> {
+    /// Constructs anchor for a given witness transaction id, MPC and DBC
+    /// proofs.
+    pub fn new(witness_txid: Txid, mpc_proof: L, dbc_proof: D) -> Self {
+        Self {
+            txid: witness_txid,
+            mpc_proof,
+            dbc_proof,
+            _method: PhantomData::default(),
+        }
+    }
+}
+
 /// Error merging two [`Anchor`]s.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
 #[display(doc_comments)]
