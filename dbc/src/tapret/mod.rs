@@ -97,7 +97,7 @@ pub enum TapretPathError {
     InvalidNodePartner(TapretNodePartner),
 }
 
-/// Rigt-side hashing partner in the taproot script tree, used by
+/// Right-side hashing partner in the taproot script tree, used by
 /// [`TapretNodePartner::RightBranch`] to ensure correct consensus ordering of
 /// the child elements.
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
@@ -189,7 +189,7 @@ pub enum TapretNodePartner {
     /// Multiple script spending paths were present; or a single script
     /// spending path should be hidden from revealing the script in the proof.
     ///
-    /// To prove that the 1-nd level branch is not a script leafs containing
+    /// To prove that the 1-st level branch is not a script leafs containing
     /// an alternative OP_RETURN commitment we have to reveal the presence of
     /// two level 2 structures underneath.
     RightBranch(TapretRightBranch),
