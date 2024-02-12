@@ -20,14 +20,13 @@
 // limitations under the License.
 
 use std::fmt::{self, Display, Formatter};
-use std::io;
 use std::str::FromStr;
 
 use amplify::confinement::Confined;
 use bc::{TapCode, TapScript};
 use commit_verify::{mpc, CommitVerify};
 use strict_encoding::{
-    DecodeError, DeserializeError, StrictDeserialize, StrictEncode, StrictSerialize,
+    DecodeError, DeserializeError, StreamWriter, StrictDeserialize, StrictEncode, StrictSerialize,
 };
 
 use super::TapretFirst;
@@ -110,12 +109,13 @@ impl CommitVerify<TapretCommitment, TapretFirst> for TapScript {
             tapret.push_opcode(TapCode::Reserved);
         }
         tapret.push_opcode(TapCode::Return);
-        let mut data = io::Cursor::new([0u8; 33]);
+        let mut writer = StreamWriter::in_memory::<33>();
         commitment
-            .strict_write(33, &mut data)
+            .strict_write(&mut writer)
             .expect("tapret commitment must be fitting 33 bytes");
-        debug_assert_eq!(data.position(), 33, "tapret commitment must take exactly 33 bytes");
-        tapret.push_slice(&data.into_inner());
+        let data = writer.unconfine();
+        debug_assert_eq!(data.len(), 33, "tapret commitment must take exactly 33 bytes");
+        tapret.push_slice(&data);
         tapret
     }
 }
