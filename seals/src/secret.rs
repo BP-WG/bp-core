@@ -43,7 +43,7 @@ pub struct SecretSeal(
 );
 
 impl CommitmentId for SecretSeal {
-    const TAG: &'static str = "urn:lnpbp:seals:secret#2024-02-03";
+    const TAG: &'static str = "urn:lnp-bp:seals:secret#2024-02-03";
 }
 
 impl From<Sha256> for SecretSeal {
