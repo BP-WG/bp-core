@@ -263,7 +263,7 @@ dependencies = [
 [[package]]
 name = "commit_encoding_derive"
 version = "0.11.0-beta.3"
-source = "git+https://github.com/LNP-BP/client_side_validation?branch=v0.11#5359d8437f5e63289ad0a63ecb66a3bd7d42f816"
+source = "git+https://github.com/LNP-BP/client_side_validation?branch=layouts#2b822b93e4088a36ca3fc23e5034c07452f322ba"
 dependencies = [
  "amplify",
  "amplify_syn",
@@ -275,7 +275,7 @@ dependencies = [
 [[package]]
 name = "commit_verify"
 version = "0.11.0-beta.3"
-source = "git+https://github.com/LNP-BP/client_side_validation?branch=v0.11#5359d8437f5e63289ad0a63ecb66a3bd7d42f816"
+source = "git+https://github.com/LNP-BP/client_side_validation?branch=layouts#2b822b93e4088a36ca3fc23e5034c07452f322ba"
 dependencies = [
  "amplify",
  "commit_encoding_derive",
@@ -285,6 +285,7 @@ dependencies = [
  "sha2",
  "strict_encoding",
  "strict_types",
+ "vesper-lang",
 ]
 
 [[package]]

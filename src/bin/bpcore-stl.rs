@@ -24,6 +24,8 @@ use std::fs;
 use bc::stl::{bp_consensus_stl, bp_tx_stl};
 use bp::stl::bp_core_stl;
 use commit_verify::stl::commit_verify_stl;
+use commit_verify::CommitmentLayout;
+use seals::txout::{ChainBlindSeal, CloseMethod, SingleBlindSeal};
 use strict_encoding::libname;
 use strict_types::stl::std_stl;
 use strict_types::{parse_args, SystemBuilder};
@@ -95,6 +97,12 @@ fn main() {
         .expect("not all libraries present");
 
     let dir = dir.unwrap_or_else(|| ".".to_owned());
+
+    let layout = ChainBlindSeal::<CloseMethod>::commitment_layout();
+    fs::write(format!("{dir}/ChainBlindSeal.vesper",), format!("{layout}")).unwrap();
+
+    let layout = SingleBlindSeal::<CloseMethod>::commitment_layout();
+    fs::write(format!("{dir}/SingleBlindSeal.vesper",), format!("{layout}")).unwrap();
 
     let tt = sys.type_tree("BPCore.AnchorMerkleTreeTapretProof").unwrap();
     fs::write(format!("{dir}/Anchor.MerkleTree.Tapret.vesper",), format!("{tt}")).unwrap();
