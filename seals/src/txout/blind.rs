@@ -2,10 +2,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-// Written in 2019-2023 by
+// Written in 2019-2024 by
 //     Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
 //
-// Copyright (C) 2019-2023 LNP/BP Standards Association. All rights reserved.
+// Copyright (C) 2019-2024 LNP/BP Standards Association. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ use std::str::FromStr;
 
 use amplify::hex;
 use bc::{Outpoint, Txid, Vout};
-use commit_verify::{CommitStrategy, CommitmentId};
+use commit_verify::{CommitId, Conceal};
 use dbc::MethodParseError;
 use rand::{thread_rng, RngCore};
 use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
@@ -49,6 +49,8 @@ pub type SingleBlindSeal<M> = BlindSeal<Txid, M>;
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
+#[derive(CommitEncode)]
+#[commit_encode(strategy = strict, id = SecretSeal)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct BlindSeal<Id: SealTxid, M: SealCloseMethod = CloseMethod> {
     /// Commitment to the specific seal close method [`CloseMethod`] which must
@@ -72,13 +74,11 @@ pub struct BlindSeal<Id: SealTxid, M: SealCloseMethod = CloseMethod> {
     pub blinding: u64,
 }
 
-impl<Id: SealTxid, M: SealCloseMethod> CommitStrategy for BlindSeal<Id, M> {
-    type Strategy = commit_verify::strategies::Strict;
-}
+impl<Id: SealTxid> Conceal for BlindSeal<Id> {
+    type Concealed = SecretSeal;
 
-impl<Id: SealTxid, M: SealCloseMethod> CommitmentId for BlindSeal<Id, M> {
-    const TAG: [u8; 32] = *b"urn:lnpbp:bp:seal:blind#29122023";
-    type Id = SecretSeal;
+    #[inline]
+    fn conceal(&self) -> Self::Concealed { self.commit_id() }
 }
 
 impl<M: SealCloseMethod> TryFrom<&BlindSeal<TxPtr, M>> for Outpoint {

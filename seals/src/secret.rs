@@ -2,10 +2,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-// Written in 2019-2023 by
+// Written in 2019-2024 by
 //     Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
 //
-// Copyright (C) 2019-2023 LNP/BP Standards Association. All rights reserved.
+// Copyright (C) 2019-2024 LNP/BP Standards Association. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,17 +24,13 @@ use std::str::FromStr;
 
 use amplify::{Bytes32, Wrapper};
 use baid58::{Baid58ParseError, Chunking, FromBaid58, ToBaid58, CHUNKING_32CHECKSUM};
-use commit_verify::{CommitmentId, Conceal};
-
-use crate::txout::{BlindSeal, SealTxid};
+use commit_verify::{CommitmentId, DigestExt, Sha256};
 
 /// Confidential version of transaction outpoint-based single-use-seal
 #[derive(Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, From)]
-#[wrapper(Index, RangeOps, BorrowSlice, Hex)]
+#[wrapper(Deref, BorrowSlice, Hex, Index, RangeOps)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
-#[derive(CommitEncode)]
-#[commit_encode(strategy = strict)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -46,11 +42,12 @@ pub struct SecretSeal(
     Bytes32,
 );
 
-impl<Id: SealTxid> Conceal for BlindSeal<Id> {
-    type Concealed = SecretSeal;
+impl CommitmentId for SecretSeal {
+    const TAG: &'static str = "urn:lnp-bp:seals:secret#2024-02-03";
+}
 
-    #[inline]
-    fn conceal(&self) -> Self::Concealed { self.commitment_id() }
+impl From<Sha256> for SecretSeal {
+    fn from(hasher: Sha256) -> Self { hasher.finish().into() }
 }
 
 impl ToBaid58<32> for SecretSeal {

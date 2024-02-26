@@ -2,10 +2,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-// Written in 2019-2023 by
+// Written in 2019-2024 by
 //     Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
 //
-// Copyright (C) 2019-2023 LNP/BP Standards Association. All rights reserved.
+// Copyright (C) 2019-2024 LNP/BP Standards Association. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ pub const LIB_ID_BITCOIN: &str =
 pub const LIB_ID_BP_TX: &str =
     "urn:ubideco:stl:HX2UBak8vPsTokug1DGMDvTpzns3xUdwZ7QJdyt4qBA9#speed-atlanta-trilogy";
 pub const LIB_ID_BP_CONSENSUS: &str =
-    "urn:ubideco:stl:H6wk6SV9j8Up16osC9q3AsQkkA41i7E2qodEfUf5JRPz#mustang-europe-melon";
+    "urn:ubideco:stl:7rhLkuvqTy2PpvD2zTFT4veffXutWDxjNgJbFAjU8cUC#join-object-wonder";
 
 #[deprecated(since = "0.10.8", note = "use _bp_tx_stl instead")]
 fn _bitcoin_stl() -> Result<TypeLib, CompileError> { _bp_tx_stl() }

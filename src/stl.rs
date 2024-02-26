@@ -2,10 +2,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-// Written in 2019-2023 by
+// Written in 2019-2024 by
 //     Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
 //
-// Copyright (C) 2019-2023 LNP/BP Standards Association. All rights reserved.
+// Copyright (C) 2019-2024 LNP/BP Standards Association. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ use strict_types::{CompileError, LibBuilder, TypeLib};
 /// Strict types id for the library providing data types from [`dbc`] and
 /// [`seals`] crates.
 pub const LIB_ID_BPCORE: &str =
-    "urn:ubideco:stl:8wHziC7Bxa3BwctUh6EVBanosrvRHecCTPUjkZT4btNd#ruby-heaven-madrid";
+    "urn:ubideco:stl:c8Tnib31q1p7szyPukEGDoQzJQ5qJwPCn5uZCHUXzB9#cupid-metro-warning";
 
 fn _bp_core_stl() -> Result<TypeLib, CompileError> {
     LibBuilder::new(libname!(LIB_NAME_BPCORE), tiny_bset! {

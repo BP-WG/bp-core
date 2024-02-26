@@ -2,10 +2,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-// Written in 2019-2023 by
+// Written in 2019-2024 by
 //     Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
 //
-// Copyright (C) 2019-2023 LNP/BP Standards Association. All rights reserved.
+// Copyright (C) 2019-2024 LNP/BP Standards Association. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,13 +20,14 @@
 // limitations under the License.
 
 use std::fmt::{self, Display, Formatter};
-use std::io;
 use std::str::FromStr;
 
 use amplify::confinement::Confined;
 use bc::{TapCode, TapScript};
-use commit_verify::{mpc, CommitEncode, CommitVerify};
-use strict_encoding::{DecodeError, DeserializeError, StrictDeserialize, StrictSerialize};
+use commit_verify::{mpc, CommitVerify};
+use strict_encoding::{
+    DecodeError, DeserializeError, StreamWriter, StrictDeserialize, StrictEncode, StrictSerialize,
+};
 
 use super::TapretFirst;
 use crate::LIB_NAME_BPCORE;
@@ -42,7 +43,6 @@ pub const TAPRET_SCRIPT_COMMITMENT_PREFIX: [u8; 31] = [
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BPCORE)]
-#[derive(CommitEncode)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -109,9 +109,13 @@ impl CommitVerify<TapretCommitment, TapretFirst> for TapScript {
             tapret.push_opcode(TapCode::Reserved);
         }
         tapret.push_opcode(TapCode::Return);
-        let mut data = io::Cursor::new([0u8; 33]);
-        commitment.commit_encode(&mut data);
-        tapret.push_slice(&data.into_inner());
+        let mut writer = StreamWriter::in_memory::<33>();
+        commitment
+            .strict_write(&mut writer)
+            .expect("tapret commitment must be fitting 33 bytes");
+        let data = writer.unconfine();
+        debug_assert_eq!(data.len(), 33, "tapret commitment must take exactly 33 bytes");
+        tapret.push_slice(&data);
         tapret
     }
 }

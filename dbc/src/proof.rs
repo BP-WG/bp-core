@@ -2,10 +2,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-// Written in 2019-2023 by
+// Written in 2019-2024 by
 //     Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
 //
-// Copyright (C) 2019-2023 LNP/BP Standards Association. All rights reserved.
+// Copyright (C) 2019-2024 LNP/BP Standards Association. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ use std::fmt::Debug;
 use std::str::FromStr;
 
 use bc::Tx;
-use commit_verify::{mpc, CommitEncode};
+use commit_verify::mpc;
 use strict_encoding::{StrictDecode, StrictDeserialize, StrictDumb, StrictEncode, StrictSerialize};
 
 use crate::LIB_NAME_BPCORE;
@@ -86,7 +86,7 @@ impl FromStr for Method {
 
 /// Deterministic bitcoin commitment proof types.
 pub trait Proof<M: DbcMethod = Method>:
-    Clone + Eq + Debug + CommitEncode + StrictSerialize + StrictDeserialize + StrictDumb
+    Clone + Eq + Debug + StrictSerialize + StrictDeserialize + StrictDumb
 {
     /// Verification error.
     type Error: Error;
