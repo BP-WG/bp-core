@@ -90,7 +90,7 @@ impl<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod> Anchor<L, D, M>
             txid: witness_txid,
             mpc_proof,
             dbc_proof,
-            _method: PhantomData::default(),
+            _method: PhantomData,
         }
     }
 }
