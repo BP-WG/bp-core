@@ -27,7 +27,7 @@ use std::ops::BitXor;
 use std::str::FromStr;
 use std::{cmp, io, slice, vec};
 
-use amplify::confinement::{Confined, U32};
+use amplify::confinement::Confined;
 use amplify::hex::FromHex;
 use amplify::{confinement, Bytes32, Wrapper};
 use commit_verify::{DigestExt, Sha256};
@@ -39,8 +39,8 @@ use strict_encoding::{
 
 use crate::opcodes::*;
 use crate::{
-    CompressedPk, InvalidPubkey, PubkeyParseError, ScriptBytes, ScriptPubkey, WitnessVer,
-    LIB_NAME_BITCOIN,
+    CompressedPk, ConsensusEncode, InvalidPubkey, PubkeyParseError, ScriptBytes, ScriptPubkey,
+    WitnessVer, LIB_NAME_BITCOIN,
 };
 
 /// The SHA-256 midstate value for the TapLeaf hash.
@@ -264,16 +264,18 @@ pub struct TapLeafHash(
 
 impl TapLeafHash {
     pub fn with_leaf_script(leaf_script: &LeafScript) -> Self {
-        let mut engine = Sha256::from_tag(MIDSTATE_TAPLEAF);
-        engine.input_raw(&[leaf_script.version.to_consensus_u8()]);
-        engine.input_with_len::<U32>(leaf_script.script.as_slice());
-        Self(engine.finish().into())
+        Self::with_raw_script(leaf_script.version, leaf_script.as_script_bytes())
     }
 
     pub fn with_tap_script(tap_script: &TapScript) -> Self {
+        Self::with_raw_script(LeafVer::TapScript, tap_script.as_script_bytes())
+    }
+
+    fn with_raw_script(version: LeafVer, script: &ScriptBytes) -> Self {
         let mut engine = Sha256::from_tag(MIDSTATE_TAPLEAF);
-        engine.input_raw(&[TAPROOT_LEAF_TAPSCRIPT]);
-        engine.input_with_len::<U32>(tap_script.as_slice());
+        engine.input_raw(&[version.to_consensus_u8()]);
+        script.len_var_int().consensus_encode(&mut engine).ok();
+        engine.input_raw(script.as_slice());
         Self(engine.finish().into())
     }
 }
@@ -551,6 +553,10 @@ impl LeafScript {
     }
     #[inline]
     pub fn from_tap_script(tap_script: TapScript) -> Self { Self::from(tap_script) }
+
+    #[inline]
+    pub fn as_script_bytes(&self) -> &ScriptBytes { &self.script }
+
     #[inline]
     pub fn tap_leaf_hash(&self) -> TapLeafHash { TapLeafHash::with_leaf_script(self) }
 }
@@ -622,6 +628,9 @@ impl TapScript {
     pub fn from_unsafe(script_bytes: Vec<u8>) -> Self {
         Self(ScriptBytes::from_unsafe(script_bytes))
     }
+
+    #[inline]
+    pub fn tap_leaf_hash(&self) -> TapLeafHash { TapLeafHash::with_tap_script(self) }
 
     /// Adds a single opcode to the script.
     #[inline]

@@ -67,7 +67,7 @@ impl ConvolveCommit<mpc::Commitment, TapretProof, TapretFirst> for InternalPk {
                 return Err(TapretKeyError::AlternativeCommitment(partner.clone()));
             }
 
-            let commitment_leaf = TapLeafHash::with_tap_script(&script_commitment);
+            let commitment_leaf = script_commitment.tap_leaf_hash();
             let commitment_hash = TapNodeHash::from(commitment_leaf);
 
             if !partner.check_ordering(commitment_hash) {
@@ -140,7 +140,7 @@ mod test {
         let msg = mpc::Commitment::from([8u8; 32]);
         let path_proof = TapretPathProof::with(
             TapretNodePartner::RightLeaf(LeafScript::from_tap_script(default!())),
-            13,
+            1,
         )
         .unwrap();
 
