@@ -20,10 +20,13 @@
 // limitations under the License.
 
 use std::fs;
+use std::io::Write;
 
 use bc::stl::{bp_consensus_stl, bp_tx_stl};
 use bp::stl::bp_core_stl;
 use commit_verify::stl::commit_verify_stl;
+use commit_verify::CommitmentLayout;
+use seals::txout::{ChainBlindSeal, CloseMethod, SingleBlindSeal};
 use strict_encoding::libname;
 use strict_types::stl::std_stl;
 use strict_types::{parse_args, SystemBuilder};
@@ -96,19 +99,42 @@ fn main() {
 
     let dir = dir.unwrap_or_else(|| ".".to_owned());
 
+    let mut file = fs::File::create(format!("{dir}/Seals.vesper")).unwrap();
+    writeln!(
+        file,
+        "{{-
+  Description: Bitcoin TxO2 blind seals
+  Author: Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
+  Copyright (C) 2024 LNP/BP Standards Association. All rights reserved.
+  License: Apache-2.0
+-}}
+
+Seals vesper lexicon=types+commitments
+"
+    )
+    .unwrap();
+    let layout = SingleBlindSeal::<CloseMethod>::commitment_layout();
+    writeln!(file, "{layout}").unwrap();
+    let layout = ChainBlindSeal::<CloseMethod>::commitment_layout();
+    writeln!(file, "{layout}").unwrap();
+    let tt = sys.type_tree("BPCore.BlindSealTxid").unwrap();
+    writeln!(file, "{tt}").unwrap();
+    let tt = sys.type_tree("BPCore.BlindSealTxPtr").unwrap();
+    writeln!(file, "{tt}").unwrap();
+
     let tt = sys.type_tree("BPCore.AnchorMerkleTreeTapretProof").unwrap();
-    fs::write(format!("{dir}/Anchor.MerkleTree.Tapret.vesper",), format!("{tt}")).unwrap();
+    fs::write(format!("{dir}/Anchor.MerkleTree.Tapret.vesper"), format!("{tt}")).unwrap();
 
     let tt = sys.type_tree("BPCore.AnchorMerkleTreeOpretProof").unwrap();
-    fs::write(format!("{dir}/Anchor.MerkleTree.Opret.vesper",), format!("{tt}")).unwrap();
+    fs::write(format!("{dir}/Anchor.MerkleTree.Opret.vesper"), format!("{tt}")).unwrap();
 
     let tt = sys
         .type_tree("BPCore.AnchorMerkleBlockTapretProof")
         .unwrap();
-    fs::write(format!("{dir}/Anchor.MerkleBlock.Tapret.vesper",), format!("{tt}")).unwrap();
+    fs::write(format!("{dir}/Anchor.MerkleBlock.Tapret.vesper"), format!("{tt}")).unwrap();
 
     let tt = sys
         .type_tree("BPCore.AnchorMerkleProofTapretProof")
         .unwrap();
-    fs::write(format!("{dir}/Anchor.MerkleProof.Tapret.vesper",), format!("{tt}")).unwrap();
+    fs::write(format!("{dir}/Anchor.MerkleProof.Tapret.vesper"), format!("{tt}")).unwrap();
 }
