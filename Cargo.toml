@@ -89,7 +89,3 @@ wasm-bindgen-test = "0.3"
 
 [package.metadata.docs.rs]
 features = [ "all" ]
-
-[patch.crates-io]
-strict_types = { git = "https://github.com/strict-types/strict-types", branch = "vesper" }
-commit_verify = { git = "https://github.com/LNP-BP/client_side_validation", branch = "layouts" }
