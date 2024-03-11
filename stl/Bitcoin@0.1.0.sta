@@ -1,8 +1,8 @@
 -----BEGIN STRICT TYPE LIB-----
-Id: 7rhLkuvqTy2PpvD2zTFT4veffXutWDxjNgJbFAjU8cUC#join-object-wonder
+Id: urn:ubideco:stl:7rhLkuvqTy2PpvD2zTFT4veffXutWDxjNgJbFAjU8cUC#join-object-wonder
 Name: Bitcoin
-Dependencies: 
-  DzTvt9gGhPUKD8Dkkjk9PDBhkJ4gtWxXWQjxnmUYLNrs#voyage-kimono-disco
+Dependency: DzTvt9gGhPUKD8Dkkjk9PDBhkJ4gtWxXWQjxnmUYLNrs#voyage-kimono-disco
+Checksum-SHA256: 4d5c95b088052dbd373f14a1705a17367bd5818e98c1882e295b60c542ed6575
 
 2SRCdV{d700l@^!MqVsrZe&e(V->r|?y|b&t*2isXxNhAA_oAshyzn}WB~(HbYuY
 lVTK~nd#><i0^jF#$$;RqYi_#e2@QaC_fb3SOOy6Z1VV3bY&HN1LTPX_G%!<XX9f
