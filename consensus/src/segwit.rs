@@ -26,7 +26,7 @@ use amplify::{confinement, Bytes32StrRev, Wrapper};
 
 use crate::opcodes::*;
 use crate::{
-    ByteStr, OpCode, RedeemScript, ScriptBytes, ScriptPubkey, VarIntArray, WScriptHash,
+    ByteStr, RedeemScript, ScriptBytes, ScriptPubkey, VarIntArray, WScriptHash,
     LIB_NAME_BITCOIN,
 };
 

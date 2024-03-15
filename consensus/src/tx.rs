@@ -154,8 +154,6 @@ impl FromStr for Outpoint {
 
 #[cfg(feature = "serde")]
 mod _serde_outpoint {
-    use std::fmt;
-
     use serde::de::{SeqAccess, Visitor};
     use serde::ser::SerializeTuple;
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -528,8 +526,6 @@ impl Tx {
 
 #[cfg(test)]
 mod test {
-    use amplify::hex::{FromHex, ToHex};
-
     use super::*;
 
     #[test]

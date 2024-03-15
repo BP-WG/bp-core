@@ -98,7 +98,6 @@ mod test {
     use commit_verify::mpc::Commitment;
 
     use super::*;
-    use crate::tapret::TapretNodePartner;
 
     #[test]
     fn key_path() {
