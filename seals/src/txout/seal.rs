@@ -92,7 +92,7 @@ impl SealTxid for Txid {
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
+    serde(crate = "serde_crate", rename_all = "camelCase", untagged)
 )]
 pub enum TxPtr {
     /// Points to the witness transaction of some other closed seal.
