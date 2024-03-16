@@ -19,6 +19,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#![allow(missing_docs)]
+
 //! Anchors are data structures used in deterministic bitcoin commitments for
 //! keeping information about the proof of the commitment in connection to the
 //! transaction which contains the commitment, and multi-protocol merkle tree as
@@ -31,6 +33,8 @@ use bc::{Tx, Txid};
 use commit_verify::mpc::{self, Message, ProtocolId};
 use strict_encoding::{StrictDumb, StrictEncode};
 
+use crate::opret::OpretProof;
+use crate::tapret::TapretProof;
 use crate::{DbcMethod, Method, LIB_NAME_BPCORE};
 
 mod dbc {
@@ -206,5 +210,81 @@ impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleBlock, D, M> {
         }
         self.mpc_proof.merge_reveal(other.mpc_proof)?;
         Ok(self)
+    }
+}
+
+#[derive(Clone, Eq, PartialEq, Debug)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BPCORE, tags = custom, dumb = Self::Tapret(strict_dumb!()))]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", rename_all = "camelCase", untagged)
+)]
+pub enum AnchorSet<P: mpc::Proof + StrictDumb = mpc::MerkleProof> {
+    #[strict_type(tag = 0x01)]
+    Tapret(Anchor<P, TapretProof>),
+    #[strict_type(tag = 0x02)]
+    Opret(Anchor<P, OpretProof>),
+    #[strict_type(tag = 0x03)]
+    Dual {
+        tapret: Anchor<P, TapretProof>,
+        opret: Anchor<P, OpretProof>,
+    },
+}
+
+impl<P: mpc::Proof + StrictDumb> AnchorSet<P> {
+    pub fn txid(&self) -> Option<Txid> {
+        match self {
+            AnchorSet::Tapret(a) => Some(a.txid),
+            AnchorSet::Opret(a) => Some(a.txid),
+            AnchorSet::Dual { tapret, opret } if tapret.txid == opret.txid => Some(tapret.txid),
+            _ => None,
+        }
+    }
+
+    pub fn txid_unchecked(&self) -> Txid {
+        match self {
+            AnchorSet::Tapret(a) => a.txid,
+            AnchorSet::Opret(a) => a.txid,
+            AnchorSet::Dual { tapret, opret: _ } => tapret.txid,
+        }
+    }
+
+    pub fn from_split(
+        tapret: Option<Anchor<P, TapretProof>>,
+        opret: Option<Anchor<P, OpretProof>>,
+    ) -> Option<Self> {
+        Some(match (tapret, opret) {
+            (Some(tapret), Some(opret)) => Self::Dual { tapret, opret },
+            (Some(tapret), None) => Self::Tapret(tapret),
+            (None, Some(opret)) => Self::Opret(opret),
+            (None, None) => return None,
+        })
+    }
+
+    #[allow(clippy::type_complexity)]
+    pub fn as_split(&self) -> (Option<&Anchor<P, TapretProof>>, Option<&Anchor<P, OpretProof>>) {
+        match self {
+            AnchorSet::Tapret(tapret) => (Some(tapret), None),
+            AnchorSet::Opret(opret) => (None, Some(opret)),
+            AnchorSet::Dual { tapret, opret } => (Some(tapret), Some(opret)),
+        }
+    }
+
+    #[allow(clippy::type_complexity)]
+    pub fn into_split(self) -> (Option<Anchor<P, TapretProof>>, Option<Anchor<P, OpretProof>>) {
+        match self {
+            AnchorSet::Tapret(tapret) => (Some(tapret), None),
+            AnchorSet::Opret(opret) => (None, Some(opret)),
+            AnchorSet::Dual { tapret, opret } => (Some(tapret), Some(opret)),
+        }
+    }
+
+    pub fn mpc_proofs(&self) -> impl Iterator<Item = &P> {
+        let (t, o) = self.as_split();
+        t.map(|a| &a.mpc_proof)
+            .into_iter()
+            .chain(o.map(|a| &a.mpc_proof))
     }
 }
