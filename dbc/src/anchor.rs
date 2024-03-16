@@ -29,6 +29,7 @@ use std::marker::PhantomData;
 
 use bc::{Tx, Txid};
 use commit_verify::mpc::{self, Message, ProtocolId};
+use commit_verify::ReservedBytes;
 use strict_encoding::{StrictDumb, StrictEncode};
 
 use crate::{DbcMethod, Method, LIB_NAME_BPCORE};
@@ -68,8 +69,14 @@ pub enum VerifyError<E: Error> {
     serde(crate = "serde_crate", rename_all = "camelCase")
 )]
 pub struct Anchor<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod = Method> {
+    /// Bytes reserved for enum tag for the future versions of anchors.
+    pub reserved1: ReservedBytes<1>,
+
     /// Transaction containing deterministic bitcoin commitment.
     pub txid: Txid,
+
+    /// Bytes reserved for the optional SPV information.
+    pub reserved2: ReservedBytes<1>,
 
     /// Structured multi-protocol LNPBP-4 data the transaction commits to.
     pub mpc_proof: L,
@@ -87,7 +94,9 @@ impl<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod> Anchor<L, D, M>
     /// proofs.
     pub fn new(witness_txid: Txid, mpc_proof: L, dbc_proof: D) -> Self {
         Self {
+            reserved1: default!(),
             txid: witness_txid,
+            reserved2: default!(),
             mpc_proof,
             dbc_proof,
             _method: PhantomData,
@@ -121,7 +130,9 @@ impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleProof, D, M> {
         let lnpbp4_proof =
             mpc::MerkleBlock::with(&self.mpc_proof, protocol_id.into(), message.into())?;
         Ok(Anchor {
+            reserved1: self.reserved1,
             txid: self.txid,
+            reserved2: self.reserved2,
             mpc_proof: lnpbp4_proof,
             dbc_proof: self.dbc_proof,
             _method: default!(),
@@ -181,7 +192,9 @@ impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleBlock, D, M> {
     ) -> Result<Anchor<mpc::MerkleProof, D, M>, mpc::LeafNotKnown> {
         let lnpbp4_proof = self.mpc_proof.to_merkle_proof(protocol.into())?;
         Ok(Anchor {
+            reserved1: self.reserved1,
             txid: self.txid,
+            reserved2: self.reserved2,
             mpc_proof: lnpbp4_proof,
             dbc_proof: self.dbc_proof,
             _method: default!(),

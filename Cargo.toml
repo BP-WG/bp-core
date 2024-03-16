@@ -88,7 +88,7 @@ getrandom = { version = "0.2", features = ["js"] }
 wasm-bindgen-test = "0.3"
 
 [package.metadata.docs.rs]
-features = [ "all" ]
+features = ["all"]
 
 [patch.crates-io]
-commit_verify = { git = "https://github.com/LNP-BP/client_side_validation", branch = "master" }
+commit_verify = { git = "https://github.com/LNP-BP/client_side_validation", branch = "reserved" }

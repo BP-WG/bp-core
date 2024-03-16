@@ -273,7 +273,7 @@ dependencies = [
 [[package]]
 name = "commit_encoding_derive"
 version = "0.11.0-beta.4"
-source = "git+https://github.com/LNP-BP/client_side_validation?branch=master#e963d5df29e9c04cb24dfc7d0b3553d286bb1986"
+source = "git+https://github.com/LNP-BP/client_side_validation?branch=reserved#b01ea9cd3def3e4155afb9a7a60a4248607fb208"
 dependencies = [
  "amplify",
  "amplify_syn",
@@ -285,7 +285,7 @@ dependencies = [
 [[package]]
 name = "commit_verify"
 version = "0.11.0-beta.4"
-source = "git+https://github.com/LNP-BP/client_side_validation?branch=master#e963d5df29e9c04cb24dfc7d0b3553d286bb1986"
+source = "git+https://github.com/LNP-BP/client_side_validation?branch=reserved#b01ea9cd3def3e4155afb9a7a60a4248607fb208"
 dependencies = [
  "amplify",
  "commit_encoding_derive",
