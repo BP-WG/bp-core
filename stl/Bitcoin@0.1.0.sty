@@ -1,5 +1,5 @@
 {-
-  Id: urn:ubideco:stl:7rhLkuvqTy2PpvD2zTFT4veffXutWDxjNgJbFAjU8cUC#join-object-wonder
+  Id: urn:ubideco:stl:9J1iFjLzsvjFXLpBg886FVrkiH2ZuX9KB9XKkS8AhAk1#apple-parking-social
   Name: Bitcoin
   Version: 0.1.0
   Description: Consensus library for bitcoin protocol
@@ -21,13 +21,16 @@ data Bip340Sig         : sig [Byte ^ 64], sighash_type SighashType?
 @mnemonic(canada-sharp-traffic)
 data BlockHash         : [Byte ^ 32]
 
-@mnemonic(rose-apropos-join)
+@mnemonic(barbara-light-panda)
 data BlockHeader       : version I32
                        , prevBlockHash BlockHash
-                       , merkleRoot [Byte ^ 32]
+                       , merkleRoot BlockMerkleRoot
                        , time U32
                        , bits U32
                        , nonce U32
+
+@mnemonic(period-time-media)
+data BlockMerkleRoot   : [Byte ^ 32]
 
 @mnemonic(kinetic-avenue-escort)
 data ByteStr           : [Byte ^ ..0xffffffff]

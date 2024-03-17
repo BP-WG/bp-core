@@ -66,7 +66,7 @@ mod weights;
 pub mod stl;
 mod coding;
 
-pub use block::{BlockHash, BlockHeader};
+pub use block::{BlockHash, BlockHeader, BlockMerkleRoot};
 pub use coding::{
     ByteStr, ConsensusDataError, ConsensusDecode, ConsensusDecodeError, ConsensusEncode, LenVarInt,
     VarInt, VarIntArray, VarIntBytes,
@@ -88,7 +88,7 @@ pub use timelocks::{
     LOCKTIME_THRESHOLD, SEQ_NO_CSV_DISABLE_MASK, SEQ_NO_CSV_TYPE_MASK,
 };
 pub use tx::{
-    Outpoint, OutpointParseError, Sats, Tx, TxIn, TxOut, TxParseError, TxVer, Txid, Vout,
+    BlockDataParseError, Outpoint, OutpointParseError, Sats, Tx, TxIn, TxOut, TxVer, Txid, Vout,
 };
 pub use util::NonStandardValue;
 pub use weights::{VBytes, Weight, WeightUnits};
