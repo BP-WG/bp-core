@@ -25,9 +25,10 @@ use amplify::confinement::{Confined, MediumBlob, SmallBlob, TinyBlob, U32};
 use amplify::{confinement, ByteArray, Bytes32, IoError, Wrapper};
 
 use crate::{
-    ControlBlock, InternalPk, InvalidLeafVer, LeafVer, LockTime, Outpoint, Parity, RedeemScript,
-    Sats, ScriptBytes, ScriptPubkey, SeqNo, SigScript, TapBranchHash, TapMerklePath, TapScript, Tx,
-    TxIn, TxOut, TxVer, Txid, Vout, Witness, WitnessScript, LIB_NAME_BITCOIN,
+    BlockHash, BlockHeader, BlockMerkleRoot, ControlBlock, InternalPk, InvalidLeafVer, LeafVer,
+    LockTime, Outpoint, Parity, RedeemScript, Sats, ScriptBytes, ScriptPubkey, SeqNo, SigScript,
+    TapBranchHash, TapMerklePath, TapScript, Tx, TxIn, TxOut, TxVer, Txid, Vout, Witness,
+    WitnessScript, LIB_NAME_BITCOIN,
 };
 
 /// Bitcoin consensus allows arrays which length is encoded as VarInt to grow up
@@ -218,6 +219,63 @@ where Self: Sized
             return Err(ConsensusDataError::DataNotConsumed.into());
         }
         Ok(me)
+    }
+}
+
+impl ConsensusEncode for BlockHeader {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        let mut counter = self.version.consensus_encode(writer)?;
+        counter += self.prev_block_hash.consensus_encode(writer)?;
+        counter += self.merkle_root.consensus_encode(writer)?;
+        counter += self.time.consensus_encode(writer)?;
+        counter += self.bits.consensus_encode(writer)?;
+        counter += self.nonce.consensus_encode(writer)?;
+        Ok(counter)
+    }
+}
+
+impl ConsensusDecode for BlockHeader {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        let version = i32::consensus_decode(reader)?;
+        let prev_block_hash = BlockHash::consensus_decode(reader)?;
+        let merkle_root = BlockMerkleRoot::consensus_decode(reader)?;
+        let time = u32::consensus_decode(reader)?;
+        let bits = u32::consensus_decode(reader)?;
+        let nonce = u32::consensus_decode(reader)?;
+        Ok(BlockHeader {
+            version,
+            prev_block_hash,
+            merkle_root,
+            time,
+            bits,
+            nonce,
+        })
+    }
+}
+
+impl ConsensusEncode for BlockHash {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        writer.write_all(&self.to_byte_array())?;
+        Ok(32)
+    }
+}
+
+impl ConsensusDecode for BlockHash {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        <[u8; 32]>::consensus_decode(reader).map(Self::from)
+    }
+}
+
+impl ConsensusEncode for BlockMerkleRoot {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        writer.write_all(&self.to_byte_array())?;
+        Ok(32)
+    }
+}
+
+impl ConsensusDecode for BlockMerkleRoot {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        <[u8; 32]>::consensus_decode(reader).map(Self::from)
     }
 }
 

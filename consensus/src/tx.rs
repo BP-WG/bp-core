@@ -441,7 +441,7 @@ impl LowerHex for Tx {
 
 #[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]
 #[display(inner)]
-pub enum TxParseError {
+pub enum BlockDataParseError {
     #[from]
     Hex(hex::Error),
     #[from]
@@ -449,11 +449,11 @@ pub enum TxParseError {
 }
 
 impl FromStr for Tx {
-    type Err = TxParseError;
+    type Err = BlockDataParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let data = Vec::<u8>::from_hex(s)?;
-        Tx::consensus_deserialize(data).map_err(TxParseError::from)
+        Tx::consensus_deserialize(data).map_err(BlockDataParseError::from)
     }
 }
 
