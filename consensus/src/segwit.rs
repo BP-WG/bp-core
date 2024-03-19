@@ -26,8 +26,7 @@ use amplify::{confinement, Bytes32StrRev, Wrapper};
 
 use crate::opcodes::*;
 use crate::{
-    ByteStr, RedeemScript, ScriptBytes, ScriptPubkey, VarIntArray, WScriptHash,
-    LIB_NAME_BITCOIN,
+    ByteStr, RedeemScript, ScriptBytes, ScriptPubkey, VarIntArray, WScriptHash, LIB_NAME_BITCOIN,
 };
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display, Error)]
