@@ -1,5 +1,5 @@
 {-
-  Id: urn:ubideco:stl:BeAiDVK898mzgHrmWgxHtysDhmffgMEoDwBgNuZo7QeZ#connect-verona-secret
+  Id: urn:ubideco:stl:9pKFs7Gw7gwerYGVcPCDqiCv5fa165qC6PvFxiotJjaG#rebel-herbert-tourist
   Name: BPCore
   Version: 0.1.0
   Description: Bitcoin client-side-validation library
@@ -11,13 +11,14 @@
 @context
 typelib BPCore
 
-import CommitVerify#7qvjR4HCwJKF3mxE5GqsAaADces5JDRwb8ajAse9mkz3#exhibit-karate-ritual
+import CommitVerify#7EpM1uymEteG4g4xmF5ntKYX1wXXpbQj5iLiDreH4jWa#protein-donald-cool
   use MerkleTree#side-locate-bonus
   use ProtocolId#gamma-banjo-corona
   use Message#shampoo-bishop-morgan
   use MerkleHash#culture-metro-modular
   use MerkleBlock#miracle-antenna-moral
   use MerkleProof#labor-hilton-magenta
+  use ReservedBytes1#joker-lemon-mental
   use TreeNode#risk-opinion-orca
 
 import Std#DzTvt9gGhPUKD8Dkkjk9PDBhkJ4gtWxXWQjxnmUYLNrs#voyage-kimono-disco
@@ -34,33 +35,45 @@ import Bitcoin#HX2UBak8vPsTokug1DGMDvTpzns3xUdwZ7QJdyt4qBA9#speed-atlanta-trilog
   use XOnlyPk#evident-finance-promo
 
 
-@mnemonic(promo-byte-ceramic)
-data AnchorMerkleBlockOpretProof : txid Bitcoin.Txid#cowboy-diego-betty
+@mnemonic(marvin-austin-fame)
+data AnchorMerkleBlockOpretProof : reserved1 CommitVerify.ReservedBytes1#joker-lemon-mental
+                       , txid Bitcoin.Txid#cowboy-diego-betty
+                       , reserved2 CommitVerify.ReservedBytes1#joker-lemon-mental
                        , mpcProof CommitVerify.MerkleBlock#miracle-antenna-moral
                        , dbcProof OpretProof
 
-@mnemonic(tarzan-grille-telecom)
-data AnchorMerkleBlockTapretProof : txid Bitcoin.Txid#cowboy-diego-betty
+@mnemonic(bottle-mozart-mimosa)
+data AnchorMerkleBlockTapretProof : reserved1 CommitVerify.ReservedBytes1#joker-lemon-mental
+                       , txid Bitcoin.Txid#cowboy-diego-betty
+                       , reserved2 CommitVerify.ReservedBytes1#joker-lemon-mental
                        , mpcProof CommitVerify.MerkleBlock#miracle-antenna-moral
                        , dbcProof TapretProof
 
-@mnemonic(absent-eric-armada)
-data AnchorMerkleProofOpretProof : txid Bitcoin.Txid#cowboy-diego-betty
+@mnemonic(flag-center-weather)
+data AnchorMerkleProofOpretProof : reserved1 CommitVerify.ReservedBytes1#joker-lemon-mental
+                       , txid Bitcoin.Txid#cowboy-diego-betty
+                       , reserved2 CommitVerify.ReservedBytes1#joker-lemon-mental
                        , mpcProof CommitVerify.MerkleProof#labor-hilton-magenta
                        , dbcProof OpretProof
 
-@mnemonic(harvest-biscuit-smile)
-data AnchorMerkleProofTapretProof : txid Bitcoin.Txid#cowboy-diego-betty
+@mnemonic(camel-mentor-taboo)
+data AnchorMerkleProofTapretProof : reserved1 CommitVerify.ReservedBytes1#joker-lemon-mental
+                       , txid Bitcoin.Txid#cowboy-diego-betty
+                       , reserved2 CommitVerify.ReservedBytes1#joker-lemon-mental
                        , mpcProof CommitVerify.MerkleProof#labor-hilton-magenta
                        , dbcProof TapretProof
 
-@mnemonic(gemini-france-egypt)
-data AnchorMerkleTreeOpretProof : txid Bitcoin.Txid#cowboy-diego-betty
+@mnemonic(clock-bazooka-cadet)
+data AnchorMerkleTreeOpretProof : reserved1 CommitVerify.ReservedBytes1#joker-lemon-mental
+                       , txid Bitcoin.Txid#cowboy-diego-betty
+                       , reserved2 CommitVerify.ReservedBytes1#joker-lemon-mental
                        , mpcProof CommitVerify.MerkleTree#side-locate-bonus
                        , dbcProof OpretProof
 
-@mnemonic(forward-spiral-parade)
-data AnchorMerkleTreeTapretProof : txid Bitcoin.Txid#cowboy-diego-betty
+@mnemonic(vacuum-fluid-acid)
+data AnchorMerkleTreeTapretProof : reserved1 CommitVerify.ReservedBytes1#joker-lemon-mental
+                       , txid Bitcoin.Txid#cowboy-diego-betty
+                       , reserved2 CommitVerify.ReservedBytes1#joker-lemon-mental
                        , mpcProof CommitVerify.MerkleTree#side-locate-bonus
                        , dbcProof TapretProof
 
