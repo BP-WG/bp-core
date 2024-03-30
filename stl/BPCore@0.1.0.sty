@@ -1,5 +1,5 @@
 {-
-  Id: urn:ubideco:stl:9pKFs7Gw7gwerYGVcPCDqiCv5fa165qC6PvFxiotJjaG#rebel-herbert-tourist
+  Id: urn:ubideco:stl:6skrch4mJzDzVaTYnCgCxFJLw23SSUxNhK7PKgPdSapR#roof-parent-reunion
   Name: BPCore
   Version: 0.1.0
   Description: Bitcoin client-side-validation library
@@ -18,7 +18,6 @@ import CommitVerify#7EpM1uymEteG4g4xmF5ntKYX1wXXpbQj5iLiDreH4jWa#protein-donald-
   use MerkleHash#culture-metro-modular
   use MerkleBlock#miracle-antenna-moral
   use MerkleProof#labor-hilton-magenta
-  use ReservedBytes1#joker-lemon-mental
   use TreeNode#risk-opinion-orca
 
 import Std#DzTvt9gGhPUKD8Dkkjk9PDBhkJ4gtWxXWQjxnmUYLNrs#voyage-kimono-disco
@@ -35,47 +34,23 @@ import Bitcoin#HX2UBak8vPsTokug1DGMDvTpzns3xUdwZ7QJdyt4qBA9#speed-atlanta-trilog
   use XOnlyPk#evident-finance-promo
 
 
-@mnemonic(marvin-austin-fame)
-data AnchorMerkleBlockOpretProof : reserved1 CommitVerify.ReservedBytes1#joker-lemon-mental
-                       , txid Bitcoin.Txid#cowboy-diego-betty
-                       , reserved2 CommitVerify.ReservedBytes1#joker-lemon-mental
-                       , mpcProof CommitVerify.MerkleBlock#miracle-antenna-moral
-                       , dbcProof OpretProof
+@mnemonic(habitat-exit-gizmo)
+data AnchorMerkleBlockOpretProof : mpcProof CommitVerify.MerkleBlock#miracle-antenna-moral, dbcProof OpretProof
 
-@mnemonic(bottle-mozart-mimosa)
-data AnchorMerkleBlockTapretProof : reserved1 CommitVerify.ReservedBytes1#joker-lemon-mental
-                       , txid Bitcoin.Txid#cowboy-diego-betty
-                       , reserved2 CommitVerify.ReservedBytes1#joker-lemon-mental
-                       , mpcProof CommitVerify.MerkleBlock#miracle-antenna-moral
-                       , dbcProof TapretProof
+@mnemonic(nobel-koala-mother)
+data AnchorMerkleBlockTapretProof : mpcProof CommitVerify.MerkleBlock#miracle-antenna-moral, dbcProof TapretProof
 
-@mnemonic(flag-center-weather)
-data AnchorMerkleProofOpretProof : reserved1 CommitVerify.ReservedBytes1#joker-lemon-mental
-                       , txid Bitcoin.Txid#cowboy-diego-betty
-                       , reserved2 CommitVerify.ReservedBytes1#joker-lemon-mental
-                       , mpcProof CommitVerify.MerkleProof#labor-hilton-magenta
-                       , dbcProof OpretProof
+@mnemonic(avalon-elastic-neon)
+data AnchorMerkleProofOpretProof : mpcProof CommitVerify.MerkleProof#labor-hilton-magenta, dbcProof OpretProof
 
-@mnemonic(camel-mentor-taboo)
-data AnchorMerkleProofTapretProof : reserved1 CommitVerify.ReservedBytes1#joker-lemon-mental
-                       , txid Bitcoin.Txid#cowboy-diego-betty
-                       , reserved2 CommitVerify.ReservedBytes1#joker-lemon-mental
-                       , mpcProof CommitVerify.MerkleProof#labor-hilton-magenta
-                       , dbcProof TapretProof
+@mnemonic(scorpio-fame-gram)
+data AnchorMerkleProofTapretProof : mpcProof CommitVerify.MerkleProof#labor-hilton-magenta, dbcProof TapretProof
 
-@mnemonic(clock-bazooka-cadet)
-data AnchorMerkleTreeOpretProof : reserved1 CommitVerify.ReservedBytes1#joker-lemon-mental
-                       , txid Bitcoin.Txid#cowboy-diego-betty
-                       , reserved2 CommitVerify.ReservedBytes1#joker-lemon-mental
-                       , mpcProof CommitVerify.MerkleTree#side-locate-bonus
-                       , dbcProof OpretProof
+@mnemonic(monica-cannon-tornado)
+data AnchorMerkleTreeOpretProof : mpcProof CommitVerify.MerkleTree#side-locate-bonus, dbcProof OpretProof
 
-@mnemonic(vacuum-fluid-acid)
-data AnchorMerkleTreeTapretProof : reserved1 CommitVerify.ReservedBytes1#joker-lemon-mental
-                       , txid Bitcoin.Txid#cowboy-diego-betty
-                       , reserved2 CommitVerify.ReservedBytes1#joker-lemon-mental
-                       , mpcProof CommitVerify.MerkleTree#side-locate-bonus
-                       , dbcProof TapretProof
+@mnemonic(susan-lucas-bazaar)
+data AnchorMerkleTreeTapretProof : mpcProof CommitVerify.MerkleTree#side-locate-bonus, dbcProof TapretProof
 
 @mnemonic(explore-aspect-ranger)
 data BlindSealTxPtr    : method Method
