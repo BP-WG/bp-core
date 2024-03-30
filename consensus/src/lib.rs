@@ -66,7 +66,7 @@ mod weights;
 pub mod stl;
 mod coding;
 
-pub use block::{BlockHash, BlockHeader};
+pub use block::{BlockHash, BlockHeader, TxMerkleNode};
 pub use coding::{
     ByteStr, ConsensusDataError, ConsensusDecode, ConsensusDecodeError, ConsensusEncode, LenVarInt,
     VarInt, VarIntArray, VarIntBytes,

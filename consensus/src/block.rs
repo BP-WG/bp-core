@@ -38,6 +38,21 @@ pub struct BlockHash(
     Bytes32StrRev,
 );
 
+#[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, From)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
+#[wrapper(BorrowSlice, Index, RangeOps, Debug, Hex, Display, FromStr)]
+pub struct TxMerkleNode(
+    #[from]
+    #[from([u8; 32])]
+    Bytes32,
+);
+
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
@@ -52,7 +67,7 @@ pub struct BlockHeader {
     /// Reference to the previous block in the chain.
     pub prev_block_hash: BlockHash,
     /// The root hash of the merkle tree of transactions in the block.
-    pub merkle_root: Bytes32,
+    pub merkle_root: TxMerkleNode,
     /// The timestamp of the block, as claimed by the miner.
     pub time: u32,
     /// The target value below which the blockhash must lie.
