@@ -1,5 +1,7 @@
 AnchorMerkleProofTapretProof rec
+  reserved1 bytes len=1 aka=ReservedBytes1
   txid bytes len=32 aka=Txid
+  reserved2 bytes len=1 aka=ReservedBytes1
   mpcProof rec MerkleProof
     pos is U32
     cofactor is U16
