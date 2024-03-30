@@ -23,7 +23,8 @@ use std::marker::PhantomData;
 
 use bc::{Tx, Txid};
 use commit_verify::mpc;
-use dbc::{Anchor, DbcMethod, Method};
+use dbc::anchor::EtxWitness;
+use dbc::{DbcMethod, Method};
 use single_use_seals::SealWitness;
 use strict_encoding::StrictDumb;
 
@@ -33,14 +34,16 @@ use crate::SealCloseMethod;
 /// Witness of a bitcoin-based seal being closed. Includes both transaction and
 /// extra-transaction data.
 pub struct Witness<D: dbc::Proof<M>, M: DbcMethod = Method> {
+    /// Transaction id of the witness transaction above.
+    pub txid: Txid,
+
     /// Witness transaction: transaction which contains commitment to the
     /// message over which the seal is closed.
     pub tx: Tx,
 
-    /// Transaction id of the witness transaction above.
-    pub txid: Txid,
-
-    /// Deterministic bitcoin commitment proof from the anchor.
+    // TODO: Add optional SPV proof
+    /// Deterministic bitcoin commitment proof from the extra-transaction
+    /// witness.
     pub proof: D,
 
     #[doc(hidden)]
@@ -50,11 +53,11 @@ pub struct Witness<D: dbc::Proof<M>, M: DbcMethod = Method> {
 impl<D: dbc::Proof<M>, M: DbcMethod> Witness<D, M> {
     /// Constructs witness from a witness transaction and extra-transaction
     /// proof, taken from an anchor.
-    pub fn with<L: mpc::Proof + StrictDumb>(tx: Tx, anchor: Anchor<L, D, M>) -> Witness<D, M> {
+    pub fn with<L: mpc::Proof + StrictDumb>(tx: Tx, etx: EtxWitness<L, D, M>) -> Witness<D, M> {
         Witness {
+            txid: tx.txid(),
             tx,
-            txid: anchor.txid,
-            proof: anchor.dbc_proof,
+            proof: etx.dbc_proof,
             _phantom: default!(),
         }
     }

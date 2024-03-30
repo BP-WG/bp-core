@@ -23,13 +23,14 @@
 
 //! Anchors are data structures used in deterministic bitcoin commitments for
 //! keeping information about the proof of the commitment in connection to the
-//! transaction which contains the commitment, and multi-protocol merkle tree as
+//! transaction which contains the commitment, and multiprotocol merkle tree as
 //! defined by LNPBP-4.
 
 use std::error::Error;
 use std::marker::PhantomData;
 
-use bc::{Tx, Txid};
+use amplify::confinement::TinyVec;
+use bc::{Tx, TxMerkleNode, Txid};
 use commit_verify::mpc::{self, Message, ProtocolId};
 use strict_encoding::{StrictDumb, StrictEncode};
 
@@ -59,10 +60,33 @@ pub enum VerifyError<E: Error> {
     Mpc(mpc::InvalidProof),
 }
 
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BPCORE, tags = custom, dumb = Self::Txid(strict_dumb!()))]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", rename_all = "camelCase")
+)]
+pub enum TxWitness {
+    #[strict_type(tag = 1)]
+    Txid(Txid),
+    #[strict_type(tag = 2)]
+    Spv(Tx, TinyVec<TxMerkleNode>), // TODO: Introduce merkle path type
+}
+
+impl TxWitness {
+    pub fn txid(&self) -> Txid {
+        match self {
+            TxWitness::Txid(txid) => *txid,
+            TxWitness::Spv(tx, _) => tx.txid(),
+        }
+    }
+}
+
 /// Anchor is a data structure used in deterministic bitcoin commitments for
-/// keeping information about the proof of the commitment in connection to the
-/// transaction which contains the commitment, and multi-protocol merkle tree as
-/// defined by LNPBP-4.
+/// keeping information about the proof of the commitment in a transactions,
+/// and multiprotocol merkle tree as defined by LNPBP-4.
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BPCORE)]
@@ -71,10 +95,7 @@ pub enum VerifyError<E: Error> {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", rename_all = "camelCase")
 )]
-pub struct Anchor<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod = Method> {
-    /// Transaction containing deterministic bitcoin commitment.
-    pub txid: Txid,
-
+pub struct EtxWitness<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod = Method> {
     /// Structured multi-protocol LNPBP-4 data the transaction commits to.
     pub mpc_proof: L,
 
@@ -86,12 +107,11 @@ pub struct Anchor<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod = M
     pub _method: PhantomData<M>,
 }
 
-impl<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod> Anchor<L, D, M> {
-    /// Constructs anchor for a given witness transaction id, MPC and DBC
+impl<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod> EtxWitness<L, D, M> {
+    /// Constructs extra-transaction witness for a given MPC and DBC
     /// proofs.
-    pub fn new(witness_txid: Txid, mpc_proof: L, dbc_proof: D) -> Self {
+    pub fn new(mpc_proof: L, dbc_proof: D) -> Self {
         Self {
-            txid: witness_txid,
             mpc_proof,
             dbc_proof,
             _method: PhantomData,
@@ -115,17 +135,16 @@ pub enum MergeError {
     DbcMismatch,
 }
 
-impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleProof, D, M> {
+impl<D: dbc::Proof<M>, M: DbcMethod> EtxWitness<mpc::MerkleProof, D, M> {
     /// Reconstructs anchor containing merkle block
     pub fn into_merkle_block(
         self,
         protocol_id: impl Into<ProtocolId>,
         message: impl Into<Message>,
-    ) -> Result<Anchor<mpc::MerkleBlock, D, M>, mpc::InvalidProof> {
+    ) -> Result<EtxWitness<mpc::MerkleBlock, D, M>, mpc::InvalidProof> {
         let lnpbp4_proof =
             mpc::MerkleBlock::with(&self.mpc_proof, protocol_id.into(), message.into())?;
-        Ok(Anchor {
-            txid: self.txid,
+        Ok(EtxWitness {
             mpc_proof: lnpbp4_proof,
             dbc_proof: self.dbc_proof,
             _method: default!(),
@@ -137,7 +156,7 @@ impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleProof, D, M> {
         &self,
         protocol_id: impl Into<ProtocolId>,
         message: impl Into<Message>,
-    ) -> Result<Anchor<mpc::MerkleBlock, D, M>, mpc::InvalidProof> {
+    ) -> Result<EtxWitness<mpc::MerkleBlock, D, M>, mpc::InvalidProof> {
         self.clone().into_merkle_block(protocol_id, message)
     }
 
@@ -167,13 +186,13 @@ impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleProof, D, M> {
     }
 }
 
-impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleBlock, D, M> {
+impl<D: dbc::Proof<M>, M: DbcMethod> EtxWitness<mpc::MerkleBlock, D, M> {
     /// Conceals all LNPBP-4 data except specific protocol and produces merkle
     /// proof anchor.
     pub fn to_merkle_proof(
         &self,
         protocol: impl Into<ProtocolId>,
-    ) -> Result<Anchor<mpc::MerkleProof, D, M>, mpc::LeafNotKnown> {
+    ) -> Result<EtxWitness<mpc::MerkleProof, D, M>, mpc::LeafNotKnown> {
         self.clone().into_merkle_proof(protocol)
     }
 
@@ -182,10 +201,9 @@ impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleBlock, D, M> {
     pub fn into_merkle_proof(
         self,
         protocol: impl Into<ProtocolId>,
-    ) -> Result<Anchor<mpc::MerkleProof, D, M>, mpc::LeafNotKnown> {
+    ) -> Result<EtxWitness<mpc::MerkleProof, D, M>, mpc::LeafNotKnown> {
         let lnpbp4_proof = self.mpc_proof.to_merkle_proof(protocol.into())?;
-        Ok(Anchor {
-            txid: self.txid,
+        Ok(EtxWitness {
             mpc_proof: lnpbp4_proof,
             dbc_proof: self.dbc_proof,
             _method: default!(),
@@ -202,9 +220,6 @@ impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleBlock, D, M> {
 
     /// Merges two anchors keeping revealed data.
     pub fn merge_reveal(mut self, other: Self) -> Result<Self, MergeError> {
-        if self.txid != other.txid {
-            return Err(MergeError::TxidMismatch);
-        }
         if self.dbc_proof != other.dbc_proof {
             return Err(MergeError::DbcMismatch);
         }
@@ -214,75 +229,60 @@ impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleBlock, D, M> {
 }
 
 #[derive(Clone, Eq, PartialEq, Debug)]
-#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BPCORE, tags = custom, dumb = Self::Tapret(strict_dumb!()))]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BPCORE, tags = custom)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", rename_all = "camelCase", untagged)
 )]
-pub enum AnchorSet<P: mpc::Proof + StrictDumb = mpc::MerkleProof> {
+pub enum Anchor<P: mpc::Proof + StrictDumb = mpc::MerkleProof> {
     #[strict_type(tag = 0x01)]
-    Tapret(Anchor<P, TapretProof>),
+    Tapret {
+        tapret: EtxWitness<P, TapretProof>,
+        txw: TxWitness,
+    },
     #[strict_type(tag = 0x02)]
-    Opret(Anchor<P, OpretProof>),
+    Opret {
+        opret: EtxWitness<P, OpretProof>,
+        txw: TxWitness,
+    },
     #[strict_type(tag = 0x03)]
     Dual {
-        tapret: Anchor<P, TapretProof>,
-        opret: Anchor<P, OpretProof>,
+        tapret: EtxWitness<P, TapretProof>,
+        opret: EtxWitness<P, OpretProof>,
+        txw: TxWitness,
     },
 }
 
-impl<P: mpc::Proof + StrictDumb> AnchorSet<P> {
-    pub fn txid(&self) -> Option<Txid> {
-        match self {
-            AnchorSet::Tapret(a) => Some(a.txid),
-            AnchorSet::Opret(a) => Some(a.txid),
-            AnchorSet::Dual { tapret, opret } if tapret.txid == opret.txid => Some(tapret.txid),
-            _ => None,
+impl<P: mpc::Proof + StrictDumb> StrictDumb for Anchor<P> {
+    fn strict_dumb() -> Self {
+        Self::Tapret {
+            tapret: strict_dumb!(),
+            txw: strict_dumb!(),
         }
     }
+}
 
-    pub fn txid_unchecked(&self) -> Txid {
+impl<P: mpc::Proof + StrictDumb> Anchor<P> {
+    pub fn txid(&self) -> Txid {
         match self {
-            AnchorSet::Tapret(a) => a.txid,
-            AnchorSet::Opret(a) => a.txid,
-            AnchorSet::Dual { tapret, opret: _ } => tapret.txid,
-        }
-    }
-
-    pub fn from_split(
-        tapret: Option<Anchor<P, TapretProof>>,
-        opret: Option<Anchor<P, OpretProof>>,
-    ) -> Option<Self> {
-        Some(match (tapret, opret) {
-            (Some(tapret), Some(opret)) => Self::Dual { tapret, opret },
-            (Some(tapret), None) => Self::Tapret(tapret),
-            (None, Some(opret)) => Self::Opret(opret),
-            (None, None) => return None,
-        })
-    }
-
-    #[allow(clippy::type_complexity)]
-    pub fn as_split(&self) -> (Option<&Anchor<P, TapretProof>>, Option<&Anchor<P, OpretProof>>) {
-        match self {
-            AnchorSet::Tapret(tapret) => (Some(tapret), None),
-            AnchorSet::Opret(opret) => (None, Some(opret)),
-            AnchorSet::Dual { tapret, opret } => (Some(tapret), Some(opret)),
-        }
-    }
-
-    #[allow(clippy::type_complexity)]
-    pub fn into_split(self) -> (Option<Anchor<P, TapretProof>>, Option<Anchor<P, OpretProof>>) {
-        match self {
-            AnchorSet::Tapret(tapret) => (Some(tapret), None),
-            AnchorSet::Opret(opret) => (None, Some(opret)),
-            AnchorSet::Dual { tapret, opret } => (Some(tapret), Some(opret)),
+            Anchor::Tapret { txw, .. } | Anchor::Opret { txw, .. } | Anchor::Dual { txw, .. } => {
+                txw.txid()
+            }
         }
     }
 
     pub fn mpc_proofs(&self) -> impl Iterator<Item = &P> {
-        let (t, o) = self.as_split();
+        let (t, o) = match self {
+            Anchor::Tapret { tapret, txw: _ } => (Some(tapret), None),
+            Anchor::Opret { opret, txw: _ } => (None, Some(opret)),
+            Anchor::Dual {
+                tapret,
+                opret,
+                txw: _,
+            } => (Some(tapret), Some(opret)),
+        };
         t.map(|a| &a.mpc_proof)
             .into_iter()
             .chain(o.map(|a| &a.mpc_proof))

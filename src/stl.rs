@@ -23,8 +23,6 @@
 
 use bc::Txid;
 use commit_verify::mpc;
-use dbc::opret::OpretProof;
-use dbc::tapret::TapretProof;
 use dbc::{Method, LIB_NAME_BPCORE};
 use seals::txout::TxPtr;
 use strict_types::{CompileError, LibBuilder, TypeLib};
@@ -32,7 +30,7 @@ use strict_types::{CompileError, LibBuilder, TypeLib};
 /// Strict types id for the library providing data types from [`dbc`] and
 /// [`seals`] crates.
 pub const LIB_ID_BPCORE: &str =
-    "urn:ubideco:stl:BeAiDVK898mzgHrmWgxHtysDhmffgMEoDwBgNuZo7QeZ#connect-verona-secret";
+    "urn:ubideco:stl:Bs1fnXJPuKnSbBgoFcteMqiKnCNrXCG69xEHosAcuywa#printer-spiral-polka";
 
 fn _bp_core_stl() -> Result<TypeLib, CompileError> {
     LibBuilder::new(libname!(LIB_NAME_BPCORE), tiny_bset! {
@@ -40,12 +38,9 @@ fn _bp_core_stl() -> Result<TypeLib, CompileError> {
         bc::stl::bp_tx_stl().to_dependency(),
         commit_verify::stl::commit_verify_stl().to_dependency()
     })
-    .transpile::<dbc::Anchor<mpc::MerkleTree, OpretProof, Method>>()
-    .transpile::<dbc::Anchor<mpc::MerkleBlock, OpretProof, Method>>()
-    .transpile::<dbc::Anchor<mpc::MerkleProof, OpretProof, Method>>()
-    .transpile::<dbc::Anchor<mpc::MerkleTree, TapretProof, Method>>()
-    .transpile::<dbc::Anchor<mpc::MerkleBlock, TapretProof, Method>>()
-    .transpile::<dbc::Anchor<mpc::MerkleProof, TapretProof, Method>>()
+    .transpile::<dbc::Anchor<mpc::MerkleTree>>()
+    .transpile::<dbc::Anchor<mpc::MerkleBlock>>()
+    .transpile::<dbc::Anchor<mpc::MerkleProof>>()
     .transpile::<seals::txout::ExplicitSeal<TxPtr, Method>>()
     .transpile::<seals::txout::ExplicitSeal<Txid, Method>>()
     .transpile::<seals::SecretSeal>()
