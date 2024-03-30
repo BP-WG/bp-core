@@ -82,6 +82,26 @@ impl TxWitness {
             TxWitness::Spv(tx, _) => tx.txid(),
         }
     }
+
+    pub fn merge_reveal(self, other: Self) -> Result<Self, MergeError> {
+        let txid = self.txid();
+        if txid != other.txid() {
+            return Err(MergeError::TxidMismatch);
+        }
+        Ok(match (self, other) {
+            (Self::Txid(txid), Self::Txid(_)) => Self::Txid(txid),
+            (Self::Spv(tx, spv), Self::Txid(_)) | (Self::Txid(_), Self::Spv(tx, spv)) => {
+                Self::Spv(tx, spv)
+            }
+            (Self::Spv(tx, spv1), Self::Spv(_, spv2)) if spv1 == spv2 => Self::Spv(tx, spv1),
+            // We do not error here since if the merkle path is invalid we will error in validation.
+            // Here we just take the longest one and try to recover from the corrupted data.
+            (Self::Spv(tx, spv1), Self::Spv(_, spv2)) if spv1.len() > spv2.len() => {
+                Self::Spv(tx, spv1)
+            }
+            (Self::Spv(tx, _), Self::Spv(_, spv2)) => Self::Spv(tx, spv2),
+        })
+    }
 }
 
 /// Anchor is a data structure used in deterministic bitcoin commitments for
@@ -218,7 +238,7 @@ impl<D: dbc::Proof<M>, M: DbcMethod> EtxWitness<mpc::MerkleBlock, D, M> {
         self.mpc_proof.conceal_except(protocols)
     }
 
-    /// Merges two anchors keeping revealed data.
+    /// Merges two extra-transaction witnesses keeping revealed data.
     pub fn merge_reveal(mut self, other: Self) -> Result<Self, MergeError> {
         if self.dbc_proof != other.dbc_proof {
             return Err(MergeError::DbcMismatch);
@@ -273,6 +293,14 @@ impl<P: mpc::Proof + StrictDumb> Anchor<P> {
         }
     }
 
+    pub fn tx_witness(&self) -> &TxWitness {
+        match self {
+            Anchor::Tapret { txw, .. } | Anchor::Opret { txw, .. } | Anchor::Dual { txw, .. } => {
+                txw
+            }
+        }
+    }
+
     pub fn mpc_proofs(&self) -> impl Iterator<Item = &P> {
         let (t, o) = match self {
             Anchor::Tapret { tapret, txw: _ } => (Some(tapret), None),
@@ -286,5 +314,43 @@ impl<P: mpc::Proof + StrictDumb> Anchor<P> {
         t.map(|a| &a.mpc_proof)
             .into_iter()
             .chain(o.map(|a| &a.mpc_proof))
+    }
+
+    fn split(
+        self,
+    ) -> (TxWitness, Option<EtxWitness<P, TapretProof>>, Option<EtxWitness<P, OpretProof>>) {
+        match self {
+            Anchor::Tapret { tapret, txw } => (txw, Some(tapret), None),
+            Anchor::Opret { opret, txw } => (txw, None, Some(opret)),
+            Anchor::Dual { tapret, opret, txw } => (txw, Some(tapret), Some(opret)),
+        }
+    }
+}
+
+impl Anchor<mpc::MerkleBlock> {
+    /// Merges two anchors keeping revealed data.
+    pub fn merge_reveal(self, other: Self) -> Result<Self, MergeError> {
+        if self == other {
+            return Ok(self);
+        }
+        let (txw1, tapret1, opret1) = self.split();
+        let (txw2, tapret2, opret2) = other.split();
+        let txw = txw1.merge_reveal(txw2)?;
+        let tapret = match (tapret1, tapret2) {
+            (None, None) => None,
+            (Some(tapret), None) | (None, Some(tapret)) => Some(tapret),
+            (Some(tapret1), Some(tapret2)) => Some(tapret1.merge_reveal(tapret2)?),
+        };
+        let opret = match (opret1, opret2) {
+            (None, None) => None,
+            (Some(opret), None) | (None, Some(opret)) => Some(opret),
+            (Some(opret1), Some(opret2)) => Some(opret1.merge_reveal(opret2)?),
+        };
+        Ok(match (tapret, opret) {
+            (None, None) => unreachable!(),
+            (Some(tapret), None) => Self::Tapret { tapret, txw },
+            (None, Some(opret)) => Self::Opret { opret, txw },
+            (Some(tapret), Some(opret)) => Self::Dual { tapret, opret, txw },
+        })
     }
 }
