@@ -86,7 +86,7 @@ impl TxWitness {
     pub fn merge_reveal(self, other: Self) -> Result<Self, MergeError> {
         let txid = self.txid();
         if txid != other.txid() {
-            return Err(MergeError::TxidMismatch);
+            return Err(MergeError::TxidMismatch(txid, other.txid()));
         }
         Ok(match (self, other) {
             (Self::Txid(txid), Self::Txid(_)) => Self::Txid(txid),
@@ -149,9 +149,10 @@ pub enum MergeError {
     MpcMismatch(mpc::MergeError),
 
     /// anchors can't be merged since they have different witness transactions
-    TxidMismatch,
+    /// {0} and {1}.
+    TxidMismatch(Txid, Txid),
 
-    /// anchors can't be merged since they have different DBC proofs
+    /// anchors can't be merged since they have different DBC proofs.
     DbcMismatch,
 }
 
