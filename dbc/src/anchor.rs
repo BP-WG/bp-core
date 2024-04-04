@@ -25,7 +25,6 @@
 //! defined by LNPBP-4.
 
 use std::error::Error;
-use std::marker::PhantomData;
 
 use bc::Tx;
 use commit_verify::mpc::{self, Message, ProtocolId};
@@ -74,19 +73,18 @@ pub struct Anchor<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod = M
     /// Proof of the DBC commitment.
     pub dbc_proof: D,
 
-    #[doc(hidden)]
-    #[strict_type(skip)]
-    pub _method: PhantomData<M>,
+    /// Method used by the anchor
+    pub method: M,
 }
 
 impl<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod> Anchor<L, D, M> {
     /// Constructs anchor for a given witness transaction id, MPC and DBC
     /// proofs.
-    pub fn new(mpc_proof: L, dbc_proof: D) -> Self {
+    pub fn new(mpc_proof: L, dbc_proof: D, method: M) -> Self {
         Self {
             mpc_proof,
             dbc_proof,
-            _method: PhantomData,
+            method,
         }
     }
 }
@@ -116,7 +114,7 @@ impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleProof, D, M> {
         Ok(Anchor {
             mpc_proof: lnpbp4_proof,
             dbc_proof: self.dbc_proof,
-            _method: default!(),
+            method: self.method,
         })
     }
 
@@ -175,7 +173,7 @@ impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleBlock, D, M> {
         Ok(Anchor {
             mpc_proof: lnpbp4_proof,
             dbc_proof: self.dbc_proof,
-            _method: default!(),
+            method: self.method,
         })
     }
 
