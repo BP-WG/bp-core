@@ -80,11 +80,11 @@ pub struct Anchor<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod = M
 impl<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod> Anchor<L, D, M> {
     /// Constructs anchor for a given witness transaction id, MPC and DBC
     /// proofs.
-    pub fn new(mpc_proof: L, dbc_proof: D, method: M) -> Self {
+    pub fn new(mpc_proof: L, dbc_proof: D) -> Self {
         Self {
             mpc_proof,
             dbc_proof,
-            method,
+            method: D::METHOD,
         }
     }
 }
