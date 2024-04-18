@@ -23,8 +23,8 @@ license = "Apache-2.0"
 
 [workspace.dependencies]
 amplify = "4.6.0"
-strict_encoding = "2.7.0-beta.1"
-strict_types = "2.7.0-beta.2"
+strict_encoding = "2.7.0-beta.3"
+strict_types = "2.7.0-beta.3"
 commit_verify = "0.11.0-beta.5"
 single_use_seals = "0.11.0-beta.5"
 bp-consensus = { version = "0.11.0-beta.5", path = "consensus" }
@@ -89,3 +89,6 @@ wasm-bindgen-test = "0.3"
 
 [package.metadata.docs.rs]
 features = ["all"]
+
+[patch.crates-io]
+commit_verify = { git = "https://github.com/LNP-BP/client_side_validation", branch = "master" }

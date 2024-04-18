@@ -1,5 +1,5 @@
 {-
-  Id: urn:ubideco:stl:6skrch4mJzDzVaTYnCgCxFJLw23SSUxNhK7PKgPdSapR#roof-parent-reunion
+  Id: urn:ubideco:stl:8UmJsi3csjCEFCEVXvjLeAgvmqxY52iY5EMfTvbyzWx2#energy-baboon-piano
   Name: BPCore
   Version: 0.1.0
   Description: Bitcoin client-side-validation library
@@ -11,7 +11,10 @@
 @context
 typelib BPCore
 
-import CommitVerify#7EpM1uymEteG4g4xmF5ntKYX1wXXpbQj5iLiDreH4jWa#protein-donald-cool
+import Std#EcCNgrgLaygt3tCZNu2ZVEzMzSAZYEUeTNAVi5E81YWi#aspirin-mango-average
+  use U5#nitro-george-nebula
+
+import CommitVerify#GCWLX5TjFmMDCJr5cxWtwoSajBWDWbkQVSuTNbrtD1tg#egypt-wedding-cupid
   use MerkleTree#side-locate-bonus
   use ProtocolId#gamma-banjo-corona
   use Message#shampoo-bishop-morgan
@@ -19,9 +22,6 @@ import CommitVerify#7EpM1uymEteG4g4xmF5ntKYX1wXXpbQj5iLiDreH4jWa#protein-donald-
   use MerkleBlock#miracle-antenna-moral
   use MerkleProof#labor-hilton-magenta
   use TreeNode#risk-opinion-orca
-
-import Std#DzTvt9gGhPUKD8Dkkjk9PDBhkJ4gtWxXWQjxnmUYLNrs#voyage-kimono-disco
-  use U5#nitro-george-nebula
 
 import Bitcoin#HX2UBak8vPsTokug1DGMDvTpzns3xUdwZ7QJdyt4qBA9#speed-atlanta-trilogy
   use Vout#chrome-robin-gallop
@@ -34,23 +34,35 @@ import Bitcoin#HX2UBak8vPsTokug1DGMDvTpzns3xUdwZ7QJdyt4qBA9#speed-atlanta-trilog
   use XOnlyPk#evident-finance-promo
 
 
-@mnemonic(habitat-exit-gizmo)
-data AnchorMerkleBlockOpretProof : mpcProof CommitVerify.MerkleBlock#miracle-antenna-moral, dbcProof OpretProof
+@mnemonic(news-salmon-joker)
+data AnchorMerkleBlockOpretProof : mpcProof CommitVerify.MerkleBlock#miracle-antenna-moral
+                       , dbcProof OpretProof
+                       , method Method
 
-@mnemonic(nobel-koala-mother)
-data AnchorMerkleBlockTapretProof : mpcProof CommitVerify.MerkleBlock#miracle-antenna-moral, dbcProof TapretProof
+@mnemonic(respect-shake-garage)
+data AnchorMerkleBlockTapretProof : mpcProof CommitVerify.MerkleBlock#miracle-antenna-moral
+                       , dbcProof TapretProof
+                       , method Method
 
-@mnemonic(avalon-elastic-neon)
-data AnchorMerkleProofOpretProof : mpcProof CommitVerify.MerkleProof#labor-hilton-magenta, dbcProof OpretProof
+@mnemonic(prince-respond-bank)
+data AnchorMerkleProofOpretProof : mpcProof CommitVerify.MerkleProof#labor-hilton-magenta
+                       , dbcProof OpretProof
+                       , method Method
 
-@mnemonic(scorpio-fame-gram)
-data AnchorMerkleProofTapretProof : mpcProof CommitVerify.MerkleProof#labor-hilton-magenta, dbcProof TapretProof
+@mnemonic(modern-savage-recycle)
+data AnchorMerkleProofTapretProof : mpcProof CommitVerify.MerkleProof#labor-hilton-magenta
+                       , dbcProof TapretProof
+                       , method Method
 
-@mnemonic(monica-cannon-tornado)
-data AnchorMerkleTreeOpretProof : mpcProof CommitVerify.MerkleTree#side-locate-bonus, dbcProof OpretProof
+@mnemonic(profile-karl-quebec)
+data AnchorMerkleTreeOpretProof : mpcProof CommitVerify.MerkleTree#side-locate-bonus
+                       , dbcProof OpretProof
+                       , method Method
 
-@mnemonic(susan-lucas-bazaar)
-data AnchorMerkleTreeTapretProof : mpcProof CommitVerify.MerkleTree#side-locate-bonus, dbcProof TapretProof
+@mnemonic(tractor-wolf-escape)
+data AnchorMerkleTreeTapretProof : mpcProof CommitVerify.MerkleTree#side-locate-bonus
+                       , dbcProof TapretProof
+                       , method Method
 
 @mnemonic(explore-aspect-ranger)
 data BlindSealTxPtr    : method Method

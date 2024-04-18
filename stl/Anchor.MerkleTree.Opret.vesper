@@ -18,3 +18,4 @@ AnchorMerkleTreeOpretProof rec
         _ bytes len=32 aka=ProtocolId
         _ bytes len=32 aka=Message
   dbcProof is Unit aka=OpretProof
+  method enum Method opretFirst=0 tapretFirst=1
