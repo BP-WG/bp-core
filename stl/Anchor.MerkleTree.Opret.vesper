@@ -1,7 +1,4 @@
 AnchorMerkleTreeOpretProof rec
-  reserved1 bytes len=1 aka=ReservedBytes1
-  txid bytes len=32 aka=Txid
-  reserved2 bytes len=1 aka=ReservedBytes1
   mpcProof rec MerkleTree
     depth enum {
       U5 _0=0 _1=1 _2=2 _3=3 _4=4 _5=5 _6=6 _7=7

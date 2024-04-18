@@ -23,9 +23,8 @@ use std::marker::PhantomData;
 
 use bc::{Tx, Txid};
 use commit_verify::mpc;
-use dbc::{Anchor, DbcMethod, Method};
+use dbc::{DbcMethod, Method};
 use single_use_seals::SealWitness;
-use strict_encoding::StrictDumb;
 
 use crate::txout::{TxoSeal, VerifyError};
 use crate::SealCloseMethod;
@@ -50,11 +49,11 @@ pub struct Witness<D: dbc::Proof<M>, M: DbcMethod = Method> {
 impl<D: dbc::Proof<M>, M: DbcMethod> Witness<D, M> {
     /// Constructs witness from a witness transaction and extra-transaction
     /// proof, taken from an anchor.
-    pub fn with<L: mpc::Proof + StrictDumb>(tx: Tx, anchor: Anchor<L, D, M>) -> Witness<D, M> {
+    pub fn with(tx: Tx, dbc: D) -> Witness<D, M> {
         Witness {
+            txid: tx.txid(),
             tx,
-            txid: anchor.txid,
-            proof: anchor.dbc_proof,
+            proof: dbc,
             _phantom: default!(),
         }
     }
