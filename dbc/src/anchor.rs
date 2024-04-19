@@ -87,6 +87,19 @@ impl<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod> Anchor<L, D, M>
             method: D::METHOD,
         }
     }
+
+    /// Verifies whether one anchor matches another ancor.
+    ///
+    /// This is not the same as `Eq`, since two anchors may reveal different
+    /// messages in their MPC proofs, and this be non-equivalent, at the same
+    /// time matching each other , i.e. having the same merkle root and
+    /// producing the same commitments.
+    #[inline]
+    pub fn matches(&self, other: &Self) -> bool {
+        self.mpc_proof.matches(&other.mpc_proof) &&
+            self.dbc_proof == other.dbc_proof &&
+            self.method == other.method
+    }
 }
 
 /// Error merging two [`Anchor`]s.
