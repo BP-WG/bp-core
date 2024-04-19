@@ -43,11 +43,6 @@ pub const TAPRET_SCRIPT_COMMITMENT_PREFIX: [u8; 31] = [
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BPCORE)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
 pub struct TapretCommitment {
     /// LNPBP-4 multi-protocol commitment.
     pub mpc: mpc::Commitment,
@@ -117,6 +112,39 @@ impl CommitVerify<TapretCommitment, TapretFirst> for TapScript {
         debug_assert_eq!(data.len(), 33, "tapret commitment must take exactly 33 bytes");
         tapret.push_slice(&data);
         tapret
+    }
+}
+
+#[cfg(feature = "serde")]
+mod _serde {
+    use amplify::{Bytes, Wrapper};
+    use serde_crate::de::Error;
+    use serde_crate::{Deserialize, Deserializer, Serialize, Serializer};
+
+    use super::*;
+
+    impl Serialize for TapretCommitment {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer {
+            if serializer.is_human_readable() {
+                self.to_string().serialize(serializer)
+            } else {
+                self.to_vec().serialize(serializer)
+            }
+        }
+    }
+
+    impl<'de> Deserialize<'de> for TapretCommitment {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de> {
+            if deserializer.is_human_readable() {
+                let s = <&str>::deserialize(deserializer)?;
+                Self::from_str(s).map_err(D::Error::custom)
+            } else {
+                let slice = Bytes::<33>::deserialize(deserializer)?;
+                Ok(Self::from(slice.into_inner()))
+            }
+        }
     }
 }
 
