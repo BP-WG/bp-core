@@ -111,8 +111,11 @@ pub enum MergeError {
     #[from]
     MpcMismatch(mpc::MergeError),
 
-    /// anchors can't be merged since they have different DBC proofs
+    /// anchors can't be merged since they have different DBC proofs.
     DbcMismatch,
+
+    /// anchors can't be merged since they use different method.
+    MethodMismatch,
 }
 
 impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleProof, D, M> {
@@ -200,6 +203,9 @@ impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleBlock, D, M> {
 
     /// Merges two anchors keeping revealed data.
     pub fn merge_reveal(mut self, other: Self) -> Result<Self, MergeError> {
+        if self.method != other.method {
+            return Err(MergeError::MethodMismatch);
+        }
         if self.dbc_proof != other.dbc_proof {
             return Err(MergeError::DbcMismatch);
         }
