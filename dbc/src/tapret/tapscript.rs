@@ -138,8 +138,8 @@ mod _serde {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: Deserializer<'de> {
             if deserializer.is_human_readable() {
-                let s = <&str>::deserialize(deserializer)?;
-                Self::from_str(s).map_err(D::Error::custom)
+                let s = String::deserialize(deserializer)?;
+                Self::from_str(&s).map_err(D::Error::custom)
             } else {
                 let slice = Bytes::<33>::deserialize(deserializer)?;
                 Ok(Self::from(slice.into_inner()))
