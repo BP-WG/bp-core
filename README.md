@@ -28,9 +28,6 @@ The original idea of client-side-validation was proposed by Peter Todd with its
 possible applications designed by Giacomo Zucco. It was shaped into the protocol
 design by Dr Maxim Orlovsky with an input from the community.
 
-Minimum supported rust version for the library (MSRV) is 1.66 and 2021 rust
-edition.
-
 
 ## Documentation
 
@@ -73,7 +70,7 @@ Contribution guidelines can be found in [CONTRIBUTING](CONTRIBUTING.md)
 
 ### MSRV
 
-This library requires minimum rust compiler version (MSRV) 1.66.0.
+Minimum supported rust compiler version (MSRV) is shown in `rust-version` of `Cargo.toml`.
 
 ### Policy on altcoins
 
