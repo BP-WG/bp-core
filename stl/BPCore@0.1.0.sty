@@ -1,5 +1,5 @@
 {-
-  Id: urn:ubideco:stl:8UmJsi3csjCEFCEVXvjLeAgvmqxY52iY5EMfTvbyzWx2#energy-baboon-piano
+  Id: stl:bx6W@Ye9-W84klBh-n2vIDku-q1tmF4T-DLS$IqW-6CutpXM#garbo-radius-peru
   Name: BPCore
   Version: 0.1.0
   Description: Bitcoin client-side-validation library
@@ -11,107 +11,107 @@
 @context
 typelib BPCore
 
-import Std#EcCNgrgLaygt3tCZNu2ZVEzMzSAZYEUeTNAVi5E81YWi#aspirin-mango-average
-  use U5#nitro-george-nebula
+import Std#ralph-blue-lucky
+  use U5#orbit-graph-sonic
 
-import CommitVerify#GCWLX5TjFmMDCJr5cxWtwoSajBWDWbkQVSuTNbrtD1tg#egypt-wedding-cupid
-  use MerkleTree#side-locate-bonus
-  use ProtocolId#gamma-banjo-corona
-  use Message#shampoo-bishop-morgan
-  use MerkleHash#culture-metro-modular
-  use MerkleBlock#miracle-antenna-moral
-  use MerkleProof#labor-hilton-magenta
-  use TreeNode#risk-opinion-orca
+import CommitVerify#tennis-peace-olympic
+  use MerkleTree#patriot-answer-oliver
+  use ProtocolId#shadow-eclipse-program
+  use Message#druid-blitz-rover
+  use MerkleHash#horse-popcorn-bundle
+  use MerkleBlock#pegasus-delta-eddie
+  use MerkleProof#price-aloha-grid
+  use TreeNode#kansas-scarlet-ricardo
 
-import Bitcoin#HX2UBak8vPsTokug1DGMDvTpzns3xUdwZ7QJdyt4qBA9#speed-atlanta-trilogy
-  use Vout#chrome-robin-gallop
-  use ScriptBytes#maestro-source-jackson
-  use TapNodeHash#crash-culture-jamaica
-  use LeafScript#brenda-round-micro
-  use Txid#cowboy-diego-betty
-  use InternalPk#meter-nerve-chicken
-  use LeafVer#tunnel-lagoon-cowboy
-  use XOnlyPk#evident-finance-promo
+import Bitcoin#signal-color-cipher
+  use Vout#brush-gloria-heroic
+  use ScriptBytes#equator-cockpit-gong
+  use TapNodeHash#paprika-amanda-hunter
+  use LeafScript#bison-doctor-oscar
+  use Txid#shallow-light-reverse
+  use InternalPk#habitat-paprika-oliver
+  use LeafVer#benefit-carbon-africa
+  use XOnlyPk#clever-swim-carpet
 
 
-@mnemonic(news-salmon-joker)
-data AnchorMerkleBlockOpretProof : mpcProof CommitVerify.MerkleBlock#miracle-antenna-moral
+@mnemonic(evita-escape-jessica)
+data AnchorMerkleBlockOpretProof : mpcProof CommitVerify.MerkleBlock
                        , dbcProof OpretProof
                        , method Method
 
-@mnemonic(respect-shake-garage)
-data AnchorMerkleBlockTapretProof : mpcProof CommitVerify.MerkleBlock#miracle-antenna-moral
+@mnemonic(bicycle-scroll-dynasty)
+data AnchorMerkleBlockTapretProof : mpcProof CommitVerify.MerkleBlock
                        , dbcProof TapretProof
                        , method Method
 
-@mnemonic(prince-respond-bank)
-data AnchorMerkleProofOpretProof : mpcProof CommitVerify.MerkleProof#labor-hilton-magenta
+@mnemonic(wonder-club-good)
+data AnchorMerkleProofOpretProof : mpcProof CommitVerify.MerkleProof
                        , dbcProof OpretProof
                        , method Method
 
-@mnemonic(modern-savage-recycle)
-data AnchorMerkleProofTapretProof : mpcProof CommitVerify.MerkleProof#labor-hilton-magenta
+@mnemonic(select-infant-precise)
+data AnchorMerkleProofTapretProof : mpcProof CommitVerify.MerkleProof
                        , dbcProof TapretProof
                        , method Method
 
-@mnemonic(profile-karl-quebec)
-data AnchorMerkleTreeOpretProof : mpcProof CommitVerify.MerkleTree#side-locate-bonus
+@mnemonic(educate-halt-nobody)
+data AnchorMerkleTreeOpretProof : mpcProof CommitVerify.MerkleTree
                        , dbcProof OpretProof
                        , method Method
 
-@mnemonic(tractor-wolf-escape)
-data AnchorMerkleTreeTapretProof : mpcProof CommitVerify.MerkleTree#side-locate-bonus
+@mnemonic(castro-visitor-grid)
+data AnchorMerkleTreeTapretProof : mpcProof CommitVerify.MerkleTree
                        , dbcProof TapretProof
                        , method Method
 
-@mnemonic(explore-aspect-ranger)
+@mnemonic(report-process-stuart)
 data BlindSealTxPtr    : method Method
                        , txid TxPtr
-                       , vout Bitcoin.Vout#chrome-robin-gallop
+                       , vout Bitcoin.Vout
                        , blinding U64
 
-@mnemonic(prepare-pluto-cactus)
+@mnemonic(baby-region-proxy)
 data BlindSealTxid     : method Method
-                       , txid Bitcoin.Txid#cowboy-diego-betty
-                       , vout Bitcoin.Vout#chrome-robin-gallop
+                       , txid Bitcoin.Txid
+                       , vout Bitcoin.Vout
                        , blinding U64
 
-@mnemonic(british-aloha-mimosa)
+@mnemonic(meaning-extra-sherman)
 data ExplicitSealTxPtr : method Method
                        , txid TxPtr
-                       , vout Bitcoin.Vout#chrome-robin-gallop
+                       , vout Bitcoin.Vout
 
-@mnemonic(think-convert-temple)
+@mnemonic(june-total-denver)
 data ExplicitSealTxid  : method Method
-                       , txid Bitcoin.Txid#cowboy-diego-betty
-                       , vout Bitcoin.Vout#chrome-robin-gallop
+                       , txid Bitcoin.Txid
+                       , vout Bitcoin.Vout
 
-@mnemonic(trilogy-tahiti-valid)
+@mnemonic(bali-boris-plasma)
 data Method            : opretFirst | tapretFirst
 
 
-@mnemonic(segment-ambient-totem)
+@mnemonic(good-village-flex)
 data OpretProof        : ()
 
-@mnemonic(santana-domingo-needle)
+@mnemonic(dollar-iris-wizard)
 data SecretSeal        : [Byte ^ 32]
 
-@mnemonic(tribal-voltage-object)
-data TapretNodePartner : leftNode Bitcoin.TapNodeHash#crash-culture-jamaica
-                       | rightLeaf Bitcoin.LeafScript#brenda-round-micro
+@mnemonic(cabinet-agent-stella)
+data TapretNodePartner : leftNode Bitcoin.TapNodeHash
+                       | rightLeaf Bitcoin.LeafScript
                        | rightBranch TapretRightBranch
 
-@mnemonic(clark-magic-salon)
+@mnemonic(cotton-ventura-clean)
 data TapretPathProof   : partnerNode TapretNodePartner?, nonce U8
 
-@mnemonic(aurora-bonjour-dinner)
-data TapretProof       : pathProof TapretPathProof, internalPk Bitcoin.InternalPk#meter-nerve-chicken
+@mnemonic(eternal-druid-round)
+data TapretProof       : pathProof TapretPathProof, internalPk Bitcoin.InternalPk
 
-@mnemonic(basket-prelude-bridge)
-data TapretRightBranch : leftNodeHash Bitcoin.TapNodeHash#crash-culture-jamaica, rightNodeHash Bitcoin.TapNodeHash#crash-culture-jamaica
+@mnemonic(miracle-patriot-touch)
+data TapretRightBranch : leftNodeHash Bitcoin.TapNodeHash, rightNodeHash Bitcoin.TapNodeHash
 
-@mnemonic(strange-source-father)
+@mnemonic(italian-july-eddie)
 data TxPtr             : witnessTx ()
-                       | txid Bitcoin.Txid#cowboy-diego-betty
+                       | txid Bitcoin.Txid
 
 

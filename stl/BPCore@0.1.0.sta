@@ -1,9 +1,10 @@
 -----BEGIN STRICT TYPE LIB-----
-Id: urn:ubideco:stl:8UmJsi3csjCEFCEVXvjLeAgvmqxY52iY5EMfTvbyzWx2#energy-baboon-piano
+Id: stl:bx6W@Ye9-W84klBh-n2vIDku-q1tmF4T-DLS$IqW-6CutpXM#garbo-radius-peru
 Name: BPCore
-Dependency: EcCNgrgLaygt3tCZNu2ZVEzMzSAZYEUeTNAVi5E81YWi#aspirin-mango-average
-Dependency: GCWLX5TjFmMDCJr5cxWtwoSajBWDWbkQVSuTNbrtD1tg#egypt-wedding-cupid
-Dependency: HX2UBak8vPsTokug1DGMDvTpzns3xUdwZ7QJdyt4qBA9#speed-atlanta-trilogy
+Dependencies:
+	Std#ralph-blue-lucky,
+	CommitVerify#tennis-peace-olympic,
+	Bitcoin#signal-color-cipher
 Checksum-SHA256: 2eb52252d5050acc52d0f2e3b5addc059471b9cf8c2d920c9f6fdddcf6a8fb2b
 
 20~CnZ*pY=$}AplgPGkh3_fq3Q7_j=2#kPT_9!;lWR>~GYywm#15<Ql;nCe3IziX
