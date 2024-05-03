@@ -24,7 +24,8 @@ use std::fmt::{Formatter, LowerHex};
 use std::str::FromStr;
 
 use amplify::hex::{FromHex, ToHex};
-use amplify::{Bytes32StrRev, Wrapper};
+use amplify::{ByteArray, Bytes32StrRev, Wrapper};
+use commit_verify::{DigestExt, Sha256};
 
 use crate::{BlockDataParseError, ConsensusDecode, ConsensusEncode, LIB_NAME_BITCOIN};
 
@@ -97,6 +98,17 @@ impl FromStr for BlockHeader {
     }
 }
 
+impl BlockHeader {
+    pub fn block_hash(&self) -> BlockHash {
+        let mut enc = Sha256::default();
+        self.consensus_encode(&mut enc)
+            .expect("engines don't error");
+        let mut double = Sha256::default();
+        double.input_raw(&enc.finish());
+        BlockHash::from_byte_array(double.finish())
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -120,5 +132,9 @@ mod test {
         assert_eq!(header.nonce, 0xad54cd0b);
         assert_eq!(header.time, 1710668837);
         assert_eq!(header.to_string(), header_str);
+        assert_eq!(
+            header.block_hash().to_string(),
+            "00000000000000000000a885d748631afdf2408d2db66e616e963d08c31a65df"
+        );
     }
 }
