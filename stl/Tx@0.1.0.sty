@@ -1,5 +1,5 @@
 {-
-  Id: urn:ubideco:stl:9zw1koriNSQRJBdHbXnTqjCdShzASm915rWgnCBgnKJ4#delphi-magnum-flame
+  Id: stl:hbSsm3pX-lvluEDR-u10173k-cTdhTqI-75q5wIV-qHYv2V0#germany-detect-export
   Name: Tx
   Version: 0.1.0
   Description: Bitcoin transaction library
@@ -13,55 +13,55 @@ typelib Tx
 
 -- no dependencies
 
-@mnemonic(kinetic-avenue-escort)
+@mnemonic(royal-anatomy-june)
 data ByteStr           : [Byte ^ ..0xffffffff]
 
-@mnemonic(tokyo-inch-program)
+@mnemonic(lobster-liberal-jump)
 data LockTime          : U32
 
-@mnemonic(pocket-pegasus-frank)
+@mnemonic(shadow-scroll-before)
 data Outpoint          : txid Txid, vout Vout
 
-@mnemonic(pyramid-spray-star)
+@mnemonic(metro-picasso-roger)
 data Sats              : U64
 
-@mnemonic(maestro-source-jackson)
+@mnemonic(equator-cockpit-gong)
 data ScriptBytes       : [Byte ^ ..0xffffffff]
 
-@mnemonic(bingo-maestro-silk)
+@mnemonic(ribbon-paradox-rival)
 data ScriptPubkey      : ScriptBytes
 
-@mnemonic(rhino-time-rodent)
+@mnemonic(copper-verbal-ingrid)
 data SeqNo             : U32
 
-@mnemonic(prelude-analyze-think)
+@mnemonic(minute-alfred-gibson)
 data SigScript         : ScriptBytes
 
-@mnemonic(milk-gloria-prize)
+@mnemonic(anvil-airport-broken)
 data Tx                : version TxVer
                        , inputs [TxIn ^ ..0xffffffff]
                        , outputs [TxOut ^ ..0xffffffff]
                        , lockTime LockTime
 
-@mnemonic(antenna-crater-planet)
+@mnemonic(person-atlanta-nickel)
 data TxIn              : prevOutput Outpoint
                        , sigScript SigScript
                        , sequence SeqNo
                        , witness Witness
 
-@mnemonic(design-jacket-spirit)
+@mnemonic(oscar-chief-truck)
 data TxOut             : value Sats, scriptPubkey ScriptPubkey
 
-@mnemonic(english-natasha-virus)
+@mnemonic(nepal-symbol-uniform)
 data TxVer             : I32
 
-@mnemonic(cowboy-diego-betty)
+@mnemonic(shallow-light-reverse)
 data Txid              : [Byte ^ 32]
 
-@mnemonic(chrome-robin-gallop)
+@mnemonic(brush-gloria-heroic)
 data Vout              : U32
 
-@mnemonic(sonata-local-slow)
+@mnemonic(ship-jessica-wizard)
 data Witness           : [ByteStr ^ ..0xffffffff]
 
 

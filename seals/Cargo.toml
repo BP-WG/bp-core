@@ -18,10 +18,10 @@ path = "src/lib.rs"
 
 [dependencies]
 amplify = { workspace = true }
+baid64 = "0.1.0"
 single_use_seals = { workspace = true }
 commit_verify = { workspace = true }
 strict_encoding = { workspace = true }
-baid58 = "0.4.4"
 bp-consensus = { workspace = true }
 bp-dbc = { workspace = true }
 rand = "0.8.5"
@@ -39,4 +39,4 @@ serde = [
 ]
 
 [package.metadata.docs.rs]
-features = [ "all" ]
+features = ["all"]

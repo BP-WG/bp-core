@@ -1,5 +1,5 @@
 {-
-  Id: urn:ubideco:stl:CZDuuDDpmR3SKQQhLTtV4X5JmosuUCg5kzzXa5Twn4FF#salmon-alcohol-miracle
+  Id: stl:q7G95wzt-SxT2BMV-t@PokBt-wNYgZTu-AaYAtM3-rYjlzs4#agenda-wolf-pagoda
   Name: Bitcoin
   Version: 0.1.0
   Description: Consensus library for bitcoin protocol
@@ -11,17 +11,17 @@
 @context
 typelib Bitcoin
 
-import Std#EcCNgrgLaygt3tCZNu2ZVEzMzSAZYEUeTNAVi5E81YWi#aspirin-mango-average
-  use Bool#laser-madam-maxwell
+import Std#ralph-blue-lucky
+  use Bool#oxygen-complex-duet
 
 
-@mnemonic(politic-cactus-salon)
+@mnemonic(fire-mouse-paint)
 data Bip340Sig         : sig [Byte ^ 64], sighash_type SighashType?
 
-@mnemonic(canada-sharp-traffic)
+@mnemonic(super-david-graph)
 data BlockHash         : [Byte ^ 32]
 
-@mnemonic(barbara-light-panda)
+@mnemonic(ricardo-flipper-urban)
 data BlockHeader       : version I32
                        , prevBlockHash BlockHash
                        , merkleRoot BlockMerkleRoot
@@ -29,49 +29,49 @@ data BlockHeader       : version I32
                        , bits U32
                        , nonce U32
 
-@mnemonic(period-time-media)
+@mnemonic(canada-century-jacket)
 data BlockMerkleRoot   : [Byte ^ 32]
 
-@mnemonic(kinetic-avenue-escort)
+@mnemonic(royal-anatomy-june)
 data ByteStr           : [Byte ^ ..0xffffffff]
 
-@mnemonic(aspect-citrus-nerve)
+@mnemonic(poncho-silver-bronze)
 data CompressedPk      : [Byte ^ 33]
 
-@mnemonic(nuclear-coral-gilbert)
+@mnemonic(green-lima-song)
 data ControlBlock      : leafVersion LeafVer
                        , outputKeyParity Parity
                        , internalPk InternalPk
                        , merkleBranch TapMerklePath
 
-@mnemonic(student-formula-circus)
+@mnemonic(quality-donald-gemini)
 data FutureLeafVer     : U8
 
-@mnemonic(anita-tactic-bikini)
+@mnemonic(almond-canvas-ecology)
 data InternalPk        : XOnlyPk
 
-@mnemonic(anvil-arctic-cloud)
+@mnemonic(forever-ariel-perform)
 data LeafScript        : version LeafVer, script ScriptBytes
 
-@mnemonic(tunnel-lagoon-cowboy)
+@mnemonic(benefit-carbon-africa)
 data LeafVer           : U8
 
-@mnemonic(student-avenue-economy)
-data LegacyPk          : compressed Std.Bool#laser-madam-maxwell, pubkey [Byte ^ 33]
+@mnemonic(clever-appear-nominal)
+data LegacyPk          : compressed Std.Bool, pubkey [Byte ^ 33]
 
-@mnemonic(gondola-middle-style)
+@mnemonic(july-delete-maxwell)
 data LegacySig         : sig [Byte ^ ..0xff], sighash_type SighashType
 
-@mnemonic(greek-support-hawaii)
+@mnemonic(apple-north-select)
 data LockHeight        : U32
 
-@mnemonic(tokyo-inch-program)
+@mnemonic(lobster-liberal-jump)
 data LockTime          : U32
 
-@mnemonic(compass-protein-barcode)
+@mnemonic(effect-benefit-chemist)
 data LockTimestamp     : U32
 
-@mnemonic(bless-hippie-shirt)
+@mnemonic(brother-sector-quiet)
 data OpCode            : pushBytes0 | pushBytes1 | pushBytes2 | pushBytes3
                        | pushBytes4 | pushBytes5 | pushBytes6 | pushBytes7
                        | pushBytes8 | pushBytes9 | pushBytes10 | pushBytes11
@@ -87,123 +87,123 @@ data OpCode            : pushBytes0 | pushBytes1 | pushBytes2 | pushBytes3
                        | checkSigVerify
 
 
-@mnemonic(pocket-pegasus-frank)
+@mnemonic(shadow-scroll-before)
 data Outpoint          : txid Txid, vout Vout
 
-@mnemonic(beach-twist-hotel)
+@mnemonic(panic-nova-speed)
 data OutputPk          : XOnlyPk
 
-@mnemonic(method-editor-echo)
+@mnemonic(phrase-forest-cool)
 data Parity            : even | odd
 
 
-@mnemonic(soviet-senator-wisdom)
+@mnemonic(vodka-bogart-madonna)
 data PubkeyHash        : [Byte ^ 20]
 
-@mnemonic(delta-jumbo-clone)
+@mnemonic(middle-season-baboon)
 data RedeemScript      : ScriptBytes
 
-@mnemonic(pyramid-spray-star)
+@mnemonic(metro-picasso-roger)
 data Sats              : U64
 
-@mnemonic(maestro-source-jackson)
+@mnemonic(equator-cockpit-gong)
 data ScriptBytes       : [Byte ^ ..0xffffffff]
 
-@mnemonic(samuel-miami-cave)
+@mnemonic(command-brave-album)
 data ScriptHash        : [Byte ^ 20]
 
-@mnemonic(bingo-maestro-silk)
+@mnemonic(ribbon-paradox-rival)
 data ScriptPubkey      : ScriptBytes
 
-@mnemonic(rhino-time-rodent)
+@mnemonic(copper-verbal-ingrid)
 data SeqNo             : U32
 
-@mnemonic(prelude-analyze-think)
+@mnemonic(minute-alfred-gibson)
 data SigScript         : ScriptBytes
 
-@mnemonic(prefix-pioneer-remark)
+@mnemonic(exotic-diet-ford)
 data SighashFlag       : all#1 | none | single
 
 
-@mnemonic(balsa-equator-ground)
-data SighashType       : flag SighashFlag, anyoneCanPay Std.Bool#laser-madam-maxwell
+@mnemonic(jazz-beatles-pasta)
+data SighashType       : flag SighashFlag, anyoneCanPay Std.Bool
 
-@mnemonic(europe-welcome-phone)
+@mnemonic(calypso-travel-script)
 data TapBranchHash     : [Byte ^ 32]
 
-@mnemonic(weekend-boris-import)
+@mnemonic(athlete-serpent-bridge)
 data TapCode           : pushBytes32#32 | pushData1#76 | pushData2 | pushData4
                        | reserved#80 | return#106
 
 
-@mnemonic(middle-jazz-basket)
+@mnemonic(micro-brave-pretty)
 data TapLeafHash       : [Byte ^ 32]
 
-@mnemonic(dublin-chemist-version)
+@mnemonic(manual-mike-alien)
 data TapMerklePath     : [TapBranchHash ^ ..0x80]
 
-@mnemonic(crash-culture-jamaica)
+@mnemonic(paprika-amanda-hunter)
 data TapNodeHash       : [Byte ^ 32]
 
-@mnemonic(telecom-quest-helium)
+@mnemonic(congo-bali-castro)
 data TapScript         : ScriptBytes
 
-@mnemonic(texas-tommy-geneva)
+@mnemonic(distant-respond-green)
 data TimeLockInterval  : height U16
                        | time U16
 
-@mnemonic(milk-gloria-prize)
+@mnemonic(anvil-airport-broken)
 data Tx                : version TxVer
                        , inputs [TxIn ^ ..0xffffffff]
                        , outputs [TxOut ^ ..0xffffffff]
                        , lockTime LockTime
 
-@mnemonic(antenna-crater-planet)
+@mnemonic(person-atlanta-nickel)
 data TxIn              : prevOutput Outpoint
                        , sigScript SigScript
                        , sequence SeqNo
                        , witness Witness
 
-@mnemonic(design-jacket-spirit)
+@mnemonic(oscar-chief-truck)
 data TxOut             : value Sats, scriptPubkey ScriptPubkey
 
-@mnemonic(english-natasha-virus)
+@mnemonic(nepal-symbol-uniform)
 data TxVer             : I32
 
-@mnemonic(cowboy-diego-betty)
+@mnemonic(shallow-light-reverse)
 data Txid              : [Byte ^ 32]
 
-@mnemonic(yellow-jaguar-pastel)
+@mnemonic(miracle-almanac-record)
 data UncompressedPk    : [Byte ^ 65]
 
-@mnemonic(waiter-salad-casino)
+@mnemonic(pogo-trivial-saturn)
 data VBytes            : U32
 
-@mnemonic(conan-avalon-food)
+@mnemonic(orange-maximum-blitz)
 data VarInt            : U64
 
-@mnemonic(chrome-robin-gallop)
+@mnemonic(brush-gloria-heroic)
 data Vout              : U32
 
-@mnemonic(plasma-august-marion)
+@mnemonic(mexico-bikini-athena)
 data WPubkeyHash       : [Byte ^ 20]
 
-@mnemonic(vibrate-charm-spain)
+@mnemonic(triton-regard-couple)
 data WScriptHash       : [Byte ^ 32]
 
-@mnemonic(bridge-version-voyage)
+@mnemonic(heart-pinball-jump)
 data WeightUnits       : U32
 
-@mnemonic(sonata-local-slow)
+@mnemonic(ship-jessica-wizard)
 data Witness           : [ByteStr ^ ..0xffffffff]
 
-@mnemonic(scholar-juice-titanic)
+@mnemonic(alias-vega-shock)
 data WitnessProgram    : version WitnessVer, program [Byte ^ 2..0x28]
 
-@mnemonic(boris-harbor-equal)
+@mnemonic(design-epoxy-metro)
 data WitnessScript     : ScriptBytes
 
-@mnemonic(richard-average-unit)
+@mnemonic(tower-medusa-eric)
 data WitnessVer        : v0 | v1#81 | v2 | v3
                        | v4 | v5 | v6 | v7
                        | v8 | v9 | v10 | v11
@@ -211,10 +211,10 @@ data WitnessVer        : v0 | v1#81 | v2 | v3
                        | v16
 
 
-@mnemonic(sushi-polygon-circus)
+@mnemonic(manager-rocket-hammer)
 data Wtxid             : [Byte ^ 32]
 
-@mnemonic(evident-finance-promo)
+@mnemonic(clever-swim-carpet)
 data XOnlyPk           : [Byte ^ 32]
 
 

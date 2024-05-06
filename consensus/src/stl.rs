@@ -31,13 +31,10 @@ use crate::{
     WitnessVer, Wtxid, LIB_NAME_BITCOIN,
 };
 
-#[deprecated(since = "0.10.8", note = "use LIB_ID_BP_TX instead")]
-pub const LIB_ID_BITCOIN: &str =
-    "urn:ubideco:stl:HX2UBak8vPsTokug1DGMDvTpzns3xUdwZ7QJdyt4qBA9#speed-atlanta-trilogy";
 pub const LIB_ID_BP_TX: &str =
-    "urn:ubideco:stl:HX2UBak8vPsTokug1DGMDvTpzns3xUdwZ7QJdyt4qBA9#speed-atlanta-trilogy";
+    "stl:9WwTYiP2-OadKCZP-cR0bJ@Y-qruINYX-bXZFj8Y-fsQoGgo#signal-color-cipher";
 pub const LIB_ID_BP_CONSENSUS: &str =
-    "urn:ubideco:stl:CZDuuDDpmR3SKQQhLTtV4X5JmosuUCg5kzzXa5Twn4FF#salmon-alcohol-miracle";
+    "stl:q7G95wzt-SxT2BMV-t@PokBt-wNYgZTu-AaYAtM3-rYjlzs4#agenda-wolf-pagoda";
 
 #[deprecated(since = "0.10.8", note = "use _bp_tx_stl instead")]
 fn _bitcoin_stl() -> Result<TypeLib, CompileError> { _bp_tx_stl() }

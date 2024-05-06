@@ -22,8 +22,8 @@
 use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 
-use amplify::{Bytes32, Wrapper};
-use baid58::{Baid58ParseError, Chunking, FromBaid58, ToBaid58, CHUNKING_32CHECKSUM};
+use amplify::{ByteArray, Bytes32, Wrapper};
+use baid64::{Baid64ParseError, DisplayBaid64, FromBaid64Str};
 use commit_verify::{CommitmentId, DigestExt, Sha256};
 
 /// Confidential version of transaction outpoint-based single-use-seal
@@ -50,27 +50,21 @@ impl From<Sha256> for SecretSeal {
     fn from(hasher: Sha256) -> Self { hasher.finish().into() }
 }
 
-impl ToBaid58<32> for SecretSeal {
+impl DisplayBaid64 for SecretSeal {
     const HRI: &'static str = "utxob";
-    const CHUNKING: Option<Chunking> = CHUNKING_32CHECKSUM;
-    fn to_baid58_payload(&self) -> [u8; 32] { self.0.into_inner() }
-    fn to_baid58_string(&self) -> String { self.to_string() }
+    const CHUNKING: bool = true;
+    const PREFIX: bool = true;
+    const EMBED_CHECKSUM: bool = true;
+    const MNEMONIC: bool = false;
+    fn to_baid64_payload(&self) -> [u8; 32] { self.to_byte_array() }
 }
-impl FromBaid58<32> for SecretSeal {}
+impl FromBaid64Str for SecretSeal {}
 impl FromStr for SecretSeal {
-    type Err = Baid58ParseError;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        SecretSeal::from_baid58_maybe_chunked_str(s, ':', ' ')
-    }
+    type Err = Baid64ParseError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> { Self::from_baid64_str(s) }
 }
 impl Display for SecretSeal {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        if f.alternate() {
-            write!(f, "{::^}", self.to_baid58())
-        } else {
-            write!(f, "{::^.3}", self.to_baid58())
-        }
-    }
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result { self.fmt_baid64(f) }
 }
 
 #[cfg(test)]
@@ -79,12 +73,11 @@ mod test {
 
     #[test]
     fn secret_seal_baid58() {
-        let baid58 = "utxob:2eFrirU-RjqLnqR74-AKRfdnc9M-DpvSRjmZG-mFPrw7nvu-Te1wy83";
-        let seal: SecretSeal = baid58.parse().unwrap();
-        assert_eq!(baid58, seal.to_string());
-        assert_eq!(baid58.replace('-', ""), format!("{seal:#}"));
-        assert_eq!(seal.to_string(), seal.to_baid58_string());
-        let reconstructed = SecretSeal::from_str(&baid58.replace('-', "")).unwrap();
+        let baid64 = "utxob:xDfmDF9g-yNOjriV-6Anbe6H-MLJ@@g6-lo7Dd4f-dhWBW8S-XYGBm";
+        let seal: SecretSeal = baid64.parse().unwrap();
+        assert_eq!(baid64, seal.to_string());
+        assert_eq!(seal.to_string(), seal.to_baid64_string());
+        let reconstructed = SecretSeal::from_str(&baid64.replace('-', "")).unwrap();
         assert_eq!(reconstructed, seal);
     }
 }
