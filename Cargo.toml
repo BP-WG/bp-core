@@ -13,24 +13,24 @@ default-members = [
 ]
 
 [workspace.package]
-version = "0.11.0-beta.5"
+version = "0.11.0-beta.6"
 authors = ["Dr Maxim Orlovsky <orlovsky@lnp-bp.org>"]
 homepage = "https://github.com/BP-WG"
 repository = "https://github.com/BP-WG/bp-core"
-rust-version = "1.69.0" # Due to TOML in amplify crate
+rust-version = "1.70.0" # Due to strict encoding
 edition = "2021"
 license = "Apache-2.0"
 
 [workspace.dependencies]
 amplify = "4.6.0"
-strict_encoding = "2.7.0-beta.3"
-strict_types = "2.7.0-beta.3"
-commit_verify = "0.11.0-beta.5"
-single_use_seals = "0.11.0-beta.5"
-bp-consensus = { version = "0.11.0-beta.5", path = "consensus" }
-bp-dbc = { version = "0.11.0-beta.5", path = "./dbc" }
-bp-seals = { version = "0.11.0-beta.5", path = "./seals" }
-secp256k1 = { version = ">=0.28.1", features = ["global-context"] }
+strict_encoding = "2.7.0-beta.4"
+strict_types = "2.7.0-beta.4"
+commit_verify = "0.11.0-beta.6"
+single_use_seals = "0.11.0-beta.6"
+bp-consensus = { version = "0.11.0-beta.6", path = "consensus" }
+bp-dbc = { version = "0.11.0-beta.6", path = "./dbc" }
+bp-seals = { version = "0.11.0-beta.6", path = "./seals" }
+secp256k1 = { version = "0.29.0", features = ["global-context"] }
 serde_crate = { package = "serde", version = "1", features = ["derive"] }
 
 [package]
@@ -89,9 +89,3 @@ wasm-bindgen-test = "0.3"
 
 [package.metadata.docs.rs]
 features = ["all"]
-
-[patch.crates-io]
-ascii-armor = { git = "https://github.com/UBIDECO/ascii-armor" }
-strict_encoding = { git = "https://github.com/strict-types/strict-encoding", branch = "develop" }
-strict_types = { git = "https://github.com/strict-types/strict-types", branch = "develop" }
-commit_verify = { git = "https://github.com/LNP-BP/client_side_validation", branch = "develop" }
