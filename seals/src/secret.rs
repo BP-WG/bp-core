@@ -72,7 +72,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn secret_seal_baid58() {
+    fn secret_seal_baid64() {
         let baid64 = "utxob:xDfmDF9g-yNOjriV-6Anbe6H-MLJ!!g6-lo7Dd4f-dhWBW8S-XYGBm";
         let seal: SecretSeal = baid64.parse().unwrap();
         assert_eq!(baid64, seal.to_string());

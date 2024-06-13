@@ -178,7 +178,7 @@ mod test {
     }
 
     #[test]
-    pub fn tapret_commitment_baid58() {
+    pub fn tapret_commitment_baid64() {
         let commitment = commitment();
         let s = commitment.to_string();
         assert_eq!(s, "k#7JerF92P=PEN7cf&`GWfS*?rIEdfEup1%zausI2m");
