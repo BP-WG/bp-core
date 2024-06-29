@@ -65,6 +65,7 @@ mod weights;
 #[cfg(feature = "stl")]
 pub mod stl;
 mod coding;
+mod sigcache;
 
 pub use block::{BlockHash, BlockHeader, BlockMerkleRoot};
 pub use coding::{
@@ -76,6 +77,7 @@ pub use opcodes::OpCode;
 pub use pubkeys::{CompressedPk, InvalidPubkey, LegacyPk, PubkeyParseError, UncompressedPk};
 pub use script::{RedeemScript, ScriptBytes, ScriptPubkey, SigScript};
 pub use segwit::{SegwitError, Witness, WitnessProgram, WitnessScript, WitnessVer, Wtxid};
+pub use sigcache::{PrevoutMismatch, SighashCache, SighashError};
 pub use sigtypes::{Bip340Sig, LegacySig, ScriptCode, SigError, Sighash, SighashFlag, SighashType};
 pub use taproot::{
     Annex, AnnexError, ControlBlock, FutureLeafVer, InternalPk, IntoTapHash, InvalidLeafVer,

@@ -27,8 +27,8 @@ use amplify::{confinement, ByteArray, Bytes32, IoError, Wrapper};
 use crate::{
     Annex, BlockHash, BlockHeader, BlockMerkleRoot, ControlBlock, InternalPk, InvalidLeafVer,
     LeafVer, LockTime, Outpoint, Parity, RedeemScript, Sats, ScriptBytes, ScriptPubkey, SeqNo,
-    SigScript, TapBranchHash, TapMerklePath, TapScript, Tx, TxIn, TxOut, TxVer, Txid, Vout,
-    Witness, WitnessScript, LIB_NAME_BITCOIN, TAPROOT_ANNEX_PREFIX,
+    SigScript, Sighash, TapBranchHash, TapLeafHash, TapMerklePath, TapScript, Tx, TxIn, TxOut,
+    TxVer, Txid, Vout, Witness, WitnessScript, LIB_NAME_BITCOIN, TAPROOT_ANNEX_PREFIX,
 };
 
 /// Bitcoin consensus allows arrays which length is encoded as VarInt to grow up
@@ -647,6 +647,18 @@ impl ConsensusDecode for Sats {
     }
 }
 
+impl ConsensusEncode for Sighash {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        self.to_byte_array().consensus_encode(writer)
+    }
+}
+
+impl ConsensusEncode for TapLeafHash {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        self.to_byte_array().consensus_encode(writer)
+    }
+}
+
 impl ConsensusEncode for VarInt {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
         match self.0 {
@@ -811,6 +823,20 @@ impl ConsensusDecode for u64 {
         let mut buf = [0u8; (Self::BITS / 8) as usize];
         reader.read_exact(&mut buf)?;
         Ok(Self::from_le_bytes(buf))
+    }
+}
+
+impl ConsensusEncode for Bytes32 {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        writer.write_all(&self.to_byte_array())?;
+        Ok(8)
+    }
+}
+
+impl ConsensusEncode for [u8; 32] {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        writer.write_all(self)?;
+        Ok(8)
     }
 }
 
