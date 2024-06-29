@@ -59,7 +59,7 @@ impl From<IoError> for SighashError {
 /// Efficiently calculates signature hash message for legacy, segwit and taproot
 /// inputs.
 #[derive(Debug)]
-pub struct SighashCache<Tx: Borrow<Transaction>, Prevout: Borrow<TxOut>> {
+pub struct SighashCache<Prevout: Borrow<TxOut> = TxOut, Tx: Borrow<Transaction> = Transaction> {
     /// Access to transaction required for transaction introspection.
     tx: Tx,
 
@@ -104,7 +104,7 @@ struct TaprootCache {
     script_pubkeys: Bytes32,
 }
 
-impl<Tx: Borrow<Transaction>, Prevout: Borrow<TxOut>> SighashCache<Tx, Prevout> {
+impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> {
     /// Constructs a new `SighashCache` from an unsigned transaction.
     ///
     /// The sighash components are computed in a lazy manner when required. For
