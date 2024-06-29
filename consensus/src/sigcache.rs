@@ -48,8 +48,20 @@ pub struct PrevoutMismatch {
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Display, Error)]
 #[display(doc_comments)]
 pub enum SighashError {
-    InvalidInputIndex { index: usize, inputs: usize },
-    NoSingleOutputMatch { index: usize, outputs: usize },
+    /// invalid input index {index} in {txid} which has only {inputs} inputs.
+    InvalidInputIndex {
+        txid: Txid,
+        index: usize,
+        inputs: usize,
+    },
+
+    /// transaction {txid} input {index} uses SIGHASH_SINGLE, but the total
+    /// number of outputs is {outputs} and thus no signature can be produced.
+    NoSingleOutputMatch {
+        txid: Txid,
+        index: usize,
+        outputs: usize,
+    },
 }
 
 impl From<IoError> for SighashError {
@@ -214,6 +226,7 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
                 .inputs
                 .get(input_index)
                 .ok_or(SighashError::InvalidInputIndex {
+                    txid: tx.txid(),
                     index: input_index,
                     inputs: tx.inputs.len(),
                 })?;
@@ -247,6 +260,7 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
             tx.outputs
                 .get(input_index)
                 .ok_or(SighashError::NoSingleOutputMatch {
+                    txid: tx.txid(),
                     index: input_index,
                     outputs: tx.outputs.len(),
                 })?
@@ -336,6 +350,7 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
                 .inputs
                 .get(input_index)
                 .ok_or(SighashError::InvalidInputIndex {
+                    txid: tx.txid(),
                     index: input_index,
                     inputs: tx.inputs.len(),
                 })?;
@@ -378,6 +393,7 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
 
         if input_index >= tx_src.inputs.len() {
             return Err(SighashError::InvalidInputIndex {
+                txid: tx_src.txid(),
                 index: input_index,
                 inputs: tx_src.inputs.len(),
             });
