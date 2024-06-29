@@ -76,7 +76,7 @@ pub use opcodes::OpCode;
 pub use pubkeys::{CompressedPk, InvalidPubkey, LegacyPk, PubkeyParseError, UncompressedPk};
 pub use script::{RedeemScript, ScriptBytes, ScriptPubkey, SigScript};
 pub use segwit::{SegwitError, Witness, WitnessProgram, WitnessScript, WitnessVer, Wtxid};
-pub use sigtypes::{Bip340Sig, LegacySig, SigError, Sighash, SighashFlag, SighashType};
+pub use sigtypes::{Bip340Sig, LegacySig, ScriptCode, SigError, Sighash, SighashFlag, SighashType};
 pub use taproot::{
     Annex, AnnexError, ControlBlock, FutureLeafVer, InternalPk, IntoTapHash, InvalidLeafVer,
     InvalidParityValue, LeafScript, LeafVer, OutputPk, Parity, TapBranchHash, TapCode, TapLeafHash,

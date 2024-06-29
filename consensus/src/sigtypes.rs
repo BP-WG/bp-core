@@ -25,7 +25,7 @@ use amplify::{Bytes32, Wrapper};
 use commit_verify::{DigestExt, Sha256};
 use secp256k1::{ecdsa, schnorr};
 
-use crate::{NonStandardValue, LIB_NAME_BITCOIN};
+use crate::{NonStandardValue, ScriptBytes, ScriptPubkey, WitnessScript, LIB_NAME_BITCOIN};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash, Default)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
@@ -211,6 +211,32 @@ impl Sighash {
         engine2.input_raw(&engine.finish());
         Self(engine2.finish().into())
     }
+}
+
+/// Type used for generating sighash in SegWit signing
+#[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
+#[wrapper(Deref, AsSlice, Hex)]
+#[wrapper_mut(DerefMut, AsSliceMut)]
+pub struct ScriptCode(ScriptBytes);
+
+impl ScriptCode {
+    pub fn with_p2sh_wpkh(script_pubkey: ScriptPubkey) -> Self { Self::with_p2wpkh(script_pubkey) }
+
+    pub fn with_p2wpkh(script_pubkey: ScriptPubkey) -> Self {
+        let mut pubkey_hash = [0u8; 20];
+        pubkey_hash.copy_from_slice(&script_pubkey[2..22]);
+        let script_code = ScriptPubkey::p2pkh(pubkey_hash);
+        ScriptCode(script_code.into_inner())
+    }
+
+    pub fn with_p2sh_wsh(witness_script: WitnessScript) -> Self { Self::with_p2wsh(witness_script) }
+
+    pub fn with_p2wsh(witness_script: WitnessScript) -> Self {
+        ScriptCode(witness_script.into_inner())
+    }
+
+    #[inline]
+    pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
 }
 
 /// An ECDSA signature-related error.
