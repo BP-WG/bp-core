@@ -459,7 +459,7 @@ impl ConsensusDecode for LockTime {
 
 impl ConsensusEncode for ScriptBytes {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
-        self.as_var_int_array().consensus_encode(writer)
+        self.as_var_int_bytes().consensus_encode(writer)
     }
 }
 

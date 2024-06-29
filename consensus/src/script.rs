@@ -23,7 +23,7 @@ use amplify::confinement;
 use amplify::confinement::Confined;
 
 use crate::opcodes::*;
-use crate::{ScriptHash, VarInt, VarIntArray, VarIntBytes, LIB_NAME_BITCOIN};
+use crate::{ScriptHash, VarInt, VarIntBytes, LIB_NAME_BITCOIN};
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
 #[wrapper(Deref, AsSlice, Hex)]
@@ -285,7 +285,7 @@ impl ScriptBytes {
 
     pub fn into_vec(self) -> Vec<u8> { self.0.into_inner() }
 
-    pub(crate) fn as_var_int_array(&self) -> &VarIntArray<u8> { &self.0 }
+    pub(crate) fn as_var_int_bytes(&self) -> &VarIntBytes { &self.0 }
 }
 
 #[cfg(feature = "serde")]
