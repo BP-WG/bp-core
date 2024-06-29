@@ -21,7 +21,7 @@
 
 use std::iter;
 
-use amplify::{Bytes32, Wrapper};
+use amplify::{ByteArray, Bytes32, Wrapper};
 use commit_verify::{DigestExt, Sha256};
 use secp256k1::{ecdsa, schnorr};
 
@@ -201,6 +201,10 @@ pub struct Sighash(
 
 impl From<Sighash> for [u8; 32] {
     fn from(value: Sighash) -> Self { value.0.into_inner() }
+}
+
+impl From<Sighash> for secp256k1::Message {
+    fn from(sighash: Sighash) -> Self { secp256k1::Message::from_digest(sighash.to_byte_array()) }
 }
 
 impl Sighash {

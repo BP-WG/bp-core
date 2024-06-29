@@ -29,7 +29,7 @@ use std::{cmp, io, slice, vec};
 
 use amplify::confinement::Confined;
 use amplify::hex::FromHex;
-use amplify::{confinement, Bytes32, Wrapper};
+use amplify::{confinement, ByteArray, Bytes32, Wrapper};
 use commit_verify::{DigestExt, Sha256};
 use secp256k1::{PublicKey, Scalar, XOnlyPublicKey};
 use strict_encoding::{
@@ -264,6 +264,12 @@ pub struct TapSighash(
 
 impl From<TapSighash> for [u8; 32] {
     fn from(value: TapSighash) -> Self { value.0.into_inner() }
+}
+
+impl From<TapSighash> for secp256k1::Message {
+    fn from(sighash: TapSighash) -> Self {
+        secp256k1::Message::from_digest(sighash.to_byte_array())
+    }
 }
 
 impl TapSighash {
