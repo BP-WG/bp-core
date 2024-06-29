@@ -25,10 +25,10 @@ use amplify::confinement::{Confined, MediumBlob, SmallBlob, TinyBlob, U32};
 use amplify::{confinement, ByteArray, Bytes32, IoError, Wrapper};
 
 use crate::{
-    BlockHash, BlockHeader, BlockMerkleRoot, ControlBlock, InternalPk, InvalidLeafVer, LeafVer,
-    LockTime, Outpoint, Parity, RedeemScript, Sats, ScriptBytes, ScriptPubkey, SeqNo, SigScript,
-    TapBranchHash, TapMerklePath, TapScript, Tx, TxIn, TxOut, TxVer, Txid, Vout, Witness,
-    WitnessScript, LIB_NAME_BITCOIN,
+    Annex, BlockHash, BlockHeader, BlockMerkleRoot, ControlBlock, InternalPk, InvalidLeafVer,
+    LeafVer, LockTime, Outpoint, Parity, RedeemScript, Sats, ScriptBytes, ScriptPubkey, SeqNo,
+    SigScript, TapBranchHash, TapMerklePath, TapScript, Tx, TxIn, TxOut, TxVer, Txid, Vout,
+    Witness, WitnessScript, LIB_NAME_BITCOIN, TAPROOT_ANNEX_PREFIX,
 };
 
 /// Bitcoin consensus allows arrays which length is encoded as VarInt to grow up
@@ -189,6 +189,9 @@ pub enum ConsensusDataError {
     #[from]
     #[display(inner)]
     InvalidLeafVer(InvalidLeafVer),
+
+    /// invalid first annex byte `{0:#02x}`, which must be `0x50`.
+    WrongAnnexFirstByte(u8),
 
     #[from]
     #[display(inner)]
@@ -526,6 +529,22 @@ impl ConsensusEncode for SigScript {
 impl ConsensusDecode for SigScript {
     fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
         ScriptBytes::consensus_decode(reader).map(Self::from_inner)
+    }
+}
+
+impl ConsensusEncode for Annex {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        self.as_var_int_bytes().consensus_encode(writer)
+    }
+}
+
+impl ConsensusDecode for Annex {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        let bytes = VarIntBytes::<1>::consensus_decode(reader)?;
+        if bytes[0] != TAPROOT_ANNEX_PREFIX {
+            return Err(ConsensusDataError::WrongAnnexFirstByte(bytes[0]).into());
+        }
+        Ok(Self::from(bytes))
     }
 }
 

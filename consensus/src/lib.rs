@@ -78,10 +78,10 @@ pub use script::{RedeemScript, ScriptBytes, ScriptPubkey, SigScript};
 pub use segwit::{SegwitError, Witness, WitnessProgram, WitnessScript, WitnessVer, Wtxid};
 pub use sigtypes::{Bip340Sig, LegacySig, SigError, SighashFlag, SighashType};
 pub use taproot::{
-    ControlBlock, FutureLeafVer, InternalPk, IntoTapHash, InvalidLeafVer, InvalidParityValue,
-    LeafScript, LeafVer, OutputPk, Parity, TapBranchHash, TapCode, TapLeafHash, TapMerklePath,
-    TapNodeHash, TapScript, XOnlyPk, MIDSTATE_TAPSIGHASH, TAPROOT_ANNEX_PREFIX, TAPROOT_LEAF_MASK,
-    TAPROOT_LEAF_TAPSCRIPT,
+    Annex, AnnexError, ControlBlock, FutureLeafVer, InternalPk, IntoTapHash, InvalidLeafVer,
+    InvalidParityValue, LeafScript, LeafVer, OutputPk, Parity, TapBranchHash, TapCode, TapLeafHash,
+    TapMerklePath, TapNodeHash, TapScript, XOnlyPk, MIDSTATE_TAPSIGHASH, TAPROOT_ANNEX_PREFIX,
+    TAPROOT_LEAF_MASK, TAPROOT_LEAF_TAPSCRIPT,
 };
 pub use timelocks::{
     InvalidTimelock, LockHeight, LockTime, LockTimestamp, SeqNo, TimelockParseError,

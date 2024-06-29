@@ -40,7 +40,7 @@ use strict_encoding::{
 use crate::opcodes::*;
 use crate::{
     CompressedPk, ConsensusEncode, InvalidPubkey, PubkeyParseError, ScriptBytes, ScriptPubkey,
-    WitnessVer, LIB_NAME_BITCOIN,
+    VarInt, VarIntBytes, WitnessVer, LIB_NAME_BITCOIN,
 };
 
 /// The SHA-256 midstate value for the TapLeaf hash.
@@ -767,6 +767,90 @@ impl ControlBlock {
             output_key_parity,
             internal_pk,
             merkle_branch,
+        }
+    }
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
+#[display(doc_comments)]
+pub enum AnnexError {
+    /// invalid first annex byte `{0:#02x}`, which must be `0x50`.
+    WrongFirstByte(u8),
+
+    #[from]
+    #[display(inner)]
+    Size(confinement::Error),
+}
+
+/// The `Annex` struct enforces first byte to be `0x50`.
+#[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
+#[wrapper(Deref, AsSlice, Hex)]
+#[wrapper_mut(DerefMut, AsSliceMut)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN, dumb = Self(confined_vec![0x50]))]
+pub struct Annex(VarIntBytes<1>);
+
+impl TryFrom<Vec<u8>> for Annex {
+    type Error = confinement::Error;
+    fn try_from(script_bytes: Vec<u8>) -> Result<Self, Self::Error> {
+        Confined::try_from(script_bytes).map(Self)
+    }
+}
+
+impl Annex {
+    /// Creates a new `Annex` struct checking the first byte is `0x50`.
+    /// Constructs script object assuming the script length is less than 4GB.
+    /// Panics otherwise.
+    #[inline]
+    pub fn new(annex_bytes: Vec<u8>) -> Result<Self, AnnexError> {
+        let annex = Confined::try_from(annex_bytes).map(Self)?;
+        if annex[0] != TAPROOT_ANNEX_PREFIX {
+            return Err(AnnexError::WrongFirstByte(annex[0]));
+        }
+        Ok(annex)
+    }
+
+    pub fn len_var_int(&self) -> VarInt { VarInt(self.len() as u64) }
+
+    pub fn into_vec(self) -> Vec<u8> { self.0.into_inner() }
+
+    /// Returns the Annex bytes data (including first byte `0x50`).
+    pub fn as_slice(&self) -> &[u8] { self.0.as_slice() }
+
+    pub(crate) fn as_var_int_bytes(&self) -> &VarIntBytes<1> { &self.0 }
+}
+
+#[cfg(feature = "serde")]
+mod _serde {
+    use amplify::hex::{FromHex, ToHex};
+    use serde::{Deserialize, Serialize};
+    use serde_crate::de::Error;
+    use serde_crate::{Deserializer, Serializer};
+
+    use super::*;
+
+    impl Serialize for Annex {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer {
+            if serializer.is_human_readable() {
+                serializer.serialize_str(&self.to_hex())
+            } else {
+                serializer.serialize_bytes(self.as_slice())
+            }
+        }
+    }
+
+    impl<'de> Deserialize<'de> for Annex {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de> {
+            if deserializer.is_human_readable() {
+                String::deserialize(deserializer).and_then(|string| {
+                    Self::from_hex(&string).map_err(|_| D::Error::custom("wrong hex data"))
+                })
+            } else {
+                let bytes = Vec::<u8>::deserialize(deserializer)?;
+                Self::new(bytes).map_err(|_| D::Error::custom("invalid annex data"))
+            }
         }
     }
 }
