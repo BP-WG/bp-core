@@ -25,10 +25,10 @@ use amplify::confinement::{Confined, MediumBlob, SmallBlob, TinyBlob, U32};
 use amplify::{confinement, ByteArray, Bytes32, IoError, Wrapper};
 
 use crate::{
-    BlockHash, BlockHeader, BlockMerkleRoot, ControlBlock, InternalPk, InvalidLeafVer, LeafVer,
-    LockTime, Outpoint, Parity, RedeemScript, Sats, ScriptBytes, ScriptPubkey, SeqNo, SigScript,
-    TapBranchHash, TapMerklePath, TapScript, Tx, TxIn, TxOut, TxVer, Txid, Vout, Witness,
-    WitnessScript, LIB_NAME_BITCOIN,
+    Annex, BlockHash, BlockHeader, BlockMerkleRoot, ControlBlock, InternalPk, InvalidLeafVer,
+    LeafVer, LockTime, Outpoint, Parity, RedeemScript, Sats, ScriptBytes, ScriptPubkey, SeqNo,
+    SigScript, Sighash, TapBranchHash, TapLeafHash, TapMerklePath, TapScript, Tx, TxIn, TxOut,
+    TxVer, Txid, Vout, Witness, WitnessScript, LIB_NAME_BITCOIN, TAPROOT_ANNEX_PREFIX,
 };
 
 /// Bitcoin consensus allows arrays which length is encoded as VarInt to grow up
@@ -36,9 +36,9 @@ use crate::{
 /// block data structure to exceed 2^32 bytes (4GB), and any change to that rule
 /// will be a hardfork. So for practical reasons we are safe to restrict the
 /// maximum size here with just 32 bits.
-pub type VarIntArray<T> = Confined<Vec<T>, 0, U32>;
+pub type VarIntArray<T, const MIN_LEN: usize = 0> = Confined<Vec<T>, MIN_LEN, U32>;
 
-pub type VarIntBytes = Confined<Vec<u8>, 0, U32>;
+pub type VarIntBytes<const MIN_LEN: usize = 0> = Confined<Vec<u8>, MIN_LEN, U32>;
 
 /// A variable-length unsigned integer.
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Default)]
@@ -82,7 +82,7 @@ pub trait LenVarInt {
     fn len_var_int(&self) -> VarInt;
 }
 
-impl<T> LenVarInt for VarIntArray<T> {
+impl<T, const MIN_LEN: usize> LenVarInt for VarIntArray<T, MIN_LEN> {
     fn len_var_int(&self) -> VarInt { VarInt::with(self.len()) }
 }
 
@@ -189,6 +189,9 @@ pub enum ConsensusDataError {
     #[from]
     #[display(inner)]
     InvalidLeafVer(InvalidLeafVer),
+
+    /// invalid first annex byte `{0:#02x}`, which must be `0x50`.
+    WrongAnnexFirstByte(u8),
 
     #[from]
     #[display(inner)]
@@ -459,7 +462,7 @@ impl ConsensusDecode for LockTime {
 
 impl ConsensusEncode for ScriptBytes {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
-        self.as_var_int_array().consensus_encode(writer)
+        self.as_var_int_bytes().consensus_encode(writer)
     }
 }
 
@@ -526,6 +529,22 @@ impl ConsensusEncode for SigScript {
 impl ConsensusDecode for SigScript {
     fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
         ScriptBytes::consensus_decode(reader).map(Self::from_inner)
+    }
+}
+
+impl ConsensusEncode for Annex {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        self.as_var_int_bytes().consensus_encode(writer)
+    }
+}
+
+impl ConsensusDecode for Annex {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        let bytes = VarIntBytes::<1>::consensus_decode(reader)?;
+        if bytes[0] != TAPROOT_ANNEX_PREFIX {
+            return Err(ConsensusDataError::WrongAnnexFirstByte(bytes[0]).into());
+        }
+        Ok(Self::from(bytes))
     }
 }
 
@@ -628,6 +647,18 @@ impl ConsensusDecode for Sats {
     }
 }
 
+impl ConsensusEncode for Sighash {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        self.to_byte_array().consensus_encode(writer)
+    }
+}
+
+impl ConsensusEncode for TapLeafHash {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        self.to_byte_array().consensus_encode(writer)
+    }
+}
+
 impl ConsensusEncode for VarInt {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
         match self.0 {
@@ -699,7 +730,7 @@ impl ConsensusDecode for ByteStr {
     }
 }
 
-impl<T: ConsensusEncode> ConsensusEncode for VarIntArray<T> {
+impl<T: ConsensusEncode, const MIN_LEN: usize> ConsensusEncode for VarIntArray<T, MIN_LEN> {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
         let mut counter = self.len_var_int().consensus_encode(writer)?;
         for item in self {
@@ -709,14 +740,14 @@ impl<T: ConsensusEncode> ConsensusEncode for VarIntArray<T> {
     }
 }
 
-impl<T: ConsensusDecode> ConsensusDecode for VarIntArray<T> {
+impl<T: ConsensusDecode, const MIN_LEN: usize> ConsensusDecode for VarIntArray<T, MIN_LEN> {
     fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
         let len = VarInt::consensus_decode(reader)?;
         let mut arr = Vec::new();
         for _ in 0..len.0 {
             arr.push(T::consensus_decode(reader)?);
         }
-        VarIntArray::try_from(arr).map_err(ConsensusDecodeError::from)
+        VarIntArray::<T, MIN_LEN>::try_from(arr).map_err(ConsensusDecodeError::from)
     }
 }
 
@@ -792,6 +823,20 @@ impl ConsensusDecode for u64 {
         let mut buf = [0u8; (Self::BITS / 8) as usize];
         reader.read_exact(&mut buf)?;
         Ok(Self::from_le_bytes(buf))
+    }
+}
+
+impl ConsensusEncode for Bytes32 {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        writer.write_all(&self.to_byte_array())?;
+        Ok(8)
+    }
+}
+
+impl ConsensusEncode for [u8; 32] {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        writer.write_all(self)?;
+        Ok(8)
     }
 }
 
