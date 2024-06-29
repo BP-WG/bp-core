@@ -248,6 +248,31 @@ pub trait IntoTapHash {
 }
 
 #[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
+#[wrapper(Index, RangeOps, AsSlice, BorrowSlice, Hex, Display, FromStr)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
+pub struct TapSighash(
+    #[from]
+    #[from([u8; 32])]
+    pub Bytes32,
+);
+
+impl From<TapSighash> for [u8; 32] {
+    fn from(value: TapSighash) -> Self { value.0.into_inner() }
+}
+
+impl TapSighash {
+    pub fn engine() -> Sha256 { Sha256::from_tag(MIDSTATE_TAPSIGHASH) }
+
+    pub fn from_engine(engine: Sha256) -> Self { Self(engine.finish().into()) }
+}
+
+#[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Index, RangeOps, BorrowSlice, Hex, Display, FromStr)]
 #[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]

@@ -21,6 +21,8 @@
 
 use std::iter;
 
+use amplify::{Bytes32, Wrapper};
+use commit_verify::{DigestExt, Sha256};
 use secp256k1::{ecdsa, schnorr};
 
 use crate::{NonStandardValue, LIB_NAME_BITCOIN};
@@ -43,8 +45,8 @@ pub enum SighashFlag {
     /// 0x3: Sign the output whose index matches this input's index. If none
     /// exists, sign the hash
     /// `0000000000000000000000000000000000000000000000000000000000000001`.
-    /// (This rule is probably an unintentional C++ism, but it's consensus so we
-    /// have to follow it.)
+    /// (This rule is probably an unintentional C++ism, but it's consensus, so
+    /// we have to follow it.)
     Single = 0x03,
 }
 
@@ -179,6 +181,35 @@ impl SighashType {
         let flag = self.flag as u8;
         let mask = (self.anyone_can_pay as u8) << 7;
         flag | mask
+    }
+}
+
+#[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
+#[wrapper(Index, RangeOps, AsSlice, BorrowSlice, Hex, Display, FromStr)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
+pub struct Sighash(
+    #[from]
+    #[from([u8; 32])]
+    pub Bytes32,
+);
+
+impl From<Sighash> for [u8; 32] {
+    fn from(value: Sighash) -> Self { value.0.into_inner() }
+}
+
+impl Sighash {
+    pub fn engine() -> Sha256 { Sha256::default() }
+
+    pub fn from_engine(engine: Sha256) -> Self {
+        let mut engine2 = Sha256::default();
+        engine2.input_raw(&engine.finish());
+        Self(engine2.finish().into())
     }
 }
 
