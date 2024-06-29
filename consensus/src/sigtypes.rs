@@ -232,6 +232,7 @@ impl ScriptCode {
     pub fn with_p2sh_wsh(witness_script: WitnessScript) -> Self { Self::with_p2wsh(witness_script) }
 
     pub fn with_p2wsh(witness_script: WitnessScript) -> Self {
+        // TODO: Parse instructions and check for the presence of OP_CODESEPARATOR
         ScriptCode(witness_script.into_inner())
     }
 
