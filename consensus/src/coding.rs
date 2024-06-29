@@ -36,9 +36,9 @@ use crate::{
 /// block data structure to exceed 2^32 bytes (4GB), and any change to that rule
 /// will be a hardfork. So for practical reasons we are safe to restrict the
 /// maximum size here with just 32 bits.
-pub type VarIntArray<T> = Confined<Vec<T>, 0, U32>;
+pub type VarIntArray<T, const MIN_LEN: usize = 0> = Confined<Vec<T>, MIN_LEN, U32>;
 
-pub type VarIntBytes = Confined<Vec<u8>, 0, U32>;
+pub type VarIntBytes<const MIN_LEN: usize = 0> = Confined<Vec<u8>, MIN_LEN, U32>;
 
 /// A variable-length unsigned integer.
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Default)]
@@ -82,7 +82,7 @@ pub trait LenVarInt {
     fn len_var_int(&self) -> VarInt;
 }
 
-impl<T> LenVarInt for VarIntArray<T> {
+impl<T, const MIN_LEN: usize> LenVarInt for VarIntArray<T, MIN_LEN> {
     fn len_var_int(&self) -> VarInt { VarInt::with(self.len()) }
 }
 
@@ -699,7 +699,7 @@ impl ConsensusDecode for ByteStr {
     }
 }
 
-impl<T: ConsensusEncode> ConsensusEncode for VarIntArray<T> {
+impl<T: ConsensusEncode, const MIN_LEN: usize> ConsensusEncode for VarIntArray<T, MIN_LEN> {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
         let mut counter = self.len_var_int().consensus_encode(writer)?;
         for item in self {
@@ -709,14 +709,14 @@ impl<T: ConsensusEncode> ConsensusEncode for VarIntArray<T> {
     }
 }
 
-impl<T: ConsensusDecode> ConsensusDecode for VarIntArray<T> {
+impl<T: ConsensusDecode, const MIN_LEN: usize> ConsensusDecode for VarIntArray<T, MIN_LEN> {
     fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
         let len = VarInt::consensus_decode(reader)?;
         let mut arr = Vec::new();
         for _ in 0..len.0 {
             arr.push(T::consensus_decode(reader)?);
         }
-        VarIntArray::try_from(arr).map_err(ConsensusDecodeError::from)
+        VarIntArray::<T, MIN_LEN>::try_from(arr).map_err(ConsensusDecodeError::from)
     }
 }
 
