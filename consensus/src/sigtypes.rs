@@ -224,20 +224,22 @@ impl Sighash {
 pub struct ScriptCode(ScriptBytes);
 
 impl ScriptCode {
-    pub fn with_p2sh_wpkh(script_pubkey: ScriptPubkey) -> Self { Self::with_p2wpkh(script_pubkey) }
+    pub fn with_p2sh_wpkh(script_pubkey: &ScriptPubkey) -> Self { Self::with_p2wpkh(script_pubkey) }
 
-    pub fn with_p2wpkh(script_pubkey: ScriptPubkey) -> Self {
+    pub fn with_p2wpkh(script_pubkey: &ScriptPubkey) -> Self {
         let mut pubkey_hash = [0u8; 20];
         pubkey_hash.copy_from_slice(&script_pubkey[2..22]);
         let script_code = ScriptPubkey::p2pkh(pubkey_hash);
         ScriptCode(script_code.into_inner())
     }
 
-    pub fn with_p2sh_wsh(witness_script: WitnessScript) -> Self { Self::with_p2wsh(witness_script) }
+    pub fn with_p2sh_wsh(witness_script: &WitnessScript) -> Self {
+        Self::with_p2wsh(witness_script)
+    }
 
-    pub fn with_p2wsh(witness_script: WitnessScript) -> Self {
+    pub fn with_p2wsh(witness_script: &WitnessScript) -> Self {
         // TODO: Parse instructions and check for the presence of OP_CODESEPARATOR
-        ScriptCode(witness_script.into_inner())
+        ScriptCode(witness_script.to_inner())
     }
 
     #[inline]
