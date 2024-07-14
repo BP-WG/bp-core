@@ -25,7 +25,7 @@ use amplify::{Bytes32, IoError};
 use commit_verify::{Digest, DigestExt, Sha256};
 
 use crate::{
-    Annex, ConsensusEncode, ScriptCode, ScriptPubkey, SeqNo, SigScript, Sighash, SighashFlag,
+    Annex, ConsensusEncode, Sats, ScriptCode, ScriptPubkey, SeqNo, SigScript, Sighash, SighashFlag,
     SighashType, TapLeafHash, TapSighash, Tx as Transaction, TxIn, TxOut, Txid, VarIntArray,
 };
 
@@ -313,7 +313,7 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
         &mut self,
         input_index: usize,
         script_code: &ScriptCode,
-        value: u64,
+        value: Sats,
         sighash_type: SighashType,
     ) -> Result<Sighash, SighashError> {
         let mut hasher = Sighash::engine();
