@@ -23,7 +23,7 @@ use amplify::confinement;
 use amplify::confinement::Confined;
 
 use crate::opcodes::*;
-use crate::{ScriptHash, VarInt, VarIntBytes, LIB_NAME_BITCOIN};
+use crate::{ScriptHash, VarInt, VarIntBytes, WitnessVer, LIB_NAME_BITCOIN};
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
 #[wrapper(Deref, AsSlice, Hex)]
@@ -191,6 +191,29 @@ impl RedeemScript {
     #[inline]
     pub fn from_unsafe(script_bytes: Vec<u8>) -> Self {
         Self(ScriptBytes::from_unsafe(script_bytes))
+    }
+
+    pub fn p2sh_wpkh(hash: impl Into<[u8; 20]>) -> Self {
+        Self::with_witness_program_unchecked(WitnessVer::V0, &hash.into())
+    }
+
+    pub fn p2sh_wsh(hash: impl Into<[u8; 32]>) -> Self {
+        Self::with_witness_program_unchecked(WitnessVer::V0, &hash.into())
+    }
+
+    fn with_witness_program_unchecked(ver: WitnessVer, prog: &[u8]) -> Self {
+        let mut script = Self::with_capacity(ScriptBytes::len_for_slice(prog.len()) + 2);
+        script.push_opcode(ver.op_code());
+        script.push_slice(prog);
+        script
+    }
+
+    pub fn is_p2sh_wpkh(&self) -> bool {
+        self.len() == 22 && self[0] == WitnessVer::V0.op_code() as u8 && self[1] == OP_PUSHBYTES_20
+    }
+
+    pub fn is_p2sh_wsh(&self) -> bool {
+        self.len() == 34 && self[0] == WitnessVer::V0.op_code() as u8 && self[1] == OP_PUSHBYTES_32
     }
 
     /// Adds a single opcode to the script.
