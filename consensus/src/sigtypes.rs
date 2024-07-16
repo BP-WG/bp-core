@@ -19,6 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::fmt::{self, Display, Formatter};
 use std::iter;
 
 use amplify::{ByteArray, Bytes32, Wrapper};
@@ -27,7 +28,7 @@ use secp256k1::{ecdsa, schnorr};
 
 use crate::{NonStandardValue, ScriptBytes, ScriptPubkey, WitnessScript, LIB_NAME_BITCOIN};
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Hash, Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Hash, Display, Default)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
 #[cfg_attr(
@@ -35,6 +36,7 @@ use crate::{NonStandardValue, ScriptBytes, ScriptPubkey, WitnessScript, LIB_NAME
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", rename_all = "camelCase")
 )]
+#[display(uppercase)]
 #[repr(u8)]
 pub enum SighashFlag {
     /// 0x1: Sign all outputs.
@@ -181,6 +183,16 @@ impl SighashType {
         let flag = self.flag as u8;
         let mask = (self.anyone_can_pay as u8) << 7;
         flag | mask
+    }
+}
+
+impl Display for SighashType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        Display::fmt(&self.flag, f)?;
+        if self.anyone_can_pay {
+            f.write_str(" | ANYONECANPAY")?;
+        }
+        Ok(())
     }
 }
 
