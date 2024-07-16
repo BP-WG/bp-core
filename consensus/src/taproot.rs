@@ -165,12 +165,16 @@ impl InternalPk {
         XOnlyPk::from_byte_array(data).map(Self)
     }
 
+    #[inline]
     pub fn from_bytes(bytes: impl AsRef<[u8]>) -> Result<Self, InvalidPubkey<33>> {
         XOnlyPk::from_bytes(bytes).map(Self)
     }
 
     #[inline]
     pub fn to_byte_array(&self) -> [u8; 32] { self.0.to_byte_array() }
+
+    #[inline]
+    pub fn to_xonly_pk(&self) -> XOnlyPk { self.0 }
 
     pub fn to_output_pk(&self, merkle_root: Option<TapNodeHash>) -> (OutputPk, Parity) {
         let mut engine = Sha256::from_tag(MIDSTATE_TAPTWEAK);
@@ -223,10 +227,15 @@ impl OutputPk {
         XOnlyPk::from_byte_array(data).map(Self)
     }
 
+    #[inline]
     pub fn from_bytes(bytes: impl AsRef<[u8]>) -> Result<Self, InvalidPubkey<33>> {
         XOnlyPk::from_bytes(bytes).map(Self)
     }
 
+    #[inline]
+    pub fn to_xonly_pk(&self) -> XOnlyPk { self.0 }
+
+    #[inline]
     pub fn to_script_pubkey(&self) -> ScriptPubkey { ScriptPubkey::p2tr_tweaked(*self) }
 
     #[inline]
