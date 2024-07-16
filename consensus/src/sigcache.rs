@@ -161,10 +161,12 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
 
         // * Control:
         // hash_type (1).
-        sighash_type
-            .unwrap_or_default()
-            .to_consensus_u8()
-            .consensus_encode(&mut hasher)?;
+        match sighash_type {
+            None => 0u8.consensus_encode(&mut hasher)?,
+            Some(sighash_type) => sighash_type
+                .to_consensus_u8()
+                .consensus_encode(&mut hasher)?,
+        };
 
         {
             let tx = self.tx.borrow();
