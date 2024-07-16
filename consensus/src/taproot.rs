@@ -172,13 +172,7 @@ impl InternalPk {
     #[inline]
     pub fn to_byte_array(&self) -> [u8; 32] { self.0.to_byte_array() }
 
-    #[deprecated(since = "0.10.9", note = "use to_output_pk")]
-    pub fn to_output_key(&self, merkle_root: Option<impl IntoTapHash>) -> XOnlyPublicKey {
-        let (pk, _) = self.to_output_pk(merkle_root);
-        pk.0.0
-    }
-
-    pub fn to_output_pk(&self, merkle_root: Option<impl IntoTapHash>) -> (OutputPk, Parity) {
+    pub fn to_output_pk(&self, merkle_root: Option<TapNodeHash>) -> (OutputPk, Parity) {
         let mut engine = Sha256::from_tag(MIDSTATE_TAPTWEAK);
         // always hash the key
         engine.input_raw(&self.0.serialize());
@@ -672,18 +666,18 @@ impl TapScript {
 }
 
 impl ScriptPubkey {
-    pub fn p2tr(internal_key: InternalPk, merkle_root: Option<impl IntoTapHash>) -> Self {
+    pub fn p2tr(internal_key: InternalPk, merkle_root: Option<TapNodeHash>) -> Self {
         let (output_key, _) = internal_key.to_output_pk(merkle_root);
         Self::p2tr_tweaked(output_key)
     }
 
     pub fn p2tr_key_only(internal_key: InternalPk) -> Self {
-        let (output_key, _) = internal_key.to_output_pk(None::<TapNodeHash>);
+        let (output_key, _) = internal_key.to_output_pk(None);
         Self::p2tr_tweaked(output_key)
     }
 
     pub fn p2tr_scripted(internal_key: InternalPk, merkle_root: impl IntoTapHash) -> Self {
-        let (output_key, _) = internal_key.to_output_pk(Some(merkle_root));
+        let (output_key, _) = internal_key.to_output_pk(Some(merkle_root.into_tap_hash()));
         Self::p2tr_tweaked(output_key)
     }
 
