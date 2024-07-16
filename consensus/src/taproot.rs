@@ -31,7 +31,7 @@ use amplify::confinement::Confined;
 use amplify::hex::FromHex;
 use amplify::{confinement, ByteArray, Bytes32, Wrapper};
 use commit_verify::{DigestExt, Sha256};
-use secp256k1::{PublicKey, Scalar, XOnlyPublicKey};
+use secp256k1::{Keypair, PublicKey, Scalar, XOnlyPublicKey};
 use strict_encoding::{
     DecodeError, ReadTuple, StrictDecode, StrictEncode, StrictProduct, StrictTuple, StrictType,
     TypeName, TypedRead, TypedWrite, WriteTuple,
@@ -135,6 +135,38 @@ impl FromStr for XOnlyPk {
         let data = <[u8; 32]>::from_hex(s)?;
         let pk = Self::from_byte_array(data)?;
         Ok(pk)
+    }
+}
+
+/// Internal taproot public key, which can be present only in key fragment
+/// inside taproot descriptors.
+#[derive(Wrapper, WrapperMut, Eq, PartialEq, From)]
+#[wrapper(Deref)]
+pub struct InternalKeypair(#[from] Keypair);
+
+impl InternalKeypair {
+    pub fn to_output_keypair(&self, merkle_root: Option<TapNodeHash>) -> (Keypair, Parity) {
+        let internal_pk = self.0.x_only_public_key().0;
+        let mut engine = Sha256::from_tag(MIDSTATE_TAPTWEAK);
+        // always hash the key
+        engine.input_raw(&internal_pk.serialize());
+        if let Some(merkle_root) = merkle_root {
+            engine.input_raw(merkle_root.into_tap_hash().as_ref());
+        }
+        let tweak =
+            Scalar::from_be_bytes(engine.finish()).expect("hash value greater than curve order");
+        let pair = self
+            .0
+            .add_xonly_tweak(secp256k1::SECP256K1, &tweak)
+            .expect("hash collision");
+        let (outpput_key, tweaked_parity) = pair.x_only_public_key();
+        debug_assert!(internal_pk.tweak_add_check(
+            secp256k1::SECP256K1,
+            &outpput_key,
+            tweaked_parity,
+            tweak
+        ));
+        (pair, tweaked_parity.into())
     }
 }
 
