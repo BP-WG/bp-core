@@ -386,6 +386,8 @@ impl FromStr for LockHeight {
 pub struct SeqNo(u32);
 
 impl SeqNo {
+    pub const ZERO: SeqNo = SeqNo(0);
+
     #[inline]
     pub const fn from_consensus_u32(lock_time: u32) -> Self { SeqNo(lock_time) }
 

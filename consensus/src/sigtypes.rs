@@ -19,13 +19,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::fmt::{self, Display, Formatter};
 use std::iter;
 
+use amplify::{ByteArray, Bytes32, Wrapper};
+use commit_verify::{DigestExt, Sha256};
 use secp256k1::{ecdsa, schnorr};
 
-use crate::{NonStandardValue, LIB_NAME_BITCOIN};
+use crate::{NonStandardValue, ScriptBytes, ScriptPubkey, WitnessScript, LIB_NAME_BITCOIN};
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Hash, Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Hash, Display, Default)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
 #[cfg_attr(
@@ -33,6 +36,7 @@ use crate::{NonStandardValue, LIB_NAME_BITCOIN};
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", rename_all = "camelCase")
 )]
+#[display(uppercase)]
 #[repr(u8)]
 pub enum SighashFlag {
     /// 0x1: Sign all outputs.
@@ -43,8 +47,8 @@ pub enum SighashFlag {
     /// 0x3: Sign the output whose index matches this input's index. If none
     /// exists, sign the hash
     /// `0000000000000000000000000000000000000000000000000000000000000001`.
-    /// (This rule is probably an unintentional C++ism, but it's consensus so we
-    /// have to follow it.)
+    /// (This rule is probably an unintentional C++ism, but it's consensus, so
+    /// we have to follow it.)
     Single = 0x03,
 }
 
@@ -180,6 +184,78 @@ impl SighashType {
         let mask = (self.anyone_can_pay as u8) << 7;
         flag | mask
     }
+}
+
+impl Display for SighashType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        Display::fmt(&self.flag, f)?;
+        if self.anyone_can_pay {
+            f.write_str(" | ANYONECANPAY")?;
+        }
+        Ok(())
+    }
+}
+
+#[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
+#[wrapper(Index, RangeOps, AsSlice, BorrowSlice, Hex, Display, FromStr)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
+pub struct Sighash(
+    #[from]
+    #[from([u8; 32])]
+    pub Bytes32,
+);
+
+impl From<Sighash> for [u8; 32] {
+    fn from(value: Sighash) -> Self { value.0.into_inner() }
+}
+
+impl From<Sighash> for secp256k1::Message {
+    fn from(sighash: Sighash) -> Self { secp256k1::Message::from_digest(sighash.to_byte_array()) }
+}
+
+impl Sighash {
+    pub fn engine() -> Sha256 { Sha256::default() }
+
+    pub fn from_engine(engine: Sha256) -> Self {
+        let mut engine2 = Sha256::default();
+        engine2.input_raw(&engine.finish());
+        Self(engine2.finish().into())
+    }
+}
+
+/// Type used for generating sighash in SegWit signing
+#[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
+#[wrapper(Deref, AsSlice, Hex)]
+#[wrapper_mut(DerefMut, AsSliceMut)]
+pub struct ScriptCode(ScriptBytes);
+
+impl ScriptCode {
+    pub fn with_p2sh_wpkh(script_pubkey: &ScriptPubkey) -> Self { Self::with_p2wpkh(script_pubkey) }
+
+    pub fn with_p2wpkh(script_pubkey: &ScriptPubkey) -> Self {
+        let mut pubkey_hash = [0u8; 20];
+        pubkey_hash.copy_from_slice(&script_pubkey[2..22]);
+        let script_code = ScriptPubkey::p2pkh(pubkey_hash);
+        ScriptCode(script_code.into_inner())
+    }
+
+    pub fn with_p2sh_wsh(witness_script: &WitnessScript) -> Self {
+        Self::with_p2wsh(witness_script)
+    }
+
+    pub fn with_p2wsh(witness_script: &WitnessScript) -> Self {
+        // TODO: Parse instructions and check for the presence of OP_CODESEPARATOR
+        ScriptCode(witness_script.to_inner())
+    }
+
+    #[inline]
+    pub fn as_script_bytes(&self) -> &ScriptBytes { &self.0 }
 }
 
 /// An ECDSA signature-related error.

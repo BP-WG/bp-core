@@ -94,7 +94,7 @@ impl ConvolveCommit<mpc::Commitment, TapretProof, TapretFirst> for InternalPk {
 mod test {
     use std::str::FromStr;
 
-    use bc::LeafScript;
+    use bc::{IntoTapHash, LeafScript};
     use commit_verify::mpc::Commitment;
 
     use super::*;
@@ -115,7 +115,7 @@ mod test {
         let tapret_commitment = TapretCommitment::with(msg, path_proof.nonce);
         let script_commitment = TapScript::commit(&tapret_commitment);
         let script_leaf = TapLeafHash::with_tap_script(&script_commitment);
-        let (real_key, _) = internal_pk.to_output_pk(Some(script_leaf));
+        let (real_key, _) = internal_pk.to_output_pk(Some(script_leaf.into_tap_hash()));
 
         assert_eq!(outer_key, real_key);
 

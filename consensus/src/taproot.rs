@@ -29,9 +29,9 @@ use std::{cmp, io, slice, vec};
 
 use amplify::confinement::Confined;
 use amplify::hex::FromHex;
-use amplify::{confinement, Bytes32, Wrapper};
+use amplify::{confinement, ByteArray, Bytes32, Wrapper};
 use commit_verify::{DigestExt, Sha256};
-use secp256k1::{PublicKey, Scalar, XOnlyPublicKey};
+use secp256k1::{Keypair, PublicKey, Scalar, XOnlyPublicKey};
 use strict_encoding::{
     DecodeError, ReadTuple, StrictDecode, StrictEncode, StrictProduct, StrictTuple, StrictType,
     TypeName, TypedRead, TypedWrite, WriteTuple,
@@ -40,7 +40,7 @@ use strict_encoding::{
 use crate::opcodes::*;
 use crate::{
     CompressedPk, ConsensusEncode, InvalidPubkey, PubkeyParseError, ScriptBytes, ScriptPubkey,
-    WitnessVer, LIB_NAME_BITCOIN,
+    VarInt, VarIntBytes, WitnessVer, LIB_NAME_BITCOIN,
 };
 
 /// The SHA-256 midstate value for the TapLeaf hash.
@@ -140,6 +140,37 @@ impl FromStr for XOnlyPk {
 
 /// Internal taproot public key, which can be present only in key fragment
 /// inside taproot descriptors.
+#[derive(Eq, PartialEq, From)]
+pub struct InternalKeypair(#[from] Keypair);
+
+impl InternalKeypair {
+    pub fn to_output_keypair(&self, merkle_root: Option<TapNodeHash>) -> (Keypair, Parity) {
+        let internal_pk = self.0.x_only_public_key().0;
+        let mut engine = Sha256::from_tag(MIDSTATE_TAPTWEAK);
+        // always hash the key
+        engine.input_raw(&internal_pk.serialize());
+        if let Some(merkle_root) = merkle_root {
+            engine.input_raw(merkle_root.into_tap_hash().as_ref());
+        }
+        let tweak =
+            Scalar::from_be_bytes(engine.finish()).expect("hash value greater than curve order");
+        let pair = self
+            .0
+            .add_xonly_tweak(secp256k1::SECP256K1, &tweak)
+            .expect("hash collision");
+        let (outpput_key, tweaked_parity) = pair.x_only_public_key();
+        debug_assert!(internal_pk.tweak_add_check(
+            secp256k1::SECP256K1,
+            &outpput_key,
+            tweaked_parity,
+            tweak
+        ));
+        (pair, tweaked_parity.into())
+    }
+}
+
+/// Internal taproot public key, which can be present only in key fragment
+/// inside taproot descriptors.
 #[derive(Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, LowerHex, Display, FromStr)]
 #[wrapper_mut(DerefMut)]
@@ -165,6 +196,7 @@ impl InternalPk {
         XOnlyPk::from_byte_array(data).map(Self)
     }
 
+    #[inline]
     pub fn from_bytes(bytes: impl AsRef<[u8]>) -> Result<Self, InvalidPubkey<33>> {
         XOnlyPk::from_bytes(bytes).map(Self)
     }
@@ -172,13 +204,10 @@ impl InternalPk {
     #[inline]
     pub fn to_byte_array(&self) -> [u8; 32] { self.0.to_byte_array() }
 
-    #[deprecated(since = "0.10.9", note = "use to_output_pk")]
-    pub fn to_output_key(&self, merkle_root: Option<impl IntoTapHash>) -> XOnlyPublicKey {
-        let (pk, _) = self.to_output_pk(merkle_root);
-        pk.0.0
-    }
+    #[inline]
+    pub fn to_xonly_pk(&self) -> XOnlyPk { self.0 }
 
-    pub fn to_output_pk(&self, merkle_root: Option<impl IntoTapHash>) -> (OutputPk, Parity) {
+    pub fn to_output_pk(&self, merkle_root: Option<TapNodeHash>) -> (OutputPk, Parity) {
         let mut engine = Sha256::from_tag(MIDSTATE_TAPTWEAK);
         // always hash the key
         engine.input_raw(&self.0.serialize());
@@ -229,10 +258,15 @@ impl OutputPk {
         XOnlyPk::from_byte_array(data).map(Self)
     }
 
+    #[inline]
     pub fn from_bytes(bytes: impl AsRef<[u8]>) -> Result<Self, InvalidPubkey<33>> {
         XOnlyPk::from_bytes(bytes).map(Self)
     }
 
+    #[inline]
+    pub fn to_xonly_pk(&self) -> XOnlyPk { self.0 }
+
+    #[inline]
     pub fn to_script_pubkey(&self) -> ScriptPubkey { ScriptPubkey::p2tr_tweaked(*self) }
 
     #[inline]
@@ -245,6 +279,37 @@ impl From<OutputPk> for [u8; 32] {
 
 pub trait IntoTapHash {
     fn into_tap_hash(self) -> TapNodeHash;
+}
+
+#[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
+#[wrapper(Index, RangeOps, AsSlice, BorrowSlice, Hex, Display, FromStr)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
+pub struct TapSighash(
+    #[from]
+    #[from([u8; 32])]
+    pub Bytes32,
+);
+
+impl From<TapSighash> for [u8; 32] {
+    fn from(value: TapSighash) -> Self { value.0.into_inner() }
+}
+
+impl From<TapSighash> for secp256k1::Message {
+    fn from(sighash: TapSighash) -> Self {
+        secp256k1::Message::from_digest(sighash.to_byte_array())
+    }
+}
+
+impl TapSighash {
+    pub fn engine() -> Sha256 { Sha256::from_tag(MIDSTATE_TAPSIGHASH) }
+
+    pub fn from_engine(engine: Sha256) -> Self { Self(engine.finish().into()) }
 }
 
 #[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
@@ -641,18 +706,18 @@ impl TapScript {
 }
 
 impl ScriptPubkey {
-    pub fn p2tr(internal_key: InternalPk, merkle_root: Option<impl IntoTapHash>) -> Self {
+    pub fn p2tr(internal_key: InternalPk, merkle_root: Option<TapNodeHash>) -> Self {
         let (output_key, _) = internal_key.to_output_pk(merkle_root);
         Self::p2tr_tweaked(output_key)
     }
 
     pub fn p2tr_key_only(internal_key: InternalPk) -> Self {
-        let (output_key, _) = internal_key.to_output_pk(None::<TapNodeHash>);
+        let (output_key, _) = internal_key.to_output_pk(None);
         Self::p2tr_tweaked(output_key)
     }
 
     pub fn p2tr_scripted(internal_key: InternalPk, merkle_root: impl IntoTapHash) -> Self {
-        let (output_key, _) = internal_key.to_output_pk(Some(merkle_root));
+        let (output_key, _) = internal_key.to_output_pk(Some(merkle_root.into_tap_hash()));
         Self::p2tr_tweaked(output_key)
     }
 
@@ -767,6 +832,90 @@ impl ControlBlock {
             output_key_parity,
             internal_pk,
             merkle_branch,
+        }
+    }
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
+#[display(doc_comments)]
+pub enum AnnexError {
+    /// invalid first annex byte `{0:#02x}`, which must be `0x50`.
+    WrongFirstByte(u8),
+
+    #[from]
+    #[display(inner)]
+    Size(confinement::Error),
+}
+
+/// The `Annex` struct enforces first byte to be `0x50`.
+#[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
+#[wrapper(Deref, AsSlice, Hex)]
+#[wrapper_mut(DerefMut, AsSliceMut)]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_BITCOIN, dumb = Self(confined_vec![0x50]))]
+pub struct Annex(VarIntBytes<1>);
+
+impl TryFrom<Vec<u8>> for Annex {
+    type Error = confinement::Error;
+    fn try_from(script_bytes: Vec<u8>) -> Result<Self, Self::Error> {
+        Confined::try_from(script_bytes).map(Self)
+    }
+}
+
+impl Annex {
+    /// Creates a new `Annex` struct checking the first byte is `0x50`.
+    /// Constructs script object assuming the script length is less than 4GB.
+    /// Panics otherwise.
+    #[inline]
+    pub fn new(annex_bytes: Vec<u8>) -> Result<Self, AnnexError> {
+        let annex = Confined::try_from(annex_bytes).map(Self)?;
+        if annex[0] != TAPROOT_ANNEX_PREFIX {
+            return Err(AnnexError::WrongFirstByte(annex[0]));
+        }
+        Ok(annex)
+    }
+
+    pub fn len_var_int(&self) -> VarInt { VarInt(self.len() as u64) }
+
+    pub fn into_vec(self) -> Vec<u8> { self.0.into_inner() }
+
+    /// Returns the Annex bytes data (including first byte `0x50`).
+    pub fn as_slice(&self) -> &[u8] { self.0.as_slice() }
+
+    pub(crate) fn as_var_int_bytes(&self) -> &VarIntBytes<1> { &self.0 }
+}
+
+#[cfg(feature = "serde")]
+mod _serde {
+    use amplify::hex::{FromHex, ToHex};
+    use serde::{Deserialize, Serialize};
+    use serde_crate::de::Error;
+    use serde_crate::{Deserializer, Serializer};
+
+    use super::*;
+
+    impl Serialize for Annex {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer {
+            if serializer.is_human_readable() {
+                serializer.serialize_str(&self.to_hex())
+            } else {
+                serializer.serialize_bytes(self.as_slice())
+            }
+        }
+    }
+
+    impl<'de> Deserialize<'de> for Annex {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de> {
+            if deserializer.is_human_readable() {
+                String::deserialize(deserializer).and_then(|string| {
+                    Self::from_hex(&string).map_err(|_| D::Error::custom("wrong hex data"))
+                })
+            } else {
+                let bytes = Vec::<u8>::deserialize(deserializer)?;
+                Self::new(bytes).map_err(|_| D::Error::custom("invalid annex data"))
+            }
         }
     }
 }
