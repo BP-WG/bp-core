@@ -140,8 +140,7 @@ impl FromStr for XOnlyPk {
 
 /// Internal taproot public key, which can be present only in key fragment
 /// inside taproot descriptors.
-#[derive(Wrapper, WrapperMut, Eq, PartialEq, From)]
-#[wrapper(Deref)]
+#[derive(Eq, PartialEq, From)]
 pub struct InternalKeypair(#[from] Keypair);
 
 impl InternalKeypair {
