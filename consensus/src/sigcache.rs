@@ -421,12 +421,12 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
         // Add all necessary inputs...
         let sig_script = script_pubkey.as_script_bytes().clone().into();
         if anyone_can_pay {
-            tx.inputs = confined_vec![TxIn {
+            tx.inputs = VarIntArray::from_checked(vec![TxIn {
                 prev_output: tx_src.inputs[input_index].prev_output,
                 sig_script,
                 sequence: tx_src.inputs[input_index].sequence,
                 witness: none!(),
-            }];
+            }]);
         } else {
             let inputs = tx_src.inputs.iter().enumerate().map(|(n, input)| TxIn {
                 prev_output: input.prev_output,
@@ -444,7 +444,7 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
                 },
                 witness: none!(),
             });
-            tx.inputs = VarIntArray::from_iter_unsafe(inputs);
+            tx.inputs = VarIntArray::from_iter_checked(inputs);
         }
         // ...then all outputs
         tx.outputs = match sighash_flag {
@@ -454,7 +454,7 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
                     .take(input_index + 1)  // sign all outputs up to and including this one, but erase
                     .enumerate()            // all of them except for this one
                     .map(|(n, out)| if n == input_index { out.clone() } else { TxOut::default() });
-                VarIntArray::from_iter_unsafe(outputs)
+                VarIntArray::from_iter_checked(outputs)
             }
             SighashFlag::None => none!(),
         };

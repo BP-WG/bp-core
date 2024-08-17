@@ -55,7 +55,7 @@ impl StrictDeserialize for TapretCommitment {}
 
 impl From<[u8; 33]> for TapretCommitment {
     fn from(value: [u8; 33]) -> Self {
-        let buf = Confined::try_from_iter(value).expect("exact size match");
+        let buf = Confined::from_iter_checked(value);
         Self::from_strict_serialized::<33>(buf).expect("exact size match")
     }
 }
@@ -65,7 +65,7 @@ impl TapretCommitment {
     pub fn to_vec(&self) -> Vec<u8> {
         self.to_strict_serialized::<33>()
             .expect("exact size match")
-            .into_inner()
+            .release()
     }
 }
 

@@ -98,25 +98,27 @@ impl AsRef<[u8]> for ByteStr {
 }
 
 impl From<Vec<u8>> for ByteStr {
-    fn from(value: Vec<u8>) -> Self { Self(Confined::try_from(value).expect("u32 >= usize")) }
+    fn from(value: Vec<u8>) -> Self {
+        Self(Confined::try_from(value).expect("byte string size exceeds 4GB"))
+    }
 }
 
 impl From<TinyBlob> for ByteStr {
-    fn from(vec: TinyBlob) -> Self { ByteStr(Confined::from_collection_unsafe(vec.into_inner())) }
+    fn from(vec: TinyBlob) -> Self { ByteStr(Confined::from_checked(vec.release())) }
 }
 
 impl From<SmallBlob> for ByteStr {
-    fn from(vec: SmallBlob) -> Self { ByteStr(Confined::from_collection_unsafe(vec.into_inner())) }
+    fn from(vec: SmallBlob) -> Self { ByteStr(Confined::from_checked(vec.release())) }
 }
 
 impl From<MediumBlob> for ByteStr {
-    fn from(vec: MediumBlob) -> Self { ByteStr(Confined::from_collection_unsafe(vec.into_inner())) }
+    fn from(vec: MediumBlob) -> Self { ByteStr(Confined::from_checked(vec.release())) }
 }
 
 impl ByteStr {
     pub fn len_var_int(&self) -> VarInt { VarInt(self.len() as u64) }
 
-    pub fn into_vec(self) -> Vec<u8> { self.0.into_inner() }
+    pub fn into_vec(self) -> Vec<u8> { self.0.release() }
 }
 
 #[cfg(feature = "serde")]
