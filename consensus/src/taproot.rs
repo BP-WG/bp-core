@@ -852,7 +852,7 @@ pub enum AnnexError {
 #[wrapper(Deref, AsSlice, Hex)]
 #[wrapper_mut(DerefMut, AsSliceMut)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BITCOIN, dumb = Self(confined_vec![0x50]))]
+#[strict_type(lib = LIB_NAME_BITCOIN, dumb = { Self(VarIntBytes::with(0x50)) })]
 pub struct Annex(VarIntBytes<1>);
 
 impl TryFrom<Vec<u8>> for Annex {
@@ -877,7 +877,7 @@ impl Annex {
 
     pub fn len_var_int(&self) -> VarInt { VarInt(self.len() as u64) }
 
-    pub fn into_vec(self) -> Vec<u8> { self.0.into_inner() }
+    pub fn into_vec(self) -> Vec<u8> { self.0.release() }
 
     /// Returns the Annex bytes data (including first byte `0x50`).
     pub fn as_slice(&self) -> &[u8] { self.0.as_slice() }

@@ -22,7 +22,7 @@ strict_types = { workspace = true, optional = true }
 commit_verify = { workspace = true }
 secp256k1 = { workspace = true }
 serde_crate = { workspace = true, optional = true }
-chrono = { version = "0.4.31", optional = true }
+chrono = { version = "0.4.38", optional = true }
 
 [features]
 default = ["chrono"]
@@ -35,4 +35,4 @@ serde = [
 ]
 
 [package.metadata.docs.rs]
-features = [ "all" ]
+features = ["all"]

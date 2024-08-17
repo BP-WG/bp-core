@@ -306,7 +306,7 @@ impl ScriptBytes {
 
     pub fn len_var_int(&self) -> VarInt { VarInt(self.len() as u64) }
 
-    pub fn into_vec(self) -> Vec<u8> { self.0.into_inner() }
+    pub fn into_vec(self) -> Vec<u8> { self.0.release() }
 
     pub(crate) fn as_var_int_bytes(&self) -> &VarIntBytes { &self.0 }
 }
