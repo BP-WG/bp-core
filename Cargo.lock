@@ -149,7 +149,7 @@ dependencies = [
 
 [[package]]
 name = "bp-consensus"
-version = "0.11.0-beta.6"
+version = "0.11.0-beta.7"
 dependencies = [
  "amplify",
  "chrono",
@@ -162,7 +162,7 @@ dependencies = [
 
 [[package]]
 name = "bp-core"
-version = "0.11.0-beta.6"
+version = "0.11.0-beta.7"
 dependencies = [
  "amplify",
  "bp-consensus",
@@ -181,7 +181,7 @@ dependencies = [
 
 [[package]]
 name = "bp-dbc"
-version = "0.11.0-beta.6"
+version = "0.11.0-beta.7"
 dependencies = [
  "amplify",
  "base85",
@@ -194,7 +194,7 @@ dependencies = [
 
 [[package]]
 name = "bp-seals"
-version = "0.11.0-beta.6"
+version = "0.11.0-beta.7"
 dependencies = [
  "amplify",
  "baid64",
