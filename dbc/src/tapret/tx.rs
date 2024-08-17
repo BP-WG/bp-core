@@ -73,9 +73,8 @@ impl ConvolveCommit<mpc::Commitment, TapretProof, TapretFirst> for Tx {
 
         for txout in &mut tx.outputs {
             if txout.script_pubkey.is_p2tr() {
-                let (commitment, proof) = txout
-                    .convolve_commit(supplement, msg)
-                    .map_err(TapretError::from)?;
+                let (commitment, proof) =
+                    txout.convolve_commit(supplement, msg).map_err(TapretError::from)?;
                 *txout = commitment;
                 return Ok((tx, proof));
             }

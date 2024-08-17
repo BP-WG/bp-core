@@ -302,10 +302,7 @@ impl TapretPathProof {
     /// for any step of the mekrle path.
     #[inline]
     pub fn check_no_commitment(&self) -> bool {
-        self.partner_node
-            .as_ref()
-            .map(TapretNodePartner::check_no_commitment)
-            .unwrap_or(true)
+        self.partner_node.as_ref().map(TapretNodePartner::check_no_commitment).unwrap_or(true)
     }
 
     /// Returns original merkle root of the tree before deterministic bitcoin
@@ -313,9 +310,7 @@ impl TapretPathProof {
     /// `None`.
     #[inline]
     pub fn original_merkle_root(&self) -> Option<TapNodeHash> {
-        self.partner_node
-            .as_ref()
-            .map(|partner| partner.tap_node_hash())
+        self.partner_node.as_ref().map(|partner| partner.tap_node_hash())
     }
 }
 

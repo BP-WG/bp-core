@@ -40,9 +40,7 @@ pub const LIB_ID_BP_CONSENSUS: &str =
 fn _bitcoin_stl() -> Result<TypeLib, CompileError> { _bp_tx_stl() }
 
 fn _bp_tx_stl() -> Result<TypeLib, CompileError> {
-    LibBuilder::new(libname!(LIB_NAME_BITCOIN), None)
-        .transpile::<Tx>()
-        .compile()
+    LibBuilder::new(libname!(LIB_NAME_BITCOIN), None).transpile::<Tx>().compile()
 }
 
 fn _bp_consensus_stl() -> Result<TypeLib, CompileError> {

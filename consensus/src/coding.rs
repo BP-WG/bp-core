@@ -207,8 +207,7 @@ pub trait ConsensusEncode {
     fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError>;
     fn consensus_serialize(&self) -> Vec<u8> {
         let mut buf = Vec::new();
-        self.consensus_encode(&mut buf)
-            .expect("in-memory writing can't fail");
+        self.consensus_encode(&mut buf).expect("in-memory writing can't fail");
         buf
     }
 }

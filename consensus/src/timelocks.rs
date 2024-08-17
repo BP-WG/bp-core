@@ -108,11 +108,7 @@ impl LockTime {
     /// `None` is returned.
     #[inline]
     pub const fn from_height(height: u32) -> Option<Self> {
-        if height < LOCKTIME_THRESHOLD {
-            Some(Self(height))
-        } else {
-            None
-        }
+        if height < LOCKTIME_THRESHOLD { Some(Self(height)) } else { None }
     }
 
     /// Creates absolute time lock with the given UNIX timestamp value.
@@ -121,11 +117,7 @@ impl LockTime {
     /// `None` is returned.
     #[inline]
     pub const fn from_unix_timestamp(timestamp: u32) -> Option<Self> {
-        if timestamp < LOCKTIME_THRESHOLD {
-            None
-        } else {
-            Some(Self(timestamp))
-        }
+        if timestamp < LOCKTIME_THRESHOLD { None } else { Some(Self(timestamp)) }
     }
 
     /// Converts into full u32 representation of `nLockTime` value as it is
@@ -204,11 +196,7 @@ impl LockTimestamp {
     /// `None` is returned.
     #[inline]
     pub fn from_unix_timestamp(timestamp: u32) -> Option<Self> {
-        if timestamp < LOCKTIME_THRESHOLD {
-            None
-        } else {
-            Some(Self(timestamp))
-        }
+        if timestamp < LOCKTIME_THRESHOLD { None } else { Some(Self(timestamp)) }
     }
 
     #[inline]
@@ -312,11 +300,7 @@ impl LockHeight {
     /// `None` is returned.
     #[inline]
     pub fn from_height(height: u32) -> Option<Self> {
-        if height < LOCKTIME_THRESHOLD {
-            Some(Self(height))
-        } else {
-            None
-        }
+        if height < LOCKTIME_THRESHOLD { Some(Self(height)) } else { None }
     }
 
     #[inline]

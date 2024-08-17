@@ -63,9 +63,7 @@ impl From<[u8; 33]> for TapretCommitment {
 impl TapretCommitment {
     /// Returns serialized representation of the commitment data.
     pub fn to_vec(&self) -> Vec<u8> {
-        self.to_strict_serialized::<33>()
-            .expect("exact size match")
-            .release()
+        self.to_strict_serialized::<33>().expect("exact size match").release()
     }
 }
 
@@ -105,9 +103,7 @@ impl CommitVerify<TapretCommitment, TapretFirst> for TapScript {
         }
         tapret.push_opcode(TapCode::Return);
         let mut writer = StreamWriter::in_memory::<33>();
-        commitment
-            .strict_write(&mut writer)
-            .expect("tapret commitment must be fitting 33 bytes");
+        commitment.strict_write(&mut writer).expect("tapret commitment must be fitting 33 bytes");
         let data = writer.unconfine();
         debug_assert_eq!(data.len(), 33, "tapret commitment must take exactly 33 bytes");
         tapret.push_slice(&data);

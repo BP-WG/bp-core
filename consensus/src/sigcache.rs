@@ -163,9 +163,7 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
         // hash_type (1).
         match sighash_type {
             None => 0u8.consensus_encode(&mut hasher)?,
-            Some(sighash_type) => sighash_type
-                .to_consensus_u8()
-                .consensus_encode(&mut hasher)?,
+            Some(sighash_type) => sighash_type.to_consensus_u8().consensus_encode(&mut hasher)?,
         };
 
         {
@@ -188,12 +186,8 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
         if !anyone_can_pay {
             self.common_cache().prevouts.consensus_encode(&mut hasher)?;
             self.taproot_cache().amounts.consensus_encode(&mut hasher)?;
-            self.taproot_cache()
-                .script_pubkeys
-                .consensus_encode(&mut hasher)?;
-            self.common_cache()
-                .sequences
-                .consensus_encode(&mut hasher)?;
+            self.taproot_cache().script_pubkeys.consensus_encode(&mut hasher)?;
+            self.common_cache().sequences.consensus_encode(&mut hasher)?;
         }
 
         // If hash_type & 3 does not equal SIGHASH_NONE or SIGHASH_SINGLE:
@@ -224,20 +218,15 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
         // output spent by this input, serialized as script inside CTxOut. Its
         // size is always 35 bytes.      nSequence (4): nSequence of this input.
         if anyone_can_pay {
-            let txin = tx
-                .inputs
-                .get(input_index)
-                .ok_or(SighashError::InvalidInputIndex {
-                    txid: tx.txid(),
-                    index: input_index,
-                    inputs: tx.inputs.len(),
-                })?;
+            let txin = tx.inputs.get(input_index).ok_or(SighashError::InvalidInputIndex {
+                txid: tx.txid(),
+                index: input_index,
+                inputs: tx.inputs.len(),
+            })?;
             let previous_output = self.prevouts[input_index].borrow();
             txin.prev_output.consensus_encode(&mut hasher)?;
             previous_output.value.consensus_encode(&mut hasher)?;
-            previous_output
-                .script_pubkey
-                .consensus_encode(&mut hasher)?;
+            previous_output.script_pubkey.consensus_encode(&mut hasher)?;
             txin.sequence.consensus_encode(&mut hasher)?;
         } else {
             (input_index as u32).consensus_encode(&mut hasher)?;
@@ -335,27 +324,22 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
             zero_hash.consensus_encode(&mut hasher)?;
         }
 
-        if !anyone_can_pay &&
-            sighash_flag != SighashFlag::Single &&
-            sighash_flag != SighashFlag::None
+        if !anyone_can_pay
+            && sighash_flag != SighashFlag::Single
+            && sighash_flag != SighashFlag::None
         {
-            self.segwit_cache()
-                .sequences
-                .consensus_encode(&mut hasher)?;
+            self.segwit_cache().sequences.consensus_encode(&mut hasher)?;
         } else {
             zero_hash.consensus_encode(&mut hasher)?;
         }
 
         {
             let tx = self.tx.borrow();
-            let txin = tx
-                .inputs
-                .get(input_index)
-                .ok_or(SighashError::InvalidInputIndex {
-                    txid: tx.txid(),
-                    index: input_index,
-                    inputs: tx.inputs.len(),
-                })?;
+            let txin = tx.inputs.get(input_index).ok_or(SighashError::InvalidInputIndex {
+                txid: tx.txid(),
+                index: input_index,
+                inputs: tx.inputs.len(),
+            })?;
 
             txin.prev_output.consensus_encode(&mut hasher)?;
             script_code.consensus_encode(&mut hasher)?;
@@ -365,8 +349,8 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
 
         if sighash_flag != SighashFlag::Single && sighash_flag != SighashFlag::None {
             self.segwit_cache().outputs.consensus_encode(&mut hasher)?;
-        } else if sighash_flag == SighashFlag::Single &&
-            input_index < self.tx.borrow().outputs.len()
+        } else if sighash_flag == SighashFlag::Single
+            && input_index < self.tx.borrow().outputs.len()
         {
             let mut single_enc = Sighash::engine();
             self.tx.borrow().outputs[input_index].consensus_encode(&mut single_enc)?;
@@ -376,9 +360,7 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
         }
 
         self.tx.borrow().lock_time.consensus_encode(&mut hasher)?;
-        sighash_type
-            .to_consensus_u32()
-            .consensus_encode(&mut hasher)?;
+        sighash_type.to_consensus_u32().consensus_encode(&mut hasher)?;
 
         Ok(Sighash::from_engine(hasher))
     }
@@ -430,13 +412,9 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
         } else {
             let inputs = tx_src.inputs.iter().enumerate().map(|(n, input)| TxIn {
                 prev_output: input.prev_output,
-                sig_script: if n == input_index {
-                    sig_script.clone()
-                } else {
-                    SigScript::new()
-                },
-                sequence: if n != input_index &&
-                    (sighash_flag == SighashFlag::Single || sighash_flag == SighashFlag::None)
+                sig_script: if n == input_index { sig_script.clone() } else { SigScript::new() },
+                sequence: if n != input_index
+                    && (sighash_flag == SighashFlag::Single || sighash_flag == SighashFlag::None)
                 {
                     SeqNo::ZERO
                 } else {
@@ -501,10 +479,7 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
             let mut enc_script_pubkeys = Sha256::default();
             for prevout in &self.prevouts {
                 let _ = prevout.borrow().value.consensus_encode(&mut enc_amounts);
-                let _ = prevout
-                    .borrow()
-                    .script_pubkey
-                    .consensus_encode(&mut enc_script_pubkeys);
+                let _ = prevout.borrow().script_pubkey.consensus_encode(&mut enc_script_pubkeys);
             }
             TaprootCache {
                 amounts: enc_amounts.finish().into(),

@@ -128,13 +128,9 @@ Seals vesper lexicon=types+commitments
     let tt = sys.type_tree("BPCore.AnchorMerkleTreeOpretProof").unwrap();
     fs::write(format!("{dir}/Anchor.MerkleTree.Opret.vesper"), format!("{tt}")).unwrap();
 
-    let tt = sys
-        .type_tree("BPCore.AnchorMerkleBlockTapretProof")
-        .unwrap();
+    let tt = sys.type_tree("BPCore.AnchorMerkleBlockTapretProof").unwrap();
     fs::write(format!("{dir}/Anchor.MerkleBlock.Tapret.vesper"), format!("{tt}")).unwrap();
 
-    let tt = sys
-        .type_tree("BPCore.AnchorMerkleProofTapretProof")
-        .unwrap();
+    let tt = sys.type_tree("BPCore.AnchorMerkleProofTapretProof").unwrap();
     fs::write(format!("{dir}/Anchor.MerkleProof.Tapret.vesper"), format!("{tt}")).unwrap();
 }

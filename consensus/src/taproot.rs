@@ -154,10 +154,7 @@ impl InternalKeypair {
         }
         let tweak =
             Scalar::from_be_bytes(engine.finish()).expect("hash value greater than curve order");
-        let pair = self
-            .0
-            .add_xonly_tweak(secp256k1::SECP256K1, &tweak)
-            .expect("hash collision");
+        let pair = self.0.add_xonly_tweak(secp256k1::SECP256K1, &tweak).expect("hash collision");
         let (outpput_key, tweaked_parity) = pair.x_only_public_key();
         debug_assert!(internal_pk.tweak_add_check(
             secp256k1::SECP256K1,
@@ -216,10 +213,8 @@ impl InternalPk {
         }
         let tweak =
             Scalar::from_be_bytes(engine.finish()).expect("hash value greater than curve order");
-        let (output_key, tweaked_parity) = self
-            .0
-            .add_tweak(secp256k1::SECP256K1, &tweak)
-            .expect("hash collision");
+        let (output_key, tweaked_parity) =
+            self.0.add_tweak(secp256k1::SECP256K1, &tweak).expect("hash collision");
         debug_assert!(self.tweak_add_check(
             secp256k1::SECP256K1,
             &output_key,

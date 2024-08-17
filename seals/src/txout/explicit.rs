@@ -64,10 +64,7 @@ impl<M: SealCloseMethod> TryFrom<&ExplicitSeal<TxPtr, M>> for Outpoint {
 
     #[inline]
     fn try_from(reveal: &ExplicitSeal<TxPtr, M>) -> Result<Self, Self::Error> {
-        reveal
-            .txid
-            .map_to_outpoint(reveal.vout)
-            .ok_or(WitnessVoutError)
+        reveal.txid.map_to_outpoint(reveal.vout).ok_or(WitnessVoutError)
     }
 }
 

@@ -68,9 +68,7 @@ impl CompressedPk {
     fn dumb() -> Self { Self(PublicKey::from_slice(&[2u8; 33]).unwrap()) }
 
     pub fn from_byte_array(data: [u8; 33]) -> Result<Self, InvalidPubkey<33>> {
-        PublicKey::from_slice(&data)
-            .map(Self)
-            .map_err(|_| InvalidPubkey::Specified(data.into()))
+        PublicKey::from_slice(&data).map(Self).map_err(|_| InvalidPubkey::Specified(data.into()))
     }
     pub fn to_byte_array(&self) -> [u8; 33] { self.0.serialize() }
 
@@ -123,9 +121,7 @@ impl UncompressedPk {
     fn dumb() -> Self { Self(PublicKey::from_slice(&[2u8; 33]).unwrap()) }
 
     pub fn from_byte_array(data: [u8; 65]) -> Result<Self, InvalidPubkey<65>> {
-        PublicKey::from_slice(&data)
-            .map(Self)
-            .map_err(|_| InvalidPubkey::Specified(data.into()))
+        PublicKey::from_slice(&data).map(Self).map_err(|_| InvalidPubkey::Specified(data.into()))
     }
     pub fn to_byte_array(&self) -> [u8; 65] { self.0.serialize_uncompressed() }
 }

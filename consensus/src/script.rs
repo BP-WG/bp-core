@@ -130,21 +130,21 @@ impl ScriptPubkey {
     /// Checks whether a script pubkey is a P2PKH output.
     #[inline]
     pub fn is_p2pkh(&self) -> bool {
-        self.0.len() == 25 &&
-            self.0[0] == OP_DUP &&
-            self.0[1] == OP_HASH160 &&
-            self.0[2] == OP_PUSHBYTES_20 &&
-            self.0[23] == OP_EQUALVERIFY &&
-            self.0[24] == OP_CHECKSIG
+        self.0.len() == 25
+            && self.0[0] == OP_DUP
+            && self.0[1] == OP_HASH160
+            && self.0[2] == OP_PUSHBYTES_20
+            && self.0[23] == OP_EQUALVERIFY
+            && self.0[24] == OP_CHECKSIG
     }
 
     /// Checks whether a script pubkey is a P2SH output.
     #[inline]
     pub fn is_p2sh(&self) -> bool {
-        self.0.len() == 23 &&
-            self.0[0] == OP_HASH160 &&
-            self.0[1] == OP_PUSHBYTES_20 &&
-            self.0[22] == OP_EQUAL
+        self.0.len() == 23
+            && self.0[0] == OP_HASH160
+            && self.0[1] == OP_PUSHBYTES_20
+            && self.0[22] == OP_EQUAL
     }
 
     #[inline]
@@ -287,9 +287,7 @@ impl ScriptBytes {
 
     #[inline]
     pub(crate) fn extend(&mut self, data: &[u8]) {
-        self.0
-            .extend(data.iter().copied())
-            .expect("script exceeds 4GB")
+        self.0.extend(data.iter().copied()).expect("script exceeds 4GB")
     }
 
     /// Computes the sum of `len` and the length of an appropriate push

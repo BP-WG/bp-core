@@ -41,9 +41,8 @@ impl ConvolveCommit<mpc::Commitment, TapretProof, TapretFirst> for ScriptPubkey 
         supplement: &TapretProof,
         msg: &mpc::Commitment,
     ) -> Result<(ScriptPubkey, TapretProof), Self::CommitError> {
-        let (output_key, _) = supplement
-            .internal_pk
-            .convolve_commit(&supplement.path_proof, msg)?;
+        let (output_key, _) =
+            supplement.internal_pk.convolve_commit(&supplement.path_proof, msg)?;
 
         let script_pubkey = ScriptPubkey::p2tr_tweaked(output_key);
 

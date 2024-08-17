@@ -196,12 +196,10 @@ mod _serde_outpoint {
                     fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
                     where A: SeqAccess<'de> {
                         let mut outpoint = Outpoint::coinbase();
-                        outpoint.txid = seq
-                            .next_element()?
-                            .ok_or_else(|| Error::invalid_length(0, &self))?;
-                        outpoint.vout = seq
-                            .next_element()?
-                            .ok_or_else(|| Error::invalid_length(1, &self))?;
+                        outpoint.txid =
+                            seq.next_element()?.ok_or_else(|| Error::invalid_length(0, &self))?;
+                        outpoint.vout =
+                            seq.next_element()?.ok_or_else(|| Error::invalid_length(1, &self))?;
                         Ok(outpoint)
                     }
                 }
@@ -403,11 +401,7 @@ impl TxVer {
 
     pub const fn try_from_standard(ver: i32) -> Result<Self, NonStandardValue<i32>> {
         let ver = TxVer::from_consensus_i32(ver);
-        if !ver.is_standard() {
-            Err(NonStandardValue::with(ver.0, "TxVer"))
-        } else {
-            Ok(ver)
-        }
+        if !ver.is_standard() { Err(NonStandardValue::with(ver.0, "TxVer")) } else { Ok(ver) }
     }
 
     #[inline]
@@ -491,18 +485,10 @@ impl Tx {
     /// to [`Tx::wtxid()`].
     pub fn txid(&self) -> Txid {
         let mut enc = Sha256::default();
-        self.version
-            .consensus_encode(&mut enc)
-            .expect("engines don't error");
-        self.inputs
-            .consensus_encode(&mut enc)
-            .expect("engines don't error");
-        self.outputs
-            .consensus_encode(&mut enc)
-            .expect("engines don't error");
-        self.lock_time
-            .consensus_encode(&mut enc)
-            .expect("engines don't error");
+        self.version.consensus_encode(&mut enc).expect("engines don't error");
+        self.inputs.consensus_encode(&mut enc).expect("engines don't error");
+        self.outputs.consensus_encode(&mut enc).expect("engines don't error");
+        self.lock_time.consensus_encode(&mut enc).expect("engines don't error");
         let mut double = Sha256::default();
         double.input_raw(&enc.finish());
         Txid::from_byte_array(double.finish())
@@ -516,8 +502,7 @@ impl Tx {
     /// to [`Transaction::txid()`].
     pub fn wtxid(&self) -> Wtxid {
         let mut enc = Sha256::default();
-        self.consensus_encode(&mut enc)
-            .expect("engines don't error");
+        self.consensus_encode(&mut enc).expect("engines don't error");
         let mut double = Sha256::default();
         double.input_raw(&enc.finish());
         Wtxid::from_byte_array(double.finish())

@@ -101,8 +101,7 @@ impl FromStr for BlockHeader {
 impl BlockHeader {
     pub fn block_hash(&self) -> BlockHash {
         let mut enc = Sha256::default();
-        self.consensus_encode(&mut enc)
-            .expect("engines don't error");
+        self.consensus_encode(&mut enc).expect("engines don't error");
         let mut double = Sha256::default();
         double.input_raw(&enc.finish());
         BlockHash::from_byte_array(double.finish())

@@ -68,12 +68,7 @@ impl<Seal: TxoSeal<M>, Dbc: dbc::Proof<M>, M: SealCloseMethod> SealWitness<Seal>
     fn verify_seal(&self, seal: &Seal, msg: &Self::Message) -> Result<(), Self::Error> {
         // 1. The seal must match tx inputs
         let outpoint = seal.outpoint().ok_or(VerifyError::NoWitnessTxid)?;
-        if !self
-            .tx
-            .inputs
-            .iter()
-            .any(|txin| txin.prev_output == outpoint)
-        {
+        if !self.tx.inputs.iter().any(|txin| txin.prev_output == outpoint) {
             return Err(VerifyError::WitnessNotClosingSeal(outpoint));
         }
 
@@ -102,12 +97,7 @@ impl<Seal: TxoSeal<M>, Dbc: dbc::Proof<M>, M: SealCloseMethod> SealWitness<Seal>
 
             // 2. Each seal must match tx inputs
             let outpoint = seal.outpoint().ok_or(VerifyError::NoWitnessTxid)?;
-            if !self
-                .tx
-                .inputs
-                .iter()
-                .any(|txin| txin.prev_output == outpoint)
-            {
+            if !self.tx.inputs.iter().any(|txin| txin.prev_output == outpoint) {
                 return Err(VerifyError::WitnessNotClosingSeal(outpoint));
             }
         }

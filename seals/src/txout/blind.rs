@@ -86,10 +86,7 @@ impl<M: SealCloseMethod> TryFrom<&BlindSeal<TxPtr, M>> for Outpoint {
 
     #[inline]
     fn try_from(reveal: &BlindSeal<TxPtr, M>) -> Result<Self, Self::Error> {
-        reveal
-            .txid
-            .map_to_outpoint(reveal.vout)
-            .ok_or(WitnessVoutError)
+        reveal.txid.map_to_outpoint(reveal.vout).ok_or(WitnessVoutError)
     }
 }
 

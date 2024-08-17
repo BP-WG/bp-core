@@ -96,9 +96,9 @@ impl<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod> Anchor<L, D, M>
     /// producing the same commitments.
     #[inline]
     pub fn matches(&self, other: &Self) -> bool {
-        self.mpc_proof.matches(&other.mpc_proof) &&
-            self.dbc_proof == other.dbc_proof &&
-            self.method == other.method
+        self.mpc_proof.matches(&other.mpc_proof)
+            && self.dbc_proof == other.dbc_proof
+            && self.method == other.method
     }
 }
 
@@ -152,9 +152,7 @@ impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleProof, D, M> {
         tx: &Tx,
     ) -> Result<mpc::Commitment, VerifyError<D::Error>> {
         let mpc_commitment = self.convolve(protocol_id, message)?;
-        self.dbc_proof
-            .verify(&mpc_commitment, tx)
-            .map_err(VerifyError::Dbc)?;
+        self.dbc_proof.verify(&mpc_commitment, tx).map_err(VerifyError::Dbc)?;
         Ok(mpc_commitment)
     }
 

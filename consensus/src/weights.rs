@@ -92,16 +92,12 @@ impl Weight for Tx {
         + self.outputs.len_var_int().len()
         + 4; // lock time
 
-        let mut weight = WeightUnits::no_discount(bytes) +
-            self.inputs().map(TxIn::weight_units).sum() +
-            self.outputs().map(TxOut::weight_units).sum();
+        let mut weight = WeightUnits::no_discount(bytes)
+            + self.inputs().map(TxIn::weight_units).sum()
+            + self.outputs().map(TxOut::weight_units).sum();
         if self.is_segwit() {
             weight += WeightUnits::witness_discount(2); // marker and flag bytes
-            weight += self
-                .inputs()
-                .map(|txin| &txin.witness)
-                .map(Witness::weight_units)
-                .sum();
+            weight += self.inputs().map(|txin| &txin.witness).map(Witness::weight_units).sum();
         }
         weight
     }
@@ -139,10 +135,8 @@ impl Weight for SigScript {
 impl Weight for Witness {
     fn weight_units(&self) -> WeightUnits {
         WeightUnits::witness_discount(
-            self.len_var_int().len() +
-                self.iter()
-                    .map(|item| item.len_var_int().len() + item.len())
-                    .sum::<usize>(),
+            self.len_var_int().len()
+                + self.iter().map(|item| item.len_var_int().len() + item.len()).sum::<usize>(),
         )
     }
 }
