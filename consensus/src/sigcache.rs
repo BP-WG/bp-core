@@ -471,10 +471,8 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
             let mut enc_prevouts = Sha256::default();
             let mut enc_sequences = Sha256::default();
             for txin in &tx.inputs {
-                txin.prev_output
-                    .consensus_encode(&mut enc_prevouts)
-                    .unwrap();
-                txin.sequence.consensus_encode(&mut enc_sequences).unwrap();
+                let _ = txin.prev_output.consensus_encode(&mut enc_prevouts);
+                let _ = txin.sequence.consensus_encode(&mut enc_sequences);
             }
             let mut enc_outputs = Sha256::default();
             for txout in &tx.outputs {
@@ -502,16 +500,11 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
             let mut enc_amounts = Sha256::default();
             let mut enc_script_pubkeys = Sha256::default();
             for prevout in &self.prevouts {
-                prevout
-                    .borrow()
-                    .value
-                    .consensus_encode(&mut enc_amounts)
-                    .unwrap();
-                prevout
+                let _ = prevout.borrow().value.consensus_encode(&mut enc_amounts);
+                let _ = prevout
                     .borrow()
                     .script_pubkey
-                    .consensus_encode(&mut enc_script_pubkeys)
-                    .unwrap();
+                    .consensus_encode(&mut enc_script_pubkeys);
             }
             TaprootCache {
                 amounts: enc_amounts.finish().into(),
