@@ -13,7 +13,7 @@ default-members = [
 ]
 
 [workspace.package]
-version = "0.11.0-beta.7"
+version = "0.11.0-beta.8"
 authors = ["Dr Maxim Orlovsky <orlovsky@lnp-bp.org>"]
 homepage = "https://github.com/BP-WG"
 repository = "https://github.com/BP-WG/bp-core"
@@ -23,13 +23,13 @@ license = "Apache-2.0"
 
 [workspace.dependencies]
 amplify = "4.7.0"
-strict_encoding = "2.7.0-rc.1"
-strict_types = "2.7.0-rc.1"
-commit_verify = "0.11.0-beta.7"
-single_use_seals = "0.11.0-beta.7"
-bp-consensus = { version = "0.11.0-beta.7", path = "consensus" }
-bp-dbc = { version = "0.11.0-beta.7", path = "./dbc" }
-bp-seals = { version = "0.11.0-beta.7", path = "./seals" }
+strict_encoding = "2.7.0"
+strict_types = "2.7.0"
+commit_verify = "0.11.0-beta.8"
+single_use_seals = "0.11.0-beta.8"
+bp-consensus = { version = "0.11.0-beta.8", path = "consensus" }
+bp-dbc = { version = "0.11.0-beta.8", path = "./dbc" }
+bp-seals = { version = "0.11.0-beta.8", path = "./seals" }
 secp256k1 = { version = "0.29.0", features = ["global-context", "rand-std"] }
 serde_crate = { package = "serde", version = "1", features = ["derive"] }
 

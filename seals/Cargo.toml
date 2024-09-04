@@ -18,7 +18,7 @@ path = "src/lib.rs"
 
 [dependencies]
 amplify = { workspace = true }
-baid64 = "0.2.0"
+baid64 = "0.2.2"
 single_use_seals = { workspace = true }
 commit_verify = { workspace = true }
 strict_encoding = { workspace = true }
