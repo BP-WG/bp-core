@@ -377,7 +377,8 @@ impl TapretProof {
 
 impl Proof<Method> for TapretProof {
     type Error = ConvolveVerifyError;
-    const METHOD: Method = Method::TapretFirst;
+
+    fn method(&self) -> Method { Method::TapretFirst }
 
     fn verify(&self, msg: &Commitment, tx: &Tx) -> Result<(), ConvolveVerifyError> {
         ConvolveCommitProof::<_, Tx, _>::verify(self, msg, tx)
