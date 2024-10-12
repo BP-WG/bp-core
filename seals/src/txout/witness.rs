@@ -31,6 +31,7 @@ use crate::SealCloseMethod;
 
 /// Witness of a bitcoin-based seal being closed. Includes both transaction and
 /// extra-transaction data.
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub struct Witness<D: dbc::Proof<M>, M: DbcMethod = Method> {
     /// Witness transaction: transaction which contains commitment to the
     /// message over which the seal is closed.
