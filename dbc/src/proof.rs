@@ -91,8 +91,8 @@ pub trait Proof<M: DbcMethod = Method>:
     /// Verification error.
     type Error: Error;
 
-    /// Returns DBC method used by the proof.
-    const METHOD: M;
+    /// Returns a single-use seal closing method used by the DBC proof.
+    fn method(&self) -> M;
 
     /// Verifies DBC proof against the provided transaction.
     fn verify(&self, msg: &mpc::Commitment, tx: &Tx) -> Result<(), Self::Error>;
