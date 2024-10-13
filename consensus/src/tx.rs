@@ -401,7 +401,11 @@ impl TxVer {
 
     pub const fn try_from_standard(ver: i32) -> Result<Self, NonStandardValue<i32>> {
         let ver = TxVer::from_consensus_i32(ver);
-        if !ver.is_standard() { Err(NonStandardValue::with(ver.0, "TxVer")) } else { Ok(ver) }
+        if !ver.is_standard() {
+            Err(NonStandardValue::with(ver.0, "TxVer"))
+        } else {
+            Ok(ver)
+        }
     }
 
     #[inline]

@@ -25,6 +25,7 @@
 //! defined by LNPBP-4.
 
 use std::error::Error;
+use std::marker::PhantomData;
 
 use bc::Tx;
 use commit_verify::mpc::{self, Message, ProtocolId};
@@ -73,8 +74,9 @@ pub struct Anchor<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod = M
     /// Proof of the DBC commitment.
     pub dbc_proof: D,
 
-    /// Method used by the anchor
-    pub method: M,
+    #[strict_type(skip)]
+    #[cfg_attr(feature = "serde", serde(skip))]
+    _method: PhantomData<M>,
 }
 
 impl<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod> Anchor<L, D, M> {
@@ -84,7 +86,7 @@ impl<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod> Anchor<L, D, M>
         Self {
             mpc_proof,
             dbc_proof,
-            method: D::METHOD,
+            _method: PhantomData,
         }
     }
 
@@ -96,9 +98,7 @@ impl<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod> Anchor<L, D, M>
     /// producing the same commitments.
     #[inline]
     pub fn matches(&self, other: &Self) -> bool {
-        self.mpc_proof.matches(&other.mpc_proof)
-            && self.dbc_proof == other.dbc_proof
-            && self.method == other.method
+        self.mpc_proof.matches(&other.mpc_proof) && self.dbc_proof == other.dbc_proof
     }
 }
 
@@ -113,9 +113,6 @@ pub enum MergeError {
 
     /// anchors can't be merged since they have different DBC proofs.
     DbcMismatch,
-
-    /// anchors can't be merged since they use different method.
-    MethodMismatch,
 }
 
 impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleProof, D, M> {
@@ -130,7 +127,7 @@ impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleProof, D, M> {
         Ok(Anchor {
             mpc_proof: lnpbp4_proof,
             dbc_proof: self.dbc_proof,
-            method: self.method,
+            _method: PhantomData,
         })
     }
 
@@ -187,7 +184,7 @@ impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleBlock, D, M> {
         Ok(Anchor {
             mpc_proof: lnpbp4_proof,
             dbc_proof: self.dbc_proof,
-            method: self.method,
+            _method: PhantomData,
         })
     }
 
@@ -201,9 +198,6 @@ impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleBlock, D, M> {
 
     /// Merges two anchors keeping revealed data.
     pub fn merge_reveal(mut self, other: Self) -> Result<Self, MergeError> {
-        if self.method != other.method {
-            return Err(MergeError::MethodMismatch);
-        }
         if self.dbc_proof != other.dbc_proof {
             return Err(MergeError::DbcMismatch);
         }

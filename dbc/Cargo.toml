@@ -22,7 +22,7 @@ base85 = "=2.0.0"
 strict_encoding = { workspace = true }
 commit_verify = { workspace = true, features = ["rand"] }
 bp-consensus = { workspace = true }
-secp256k1 = { workspace = true, features = ["global-context", "rand-std"] }
+secp256k1 = { workspace = true }
 serde_crate = { workspace = true, optional = true }
 
 [features]
@@ -36,4 +36,4 @@ serde = [
 ]
 
 [package.metadata.docs.rs]
-features = [ "all" ]
+features = ["all"]
