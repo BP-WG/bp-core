@@ -72,7 +72,8 @@ impl StrictDeserialize for OpretProof {}
 
 impl Proof<Method> for OpretProof {
     type Error = EmbedVerifyError<OpretError>;
-    const METHOD: Method = Method::OpretFirst;
+
+    fn method(&self) -> Method { Method::OpretFirst }
 
     fn verify(&self, msg: &Commitment, tx: &Tx) -> Result<(), EmbedVerifyError<OpretError>> {
         tx.verify(msg, self)
