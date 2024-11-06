@@ -35,6 +35,11 @@ use crate::LIB_NAME_BPCORE;
 pub struct MethodParseError(pub String);
 
 /// Method of DBC construction.
+///
+/// Method defines a set of parameters used by a single-use seal, such as:
+/// - selection of bitcoin input;
+/// - commitment algorithm;
+/// - used hash functions.
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[cfg_attr(
     feature = "serde",
@@ -46,13 +51,13 @@ pub struct MethodParseError(pub String);
 #[repr(u8)]
 pub enum Method {
     /// OP_RETURN commitment present in the first OP_RETURN-containing
-    /// transaction output.
+    /// transaction output, made with tagged SHA256 hash function.
     #[display("opret1st")]
     #[strict_type(dumb)]
     OpretFirst = 0x00,
 
     /// Taproot-based OP_RETURN commitment present in the first Taproot
-    /// transaction output.
+    /// transaction output, made with tagged SHA256 hash function.
     #[display("tapret1st")]
     TapretFirst = 0x01,
 }
@@ -75,7 +80,7 @@ pub trait Proof: Clone + Eq + Debug + StrictSerialize + StrictDeserialize + Stri
     const METHOD: Method;
 
     /// Verification error.
-    type Error: Error;
+    type Error: Clone + Error;
 
     /// Verifies DBC proof against the provided transaction.
     fn verify(&self, msg: &mpc::Commitment, tx: &Tx) -> Result<(), Self::Error>;

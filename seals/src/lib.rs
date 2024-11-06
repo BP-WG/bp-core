@@ -27,7 +27,7 @@
     unused_mut,
     unused_imports,
     dead_code,
-    missing_docs
+    // missing_docs
 )]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
@@ -43,8 +43,8 @@ extern crate commit_verify;
 #[macro_use]
 extern crate serde_crate as serde;
 
-pub mod resolver;
-pub mod txout;
+mod txout;
 mod secret;
 
 pub use secret::SecretSeal;
+pub use txout::{Anchor, Noise, TxoSeal, TxoSealExt};

@@ -1,11 +1,12 @@
-AnchorMerkleProofTapretProof rec
-  mpcProof rec MerkleProof
-    pos is U32
-    cofactor is U16
-    path list len=0..32
-      element bytes len=32 aka=MerkleHash
-  dbcProof rec TapretProof
-    pathProof rec TapretPathProof
-      some union TapretNodePartner option wrapped tag=1
-        rightBranch rec TapretRightBranch wrapped tag=2
-      nonce is U8
+rec AnchorMerkleProofTapretProof
+  rec mpcProof, MerkleProof
+    enum method, Method, sha256t 0
+    is pos, U32
+    is cofactor, U16
+    list path, len 0..32
+      bytes element, len 32, aka MerkleHash
+  rec dbcProof, TapretProof
+    rec pathProof, TapretPathProof
+      union some, TapretNodePartner, option, wrapped, tag 1
+        rec rightBranch, TapretRightBranch, wrapped, tag 2
+      is nonce, U8

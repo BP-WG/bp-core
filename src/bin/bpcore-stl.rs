@@ -26,7 +26,8 @@ use bc::stl::{bp_consensus_stl, bp_tx_stl};
 use bp::stl::bp_core_stl;
 use commit_verify::stl::commit_verify_stl;
 use commit_verify::CommitmentLayout;
-use seals::txout::{ChainBlindSeal, SingleBlindSeal};
+use dbc::tapret::TapretProof;
+use seals::TxoSeal;
 use strict_encoding::libname;
 use strict_types::stl::std_stl;
 use strict_types::{parse_args, SystemBuilder};
@@ -113,13 +114,11 @@ Seals vesper lexicon=types+commitments
 "
     )
     .unwrap();
-    let layout = SingleBlindSeal::commitment_layout();
+    let layout = TxoSeal::<TapretProof>::commitment_layout();
     writeln!(file, "{layout}").unwrap();
-    let layout = ChainBlindSeal::commitment_layout();
-    writeln!(file, "{layout}").unwrap();
-    let tt = sys.type_tree("BPCore.BlindSealTxid").unwrap();
+    let tt = sys.type_tree("BPCore.TxoSealTapretProof").unwrap();
     writeln!(file, "{tt}").unwrap();
-    let tt = sys.type_tree("BPCore.BlindSealTxPtr").unwrap();
+    let tt = sys.type_tree("BPCore.TxoSealOpretProof").unwrap();
     writeln!(file, "{tt}").unwrap();
 
     let tt = sys.type_tree("BPCore.AnchorMerkleTreeTapretProof").unwrap();
