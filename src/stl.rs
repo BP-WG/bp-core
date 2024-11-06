@@ -25,7 +25,7 @@ use bc::Txid;
 use commit_verify::mpc;
 use dbc::opret::OpretProof;
 use dbc::tapret::TapretProof;
-use dbc::{Method, LIB_NAME_BPCORE};
+use dbc::LIB_NAME_BPCORE;
 use seals::txout::TxPtr;
 use strict_types::{CompileError, LibBuilder, TypeLib};
 
@@ -46,11 +46,11 @@ fn _bp_core_stl() -> Result<TypeLib, CompileError> {
     .transpile::<dbc::Anchor<mpc::MerkleTree, OpretProof>>()
     .transpile::<dbc::Anchor<mpc::MerkleBlock, OpretProof>>()
     .transpile::<dbc::Anchor<mpc::MerkleProof, OpretProof>>()
-    .transpile::<seals::txout::ExplicitSeal<TxPtr, Method>>()
-    .transpile::<seals::txout::ExplicitSeal<Txid, Method>>()
+    .transpile::<seals::txout::ExplicitSeal<TxPtr>>()
+    .transpile::<seals::txout::ExplicitSeal<Txid>>()
     .transpile::<seals::SecretSeal>()
-    .transpile::<seals::txout::BlindSeal<TxPtr, Method>>()
-    .transpile::<seals::txout::BlindSeal<Txid, Method>>()
+    .transpile::<seals::txout::BlindSeal<TxPtr>>()
+    .transpile::<seals::txout::BlindSeal<Txid>>()
     .compile()
 }
 

@@ -19,20 +19,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::marker::PhantomData;
-
 use bc::{Tx, Txid};
 use commit_verify::mpc;
-use dbc::{DbcMethod, Method};
 use single_use_seals::SealWitness;
 
 use crate::txout::{TxoSeal, VerifyError};
-use crate::SealCloseMethod;
 
 /// Witness of a bitcoin-based seal being closed. Includes both transaction and
 /// extra-transaction data.
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
-pub struct Witness<D: dbc::Proof<M>, M: DbcMethod = Method> {
+pub struct Witness<D: dbc::Proof> {
     /// Witness transaction: transaction which contains commitment to the
     /// message over which the seal is closed.
     pub tx: Tx,
@@ -42,27 +38,21 @@ pub struct Witness<D: dbc::Proof<M>, M: DbcMethod = Method> {
 
     /// Deterministic bitcoin commitment proof from the anchor.
     pub proof: D,
-
-    #[doc(hidden)]
-    pub _phantom: PhantomData<M>,
 }
 
-impl<D: dbc::Proof<M>, M: DbcMethod> Witness<D, M> {
+impl<D: dbc::Proof> Witness<D> {
     /// Constructs witness from a witness transaction and extra-transaction
     /// proof, taken from an anchor.
-    pub fn with(tx: Tx, dbc: D) -> Witness<D, M> {
+    pub fn with(tx: Tx, dbc: D) -> Witness<D> {
         Witness {
             txid: tx.txid(),
             tx,
             proof: dbc,
-            _phantom: default!(),
         }
     }
 }
 
-impl<Seal: TxoSeal<M>, Dbc: dbc::Proof<M>, M: SealCloseMethod> SealWitness<Seal>
-    for Witness<Dbc, M>
-{
+impl<Seal: TxoSeal, Dbc: dbc::Proof> SealWitness<Seal> for Witness<Dbc> {
     type Message = mpc::Commitment;
     type Error = VerifyError<Dbc::Error>;
 

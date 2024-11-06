@@ -25,13 +25,12 @@
 //! defined by LNPBP-4.
 
 use std::error::Error;
-use std::marker::PhantomData;
 
 use bc::Tx;
 use commit_verify::mpc::{self, Message, ProtocolId};
 use strict_encoding::{StrictDumb, StrictEncode};
 
-use crate::{DbcMethod, Method, LIB_NAME_BPCORE};
+use crate::LIB_NAME_BPCORE;
 
 mod dbc {
     pub use crate::Proof;
@@ -67,26 +66,21 @@ pub enum VerifyError<E: Error> {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", rename_all = "camelCase")
 )]
-pub struct Anchor<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod = Method> {
+pub struct Anchor<L: mpc::Proof + StrictDumb, D: dbc::Proof> {
     /// Structured multi-protocol LNPBP-4 data the transaction commits to.
     pub mpc_proof: L,
 
     /// Proof of the DBC commitment.
     pub dbc_proof: D,
-
-    #[strict_type(skip)]
-    #[cfg_attr(feature = "serde", serde(skip))]
-    _method: PhantomData<M>,
 }
 
-impl<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod> Anchor<L, D, M> {
+impl<L: mpc::Proof + StrictDumb, D: dbc::Proof> Anchor<L, D> {
     /// Constructs anchor for a given witness transaction id, MPC and DBC
     /// proofs.
     pub fn new(mpc_proof: L, dbc_proof: D) -> Self {
         Self {
             mpc_proof,
             dbc_proof,
-            _method: PhantomData,
         }
     }
 
@@ -115,19 +109,18 @@ pub enum MergeError {
     DbcMismatch,
 }
 
-impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleProof, D, M> {
+impl<D: dbc::Proof> Anchor<mpc::MerkleProof, D> {
     /// Reconstructs anchor containing merkle block
     pub fn into_merkle_block(
         self,
         protocol_id: impl Into<ProtocolId>,
         message: impl Into<Message>,
-    ) -> Result<Anchor<mpc::MerkleBlock, D, M>, mpc::InvalidProof> {
+    ) -> Result<Anchor<mpc::MerkleBlock, D>, mpc::InvalidProof> {
         let lnpbp4_proof =
             mpc::MerkleBlock::with(&self.mpc_proof, protocol_id.into(), message.into())?;
         Ok(Anchor {
             mpc_proof: lnpbp4_proof,
             dbc_proof: self.dbc_proof,
-            _method: PhantomData,
         })
     }
 
@@ -136,7 +129,7 @@ impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleProof, D, M> {
         &self,
         protocol_id: impl Into<ProtocolId>,
         message: impl Into<Message>,
-    ) -> Result<Anchor<mpc::MerkleBlock, D, M>, mpc::InvalidProof> {
+    ) -> Result<Anchor<mpc::MerkleBlock, D>, mpc::InvalidProof> {
         self.clone().into_merkle_block(protocol_id, message)
     }
 
@@ -164,13 +157,13 @@ impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleProof, D, M> {
     }
 }
 
-impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleBlock, D, M> {
+impl<D: dbc::Proof> Anchor<mpc::MerkleBlock, D> {
     /// Conceals all LNPBP-4 data except specific protocol and produces merkle
     /// proof anchor.
     pub fn to_merkle_proof(
         &self,
         protocol: impl Into<ProtocolId>,
-    ) -> Result<Anchor<mpc::MerkleProof, D, M>, mpc::LeafNotKnown> {
+    ) -> Result<Anchor<mpc::MerkleProof, D>, mpc::LeafNotKnown> {
         self.clone().into_merkle_proof(protocol)
     }
 
@@ -179,12 +172,11 @@ impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleBlock, D, M> {
     pub fn into_merkle_proof(
         self,
         protocol: impl Into<ProtocolId>,
-    ) -> Result<Anchor<mpc::MerkleProof, D, M>, mpc::LeafNotKnown> {
+    ) -> Result<Anchor<mpc::MerkleProof, D>, mpc::LeafNotKnown> {
         let lnpbp4_proof = self.mpc_proof.to_merkle_proof(protocol.into())?;
         Ok(Anchor {
             mpc_proof: lnpbp4_proof,
             dbc_proof: self.dbc_proof,
-            _method: PhantomData,
         })
     }
 

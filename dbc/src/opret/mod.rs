@@ -70,10 +70,10 @@ pub struct OpretProof(());
 impl StrictSerialize for OpretProof {}
 impl StrictDeserialize for OpretProof {}
 
-impl Proof<Method> for OpretProof {
+impl Proof for OpretProof {
     type Error = EmbedVerifyError<OpretError>;
 
-    fn method(&self) -> Method { Method::OpretFirst }
+    const METHOD: Method = Method::OpretFirst;
 
     fn verify(&self, msg: &Commitment, tx: &Tx) -> Result<(), EmbedVerifyError<OpretError>> {
         tx.verify(msg, self)

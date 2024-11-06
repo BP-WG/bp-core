@@ -30,7 +30,6 @@ use dbc::MethodParseError;
 
 use crate::txout::seal::{SealTxid, TxPtr};
 use crate::txout::{CloseMethod, TxoSeal, WitnessVoutError};
-use crate::SealCloseMethod;
 
 /// Revealed seal definition which may point to a witness transactions and does
 /// not contain blinding data.
@@ -42,10 +41,10 @@ use crate::SealCloseMethod;
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
-pub struct ExplicitSeal<Id: SealTxid, M: SealCloseMethod = CloseMethod> {
+pub struct ExplicitSeal<Id: SealTxid> {
     /// Commitment to the specific seal close method [`CloseMethod`] which must
     /// be used to close this seal.
-    pub method: M,
+    pub method: CloseMethod,
 
     /// Txid of the seal definition.
     ///
@@ -59,35 +58,35 @@ pub struct ExplicitSeal<Id: SealTxid, M: SealCloseMethod = CloseMethod> {
     pub vout: Vout,
 }
 
-impl<M: SealCloseMethod> TryFrom<&ExplicitSeal<TxPtr, M>> for Outpoint {
+impl TryFrom<&ExplicitSeal<TxPtr>> for Outpoint {
     type Error = WitnessVoutError;
 
     #[inline]
-    fn try_from(reveal: &ExplicitSeal<TxPtr, M>) -> Result<Self, Self::Error> {
+    fn try_from(reveal: &ExplicitSeal<TxPtr>) -> Result<Self, Self::Error> {
         reveal.txid.map_to_outpoint(reveal.vout).ok_or(WitnessVoutError)
     }
 }
 
-impl<M: SealCloseMethod> TryFrom<ExplicitSeal<TxPtr, M>> for Outpoint {
+impl TryFrom<ExplicitSeal<TxPtr>> for Outpoint {
     type Error = WitnessVoutError;
 
     #[inline]
-    fn try_from(reveal: ExplicitSeal<TxPtr, M>) -> Result<Self, Self::Error> {
+    fn try_from(reveal: ExplicitSeal<TxPtr>) -> Result<Self, Self::Error> {
         Outpoint::try_from(&reveal)
     }
 }
 
-impl<M: SealCloseMethod> From<&ExplicitSeal<Txid, M>> for Outpoint {
-    fn from(seal: &ExplicitSeal<Txid, M>) -> Self { Outpoint::new(seal.txid, seal.vout) }
+impl From<&ExplicitSeal<Txid>> for Outpoint {
+    fn from(seal: &ExplicitSeal<Txid>) -> Self { Outpoint::new(seal.txid, seal.vout) }
 }
 
-impl<M: SealCloseMethod> From<ExplicitSeal<Txid, M>> for Outpoint {
-    fn from(seal: ExplicitSeal<Txid, M>) -> Self { Outpoint::from(&seal) }
+impl From<ExplicitSeal<Txid>> for Outpoint {
+    fn from(seal: ExplicitSeal<Txid>) -> Self { Outpoint::from(&seal) }
 }
 
-impl<Id: SealTxid, M: SealCloseMethod> TxoSeal<M> for ExplicitSeal<Id, M> {
+impl<Id: SealTxid> TxoSeal for ExplicitSeal<Id> {
     #[inline]
-    fn method(&self) -> M { self.method }
+    fn method(&self) -> CloseMethod { self.method }
 
     #[inline]
     fn txid(&self) -> Option<Txid> { self.txid.txid() }
@@ -107,10 +106,10 @@ impl<Id: SealTxid, M: SealCloseMethod> TxoSeal<M> for ExplicitSeal<Id, M> {
     }
 }
 
-impl<Id: SealTxid, M: SealCloseMethod> ExplicitSeal<Id, M> {
+impl<Id: SealTxid> ExplicitSeal<Id> {
     /// Constructs seal for the provided outpoint and seal closing method.
     #[inline]
-    pub fn new(method: M, outpoint: Outpoint) -> ExplicitSeal<Id, M> {
+    pub fn new(method: CloseMethod, outpoint: Outpoint) -> ExplicitSeal<Id> {
         Self {
             method,
             txid: Id::from(outpoint.txid),
@@ -120,7 +119,7 @@ impl<Id: SealTxid, M: SealCloseMethod> ExplicitSeal<Id, M> {
 
     /// Constructs seal.
     #[inline]
-    pub fn with(method: M, txid: Id, vout: impl Into<Vout>) -> ExplicitSeal<Id, M> {
+    pub fn with(method: CloseMethod, txid: Id, vout: impl Into<Vout>) -> ExplicitSeal<Id> {
         ExplicitSeal {
             method,
             txid,
@@ -129,7 +128,7 @@ impl<Id: SealTxid, M: SealCloseMethod> ExplicitSeal<Id, M> {
     }
 }
 
-impl<M: SealCloseMethod> ExplicitSeal<Txid, M> {
+impl ExplicitSeal<Txid> {
     /// Converts seal into a transaction outpoint.
     #[inline]
     pub fn to_outpoint(&self) -> Outpoint { Outpoint::new(self.txid, self.vout) }
@@ -163,9 +162,7 @@ pub enum ParseError {
     WrongStructure,
 }
 
-impl<Id: SealTxid, M: SealCloseMethod> FromStr for ExplicitSeal<Id, M>
-where M: FromStr<Err = MethodParseError>
-{
+impl<Id: SealTxid> FromStr for ExplicitSeal<Id> {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -183,9 +180,7 @@ where M: FromStr<Err = MethodParseError>
     }
 }
 
-impl<Id: SealTxid, M: SealCloseMethod> Display for ExplicitSeal<Id, M>
-where M: Display
-{
+impl<Id: SealTxid> Display for ExplicitSeal<Id> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}:{}:{}", self.method, self.txid, self.vout,)
     }
