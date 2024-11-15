@@ -165,7 +165,7 @@ dependencies = [
 
 [[package]]
 name = "bp-consensus"
-version = "0.12.0-alpha.1"
+version = "0.12.0-beta.1"
 dependencies = [
  "amplify",
  "chrono",
@@ -178,7 +178,7 @@ dependencies = [
 
 [[package]]
 name = "bp-core"
-version = "0.12.0-alpha.1"
+version = "0.12.0-beta.1"
 dependencies = [
  "amplify",
  "bp-consensus",
@@ -197,7 +197,7 @@ dependencies = [
 
 [[package]]
 name = "bp-dbc"
-version = "0.12.0-alpha.1"
+version = "0.12.0-beta.1"
 dependencies = [
  "amplify",
  "base85",
@@ -210,7 +210,7 @@ dependencies = [
 
 [[package]]
 name = "bp-seals"
-version = "0.12.0-alpha.1"
+version = "0.12.0-beta.1"
 dependencies = [
  "amplify",
  "baid64 0.2.2",
@@ -237,9 +237,9 @@ checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 
 [[package]]
 name = "cc"
-version = "1.2.0"
+version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1aeb932158bd710538c73702db6945cb68a8fb08c519e6e12706b94263b36db8"
+checksum = "fd9de9f2205d5ef3fd67e685b0df337994ddd4495e2a28d185500d0e1edfea47"
 dependencies = [
  "shlex",
 ]
@@ -267,7 +267,8 @@ dependencies = [
 [[package]]
 name = "commit_encoding_derive"
 version = "0.12.0-alpha.2"
-source = "git+https://github.com/LNP-BP/client_side_validation?branch=v0.12#a625ed95943ba862b7f7b975d34ed837b2a3aba4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16b452b3e69f9cfd18d345684a7e06827c84798724f8a58addc387c401cab8fb"
 dependencies = [
  "amplify",
  "amplify_syn",
@@ -278,8 +279,9 @@ dependencies = [
 
 [[package]]
 name = "commit_verify"
-version = "0.12.0-alpha.2"
-source = "git+https://github.com/LNP-BP/client_side_validation?branch=v0.12#a625ed95943ba862b7f7b975d34ed837b2a3aba4"
+version = "0.12.0-alpha.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "545fb0e0fedd69e72869d3b2dde6f96af63a38f70f62f148bef2672bef5d32bd"
 dependencies = [
  "amplify",
  "commit_encoding_derive",
@@ -629,8 +631,9 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
 name = "single_use_seals"
-version = "0.12.0-alpha.2"
-source = "git+https://github.com/LNP-BP/client_side_validation?branch=v0.12#a625ed95943ba862b7f7b975d34ed837b2a3aba4"
+version = "0.12.0-alpha.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9550e2f1be9c206b86146373d03bd1d26480440d43779e16ade04350ecfde97"
 
 [[package]]
 name = "strict_encoding"
