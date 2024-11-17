@@ -1,5 +1,5 @@
 {-
-  Id: stl:A3Hq5xgH-a7u2hJJ-XyPrSVp-~bVLnkf-A1KMLfv-MeK4lEw#russian-granite-campus
+  Id: stl:shT3puxD-pguyIQF-lMwkHEo-oASAiSm-s6zQH6s-AqbOAOg#bruno-belgium-shelf
   Name: BPCore
   Version: 0.1.0
   Description: Bitcoin client-side-validation library
@@ -55,15 +55,22 @@ data AnchorMerkleTreeOpretProof : mpcProof CommitVerify.MerkleTree, dbcProof Opr
 @mnemonic(tokyo-yankee-garcia)
 data AnchorMerkleTreeTapretProof : mpcProof CommitVerify.MerkleTree, dbcProof TapretProof
 
-@mnemonic(disney-apropos-costume)
-data AnchorOpretProof  : mpcProof CommitVerify.MerkleProof
+@mnemonic(pilot-evita-provide)
+data AnchorOpretProof  : mmbProof BundleProof
+                       , mpcProtocol CommitVerify.ProtocolId
+                       , mpcProof CommitVerify.MerkleProof
                        , dbcProof OpretProof
                        , fallbackProof CommitVerify.ReservedBytes1
 
-@mnemonic(speech-jerome-phoenix)
-data AnchorTapretProof : mpcProof CommitVerify.MerkleProof
+@mnemonic(liter-sponsor-blitz)
+data AnchorTapretProof : mmbProof BundleProof
+                       , mpcProtocol CommitVerify.ProtocolId
+                       , mpcProof CommitVerify.MerkleProof
                        , dbcProof TapretProof
                        , fallbackProof CommitVerify.ReservedBytes1
+
+@mnemonic(mask-little-round)
+data BundleProof       : map {U32 -> ^ ..0xff [Byte ^ 32]}
 
 @mnemonic(basket-match-colony)
 data Noise             : [Byte ^ 68]

@@ -25,10 +25,10 @@
 use core::fmt::Debug;
 use core::marker::PhantomData;
 
-use amplify::Bytes;
+use amplify::confinement::TinyOrdMap;
+use amplify::{ByteArray, Bytes, Bytes32};
 use bc::{Outpoint, Tx, Txid};
-use commit_verify::mpc::{self, ProtocolId};
-use commit_verify::ReservedBytes;
+use commit_verify::{mpc, CommitId, ReservedBytes};
 use single_use_seals::{ClientSideWitness, PublishedWitness, SealWitness, SingleUseSeal};
 use strict_encoding::StrictDumb;
 
@@ -44,6 +44,62 @@ use crate::SecretSeal;
 )]
 pub struct Noise(Bytes<68>);
 
+pub mod mmb {
+    use commit_verify::{CommitmentId, DigestExt, Sha256};
+
+    use super::*;
+
+    #[derive(Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, From)]
+    #[wrapper(Deref, BorrowSlice, Hex, Index, RangeOps)]
+    #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+    #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
+    #[cfg_attr(
+        feature = "serde",
+        derive(Serialize, Deserialize),
+        serde(crate = "serde_crate", transparent)
+    )]
+    pub struct Commitment(
+        #[from]
+        #[from([u8; 32])]
+        Bytes32,
+    );
+    impl CommitmentId for Commitment {
+        const TAG: &'static str = "urn:lnp-bp:mmb:bundle#2024-11-18";
+    }
+    impl From<Sha256> for Commitment {
+        fn from(hasher: Sha256) -> Self { hasher.finish().into() }
+    }
+
+    #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+    #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+    #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
+    #[derive(CommitEncode)]
+    #[commit_encode(strategy = strict, id = Commitment)]
+    #[cfg_attr(
+        feature = "serde",
+        derive(Serialize, Deserialize),
+        serde(crate = "serde_crate", rename_all = "camelCase")
+    )]
+    pub struct BundleProof {
+        pub map: TinyOrdMap<u32, Bytes32>,
+    }
+
+    impl BundleProof {
+        pub fn verify(&self, seal: Outpoint, msg: Bytes32, tx: &Tx) -> bool {
+            let Some(input_index) = tx.inputs().position(|input| input.prev_output == seal) else {
+                return false;
+            };
+            let Ok(input_index) = u32::try_from(input_index) else {
+                return false;
+            };
+            let Some(expected) = self.map.get(&input_index) else {
+                return false;
+            };
+            *expected == msg
+        }
+    }
+}
+
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
@@ -53,6 +109,8 @@ pub struct Noise(Bytes<68>);
     serde(crate = "serde_crate", rename_all = "camelCase")
 )]
 pub struct Anchor<D: dbc::Proof> {
+    pub mmb_proof: mmb::BundleProof,
+    pub mpc_protocol: mpc::ProtocolId,
     pub mpc_proof: mpc::MerkleProof,
     pub dbc_proof: D,
     #[cfg_attr(feature = "serde", serde(skip))]
@@ -103,19 +161,18 @@ pub struct TxoSeal<D: dbc::Proof> {
 }
 
 impl<D: dbc::Proof> SingleUseSeal for TxoSeal<D> {
-    type Message = Proof<D>;
+    type Message = Bytes32;
     type PubWitness = Tx;
     type CliWitness = Anchor<D>;
 
-    fn is_included(&self, witness: &SealWitness<Self>) -> bool {
-        let mut inputs = witness.published.inputs();
+    fn is_included(&self, message: Self::Message, witness: &SealWitness<Self>) -> bool {
         match self.secondary {
             TxoSealExt::Noise(_) => {
-                inputs.any(|input| input.prev_output == self.primary)
+                witness.client.mmb_proof.verify(self.primary, message, &witness.published)
                 // TODO: && witness.client.fallback_proof.is_none()
             }
             TxoSealExt::Fallback(fallback) => {
-                inputs.any(|input| input.prev_output == fallback)
+                witness.client.mmb_proof.verify(fallback, message, &witness.published)
                 // TODO: && witness.client.fallback_proof.is_some()
             }
         }
@@ -134,18 +191,18 @@ impl<D: dbc::Proof> PublishedWitness<TxoSeal<D>> for Tx {
 }
 
 impl<D: dbc::Proof> ClientSideWitness for Anchor<D> {
-    type Message = (ProtocolId, mpc::Message);
+    type Proof = Proof<D>;
     type Seal = TxoSeal<D>;
     type Error = mpc::InvalidProof;
 
-    fn convolve_commit(
-        &self,
-        (protocol_id, message): (ProtocolId, mpc::Message),
-    ) -> Result<Proof<D>, Self::Error> {
+    fn convolve_commit(&self, _: Bytes32) -> Result<Proof<D>, Self::Error> {
         // TODO: Verify fallback proof
         // if let Some(_fallback_proof) = self.fallback_proof {
         // }
-        let mpc_commit = self.mpc_proof.convolve(protocol_id, message)?;
+
+        let bundle_id = self.mmb_proof.commit_id();
+        let mpc_message = mpc::Message::from_byte_array(bundle_id.to_byte_array());
+        let mpc_commit = self.mpc_proof.convolve(self.mpc_protocol, mpc_message)?;
         Ok(Proof {
             mpc_commit,
             dbc_proof: self.dbc_proof.clone(),

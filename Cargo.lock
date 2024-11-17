@@ -632,8 +632,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 [[package]]
 name = "single_use_seals"
 version = "0.12.0-alpha.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9550e2f1be9c206b86146373d03bd1d26480440d43779e16ade04350ecfde97"
+source = "git+https://github.com/LNP-BP/client_side_validation?branch=v0.12#38699a31423eba71de8b81322c08390fd4f1fe6d"
 
 [[package]]
 name = "strict_encoding"
