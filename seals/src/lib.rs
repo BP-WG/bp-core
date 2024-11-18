@@ -47,4 +47,4 @@ mod txout;
 mod secret;
 
 pub use secret::SecretSeal;
-pub use txout::{Anchor, Noise, TxoSeal, TxoSealExt};
+pub use txout::{Anchor, AnchorError, Noise, TxoSeal, TxoSealExt};

@@ -100,7 +100,9 @@ pub mod mmb {
     }
 }
 
-/// Anchor is a set of data required for the client-side validation of a Bitcoin Txout single-use
+/// Anchor is a client-side witness for the bitcoin txout seals.
+///
+/// Anchor is a set of data required for the client-side validation of a bitcoin txout single-use
 /// seal, which can't be recovered from the transaction and other public information itself.
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
@@ -116,8 +118,15 @@ pub struct Anchor<D: dbc::Proof> {
     pub mpc_proof: mpc::MerkleProof,
     pub dbc_proof: D,
     #[cfg_attr(feature = "serde", serde(skip))]
-    // TODO: This should become an option
+    // TODO: This should become an option once fallback proofs are ready
     pub fallback_proof: ReservedBytes<1>,
+}
+
+impl<D: dbc::Proof> Anchor<D> {
+    // TODO: Change when the fallback proofs are ready
+    pub fn is_fallback(&self) -> bool { false }
+    // TODO: Change when the fallback proofs are ready
+    pub fn verify_fallback(&self) -> Result<(), AnchorError> { Ok(()) }
 }
 
 /// Proof data for verification of deterministic bitcoin commitment produced from anchor.
@@ -170,14 +179,14 @@ impl<D: dbc::Proof> SingleUseSeal for TxoSeal<D> {
 
     fn is_included(&self, message: Self::Message, witness: &SealWitness<Self>) -> bool {
         match self.secondary {
-            TxoSealExt::Noise(_) => {
+            TxoSealExt::Noise(_) | TxoSealExt::Fallback(_) if !witness.client.is_fallback() => {
                 witness.client.mmb_proof.verify(self.primary, message, &witness.published)
-                // TODO: && witness.client.fallback_proof.is_none()
             }
             TxoSealExt::Fallback(fallback) => {
                 witness.client.mmb_proof.verify(fallback, message, &witness.published)
-                // TODO: && witness.client.fallback_proof.is_some()
             }
+            // If we are provided a fallback proof but no fallback seal were defined
+            TxoSealExt::Noise(_) => false,
         }
     }
 }
@@ -196,13 +205,10 @@ impl<D: dbc::Proof> PublishedWitness<TxoSeal<D>> for Tx {
 impl<D: dbc::Proof> ClientSideWitness for Anchor<D> {
     type Proof = Proof<D>;
     type Seal = TxoSeal<D>;
-    type Error = mpc::InvalidProof;
+    type Error = AnchorError;
 
     fn convolve_commit(&self, _: Bytes32) -> Result<Proof<D>, Self::Error> {
-        // TODO: Verify fallback proof
-        // if let Some(_fallback_proof) = self.fallback_proof {
-        // }
-
+        self.verify_fallback()?;
         let bundle_id = self.mmb_proof.commit_id();
         let mpc_message = mpc::Message::from_byte_array(bundle_id.to_byte_array());
         let mpc_commit = self.mpc_proof.convolve(self.mpc_protocol, mpc_message)?;
@@ -211,4 +217,11 @@ impl<D: dbc::Proof> ClientSideWitness for Anchor<D> {
             dbc_proof: self.dbc_proof.clone(),
         })
     }
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Error, Debug, Display, From)]
+#[display(inner)]
+pub enum AnchorError {
+    #[from]
+    Mpc(mpc::InvalidProof),
 }
