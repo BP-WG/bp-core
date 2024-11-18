@@ -100,6 +100,8 @@ pub mod mmb {
     }
 }
 
+/// Anchor is a set of data required for the client-side validation of a Bitcoin Txout single-use
+/// seal, which can't be recovered from the transaction and other public information itself.
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
@@ -118,6 +120,7 @@ pub struct Anchor<D: dbc::Proof> {
     pub fallback_proof: ReservedBytes<1>,
 }
 
+/// Proof data for verification of deterministic bitcoin commitment produced from anchor.
 pub struct Proof<D: dbc::Proof> {
     pub mpc_commit: mpc::Commitment,
     pub dbc_proof: D,

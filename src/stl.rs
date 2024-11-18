@@ -21,7 +21,6 @@
 
 //! Strict types library generator methods.
 
-use commit_verify::mpc;
 use dbc::opret::OpretProof;
 use dbc::tapret::TapretProof;
 use dbc::LIB_NAME_BPCORE;
@@ -30,7 +29,7 @@ use strict_types::{CompileError, LibBuilder, TypeLib};
 /// Strict types id for the library providing data types from [`dbc`] and
 /// [`seals`] crates.
 pub const LIB_ID_BPCORE: &str =
-    "stl:shT3puxD-pguyIQF-lMwkHEo-oASAiSm-s6zQH6s-AqbOAOg#bruno-belgium-shelf";
+    "stl:3xUSwL0a-VuYPFl2-Cdk3L21-yX8c1Kg-~wRzG1T-B2FgGWg#pastel-voice-binary";
 
 fn _bp_core_stl() -> Result<TypeLib, CompileError> {
     LibBuilder::new(libname!(LIB_NAME_BPCORE), tiny_bset! {
@@ -38,12 +37,6 @@ fn _bp_core_stl() -> Result<TypeLib, CompileError> {
         bc::stl::bp_tx_stl().to_dependency(),
         commit_verify::stl::commit_verify_stl().to_dependency()
     })
-    .transpile::<dbc::Anchor<mpc::MerkleTree, TapretProof>>()
-    .transpile::<dbc::Anchor<mpc::MerkleBlock, TapretProof>>()
-    .transpile::<dbc::Anchor<mpc::MerkleProof, TapretProof>>()
-    .transpile::<dbc::Anchor<mpc::MerkleTree, OpretProof>>()
-    .transpile::<dbc::Anchor<mpc::MerkleBlock, OpretProof>>()
-    .transpile::<dbc::Anchor<mpc::MerkleProof, OpretProof>>()
     .transpile::<seals::TxoSeal<OpretProof>>()
     .transpile::<seals::TxoSeal<TapretProof>>()
     .transpile::<seals::Anchor<OpretProof>>()

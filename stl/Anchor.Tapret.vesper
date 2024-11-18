@@ -1,4 +1,9 @@
-rec AnchorMerkleProofTapretProof
+rec AnchorTapretProof
+  rec mmbProof, BundleProof
+    map map, len 0..MAX8
+      is key, U32
+      bytes value, len 32
+  bytes mpcProtocol, len 32, aka ProtocolId
   rec mpcProof, MerkleProof
     enum method, Method, sha256t 0
     is pos, U32
@@ -10,3 +15,4 @@ rec AnchorMerkleProofTapretProof
       union some, TapretNodePartner, option, wrapped, tag 1
         rec rightBranch, TapretRightBranch, wrapped, tag 2
       is nonce, U8
+  bytes fallbackProof, len 1, aka ReservedBytes1
