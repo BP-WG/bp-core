@@ -44,7 +44,5 @@ extern crate commit_verify;
 extern crate serde_crate as serde;
 
 mod txout;
-mod secret;
 
-pub use secret::SecretSeal;
 pub use txout::{Anchor, AnchorError, Noise, TxoSeal, TxoSealExt};

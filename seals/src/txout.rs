@@ -28,11 +28,9 @@ use core::marker::PhantomData;
 use amplify::confinement::TinyOrdMap;
 use amplify::{ByteArray, Bytes, Bytes32};
 use bc::{Outpoint, Tx, Txid};
-use commit_verify::{mpc, CommitId, ReservedBytes};
+use commit_verify::{mpc, CommitId, ReservedBytes, StrictHash};
 use single_use_seals::{ClientSideWitness, PublishedWitness, SealWitness, SingleUseSeal};
 use strict_encoding::StrictDumb;
-
-use crate::SecretSeal;
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
@@ -162,7 +160,7 @@ impl StrictDumb for TxoSealExt {
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
 #[derive(CommitEncode)]
-#[commit_encode(strategy = strict, id = SecretSeal)]
+#[commit_encode(strategy = strict, id = StrictHash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct TxoSeal<D: dbc::Proof> {
     pub primary: Outpoint,
