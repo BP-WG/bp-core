@@ -24,6 +24,7 @@
 
 use core::fmt::Debug;
 use core::marker::PhantomData;
+use std::cmp::Ordering;
 
 use amplify::confinement::TinyOrdMap;
 use amplify::{ByteArray, Bytes, Bytes32};
@@ -155,7 +156,7 @@ impl StrictDumb for TxoSealExt {
     fn strict_dumb() -> Self { TxoSealExt::Noise(Noise::from(Bytes::from_byte_array([0u8; 68]))) }
 }
 
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display)]
 #[display("{primary}/{secondary}")]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
@@ -168,6 +169,15 @@ pub struct TxoSeal<D: dbc::Proof> {
     #[strict_type(skip)]
     #[cfg_attr(feature = "serde", serde(skip))]
     _phantom: PhantomData<D>,
+}
+
+impl<D: dbc::Proof> PartialOrd for TxoSeal<D> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> { Some(self.cmp(other)) }
+}
+impl<D: dbc::Proof> Ord for TxoSeal<D> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.primary.cmp(&other.primary).then(self.secondary.cmp(&other.secondary))
+    }
 }
 
 impl<D: dbc::Proof> SingleUseSeal for TxoSeal<D> {
