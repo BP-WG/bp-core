@@ -51,6 +51,10 @@ pub struct Txid(
     Bytes32StrRev,
 );
 
+impl From<Txid> for [u8; 32] {
+    fn from(txid: Txid) -> Self { txid.to_byte_array() }
+}
+
 impl Txid {
     #[inline]
     pub const fn coinbase() -> Self { Self(Bytes32StrRev::zero()) }
