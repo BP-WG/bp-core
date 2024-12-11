@@ -29,7 +29,7 @@ use std::cmp::Ordering;
 use amplify::confinement::TinyOrdMap;
 use amplify::{ByteArray, Bytes, Bytes32};
 use bc::{Outpoint, Tx, Txid, Vout};
-use commit_verify::{mpc, CommitId, Digest, DigestExt, ReservedBytes, Sha256, StrictHash};
+use commit_verify::{mpc, CommitId, DigestExt, ReservedBytes, Sha256, StrictHash};
 use single_use_seals::{ClientSideWitness, PublishedWitness, SealWitness, SingleUseSeal};
 use strict_encoding::StrictDumb;
 
@@ -156,7 +156,7 @@ impl StrictDumb for TxoSealExt {
     fn strict_dumb() -> Self { TxoSealExt::Noise(Noise::from(Bytes::from_byte_array([0u8; 40]))) }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Display)]
 #[display("{primary}/{secondary}")]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
@@ -171,6 +171,8 @@ pub struct TxoSeal<D: dbc::Proof> {
     _phantom: PhantomData<D>,
 }
 
+// Manual impl is needed since we need to avoid D: Copy bound
+impl<D: dbc::Proof> Copy for TxoSeal<D> {}
 impl<D: dbc::Proof> PartialOrd for TxoSeal<D> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> { Some(self.cmp(other)) }
 }
