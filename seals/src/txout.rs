@@ -41,7 +41,7 @@ use strict_encoding::StrictDumb;
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct Noise(Bytes<68>);
+pub struct Noise(Bytes<40>);
 
 pub mod mmb {
     use commit_verify::{CommitmentId, DigestExt, Sha256};
@@ -153,7 +153,7 @@ pub enum TxoSealExt {
 }
 
 impl StrictDumb for TxoSealExt {
-    fn strict_dumb() -> Self { TxoSealExt::Noise(Noise::from(Bytes::from_byte_array([0u8; 68]))) }
+    fn strict_dumb() -> Self { TxoSealExt::Noise(Noise::from(Bytes::from_byte_array([0u8; 40]))) }
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display)]
