@@ -28,8 +28,8 @@ use std::cmp::Ordering;
 
 use amplify::confinement::TinyOrdMap;
 use amplify::{ByteArray, Bytes, Bytes32};
-use bc::{Outpoint, Tx, Txid};
-use commit_verify::{mpc, CommitId, ReservedBytes, StrictHash};
+use bc::{Outpoint, Tx, Txid, Vout};
+use commit_verify::{mpc, CommitId, Digest, DigestExt, ReservedBytes, Sha256, StrictHash};
 use single_use_seals::{ClientSideWitness, PublishedWitness, SealWitness, SingleUseSeal};
 use strict_encoding::StrictDumb;
 
@@ -177,6 +177,24 @@ impl<D: dbc::Proof> PartialOrd for TxoSeal<D> {
 impl<D: dbc::Proof> Ord for TxoSeal<D> {
     fn cmp(&self, other: &Self) -> Ordering {
         self.primary.cmp(&other.primary).then(self.secondary.cmp(&other.secondary))
+    }
+}
+
+impl<D: dbc::Proof> TxoSeal<D> {
+    pub fn vout_no_fallback(vout: Vout, noise_engine: Sha256) -> Self {
+        Self::no_fallback(Outpoint::new(Txid::from([0xFFu8; 32]), vout), noise_engine)
+    }
+
+    pub fn no_fallback(outpoint: Outpoint, mut noise_engine: Sha256) -> Self {
+        noise_engine.input_raw(outpoint.txid.as_ref());
+        noise_engine.input_raw(&outpoint.vout.to_u32().to_be_bytes());
+        let mut noise = [0xFFu8; 40];
+        noise[..32].copy_from_slice(&noise_engine.finish());
+        Self {
+            primary: outpoint,
+            secondary: TxoSealExt::Noise(Noise(noise.into())),
+            _phantom: PhantomData,
+        }
     }
 }
 

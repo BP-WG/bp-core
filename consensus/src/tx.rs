@@ -36,6 +36,7 @@ use crate::{
 };
 
 #[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, From)]
+#[wrapper(AsSlice)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
 #[cfg_attr(
