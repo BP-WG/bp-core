@@ -183,11 +183,16 @@ impl<D: dbc::Proof> Ord for TxoSeal<D> {
 }
 
 impl<D: dbc::Proof> TxoSeal<D> {
-    pub fn vout_no_fallback(vout: Vout, noise_engine: Sha256) -> Self {
-        Self::no_fallback(Outpoint::new(Txid::from([0xFFu8; 32]), vout), noise_engine)
+    /// `nonce` is a deterministic incremental number, preventing from creating the same seal if the
+    /// same output is used.
+    pub fn vout_no_fallback(vout: Vout, noise_engine: Sha256, nonce: u64) -> Self {
+        Self::no_fallback(Outpoint::new(Txid::from([0xFFu8; 32]), vout), noise_engine, nonce)
     }
 
-    pub fn no_fallback(outpoint: Outpoint, mut noise_engine: Sha256) -> Self {
+    /// `nonce` is a deterministic incremental number, preventing from creating the same seal if the
+    /// same output is used.
+    pub fn no_fallback(outpoint: Outpoint, mut noise_engine: Sha256, nonce: u64) -> Self {
+        noise_engine.input_raw(&nonce.to_be_bytes());
         noise_engine.input_raw(outpoint.txid.as_ref());
         noise_engine.input_raw(&outpoint.vout.to_u32().to_be_bytes());
         let mut noise = [0xFFu8; 40];
