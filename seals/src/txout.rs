@@ -22,9 +22,9 @@
 //! Bitcoin single-use-seals defined by a transaction output and closed by
 //! spending that output ("TxOut seals").
 
+use core::cmp::Ordering;
 use core::fmt::Debug;
 use core::marker::PhantomData;
-use std::cmp::Ordering;
 
 use amplify::confinement::TinyOrdMap;
 use amplify::{ByteArray, Bytes, Bytes32};
