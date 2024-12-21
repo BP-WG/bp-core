@@ -26,7 +26,6 @@ use core::cmp::Ordering;
 use core::fmt::Debug;
 use core::marker::PhantomData;
 
-use amplify::confinement::TinyOrdMap;
 use amplify::{ByteArray, Bytes, Bytes32};
 use bc::{Outpoint, Tx, Txid, Vout};
 use commit_verify::{mpc, CommitId, DigestExt, ReservedBytes, Sha256, StrictHash};
@@ -44,6 +43,7 @@ use strict_encoding::StrictDumb;
 pub struct Noise(Bytes<40>);
 
 pub mod mmb {
+    use amplify::confinement::SmallOrdMap;
     use commit_verify::{CommitmentId, DigestExt, Sha256};
 
     use super::*;
@@ -80,7 +80,7 @@ pub mod mmb {
         serde(crate = "serde_crate", rename_all = "camelCase")
     )]
     pub struct BundleProof {
-        pub map: TinyOrdMap<u32, Bytes32>,
+        pub map: SmallOrdMap<u32, Bytes32>,
     }
 
     impl BundleProof {
