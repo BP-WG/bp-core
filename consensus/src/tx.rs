@@ -39,11 +39,7 @@ use crate::{
 #[wrapper(AsSlice)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 #[wrapper(BorrowSlice, Index, RangeOps, Debug, Hex, Display, FromStr)]
 // all-zeros used in coinbase
 pub struct Txid(
@@ -66,11 +62,7 @@ impl Txid {
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display, From)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 #[display(inner)]
 // 0xFFFFFFFF used in coinbase
 pub struct Vout(u32);
@@ -218,11 +210,7 @@ mod _serde_outpoint {
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 pub struct TxIn {
     pub prev_output: Outpoint,
     pub sig_script: SigScript,
@@ -237,11 +225,7 @@ pub struct TxIn {
 #[wrapper_mut(MathAssign)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct Sats(
     #[from]
     #[from(u32)]
@@ -366,11 +350,7 @@ impl Display for Sats {
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 pub struct TxOut {
     pub value: Sats,
     pub script_pubkey: ScriptPubkey,
@@ -388,7 +368,7 @@ impl TxOut {
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TxVer(i32);
 
 impl Default for TxVer {
@@ -423,11 +403,7 @@ impl TxVer {
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 #[display(LowerHex)]
 pub struct Tx {
     pub version: TxVer,

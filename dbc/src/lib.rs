@@ -43,7 +43,7 @@
 extern crate amplify;
 #[cfg(feature = "serde")]
 #[macro_use]
-extern crate serde_crate as serde;
+extern crate serde;
 #[macro_use]
 extern crate strict_encoding;
 extern crate commit_verify;

@@ -35,11 +35,7 @@ use strict_encoding::StrictDumb;
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct Noise(Bytes<40>);
 
 pub mod mmb {
@@ -52,11 +48,7 @@ pub mod mmb {
     #[wrapper(Deref, BorrowSlice, Display, FromStr, Hex, Index, RangeOps)]
     #[derive(StrictType, StrictEncode, StrictDecode)]
     #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
-    #[cfg_attr(
-        feature = "serde",
-        derive(Serialize, Deserialize),
-        serde(crate = "serde_crate", transparent)
-    )]
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
     pub struct Message(
         #[from]
         #[from([u8; 32])]
@@ -67,11 +59,7 @@ pub mod mmb {
     #[wrapper(Deref, BorrowSlice, Hex, Index, RangeOps)]
     #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
     #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
-    #[cfg_attr(
-        feature = "serde",
-        derive(Serialize, Deserialize),
-        serde(crate = "serde_crate", transparent)
-    )]
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
     pub struct Commitment(
         #[from]
         #[from([u8; 32])]
@@ -89,11 +77,7 @@ pub mod mmb {
     #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
     #[derive(CommitEncode)]
     #[commit_encode(strategy = strict, id = Commitment)]
-    #[cfg_attr(
-        feature = "serde",
-        derive(Serialize, Deserialize),
-        serde(crate = "serde_crate", rename_all = "camelCase")
-    )]
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
     pub struct BundleProof {
         pub map: SmallOrdMap<u32, Message>,
     }
@@ -134,7 +118,7 @@ pub mod mpc {
     #[cfg_attr(
         feature = "serde",
         derive(Serialize, Deserialize),
-        serde(crate = "serde_crate", rename_all = "camelCase", untagged)
+        serde(rename_all = "camelCase", untagged)
     )]
     pub enum MessageSource {
         #[from]
@@ -159,21 +143,13 @@ pub mod mpc {
     #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
     #[derive(StrictType, StrictEncode, StrictDecode)]
     #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
-    #[cfg_attr(
-        feature = "serde",
-        derive(Serialize, Deserialize),
-        serde(crate = "serde_crate", transparent)
-    )]
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
     pub struct MessageMap(MediumOrdMap<ProtocolId, MessageSource>);
 
     #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
     #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
     #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
-    #[cfg_attr(
-        feature = "serde",
-        derive(Serialize, Deserialize),
-        serde(crate = "serde_crate", rename_all = "camelCase")
-    )]
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
     pub struct Source {
         pub min_depth: u5,
         pub entropy: u64,
@@ -204,11 +180,7 @@ pub mod mpc {
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 pub struct Anchor<D: dbc::Proof> {
     pub mmb_proof: mmb::BundleProof,
     pub mpc_protocol: mpc::ProtocolId,
@@ -235,11 +207,7 @@ pub struct Proof<D: dbc::Proof> {
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE, tags = custom)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", untagged)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(untagged))]
 pub enum TxoSealExt {
     #[display("~")]
     #[strict_type(tag = 0)]
@@ -260,7 +228,7 @@ impl StrictDumb for TxoSealExt {
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
 #[derive(CommitEncode)]
 #[commit_encode(strategy = strict, id = StrictHash)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TxoSeal<D: dbc::Proof> {
     pub primary: Outpoint,
     pub secondary: TxoSealExt,

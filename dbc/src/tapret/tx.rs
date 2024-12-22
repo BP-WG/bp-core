@@ -26,11 +26,7 @@ use super::{TapretFirst, TapretKeyError, TapretProof};
 
 /// Errors during tapret commitment.
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 pub enum TapretError {
     /// Error embedding tapret commitment into x-only key.
     #[from]

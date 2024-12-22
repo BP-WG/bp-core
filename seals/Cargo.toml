@@ -25,7 +25,7 @@ strict_encoding = { workspace = true }
 bp-consensus = { workspace = true }
 bp-dbc = { workspace = true }
 rand = "0.8.5"
-serde_crate = { workspace = true, optional = true }
+serde = { workspace = true, optional = true }
 
 [features]
 default = []
@@ -35,7 +35,7 @@ serde = [
     "commit_verify/serde",
     "bp-consensus/serde",
     "bp-dbc/serde",
-    "serde_crate"
+    "dep:serde"
 ]
 
 [package.metadata.docs.rs]

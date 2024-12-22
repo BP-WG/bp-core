@@ -21,7 +21,7 @@ strict_encoding = { workspace = true }
 strict_types = { workspace = true, optional = true }
 commit_verify = { workspace = true }
 secp256k1 = { workspace = true }
-serde_crate = { workspace = true, optional = true }
+serde = { workspace = true, optional = true }
 chrono = { version = "0.4.38", optional = true }
 
 [features]
@@ -29,7 +29,7 @@ default = ["chrono"]
 all = ["chrono", "stl", "serde"]
 stl = ["strict_types"]
 serde = [
-    "serde_crate",
+    "dep:serde",
     "amplify/serde",
     "secp256k1/serde"
 ]

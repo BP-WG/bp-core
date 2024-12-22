@@ -25,11 +25,7 @@ use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE, tags = custom, dumb = Self::Bitcoin(strict_dumb!()))]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 pub enum Bp<T>
 where T: StrictDumb + StrictEncode + StrictDecode
 {

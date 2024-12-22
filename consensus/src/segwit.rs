@@ -308,11 +308,7 @@ impl ScriptPubkey {
 #[wrapper_mut(DerefMut, AsSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct WitnessScript(ScriptBytes);
 
 impl TryFrom<Vec<u8>> for WitnessScript {
@@ -357,11 +353,7 @@ impl WitnessScript {
 #[wrapper(BorrowSlice, Index, RangeOps, Debug, Hex, Display, FromStr)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct Wtxid(
     #[from]
     #[from([u8; 32])]
@@ -403,9 +395,8 @@ impl Witness {
 
 #[cfg(feature = "serde")]
 mod _serde {
-    use serde::{Deserialize, Serialize};
-    use serde_crate::ser::SerializeSeq;
-    use serde_crate::{Deserializer, Serializer};
+    use serde::ser::SerializeSeq;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
     use super::*;
 

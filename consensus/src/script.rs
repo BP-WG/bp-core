@@ -30,11 +30,7 @@ use crate::{ScriptHash, VarInt, VarIntBytes, WitnessVer, LIB_NAME_BITCOIN};
 #[wrapper_mut(DerefMut, AsSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct SigScript(ScriptBytes);
 
 impl TryFrom<Vec<u8>> for SigScript {
@@ -72,11 +68,7 @@ impl SigScript {
 #[wrapper_mut(DerefMut, AsSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct ScriptPubkey(ScriptBytes);
 
 impl TryFrom<Vec<u8>> for ScriptPubkey {
@@ -163,11 +155,7 @@ impl ScriptPubkey {
 #[wrapper_mut(DerefMut, AsSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct RedeemScript(ScriptBytes);
 
 impl TryFrom<Vec<u8>> for RedeemScript {
@@ -312,9 +300,8 @@ impl ScriptBytes {
 #[cfg(feature = "serde")]
 mod _serde {
     use amplify::hex::{FromHex, ToHex};
-    use serde::{Deserialize, Serialize};
-    use serde_crate::de::Error;
-    use serde_crate::{Deserializer, Serializer};
+    use serde::de::Error;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
     use super::*;
 
