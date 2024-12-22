@@ -23,6 +23,7 @@
 //! spending that output ("TxOut seals").
 
 use core::cmp::Ordering;
+use core::error::Error;
 use core::fmt::Debug;
 use core::marker::PhantomData;
 
@@ -323,6 +324,32 @@ impl<D: dbc::Proof> ClientSideWitness for Anchor<D> {
             dbc_proof: self.dbc_proof.clone(),
         })
     }
+
+    fn merge(&mut self, other: Self) -> Result<(), impl Error>
+    where Self: Sized {
+        if self.mpc_protocol != other.mpc_protocol
+            || self.mpc_proof != other.mpc_proof
+            || self.dbc_proof != other.dbc_proof
+            || self.fallback_proof != other.fallback_proof
+        {
+            return Err(AnchorMergeError::AnchorMismatch);
+        }
+        self.mmb_proof
+            .map
+            .extend(other.mmb_proof.map)
+            .map_err(|_| AnchorMergeError::TooManyInputs)?;
+        Ok(())
+    }
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Error, Debug, Display, From)]
+#[display(doc_comments)]
+pub enum AnchorMergeError {
+    /// anchor mismatch in merge procedure
+    AnchorMismatch,
+
+    /// anchor is invalid: too many inputs
+    TooManyInputs,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Error, Debug, Display, From)]
