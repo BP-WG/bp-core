@@ -45,4 +45,4 @@ extern crate serde_crate as serde;
 
 mod txout;
 
-pub use txout::{mmb, Anchor, AnchorError, Noise, TxoSeal, TxoSealExt};
+pub use txout::{mmb, mpc, Anchor, AnchorError, Noise, TxoSeal, TxoSealExt};

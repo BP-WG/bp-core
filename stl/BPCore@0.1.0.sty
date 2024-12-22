@@ -1,5 +1,5 @@
 {-
-  Id: stl:xM0Q4fBV-9f68DxC-koz0lAW-70tm5F2-gLljyhC-YmIuIgI#inca-nevada-garbo
+  Id: stl:ywtQuh4L-rC8_3Lk-99FA5~N-La46hkd-qHFFwE3-XghE5FQ#llama-ohio-lagoon
   Name: BPCore
   Version: 0.1.0
   Description: Bitcoin client-side-validation library
@@ -10,6 +10,9 @@
 
 @context
 typelib BPCore
+
+import Std#delete-roman-hair
+  use U5#orbit-graph-sonic
 
 import Bitcoin#signal-color-cipher
   use Vout#brush-gloria-heroic
@@ -25,6 +28,7 @@ import Bitcoin#signal-color-cipher
 import CommitVerify#uranium-alien-extend
   use Method#subject-justin-cowboy
   use ProtocolId#shadow-eclipse-program
+  use Message#druid-blitz-rover
   use MerkleHash#horse-popcorn-bundle
   use MerkleProof#austria-jaguar-donald
   use ReservedBytes1#origin-roger-relax
@@ -44,14 +48,29 @@ data AnchorTapretProof : mmbProof BundleProof
                        , dbcProof TapretProof
                        , fallbackProof CommitVerify.ReservedBytes1
 
-@mnemonic(mask-little-round)
-data BundleProof       : map {U32 -> ^ ..0xff [Byte ^ 32]}
+@mnemonic(beast-normal-road)
+data BundleProof       : map {U32 -> Message}
 
-@mnemonic(basket-match-colony)
-data Noise             : [Byte ^ 68]
+@mnemonic(druid-blitz-rover)
+data Message           : [Byte ^ 32]
+
+@mnemonic(detect-status-goblin)
+data MessageMap        : {CommitVerify.ProtocolId -> ^ ..0xffffff MessageSource}
+
+@mnemonic(clone-beach-america)
+data MessageSource     : single#1 CommitVerify.Message
+                       | mmb BundleProof
+
+@mnemonic(bruce-gravity-titanic)
+data Noise             : [Byte ^ 40]
 
 @mnemonic(good-village-flex)
 data OpretProof        : ()
+
+@mnemonic(polygon-nixon-guitar)
+data Source            : minDepth Std.U5
+                       , entropy U64
+                       , messages MessageMap
 
 @mnemonic(cabinet-agent-stella)
 data TapretNodePartner : leftNode Bitcoin.TapNodeHash

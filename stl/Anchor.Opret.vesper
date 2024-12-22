@@ -1,8 +1,8 @@
 rec AnchorOpretProof
   rec mmbProof, BundleProof
-    map map, len 0..MAX8
+    map map, len 0..MAX16
       is key, U32
-      bytes value, len 32
+      bytes value, len 32, aka Message
   bytes mpcProtocol, len 32, aka ProtocolId
   rec mpcProof, MerkleProof
     enum method, Method, sha256t 0

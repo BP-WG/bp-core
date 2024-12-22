@@ -15,7 +15,7 @@ rec TxoSealTapretProof
     bytes txid, len 32, aka Txid
     is vout, U32, aka Vout
   union secondary, TxoSealExt
-    bytes noise, len 68, wrapped, aka Noise, tag 0
+    bytes noise, len 40, wrapped, aka Noise, tag 0
     rec fallback, Outpoint, wrapped, tag 1
       bytes txid, len 32, aka Txid
       is vout, U32, aka Vout
@@ -25,7 +25,7 @@ rec TxoSealOpretProof
     bytes txid, len 32, aka Txid
     is vout, U32, aka Vout
   union secondary, TxoSealExt
-    bytes noise, len 68, wrapped, aka Noise, tag 0
+    bytes noise, len 40, wrapped, aka Noise, tag 0
     rec fallback, Outpoint, wrapped, tag 1
       bytes txid, len 32, aka Txid
       is vout, U32, aka Vout

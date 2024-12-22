@@ -28,7 +28,7 @@ use core::marker::PhantomData;
 
 use amplify::{ByteArray, Bytes, Bytes32};
 use bc::{Outpoint, Tx, Txid, Vout};
-use commit_verify::{mpc, CommitId, DigestExt, ReservedBytes, Sha256, StrictHash};
+use commit_verify::{CommitId, DigestExt, ReservedBytes, Sha256, StrictHash};
 use single_use_seals::{ClientSideWitness, PublishedWitness, SealWitness, SingleUseSeal};
 use strict_encoding::StrictDumb;
 
@@ -47,6 +47,21 @@ pub mod mmb {
     use commit_verify::{CommitmentId, DigestExt, Sha256};
 
     use super::*;
+
+    #[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
+    #[wrapper(Deref, BorrowSlice, Display, FromStr, Hex, Index, RangeOps)]
+    #[derive(StrictType, StrictEncode, StrictDecode)]
+    #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
+    #[cfg_attr(
+        feature = "serde",
+        derive(Serialize, Deserialize),
+        serde(crate = "serde_crate", transparent)
+    )]
+    pub struct Message(
+        #[from]
+        #[from([u8; 32])]
+        Bytes32,
+    );
 
     #[derive(Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, From)]
     #[wrapper(Deref, BorrowSlice, Hex, Index, RangeOps)]
@@ -80,11 +95,11 @@ pub mod mmb {
         serde(crate = "serde_crate", rename_all = "camelCase")
     )]
     pub struct BundleProof {
-        pub map: SmallOrdMap<u32, Bytes32>,
+        pub map: SmallOrdMap<u32, Message>,
     }
 
     impl BundleProof {
-        pub fn verify(&self, seal: Outpoint, msg: Bytes32, tx: &Tx) -> bool {
+        pub fn verify(&self, seal: Outpoint, msg: Message, tx: &Tx) -> bool {
             let Some(input_index) = tx.inputs().position(|input| input.prev_output == seal) else {
                 return false;
             };
@@ -95,6 +110,89 @@ pub mod mmb {
                 return false;
             };
             *expected == msg
+        }
+    }
+}
+
+/// Module extends [`commit_verify::mpc`] module with multi-message bundle commitments.
+pub mod mpc {
+    use amplify::confinement::MediumOrdMap;
+    use amplify::num::u5;
+    use amplify::ByteArray;
+    pub use commit_verify::mpc::{
+        Commitment, Error, InvalidProof, Leaf, LeafNotKnown, MergeError, MerkleBlock,
+        MerkleConcealed, MerkleProof, MerkleTree, Message, Method, Proof, ProtocolId,
+        MPC_MINIMAL_DEPTH,
+    };
+    use commit_verify::{CommitId, TryCommitVerify};
+
+    use crate::mmb;
+
+    #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, From)]
+    #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+    #[strict_type(lib = dbc::LIB_NAME_BPCORE, tags = custom, dumb = Self::Single(strict_dumb!()))]
+    #[cfg_attr(
+        feature = "serde",
+        derive(Serialize, Deserialize),
+        serde(crate = "serde_crate", rename_all = "camelCase", untagged)
+    )]
+    pub enum MessageSource {
+        #[from]
+        #[strict_type(tag = 1)]
+        Single(Message),
+        #[from]
+        #[strict_type(tag = 2)]
+        Mmb(mmb::BundleProof),
+    }
+
+    impl MessageSource {
+        pub fn mpc_message(&self) -> Message {
+            match self {
+                MessageSource::Single(message) => *message,
+                MessageSource::Mmb(proof) => {
+                    Message::from_byte_array(proof.commit_id().to_byte_array())
+                }
+            }
+        }
+    }
+
+    #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
+    #[derive(StrictType, StrictEncode, StrictDecode)]
+    #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
+    #[cfg_attr(
+        feature = "serde",
+        derive(Serialize, Deserialize),
+        serde(crate = "serde_crate", transparent)
+    )]
+    pub struct MessageMap(MediumOrdMap<ProtocolId, MessageSource>);
+
+    #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+    #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+    #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
+    #[cfg_attr(
+        feature = "serde",
+        derive(Serialize, Deserialize),
+        serde(crate = "serde_crate", rename_all = "camelCase")
+    )]
+    pub struct Source {
+        pub min_depth: u5,
+        pub entropy: u64,
+        pub messages: MessageMap,
+    }
+
+    impl Source {
+        pub fn into_merkle_tree(self) -> Result<MerkleTree, Error> {
+            let messages = self.messages.0.iter().map(|(id, src)| {
+                let msg = src.mpc_message();
+                (*id, msg)
+            });
+            let source = commit_verify::mpc::MultiSource {
+                method: Method::Sha256t,
+                min_depth: self.min_depth,
+                messages: MediumOrdMap::from_iter_checked(messages),
+                static_entropy: Some(self.entropy),
+            };
+            MerkleTree::try_commit(&source)
         }
     }
 }
@@ -206,7 +304,7 @@ impl<D: dbc::Proof> TxoSeal<D> {
 }
 
 impl<D: dbc::Proof> SingleUseSeal for TxoSeal<D> {
-    type Message = Bytes32;
+    type Message = mmb::Message;
     type PubWitness = Tx;
     type CliWitness = Anchor<D>;
 
@@ -240,8 +338,11 @@ impl<D: dbc::Proof> ClientSideWitness for Anchor<D> {
     type Seal = TxoSeal<D>;
     type Error = AnchorError;
 
-    fn convolve_commit(&self, _: Bytes32) -> Result<Proof<D>, Self::Error> {
+    fn convolve_commit(&self, mmb_message: mmb::Message) -> Result<Proof<D>, Self::Error> {
         self.verify_fallback()?;
+        if self.mmb_proof.map.values().all(|msg| *msg != mmb_message) {
+            return Err(AnchorError::Mmb(mmb_message));
+        }
         let bundle_id = self.mmb_proof.commit_id();
         let mpc_message = mpc::Message::from_byte_array(bundle_id.to_byte_array());
         let mpc_commit = self.mpc_proof.convolve(self.mpc_protocol, mpc_message)?;
@@ -257,4 +358,6 @@ impl<D: dbc::Proof> ClientSideWitness for Anchor<D> {
 pub enum AnchorError {
     #[from]
     Mpc(mpc::InvalidProof),
+    #[display("message {0} is not part of the anchor")]
+    Mmb(mmb::Message),
 }
