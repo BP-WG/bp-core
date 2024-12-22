@@ -72,12 +72,16 @@ pub mod mmb {
         fn from(hasher: Sha256) -> Self { hasher.finish().into() }
     }
 
+    impl From<Commitment> for mpc::Message {
+        fn from(msg: Commitment) -> Self { mpc::Message::from_byte_array(msg.to_byte_array()) }
+    }
+
     #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
     #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
     #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
     #[derive(CommitEncode)]
     #[commit_encode(strategy = strict, id = Commitment)]
-    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct BundleProof {
         pub map: SmallOrdMap<u32, Message>,
     }
