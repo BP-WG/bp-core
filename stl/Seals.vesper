@@ -8,7 +8,7 @@
 Seals vesper lexicon=types+commitments
 
 commitment StrictHash, hasher SHA256, tagged urn:ubideco:strict-types:value-hash#2024-02-10
-  serialized TxoSealTapretProof
+  serialized TxoSealDef
 
 rec TxoSealTapretProof
   rec primary, Outpoint

@@ -233,6 +233,10 @@ impl StrictDumb for TxoSealExt {
 /// informational purposes only. For all other uses please check [`TxoSeal`].
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display)]
 #[display("{primary}/{secondary}")]
+#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
+#[strict_type(lib = dbc::LIB_NAME_BPCORE)]
+#[derive(CommitEncode)]
+#[commit_encode(strategy = strict, id = StrictHash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TxoSealDef {
     pub primary: Outpoint,
@@ -252,8 +256,6 @@ impl<D: dbc::Proof> From<TxoSeal<D>> for TxoSealDef {
 #[display("{primary}/{secondary}")]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
-#[derive(CommitEncode)]
-#[commit_encode(strategy = strict, id = StrictHash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TxoSeal<D: dbc::Proof> {
     pub primary: Outpoint,

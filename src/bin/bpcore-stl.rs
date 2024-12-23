@@ -26,8 +26,7 @@ use bc::stl::{bp_consensus_stl, bp_tx_stl};
 use bp::stl::bp_core_stl;
 use commit_verify::stl::commit_verify_stl;
 use commit_verify::CommitmentLayout;
-use dbc::tapret::TapretProof;
-use seals::TxoSeal;
+use seals::TxoSealDef;
 use strict_encoding::libname;
 use strict_types::stl::std_stl;
 use strict_types::{parse_args, SystemBuilder};
@@ -114,7 +113,7 @@ Seals vesper lexicon=types+commitments
 "
     )
     .unwrap();
-    let layout = TxoSeal::<TapretProof>::commitment_layout();
+    let layout = TxoSealDef::commitment_layout();
     writeln!(file, "{layout}").unwrap();
     let tt = sys.type_tree("BPCore.TxoSealTapretProof").unwrap();
     writeln!(file, "{tt}").unwrap();
