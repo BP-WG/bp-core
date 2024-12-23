@@ -231,7 +231,7 @@ impl StrictDumb for TxoSealExt {
 ///
 /// Seals of this type can't be used in seal validation or in closing seals, and are used for
 /// informational purposes only. For all other uses please check [`TxoSeal`].
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display)]
 #[display("{primary}/{secondary}")]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
