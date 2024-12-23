@@ -31,11 +31,7 @@ use crate::{NonStandardValue, ScriptBytes, ScriptPubkey, WitnessScript, LIB_NAME
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash, Display, Default)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 #[display(uppercase)]
 #[repr(u8)]
 pub enum SighashFlag {
@@ -55,11 +51,7 @@ pub enum SighashFlag {
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash, Default)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 pub struct SighashType {
     pub flag: SighashFlag,
     pub anyone_can_pay: bool,
@@ -200,11 +192,7 @@ impl Display for SighashType {
 #[wrapper(Index, RangeOps, AsSlice, BorrowSlice, Hex, Display, FromStr)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct Sighash(
     #[from]
     #[from([u8; 32])]
@@ -283,11 +271,7 @@ pub enum SigError {
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
 #[derive(StrictType)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 pub struct LegacySig {
     /// The underlying ECDSA Signature
     pub sig: ecdsa::Signature,
@@ -329,11 +313,7 @@ impl LegacySig {
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
 #[derive(StrictType)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 pub struct Bip340Sig {
     /// The underlying ECDSA Signature
     pub sig: schnorr::Signature,

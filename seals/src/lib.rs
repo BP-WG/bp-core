@@ -27,7 +27,7 @@
     unused_mut,
     unused_imports,
     dead_code,
-    missing_docs
+    // missing_docs
 )]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
@@ -41,15 +41,10 @@ extern crate strict_encoding;
 extern crate commit_verify;
 #[cfg(feature = "serde")]
 #[macro_use]
-extern crate serde_crate as serde;
+extern crate serde;
 
-pub mod resolver;
-pub mod txout;
-mod secret;
+mod txout;
 
-pub use secret::SecretSeal;
-
-/// Method for closing BP single-use-seals.
-pub trait SealCloseMethod: dbc::DbcMethod {}
-
-impl SealCloseMethod for dbc::Method {}
+pub use txout::{
+    mmb, mpc, Anchor, AnchorError, AnchorMergeError, Noise, TxoSeal, TxoSealDef, TxoSealExt,
+};

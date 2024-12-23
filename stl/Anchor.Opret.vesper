@@ -1,0 +1,14 @@
+rec AnchorOpretProof
+  rec mmbProof, BundleProof
+    map map, len 0..MAX16
+      is key, U32
+      bytes value, len 32, aka Message
+  bytes mpcProtocol, len 32, aka ProtocolId
+  rec mpcProof, MerkleProof
+    enum method, Method, sha256t 0
+    is pos, U32
+    is cofactor, U16
+    list path, len 0..32
+      bytes element, len 32, aka MerkleHash
+  is dbcProof, Unit, aka OpretProof
+  bytes fallbackProof, len 1, aka ReservedBytes1

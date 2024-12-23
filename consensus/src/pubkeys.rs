@@ -57,11 +57,7 @@ pub enum InvalidPubkey<const LEN: usize> {
 #[wrapper_mut(DerefMut)]
 #[derive(StrictType, StrictDumb)]
 #[strict_type(lib = LIB_NAME_BITCOIN, dumb = Self::dumb())]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct CompressedPk(PublicKey);
 
 impl CompressedPk {
@@ -110,11 +106,7 @@ impl FromStr for CompressedPk {
 #[wrapper_mut(DerefMut)]
 #[derive(StrictType, StrictDumb)]
 #[strict_type(lib = LIB_NAME_BITCOIN, dumb = Self::dumb())]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct UncompressedPk(PublicKey);
 
 impl UncompressedPk {
@@ -159,7 +151,7 @@ impl FromStr for UncompressedPk {
 #[wrapper_mut(DerefMut)]
 #[derive(StrictType, StrictDumb)]
 #[strict_type(lib = LIB_NAME_BITCOIN, dumb = Self::dumb())]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LegacyPk {
     pub compressed: bool,
     #[wrap]

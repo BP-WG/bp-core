@@ -41,11 +41,7 @@ impl CommitmentProtocol for OpretFirst {}
 
 /// Errors during tapret commitment.
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 #[display(doc_comments)]
 pub enum OpretError {
     /// transaction doesn't contain OP_RETURN output.
@@ -60,20 +56,16 @@ pub enum OpretError {
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BPCORE)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 pub struct OpretProof(());
 
 impl StrictSerialize for OpretProof {}
 impl StrictDeserialize for OpretProof {}
 
-impl Proof<Method> for OpretProof {
+impl Proof for OpretProof {
     type Error = EmbedVerifyError<OpretError>;
 
-    fn method(&self) -> Method { Method::OpretFirst }
+    const METHOD: Method = Method::OpretFirst;
 
     fn verify(&self, msg: &Commitment, tx: &Tx) -> Result<(), EmbedVerifyError<OpretError>> {
         tx.verify(msg, self)

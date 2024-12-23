@@ -124,8 +124,8 @@ impl ByteStr {
 #[cfg(feature = "serde")]
 mod _serde {
     use amplify::hex::{FromHex, ToHex};
-    use serde_crate::de::Error;
-    use serde_crate::{Deserialize, Deserializer, Serialize, Serializer};
+    use serde::de::Error;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
     use super::*;
 

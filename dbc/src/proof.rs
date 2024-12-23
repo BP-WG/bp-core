@@ -29,48 +29,34 @@ use strict_encoding::{StrictDecode, StrictDeserialize, StrictDumb, StrictEncode,
 
 use crate::LIB_NAME_BPCORE;
 
-/// Trait defining DBC method - or enumberation of allowed DBC methods used by
-/// proofs, single-use-seals etc.
-pub trait DbcMethod:
-    Copy
-    + Eq
-    + Ord
-    + std::hash::Hash
-    + strict_encoding::StrictDumb
-    + strict_encoding::StrictEncode
-    + strict_encoding::StrictDecode
-{
-}
-
 /// wrong deterministic bitcoin commitment closing method id '{0}'.
 #[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]
 #[display(doc_comments)]
 pub struct MethodParseError(pub String);
 
 /// Method of DBC construction.
+///
+/// Method defines a set of parameters used by a single-use seal, such as:
+/// - selection of bitcoin input;
+/// - commitment algorithm;
+/// - used hash functions.
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BPCORE, tags = repr, into_u8, try_from_u8)]
 #[repr(u8)]
 pub enum Method {
     /// OP_RETURN commitment present in the first OP_RETURN-containing
-    /// transaction output.
+    /// transaction output, made with tagged SHA256 hash function.
     #[display("opret1st")]
     #[strict_type(dumb)]
     OpretFirst = 0x00,
 
     /// Taproot-based OP_RETURN commitment present in the first Taproot
-    /// transaction output.
+    /// transaction output, made with tagged SHA256 hash function.
     #[display("tapret1st")]
     TapretFirst = 0x01,
 }
-
-impl DbcMethod for Method {}
 
 impl FromStr for Method {
     type Err = MethodParseError;
@@ -85,14 +71,12 @@ impl FromStr for Method {
 }
 
 /// Deterministic bitcoin commitment proof types.
-pub trait Proof<M: DbcMethod = Method>:
-    Clone + Eq + Debug + StrictSerialize + StrictDeserialize + StrictDumb
-{
-    /// Verification error.
-    type Error: Error;
-
+pub trait Proof: Clone + Eq + Debug + StrictSerialize + StrictDeserialize + StrictDumb {
     /// Returns a single-use seal closing method used by the DBC proof.
-    fn method(&self) -> M;
+    const METHOD: Method;
+
+    /// Verification error.
+    type Error: Clone + Error;
 
     /// Verifies DBC proof against the provided transaction.
     fn verify(&self, msg: &mpc::Commitment, tx: &Tx) -> Result<(), Self::Error>;
