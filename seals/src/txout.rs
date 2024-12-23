@@ -227,6 +227,27 @@ impl StrictDumb for TxoSealExt {
     fn strict_dumb() -> Self { TxoSealExt::Noise(Noise::from(Bytes::from_byte_array([0u8; 40]))) }
 }
 
+/// Seal definition which is not specific to a used single-use seal protocol.
+///
+/// Seals of this type can't be used in seal validation or in closing seals, and are used for
+/// informational purposes only. For all other uses please check [`TxoSeal`].
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display)]
+#[display("{primary}/{secondary}")]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct TxoSealDef {
+    pub primary: Outpoint,
+    pub secondary: TxoSealExt,
+}
+
+impl<D: dbc::Proof> From<TxoSeal<D>> for TxoSealDef {
+    fn from(seal: TxoSeal<D>) -> Self {
+        TxoSealDef {
+            primary: seal.primary,
+            secondary: seal.secondary,
+        }
+    }
+}
+
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Display)]
 #[display("{primary}/{secondary}")]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
@@ -274,6 +295,16 @@ impl<D: dbc::Proof> TxoSeal<D> {
             _phantom: PhantomData,
         }
     }
+
+    pub fn from_definition(seal: TxoSealDef) -> Self {
+        Self {
+            primary: seal.primary,
+            secondary: seal.secondary,
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn to_definition(&self) -> TxoSealDef { TxoSealDef::from(*self) }
 }
 
 impl<D: dbc::Proof> SingleUseSeal for TxoSeal<D> {
