@@ -252,6 +252,36 @@ impl<D: dbc::Proof> From<TxoSeal<D>> for TxoSealDef {
     }
 }
 
+impl TxoSealDef {
+    /// Creates a new witness output-based seal definition without fallback.
+    ///
+    /// # Arguments
+    ///
+    /// `nonce` is a deterministic incremental number, preventing from creating the same seal if the
+    /// same output is used.
+    pub fn vout_no_fallback(vout: Vout, noise_engine: Sha256, nonce: u64) -> Self {
+        Self::no_fallback(Outpoint::new(Txid::from([0xFFu8; 32]), vout), noise_engine, nonce)
+    }
+
+    /// Creates a new witness output-based seal definition without fallback.
+    ///
+    /// # Arguments
+    ///
+    /// `nonce` is a deterministic incremental number, preventing from creating the same seal if the
+    /// same output is used.
+    pub fn no_fallback(outpoint: Outpoint, mut noise_engine: Sha256, nonce: u64) -> Self {
+        noise_engine.input_raw(&nonce.to_be_bytes());
+        noise_engine.input_raw(outpoint.txid.as_ref());
+        noise_engine.input_raw(&outpoint.vout.to_u32().to_be_bytes());
+        let mut noise = [0xFFu8; 40];
+        noise[..32].copy_from_slice(&noise_engine.finish());
+        Self {
+            primary: outpoint,
+            secondary: TxoSealExt::Noise(Noise(noise.into())),
+        }
+    }
+}
+
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Display)]
 #[display("{primary}/{secondary}")]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
@@ -277,25 +307,24 @@ impl<D: dbc::Proof> Ord for TxoSeal<D> {
 }
 
 impl<D: dbc::Proof> TxoSeal<D> {
+    /// Creates a new witness output-based seal definition without fallback.
+    ///
+    /// # Arguments
+    ///
     /// `nonce` is a deterministic incremental number, preventing from creating the same seal if the
     /// same output is used.
     pub fn vout_no_fallback(vout: Vout, noise_engine: Sha256, nonce: u64) -> Self {
-        Self::no_fallback(Outpoint::new(Txid::from([0xFFu8; 32]), vout), noise_engine, nonce)
+        Self::from_definition(TxoSealDef::vout_no_fallback(vout, noise_engine, nonce))
     }
 
+    /// Creates a new witness output-based seal definition without fallback.
+    ///
+    /// # Arguments
+    ///
     /// `nonce` is a deterministic incremental number, preventing from creating the same seal if the
     /// same output is used.
-    pub fn no_fallback(outpoint: Outpoint, mut noise_engine: Sha256, nonce: u64) -> Self {
-        noise_engine.input_raw(&nonce.to_be_bytes());
-        noise_engine.input_raw(outpoint.txid.as_ref());
-        noise_engine.input_raw(&outpoint.vout.to_u32().to_be_bytes());
-        let mut noise = [0xFFu8; 40];
-        noise[..32].copy_from_slice(&noise_engine.finish());
-        Self {
-            primary: outpoint,
-            secondary: TxoSealExt::Noise(Noise(noise.into())),
-            _phantom: PhantomData,
-        }
+    pub fn no_fallback(outpoint: Outpoint, noise_engine: Sha256, nonce: u64) -> Self {
+        Self::from_definition(TxoSealDef::no_fallback(outpoint, noise_engine, nonce))
     }
 
     pub fn from_definition(seal: TxoSealDef) -> Self {
