@@ -37,7 +37,7 @@ impl EmbedCommitProof<Commitment, ScriptPubkey, OpretFirst> for OpretProof {
         if commit_container.len() != 34 {
             return Err(OpretError::InvalidOpretScript.into());
         }
-        Ok(ScriptPubkey::from_unsafe(vec![OP_RETURN]))
+        Ok(ScriptPubkey::from_checked(vec![OP_RETURN]))
     }
 }
 

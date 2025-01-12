@@ -7,14 +7,15 @@
 
 [![crates.io](https://img.shields.io/crates/v/bp-core)](https://crates.io/crates/bp-core)
 [![Docs](https://docs.rs/bp-core/badge.svg)](https://docs.rs/bp-core)
-[![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
+[![checked forbidden](https://img.shields.io/badge/checked-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 [![Apache-2 licensed](https://img.shields.io/crates/l/bp-core)](./LICENSE)
 
-The library implements components necessary for working with Bitcoin 
-consensus-level data structures and [client-side-validation] in bitcoin 
+The library implements components necessary for working with Bitcoin
+consensus-level data structures and [client-side-validation] in bitcoin
 protocol, specifically
 
-- deterministic bitcoin commitments API ([LNPBP-1], [LNPBP-2], [LNPBP-3], [LNPBP-6], [LNPBP-11] & [LNPBP-12] standards)
+- deterministic bitcoin commitments
+  API ([LNPBP-1], [LNPBP-2], [LNPBP-3], [LNPBP-6], [LNPBP-11] & [LNPBP-12] standards)
 - bitcoin-based single-use-seal API ([LNPBP-10] standards)
 
 Client-side-validation is a paradigm for distributed computing, based on top of
@@ -28,10 +29,10 @@ The original idea of client-side-validation was proposed by Peter Todd with its
 possible applications designed by Giacomo Zucco. It was shaped into the protocol
 design by Dr Maxim Orlovsky with an input from the community.
 
-
 ## Documentation
 
 Detailed developer & API documentation for all libraries can be accessed at:
+
 - <https://docs.rs/bp-core/>
 - <https://docs.rs/bp-dbc/>
 - <https://docs.rs/bp-seals/>
@@ -40,7 +41,6 @@ Detailed developer & API documentation for all libraries can be accessed at:
 To learn about the technologies enabled by the library please check
 [slides from our tech presentations][presentations] and
 [LNP/BP tech talks videos][lnpbp-youtube].
-
 
 ## Usage
 
@@ -85,14 +85,23 @@ See [LICENCE](LICENSE) file for the license details.
 
 
 [lnpbp-web]: https://lnp-bp.org
+
 [lnpbp-github]: https://github.com/LNP-BP
+
 [lnpbp-youtube]: https://www.youtube.com/@LNPBP
+
 [presentations]: https://github.com/LNP-BP/FAQ/blob/master/Presentation%20slides/
 
 [LNPBP-1]: https://github.com/LNP-BP/LNPBPs/blob/master/lnpbp-0001.md
+
 [LNPBP-2]: https://github.com/LNP-BP/LNPBPs/blob/master/lnpbp-0002.md
+
 [LNPBP-3]: https://github.com/LNP-BP/LNPBPs/blob/master/lnpbp-0003.md
+
 [LNPBP-6]: https://github.com/LNP-BP/LNPBPs/blob/master/lnpbp-0006.md
+
 [LNPBP-10]: https://github.com/LNP-BP/LNPBPs/blob/master/lnpbp-0010.md
+
 [LNPBP-11]: https://github.com/LNP-BP/LNPBPs/blob/master/lnpbp-0011.md
+
 [LNPBP-12]: https://github.com/LNP-BP/LNPBPs/blob/master/lnpbp-0012.md

@@ -55,8 +55,8 @@ impl SigScript {
     /// Constructs script object assuming the script length is less than 4GB.
     /// Panics otherwise.
     #[inline]
-    pub fn from_unsafe(script_bytes: Vec<u8>) -> Self {
-        Self(ScriptBytes::from_unsafe(script_bytes))
+    pub fn from_checked(script_bytes: Vec<u8>) -> Self {
+        Self(ScriptBytes::from_checked(script_bytes))
     }
 
     #[inline]
@@ -90,8 +90,8 @@ impl ScriptPubkey {
     /// Constructs script object assuming the script length is less than 4GB.
     /// Panics otherwise.
     #[inline]
-    pub fn from_unsafe(script_bytes: Vec<u8>) -> Self {
-        Self(ScriptBytes::from_unsafe(script_bytes))
+    pub fn from_checked(script_bytes: Vec<u8>) -> Self {
+        Self(ScriptBytes::from_checked(script_bytes))
     }
 
     pub fn p2pkh(hash: impl Into<[u8; 20]>) -> Self {
@@ -177,8 +177,8 @@ impl RedeemScript {
     /// Constructs script object assuming the script length is less than 4GB.
     /// Panics otherwise.
     #[inline]
-    pub fn from_unsafe(script_bytes: Vec<u8>) -> Self {
-        Self(ScriptBytes::from_unsafe(script_bytes))
+    pub fn from_checked(script_bytes: Vec<u8>) -> Self {
+        Self(ScriptBytes::from_checked(script_bytes))
     }
 
     pub fn p2sh_wpkh(hash: impl Into<[u8; 20]>) -> Self {
@@ -232,7 +232,7 @@ impl ScriptBytes {
     /// Constructs script object assuming the script length is less than 4GB.
     /// Panics otherwise.
     #[inline]
-    pub fn from_unsafe(script_bytes: Vec<u8>) -> Self {
+    pub fn from_checked(script_bytes: Vec<u8>) -> Self {
         Self(Confined::try_from(script_bytes).expect("script exceeding 4GB"))
     }
 

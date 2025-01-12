@@ -641,8 +641,8 @@ impl TapScript {
     /// Constructs script object assuming the script length is less than 4GB.
     /// Panics otherwise.
     #[inline]
-    pub fn from_unsafe(script_bytes: Vec<u8>) -> Self {
-        Self(ScriptBytes::from_unsafe(script_bytes))
+    pub fn from_checked(script_bytes: Vec<u8>) -> Self {
+        Self(ScriptBytes::from_checked(script_bytes))
     }
 
     #[inline]
