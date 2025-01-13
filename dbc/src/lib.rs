@@ -55,6 +55,3 @@ pub mod keytweak;
 pub mod opret;
 pub mod sigtweak;
 pub mod tapret;
-mod proof;
-
-pub use proof::{Method, MethodParseError, Proof};

@@ -1,4 +1,4 @@
-rec AnchorOpretProof
+rec Anchor
   rec mmbProof, BundleProof
     map map, len 0..MAX16
       is key, U32
@@ -10,5 +10,9 @@ rec AnchorOpretProof
     is cofactor, U16
     list path, len 0..32
       bytes element, len 32, aka MerkleHash
-  is dbcProof, Unit, aka OpretProof
+    rec some, TapretProof, option, wrapped, tag 1
+      rec pathProof, TapretPathProof
+        union some, TapretNodePartner, option, wrapped, tag 1
+          rec rightBranch, TapretRightBranch, wrapped, tag 2
+        is nonce, U8
   bytes fallbackProof, len 1, aka ReservedBytes1

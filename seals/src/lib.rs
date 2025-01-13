@@ -46,5 +46,5 @@ extern crate serde;
 mod txout;
 
 pub use txout::{
-    mmb, mpc, Anchor, AnchorError, AnchorMergeError, Noise, TxoSeal, TxoSealDef, TxoSealExt,
+    mmb, mpc, Anchor, AnchorError, AnchorMergeError, Noise, TxoSeal, TxoSealError, TxoSealExt,
 };

@@ -8,19 +8,9 @@
 Seals vesper lexicon=types+commitments
 
 commitment StrictHash, hasher SHA256, tagged urn:ubideco:strict-types:value-hash#2024-02-10
-  serialized TxoSealDef
+  serialized TxoSeal
 
-rec TxoSealTapretProof
-  rec primary, Outpoint
-    bytes txid, len 32, aka Txid
-    is vout, U32, aka Vout
-  union secondary, TxoSealExt
-    bytes noise, len 40, wrapped, aka Noise, tag 0
-    rec fallback, Outpoint, wrapped, tag 1
-      bytes txid, len 32, aka Txid
-      is vout, U32, aka Vout
-
-rec TxoSealOpretProof
+rec TxoSeal
   rec primary, Outpoint
     bytes txid, len 32, aka Txid
     is vout, U32, aka Vout

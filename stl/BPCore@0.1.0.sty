@@ -1,5 +1,5 @@
 {-
-  Id: stl:ywtQuh4L-rC8_3Lk-99FA5~N-La46hkd-qHFFwE3-XghE5FQ#llama-ohio-lagoon
+  Id: stl:5nv1kDfd-gGwz25~-eE2nwLv-eLQqAJr-lmsIL5z-eKSOBzQ#super-vatican-clark
   Name: BPCore
   Version: 0.1.0
   Description: Bitcoin client-side-validation library
@@ -34,18 +34,11 @@ import CommitVerify#uranium-alien-extend
   use ReservedBytes1#origin-roger-relax
 
 
-@mnemonic(pilot-evita-provide)
-data AnchorOpretProof  : mmbProof BundleProof
+@mnemonic(choice-chemist-brigade)
+data Anchor            : mmbProof BundleProof
                        , mpcProtocol CommitVerify.ProtocolId
                        , mpcProof CommitVerify.MerkleProof
-                       , dbcProof OpretProof
-                       , fallbackProof CommitVerify.ReservedBytes1
-
-@mnemonic(liter-sponsor-blitz)
-data AnchorTapretProof : mmbProof BundleProof
-                       , mpcProtocol CommitVerify.ProtocolId
-                       , mpcProof CommitVerify.MerkleProof
-                       , dbcProof TapretProof
+                       , dbcProof TapretProof?
                        , fallbackProof CommitVerify.ReservedBytes1
 
 @mnemonic(beast-normal-road)
@@ -63,9 +56,6 @@ data MessageSource     : single#1 CommitVerify.Message
 
 @mnemonic(bruce-gravity-titanic)
 data Noise             : [Byte ^ 40]
-
-@mnemonic(good-village-flex)
-data OpretProof        : ()
 
 @mnemonic(polygon-nixon-guitar)
 data Source            : minDepth Std.U5
@@ -86,14 +76,11 @@ data TapretProof       : pathProof TapretPathProof, internalPk Bitcoin.InternalP
 @mnemonic(miracle-patriot-touch)
 data TapretRightBranch : leftNodeHash Bitcoin.TapNodeHash, rightNodeHash Bitcoin.TapNodeHash
 
+@mnemonic(email-mercy-shock)
+data TxoSeal           : primary Bitcoin.Outpoint, secondary TxoSealExt
+
 @mnemonic(stamp-morning-tulip)
 data TxoSealExt        : noise Noise
                        | fallback Bitcoin.Outpoint
-
-@mnemonic(igloo-viva-orient)
-data TxoSealOpretProof : primary Bitcoin.Outpoint, secondary TxoSealExt
-
-@mnemonic(hobby-yogurt-taboo)
-data TxoSealTapretProof : primary Bitcoin.Outpoint, secondary TxoSealExt
 
 

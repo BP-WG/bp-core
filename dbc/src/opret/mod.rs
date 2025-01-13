@@ -25,16 +25,12 @@ mod tx;
 mod txout;
 mod spk;
 
-use bc::Tx;
-use commit_verify::mpc::Commitment;
-use commit_verify::{CommitmentProtocol, EmbedCommitVerify, EmbedVerifyError};
+use commit_verify::CommitmentProtocol;
 use strict_encoding::{StrictDeserialize, StrictSerialize};
 
-use crate::proof::Method;
-use crate::{Proof, LIB_NAME_BPCORE};
+use crate::LIB_NAME_BPCORE;
 
-/// Marker non-instantiable enum defining LNPBP-12 taproot OP_RETURN (`tapret`)
-/// protocol.
+/// Marker non-instantiable enum defining LNPBP-12 taproot OP_RETURN (`opret`) protocol.
 pub enum OpretFirst {}
 
 impl CommitmentProtocol for OpretFirst {}
@@ -61,13 +57,3 @@ pub struct OpretProof(());
 
 impl StrictSerialize for OpretProof {}
 impl StrictDeserialize for OpretProof {}
-
-impl Proof for OpretProof {
-    type Error = EmbedVerifyError<OpretError>;
-
-    const METHOD: Method = Method::OpretFirst;
-
-    fn verify(&self, msg: &Commitment, tx: &Tx) -> Result<(), EmbedVerifyError<OpretError>> {
-        tx.verify(msg, self)
-    }
-}

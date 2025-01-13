@@ -21,15 +21,13 @@
 
 //! Strict types library generator methods.
 
-use dbc::opret::OpretProof;
-use dbc::tapret::TapretProof;
 use dbc::LIB_NAME_BPCORE;
 use strict_types::{CompileError, LibBuilder, TypeLib};
 
 /// Strict types id for the library providing data types from [`dbc`] and
 /// [`seals`] crates.
 pub const LIB_ID_BPCORE: &str =
-    "stl:ywtQuh4L-rC8_3Lk-99FA5~N-La46hkd-qHFFwE3-XghE5FQ#llama-ohio-lagoon";
+    "stl:5nv1kDfd-gGwz25~-eE2nwLv-eLQqAJr-lmsIL5z-eKSOBzQ#super-vatican-clark";
 
 fn _bp_core_stl() -> Result<TypeLib, CompileError> {
     LibBuilder::new(libname!(LIB_NAME_BPCORE), tiny_bset! {
@@ -37,10 +35,8 @@ fn _bp_core_stl() -> Result<TypeLib, CompileError> {
         bc::stl::bp_tx_stl().to_dependency(),
         commit_verify::stl::commit_verify_stl().to_dependency()
     })
-    .transpile::<seals::TxoSeal<OpretProof>>()
-    .transpile::<seals::TxoSeal<TapretProof>>()
-    .transpile::<seals::Anchor<OpretProof>>()
-    .transpile::<seals::Anchor<TapretProof>>()
+    .transpile::<seals::TxoSeal>()
+    .transpile::<seals::Anchor>()
     .transpile::<seals::mpc::Source>()
     .compile()
 }
