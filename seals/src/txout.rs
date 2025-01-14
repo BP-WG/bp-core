@@ -27,7 +27,10 @@ use core::fmt::Debug;
 
 use amplify::{ByteArray, Bytes, Bytes32};
 use bc::{Outpoint, Tx, Txid, Vout};
-use commit_verify::{CommitId, ConvolveVerifyError, DigestExt, ReservedBytes, Sha256, StrictHash};
+use commit_verify::{
+    CommitId, ConvolveVerifyError, DigestExt, EmbedVerifyError, ReservedBytes, Sha256, StrictHash,
+};
+use dbc::opret::{OpretError, OpretProof};
 use dbc::tapret::TapretProof;
 use single_use_seals::{ClientSideWitness, PublishedWitness, SealWitness, SingleUseSeal};
 use strict_encoding::StrictDumb;
@@ -301,7 +304,7 @@ impl PublishedWitness<TxoSeal> for Tx {
             .ok_or(TxoSealError::NoOutput)?;
         if out.script_pubkey.is_op_return() {
             if proof.dbc_proof.is_none() {
-                Ok(())
+                OpretProof::default().verify(&proof.mpc_commit, self).map_err(TxoSealError::from)
             } else {
                 Err(TxoSealError::InvalidProofType)
             }
@@ -363,8 +366,12 @@ pub enum TxoSealError {
     NoTapretProof,
 
     #[from]
-    /// invalid tapret proof.
-    Dbc(ConvolveVerifyError),
+    /// invalid tapret commitment.
+    Tapret(ConvolveVerifyError),
+
+    #[from]
+    /// invalid opret commitment.
+    Opret(EmbedVerifyError<OpretError>),
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, Display, Error, From)]

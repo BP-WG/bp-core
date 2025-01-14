@@ -25,7 +25,9 @@ mod tx;
 mod txout;
 mod spk;
 
-use commit_verify::CommitmentProtocol;
+use bc::Tx;
+use commit_verify::mpc::Commitment;
+use commit_verify::{CommitmentProtocol, EmbedCommitVerify, EmbedVerifyError};
 use strict_encoding::{StrictDeserialize, StrictSerialize};
 
 use crate::LIB_NAME_BPCORE;
@@ -57,3 +59,10 @@ pub struct OpretProof(());
 
 impl StrictSerialize for OpretProof {}
 impl StrictDeserialize for OpretProof {}
+
+impl OpretProof {
+    /// Verifies opret commitment againsy the proof.
+    pub fn verify(&self, msg: &Commitment, tx: &Tx) -> Result<(), EmbedVerifyError<OpretError>> {
+        tx.verify(msg, self)
+    }
+}
