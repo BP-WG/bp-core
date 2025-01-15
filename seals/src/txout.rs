@@ -22,14 +22,16 @@
 //! Bitcoin single-use-seals defined by a transaction output and closed by
 //! spending that output ("TxOut seals").
 
-use core::cmp::Ordering;
 use core::error::Error;
 use core::fmt::Debug;
-use core::marker::PhantomData;
 
 use amplify::{ByteArray, Bytes, Bytes32};
 use bc::{Outpoint, Tx, Txid, Vout};
-use commit_verify::{CommitId, DigestExt, ReservedBytes, Sha256, StrictHash};
+use commit_verify::{
+    CommitId, ConvolveVerifyError, DigestExt, EmbedVerifyError, ReservedBytes, Sha256, StrictHash,
+};
+use dbc::opret::{OpretError, OpretProof};
+use dbc::tapret::TapretProof;
 use single_use_seals::{ClientSideWitness, PublishedWitness, SealWitness, SingleUseSeal};
 use strict_encoding::StrictDumb;
 
@@ -186,17 +188,17 @@ pub mod mpc {
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
-pub struct Anchor<D: dbc::Proof> {
+pub struct Anchor {
     pub mmb_proof: mmb::BundleProof,
     pub mpc_protocol: mpc::ProtocolId,
     pub mpc_proof: mpc::MerkleProof,
-    pub dbc_proof: D,
+    pub dbc_proof: Option<TapretProof>,
     #[cfg_attr(feature = "serde", serde(skip))]
     // TODO: This should become an option once fallback proofs are ready
     pub fallback_proof: ReservedBytes<1>,
 }
 
-impl<D: dbc::Proof> Anchor<D> {
+impl Anchor {
     // TODO: Change when the fallback proofs are ready
     pub fn is_fallback(&self) -> bool { false }
     // TODO: Change when the fallback proofs are ready
@@ -204,9 +206,9 @@ impl<D: dbc::Proof> Anchor<D> {
 }
 
 /// Proof data for verification of deterministic bitcoin commitment produced from anchor.
-pub struct Proof<D: dbc::Proof> {
+pub struct Proof {
     pub mpc_commit: mpc::Commitment,
-    pub dbc_proof: D,
+    pub dbc_proof: Option<TapretProof>,
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
@@ -227,10 +229,6 @@ impl StrictDumb for TxoSealExt {
     fn strict_dumb() -> Self { TxoSealExt::Noise(Noise::from(Bytes::from_byte_array([0u8; 40]))) }
 }
 
-/// Seal definition which is not specific to a used single-use seal protocol.
-///
-/// Seals of this type can't be used in seal validation or in closing seals, and are used for
-/// informational purposes only. For all other uses please check [`TxoSeal`].
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display)]
 #[display("{primary}/{secondary}")]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
@@ -238,21 +236,12 @@ impl StrictDumb for TxoSealExt {
 #[derive(CommitEncode)]
 #[commit_encode(strategy = strict, id = StrictHash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct TxoSealDef {
+pub struct TxoSeal {
     pub primary: Outpoint,
     pub secondary: TxoSealExt,
 }
 
-impl<D: dbc::Proof> From<TxoSeal<D>> for TxoSealDef {
-    fn from(seal: TxoSeal<D>) -> Self {
-        TxoSealDef {
-            primary: seal.primary,
-            secondary: seal.secondary,
-        }
-    }
-}
-
-impl TxoSealDef {
+impl TxoSeal {
     /// Creates a new witness output-based seal definition without fallback.
     ///
     /// # Arguments
@@ -282,66 +271,10 @@ impl TxoSealDef {
     }
 }
 
-#[derive(Clone, Eq, PartialEq, Hash, Debug, Display)]
-#[display("{primary}/{secondary}")]
-#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = dbc::LIB_NAME_BPCORE)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct TxoSeal<D: dbc::Proof> {
-    pub primary: Outpoint,
-    pub secondary: TxoSealExt,
-    #[strict_type(skip)]
-    #[cfg_attr(feature = "serde", serde(skip))]
-    _phantom: PhantomData<D>,
-}
-
-// Manual impl is needed since we need to avoid D: Copy bound
-impl<D: dbc::Proof> Copy for TxoSeal<D> {}
-impl<D: dbc::Proof> PartialOrd for TxoSeal<D> {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> { Some(self.cmp(other)) }
-}
-impl<D: dbc::Proof> Ord for TxoSeal<D> {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.primary.cmp(&other.primary).then(self.secondary.cmp(&other.secondary))
-    }
-}
-
-impl<D: dbc::Proof> TxoSeal<D> {
-    /// Creates a new witness output-based seal definition without fallback.
-    ///
-    /// # Arguments
-    ///
-    /// `nonce` is a deterministic incremental number, preventing from creating the same seal if the
-    /// same output is used.
-    pub fn vout_no_fallback(vout: Vout, noise_engine: Sha256, nonce: u64) -> Self {
-        Self::from_definition(TxoSealDef::vout_no_fallback(vout, noise_engine, nonce))
-    }
-
-    /// Creates a new witness output-based seal definition without fallback.
-    ///
-    /// # Arguments
-    ///
-    /// `nonce` is a deterministic incremental number, preventing from creating the same seal if the
-    /// same output is used.
-    pub fn no_fallback(outpoint: Outpoint, noise_engine: Sha256, nonce: u64) -> Self {
-        Self::from_definition(TxoSealDef::no_fallback(outpoint, noise_engine, nonce))
-    }
-
-    pub fn from_definition(seal: TxoSealDef) -> Self {
-        Self {
-            primary: seal.primary,
-            secondary: seal.secondary,
-            _phantom: PhantomData,
-        }
-    }
-
-    pub fn to_definition(&self) -> TxoSealDef { TxoSealDef::from(*self) }
-}
-
-impl<D: dbc::Proof> SingleUseSeal for TxoSeal<D> {
+impl SingleUseSeal for TxoSeal {
     type Message = mmb::Message;
     type PubWitness = Tx;
-    type CliWitness = Anchor<D>;
+    type CliWitness = Anchor;
 
     fn is_included(&self, message: Self::Message, witness: &SealWitness<Self>) -> bool {
         match self.secondary {
@@ -358,22 +291,37 @@ impl<D: dbc::Proof> SingleUseSeal for TxoSeal<D> {
 }
 
 // TODO: It's not just a transaction, it should be an SPV proof
-impl<D: dbc::Proof> PublishedWitness<TxoSeal<D>> for Tx {
+impl PublishedWitness<TxoSeal> for Tx {
     type PubId = Txid;
-    type Error = D::Error;
+    type Error = TxoSealError;
 
     fn pub_id(&self) -> Txid { self.txid() }
-    fn verify_commitment(&self, proof: Proof<D>) -> Result<(), Self::Error> {
-        proof.dbc_proof.verify(&proof.mpc_commit, self)
+
+    fn verify_commitment(&self, proof: Proof) -> Result<(), Self::Error> {
+        let out = self
+            .outputs()
+            .find(|out| out.script_pubkey.is_op_return() || out.script_pubkey.is_p2tr())
+            .ok_or(TxoSealError::NoOutput)?;
+        if out.script_pubkey.is_op_return() {
+            if proof.dbc_proof.is_none() {
+                OpretProof::default().verify(&proof.mpc_commit, self).map_err(TxoSealError::from)
+            } else {
+                Err(TxoSealError::InvalidProofType)
+            }
+        } else if let Some(ref dbc_proof) = proof.dbc_proof {
+            dbc_proof.verify(&proof.mpc_commit, self).map_err(TxoSealError::from)
+        } else {
+            Err(TxoSealError::NoTapretProof)
+        }
     }
 }
 
-impl<D: dbc::Proof> ClientSideWitness for Anchor<D> {
-    type Proof = Proof<D>;
-    type Seal = TxoSeal<D>;
+impl ClientSideWitness for Anchor {
+    type Proof = Proof;
+    type Seal = TxoSeal;
     type Error = AnchorError;
 
-    fn convolve_commit(&self, mmb_message: mmb::Message) -> Result<Proof<D>, Self::Error> {
+    fn convolve_commit(&self, mmb_message: mmb::Message) -> Result<Proof, Self::Error> {
         self.verify_fallback()?;
         if self.mmb_proof.map.values().all(|msg| *msg != mmb_message) {
             return Err(AnchorError::Mmb(mmb_message));
@@ -404,7 +352,29 @@ impl<D: dbc::Proof> ClientSideWitness for Anchor<D> {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Error, Debug, Display, From)]
+#[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]
+#[display(doc_comments)]
+pub enum TxoSealError {
+    /// witness transaction contains no taproot or OP_RETURN output.
+    NoOutput,
+
+    /// witness transaction first DBC-compatible output doesn't match the provided proof type.
+    InvalidProofType,
+
+    /// witness transaction first DBC-compatible output is taproot, but no tapret proof is
+    /// provided.
+    NoTapretProof,
+
+    #[from]
+    /// invalid tapret commitment.
+    Tapret(ConvolveVerifyError),
+
+    #[from]
+    /// invalid opret commitment.
+    Opret(EmbedVerifyError<OpretError>),
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, Display, Error, From)]
 #[display(doc_comments)]
 pub enum AnchorMergeError {
     /// anchor mismatch in merge procedure
@@ -414,7 +384,7 @@ pub enum AnchorMergeError {
     TooManyInputs,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Error, Debug, Display, From)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, Display, Error, From)]
 #[display(inner)]
 pub enum AnchorError {
     #[from]
