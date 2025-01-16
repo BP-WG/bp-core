@@ -126,16 +126,10 @@ impl<Id: SealTxid> TxoSeal for BlindSeal<Id> {
 impl<Id: SealTxid> BlindSeal<Id> {
     /// Creates new seal for the provided outpoint. Uses `thread_rng` to initialize blinding
     /// factor.
-    pub fn rand_from(outpoint: Outpoint) -> Self { BlindSeal::rand(outpoint.txid, outpoint.vout) }
-
-    /// Creates new seal for the provided outpoint. Uses `thread_rng` to initialize blinding
-    /// factor.
-    pub fn rand(txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
-        BlindSeal::with_rng(txid, vout, &mut thread_rng())
+    pub fn rand_from(outpoint: Outpoint) -> Self {
+        BlindSeal::new_random(outpoint.txid, outpoint.vout)
     }
-}
 
-impl<Id: SealTxid> BlindSeal<Id> {
     /// Creates new seal for the provided outpoint. Uses `thread_rng` to initialize blinding
     /// factor.
     pub fn new_random(txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
@@ -240,6 +234,9 @@ impl<Id: SealTxid> FromStr for BlindSeal<Id> {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut split = s.split(&[':', '#'][..]);
+        if split.next() != Some("txoseal") {
+            return Err(ParseError::WrongStructure);
+        }
         match (split.next(), split.next(), split.next(), split.next()) {
             (Some(""), ..) => Err(ParseError::TxidRequired),
             (Some(_), None, ..) if !s.contains('#') => Err(ParseError::BlindingRequired),
@@ -261,7 +258,7 @@ impl<Id: SealTxid> Display for BlindSeal<Id>
 where Self: TxoSeal
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}:{}#{:#010x}", self.txid, self.vout, self.blinding)
+        write!(f, "txoseal:{}:{}#{:#010x}", self.txid, self.vout, self.blinding)
     }
 }
 
@@ -283,33 +280,37 @@ mod test {
         let s = outpoint_reveal.to_string();
         assert_eq!(
             &s,
-            "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:21#0x31bbed7e7b2d"
+            "txoseal:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:21#\
+             0x31bbed7e7b2d"
         );
         // round-trip
         assert_eq!(ChainBlindSeal::from_str(&s).unwrap(), outpoint_reveal);
 
         outpoint_reveal.txid = TxPtr::WitnessTx;
         let s = outpoint_reveal.to_string();
-        assert_eq!(&s, "~:21#0x31bbed7e7b2d");
+        assert_eq!(&s, "txoseal:~:21#0x31bbed7e7b2d");
         // round-trip
         assert_eq!(ChainBlindSeal::from_str(&s).unwrap(), outpoint_reveal);
 
         // wrong vout value
         assert_eq!(
             ChainBlindSeal::from_str(
-                "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:0x765#0x78ca95"
+                "txoseal:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:0x765#\
+                 0x78ca95"
             ),
             Err(ParseError::WrongVout)
         );
         assert_eq!(
             ChainBlindSeal::from_str(
-                "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:i9#0x78ca95"
+                "txoseal:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:i9#\
+                 0x78ca95"
             ),
             Err(ParseError::WrongVout)
         );
         assert_eq!(
             ChainBlindSeal::from_str(
-                "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:-5#0x78ca95"
+                "txoseal:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:-5#\
+                 0x78ca95"
             ),
             Err(ParseError::WrongVout)
         );
@@ -317,25 +318,25 @@ mod test {
         // wrong blinding secret value
         assert_eq!(
             ChainBlindSeal::from_str(
-                "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#0x78cs"
+                "txoseal:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#0x78cs"
             ),
             Err(ParseError::WrongBlinding)
         );
         assert_eq!(
             ChainBlindSeal::from_str(
-                "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#78ca95"
+                "txoseal:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#78ca95"
             ),
             Err(ParseError::NonHexBlinding)
         );
         assert_eq!(
             ChainBlindSeal::from_str(
-                "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#857"
+                "txoseal:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#857"
             ),
             Err(ParseError::NonHexBlinding)
         );
         assert_eq!(
             ChainBlindSeal::from_str(
-                "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#-5"
+                "txoseal:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#-5"
             ),
             Err(ParseError::NonHexBlinding)
         );
@@ -343,17 +344,19 @@ mod test {
         // wrong txid value
         assert_eq!(
             ChainBlindSeal::from_str(
-                "646ca5c1062619e2a2d607719dfd820551fb773e4dc8c4ed67965a8d1fae839:5#0x78ca69"
+                "txoseal:646ca5c1062619e2a2d607719dfd820551fb773e4dc8c4ed67965a8d1fae839:5#\
+                 0x78ca69"
             ),
             Err(ParseError::WrongTxid(hex::Error::OddLengthString(63)))
         );
         assert_eq!(
-            ChainBlindSeal::from_str("rvgbdg:5#0x78ca69"),
+            ChainBlindSeal::from_str("txoseal:rvgbdg:5#0x78ca69"),
             Err(ParseError::WrongTxid(hex::Error::InvalidChar(b'r')))
         );
         assert_eq!(
             ChainBlindSeal::from_str(
-                "10@646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#0x78ca69"
+                "txoseal:10@646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:5#\
+                 0x78ca69"
             ),
             Err(ParseError::WrongTxid(hex::Error::OddLengthString(67)))
         );
@@ -367,30 +370,37 @@ mod test {
         );
         assert_eq!(
             ChainBlindSeal::from_str(
-                "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839#0x78ca"
+                "txoseal:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:1"
             ),
             Err(ParseError::WrongStructure)
         );
         assert_eq!(
             ChainBlindSeal::from_str(
-                "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839"
+                "txoseal:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839#0x78ca"
+            ),
+            Err(ParseError::WrongStructure)
+        );
+        assert_eq!(
+            ChainBlindSeal::from_str(
+                "txoseal:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839"
             ),
             Err(ParseError::BlindingRequired)
         );
         assert_eq!(
             ChainBlindSeal::from_str(
-                "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839##0x78ca"
+                "txoseal:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839##0x78ca"
             ),
             Err(ParseError::WrongVout)
         );
         assert_eq!(
             ChainBlindSeal::from_str(
-                "646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:#0x78ca95"
+                "txoseal:646ca5c1062619e2a2d60771c9dfd820551fb773e4dc8c4ed67965a8d1fae839:#\
+                 0x78ca95"
             ),
             Err(ParseError::WrongVout)
         );
         assert_eq!(
-            ChainBlindSeal::from_str("_:5#0x78ca"),
+            ChainBlindSeal::from_str("txoseal:_:5#0x78ca"),
             Err(ParseError::WrongTxid(hex::Error::OddLengthString(1)))
         );
     }
