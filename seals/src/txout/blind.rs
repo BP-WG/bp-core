@@ -69,6 +69,12 @@ pub struct BlindSeal<Id: SealTxid> {
     pub blinding: u64,
 }
 
+impl<Id: SealTxid> BlindSeal<Id> {
+    /// Converts revealed seal into concealed.
+    #[inline]
+    pub fn to_secret_seal(&self) -> SecretSeal { self.conceal() }
+}
+
 impl<Id: SealTxid> Conceal for BlindSeal<Id> {
     type Concealed = SecretSeal;
 
