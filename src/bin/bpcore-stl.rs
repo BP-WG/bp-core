@@ -26,7 +26,7 @@ use bc::stl::{bp_consensus_stl, bp_tx_stl};
 use bp::stl::bp_core_stl;
 use commit_verify::stl::commit_verify_stl;
 use commit_verify::CommitmentLayout;
-use seals::TxoSeal;
+use seals::WTxoSeal;
 use strict_encoding::libname;
 use strict_types::stl::std_stl;
 use strict_types::{parse_args, SystemBuilder};
@@ -34,7 +34,7 @@ use strict_types::{parse_args, SystemBuilder};
 fn main() {
     let (format, dir) = parse_args();
 
-    let mut lib = bc::stl::bp_tx_stl();
+    let mut lib = bp_tx_stl();
     lib.name = libname!("Tx");
     lib.serialize(
         format,
@@ -103,7 +103,7 @@ fn main() {
     writeln!(
         file,
         "{{-
-  Description: Bitcoin TxO2 blind seals
+  Description: Bitcoin WTxO blind seals
   Author: Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
   Copyright (C) 2024 LNP/BP Standards Association. All rights reserved.
   License: Apache-2.0
@@ -113,9 +113,9 @@ Seals vesper lexicon=types+commitments
 "
     )
     .unwrap();
-    let layout = TxoSeal::commitment_layout();
+    let layout = WTxoSeal::commitment_layout();
     writeln!(file, "{layout}").unwrap();
-    let tt = sys.type_tree("BPCore.TxoSeal").unwrap();
+    let tt = sys.type_tree("BPCore.WTxoSeal").unwrap();
     writeln!(file, "{tt}").unwrap();
 
     let tt = sys.type_tree("BPCore.Anchor").unwrap();

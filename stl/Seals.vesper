@@ -1,5 +1,5 @@
 {-
-  Description: Bitcoin TxO2 blind seals
+  Description: Bitcoin WTxO blind seals
   Author: Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
   Copyright (C) 2024 LNP/BP Standards Association. All rights reserved.
   License: Apache-2.0
@@ -8,12 +8,14 @@
 Seals vesper lexicon=types+commitments
 
 commitment StrictHash, hasher SHA256, tagged urn:ubideco:strict-types:value-hash#2024-02-10
-  serialized TxoSeal
+  serialized WTxoSeal
 
-rec TxoSeal
-  rec primary, Outpoint
-    bytes txid, len 32, aka Txid
-    is vout, U32, aka Vout
+rec WTxoSeal
+  union primary, WOutpoint
+    is wout, U32, wrapped, aka Vout, tag 0
+    rec extern, Outpoint, wrapped, tag 1
+      bytes txid, len 32, aka Txid
+      is vout, U32, aka Vout
   union secondary, TxoSealExt
     bytes noise, len 40, wrapped, aka Noise, tag 0
     rec fallback, Outpoint, wrapped, tag 1

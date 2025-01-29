@@ -44,7 +44,9 @@ extern crate commit_verify;
 extern crate serde;
 
 mod txout;
+mod wtxout;
 
 pub use txout::{
     mmb, mpc, Anchor, AnchorError, AnchorMergeError, Noise, TxoSeal, TxoSealError, TxoSealExt,
 };
+pub use wtxout::{WOutpoint, WTxoSeal};

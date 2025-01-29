@@ -27,7 +27,7 @@ use strict_types::{CompileError, LibBuilder, TypeLib};
 /// Strict types id for the library providing data types from [`dbc`] and
 /// [`seals`] crates.
 pub const LIB_ID_BPCORE: &str =
-    "stl:5nv1kDfd-gGwz25~-eE2nwLv-eLQqAJr-lmsIL5z-eKSOBzQ#super-vatican-clark";
+    "stl:IvdK_1TS-X9dXRUt-2BstAqb-cd7P6x9-m0BnaF0-2fewUwI#geneva-pulse-philips";
 
 fn _bp_core_stl() -> Result<TypeLib, CompileError> {
     LibBuilder::new(libname!(LIB_NAME_BPCORE), tiny_bset! {
@@ -36,6 +36,7 @@ fn _bp_core_stl() -> Result<TypeLib, CompileError> {
         commit_verify::stl::commit_verify_stl().to_dependency()
     })
     .transpile::<seals::TxoSeal>()
+    .transpile::<seals::WTxoSeal>()
     .transpile::<seals::Anchor>()
     .transpile::<seals::mpc::Source>()
     .compile()

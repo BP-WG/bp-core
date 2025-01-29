@@ -1,5 +1,5 @@
 {-
-  Id: stl:5nv1kDfd-gGwz25~-eE2nwLv-eLQqAJr-lmsIL5z-eKSOBzQ#super-vatican-clark
+  Id: stl:IvdK_1TS-X9dXRUt-2BstAqb-cd7P6x9-m0BnaF0-2fewUwI#geneva-pulse-philips
   Name: BPCore
   Version: 0.1.0
   Description: Bitcoin client-side-validation library
@@ -82,5 +82,12 @@ data TxoSeal           : primary Bitcoin.Outpoint, secondary TxoSealExt
 @mnemonic(stamp-morning-tulip)
 data TxoSealExt        : noise Noise
                        | fallback Bitcoin.Outpoint
+
+@mnemonic(clock-absorb-side)
+data WOutpoint         : wout Bitcoin.Vout
+                       | extern Bitcoin.Outpoint
+
+@mnemonic(rapid-arsenal-shirt)
+data WTxoSeal          : primary WOutpoint, secondary TxoSealExt
 
 

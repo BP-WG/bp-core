@@ -26,10 +26,8 @@ use core::error::Error;
 use core::fmt::Debug;
 
 use amplify::{ByteArray, Bytes, Bytes32};
-use bc::{Outpoint, Tx, Txid, Vout};
-use commit_verify::{
-    CommitId, ConvolveVerifyError, DigestExt, EmbedVerifyError, ReservedBytes, Sha256, StrictHash,
-};
+use bc::{Outpoint, Tx, Txid};
+use commit_verify::{CommitId, ConvolveVerifyError, EmbedVerifyError, ReservedBytes};
 use dbc::opret::{OpretError, OpretProof};
 use dbc::tapret::TapretProof;
 use single_use_seals::{ClientSideWitness, PublishedWitness, SealWitness, SingleUseSeal};
@@ -233,42 +231,10 @@ impl StrictDumb for TxoSealExt {
 #[display("{primary}/{secondary}")]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
-#[derive(CommitEncode)]
-#[commit_encode(strategy = strict, id = StrictHash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TxoSeal {
     pub primary: Outpoint,
     pub secondary: TxoSealExt,
-}
-
-impl TxoSeal {
-    /// Creates a new witness output-based seal definition without fallback.
-    ///
-    /// # Arguments
-    ///
-    /// `nonce` is a deterministic incremental number, preventing from creating the same seal if the
-    /// same output is used.
-    pub fn vout_no_fallback(vout: Vout, noise_engine: Sha256, nonce: u64) -> Self {
-        Self::no_fallback(Outpoint::new(Txid::from([0xFFu8; 32]), vout), noise_engine, nonce)
-    }
-
-    /// Creates a new witness output-based seal definition without fallback.
-    ///
-    /// # Arguments
-    ///
-    /// `nonce` is a deterministic incremental number, preventing from creating the same seal if the
-    /// same output is used.
-    pub fn no_fallback(outpoint: Outpoint, mut noise_engine: Sha256, nonce: u64) -> Self {
-        noise_engine.input_raw(&nonce.to_be_bytes());
-        noise_engine.input_raw(outpoint.txid.as_ref());
-        noise_engine.input_raw(&outpoint.vout.to_u32().to_be_bytes());
-        let mut noise = [0xFFu8; 40];
-        noise[..32].copy_from_slice(&noise_engine.finish());
-        Self {
-            primary: outpoint,
-            secondary: TxoSealExt::Noise(Noise(noise.into())),
-        }
-    }
 }
 
 impl SingleUseSeal for TxoSeal {
