@@ -22,10 +22,8 @@
 //! Witness-output enabled TxO-seals allow constructing graphs of seals, useful in protocols like
 //! RGB.
 
-use amplify::Bytes;
 use bc::{Outpoint, Vout};
-use commit_verify::{DigestExt, Sha256, StrictHash};
-use strict_encoding::StrictSum;
+use commit_verify::{Sha256, StrictHash};
 
 use crate::{Noise, TxoSealExt};
 
@@ -76,24 +74,10 @@ impl WTxoSeal {
         Self::with(WOutpoint::Extern(outpoint), noise_engine, nonce)
     }
 
-    pub fn with(outpoint: WOutpoint, mut noise_engine: Sha256, nonce: u64) -> Self {
-        noise_engine.input_raw(&nonce.to_be_bytes());
-        match outpoint {
-            WOutpoint::Wout(wout) => {
-                noise_engine.input_raw(&[WOutpoint::ALL_VARIANTS[0].0]);
-                noise_engine.input_raw(&wout.to_u32().to_be_bytes());
-            }
-            WOutpoint::Extern(outpoint) => {
-                noise_engine.input_raw(&[WOutpoint::ALL_VARIANTS[1].0]);
-                noise_engine.input_raw(outpoint.txid.as_ref());
-                noise_engine.input_raw(&outpoint.vout.to_u32().to_be_bytes());
-            }
-        }
-        let mut noise = [0xFFu8; 40];
-        noise[..32].copy_from_slice(&noise_engine.finish());
+    pub fn with(outpoint: WOutpoint, noise_engine: Sha256, nonce: u64) -> Self {
         Self {
             primary: outpoint,
-            secondary: TxoSealExt::Noise(Noise::from(Bytes::from(noise))),
+            secondary: TxoSealExt::Noise(Noise::with(outpoint, noise_engine, nonce)),
         }
     }
 }

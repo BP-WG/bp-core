@@ -27,17 +27,41 @@ use core::fmt::Debug;
 
 use amplify::{ByteArray, Bytes, Bytes32};
 use bc::{Outpoint, Tx, Txid};
-use commit_verify::{CommitId, ConvolveVerifyError, EmbedVerifyError, ReservedBytes};
+use commit_verify::{
+    CommitId, ConvolveVerifyError, DigestExt, EmbedVerifyError, ReservedBytes, Sha256,
+};
 use dbc::opret::{OpretError, OpretProof};
 use dbc::tapret::TapretProof;
 use single_use_seals::{ClientSideWitness, PublishedWitness, SealWitness, SingleUseSeal};
-use strict_encoding::StrictDumb;
+use strict_encoding::{StrictDumb, StrictSum};
+
+use crate::WOutpoint;
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct Noise(Bytes<40>);
+
+impl Noise {
+    pub fn with(outpoint: WOutpoint, mut noise_engine: Sha256, nonce: u64) -> Self {
+        noise_engine.input_raw(&nonce.to_be_bytes());
+        match outpoint {
+            WOutpoint::Wout(wout) => {
+                noise_engine.input_raw(&[WOutpoint::ALL_VARIANTS[0].0]);
+                noise_engine.input_raw(&wout.to_u32().to_be_bytes());
+            }
+            WOutpoint::Extern(outpoint) => {
+                noise_engine.input_raw(&[WOutpoint::ALL_VARIANTS[1].0]);
+                noise_engine.input_raw(outpoint.txid.as_ref());
+                noise_engine.input_raw(&outpoint.vout.to_u32().to_be_bytes());
+            }
+        }
+        let mut noise = [0xFFu8; 40];
+        noise[..32].copy_from_slice(&noise_engine.finish());
+        Self(noise.into())
+    }
+}
 
 pub mod mmb {
     use amplify::confinement::SmallOrdMap;
