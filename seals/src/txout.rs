@@ -37,7 +37,8 @@ use strict_encoding::{StrictDumb, StrictSum};
 
 use crate::WOutpoint;
 
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, From)]
+#[display("{0:x}")]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
@@ -234,15 +235,14 @@ pub struct Proof {
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
+#[display(inner)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE, tags = custom)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(untagged))]
 pub enum TxoSealExt {
-    #[display("~")]
     #[strict_type(tag = 0)]
     Noise(Noise),
 
-    #[display(inner)]
     #[strict_type(tag = 1)]
     Fallback(Outpoint),
 }
