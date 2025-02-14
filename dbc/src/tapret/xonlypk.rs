@@ -28,11 +28,7 @@ use crate::tapret::tapscript::TapretCommitment;
 /// Errors during tapret commitment embedding into x-only public key.
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
 #[display(doc_comments)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 pub enum TapretKeyError {
     /// tapret node partner {0} contains alternative commitment
     AlternativeCommitment(TapretNodePartner),

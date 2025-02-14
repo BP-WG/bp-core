@@ -75,11 +75,7 @@ impl<const LEN: usize> From<InvalidPubkey<LEN>> for DecodeError {
 #[wrapper_mut(DerefMut)]
 #[derive(StrictType, StrictDumb)]
 #[strict_type(lib = LIB_NAME_BITCOIN, dumb = Self::dumb())]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct XOnlyPk(XOnlyPublicKey);
 
 impl XOnlyPk {
@@ -173,11 +169,7 @@ impl InternalKeypair {
 #[wrapper_mut(DerefMut)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct InternalPk(
     #[from]
     #[from(XOnlyPublicKey)]
@@ -237,11 +229,7 @@ impl From<InternalPk> for [u8; 32] {
 #[wrapper_mut(DerefMut)]
 #[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct OutputPk(XOnlyPk);
 
 impl OutputPk {
@@ -280,11 +268,7 @@ pub trait IntoTapHash {
 #[wrapper(Index, RangeOps, AsSlice, BorrowSlice, Hex, Display, FromStr)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct TapSighash(
     #[from]
     #[from([u8; 32])]
@@ -311,11 +295,7 @@ impl TapSighash {
 #[wrapper(Index, RangeOps, BorrowSlice, Hex, Display, FromStr)]
 #[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct TapLeafHash(
     #[from]
     #[from([u8; 32])]
@@ -348,11 +328,7 @@ impl IntoTapHash for TapLeafHash {
 #[wrapper(Index, RangeOps, BorrowSlice, Hex, Display, FromStr)]
 #[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct TapBranchHash(
     #[from]
     #[from([u8; 32])]
@@ -376,11 +352,7 @@ impl IntoTapHash for TapBranchHash {
 #[wrapper(Index, RangeOps, AsSlice, BorrowSlice, Hex, Display, FromStr)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct TapNodeHash(
     #[from]
     #[from([u8; 32])]
@@ -398,11 +370,7 @@ impl IntoTapHash for TapNodeHash {
 #[wrapper_mut(DerefMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct TapMerklePath(Confined<Vec<TapBranchHash>, 0, 128>);
 
 impl IntoIterator for TapMerklePath {
@@ -458,11 +426,7 @@ pub struct InvalidLeafVer(u8);
 
 /// The leaf version for tapleafs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 pub enum LeafVer {
     /// BIP-342 tapscript.
     #[default]
@@ -546,11 +510,7 @@ impl UpperHex for LeafVer {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN, dumb = { Self(0x51) })]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct FutureLeafVer(u8);
 
 impl FutureLeafVer {
@@ -583,7 +543,7 @@ impl UpperHex for FutureLeafVer {
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default, Display)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[display("{version:04x} {script:x}")]
 pub struct LeafScript {
     pub version: LeafVer,
@@ -658,11 +618,7 @@ pub enum TapCode {
 #[wrapper_mut(DerefMut, AsSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct TapScript(ScriptBytes);
 // TODO: impl Display/FromStr for TapScript providing correct opcodes
 
@@ -685,8 +641,8 @@ impl TapScript {
     /// Constructs script object assuming the script length is less than 4GB.
     /// Panics otherwise.
     #[inline]
-    pub fn from_unsafe(script_bytes: Vec<u8>) -> Self {
-        Self(ScriptBytes::from_unsafe(script_bytes))
+    pub fn from_checked(script_bytes: Vec<u8>) -> Self {
+        Self(ScriptBytes::from_checked(script_bytes))
     }
 
     #[inline]
@@ -737,11 +693,7 @@ pub struct InvalidParityValue(pub u8);
 #[display(lowercase)]
 #[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
 #[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 #[repr(u8)]
 pub enum Parity {
     /// Even parity.
@@ -797,11 +749,7 @@ impl BitXor for Parity {
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 pub struct ControlBlock {
     /// The tapleaf version.
     pub leaf_version: LeafVer,
@@ -883,9 +831,8 @@ impl Annex {
 #[cfg(feature = "serde")]
 mod _serde {
     use amplify::hex::{FromHex, ToHex};
-    use serde::{Deserialize, Serialize};
-    use serde_crate::de::Error;
-    use serde_crate::{Deserializer, Serializer};
+    use serde::de::Error;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
     use super::*;
 

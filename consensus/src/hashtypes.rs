@@ -30,11 +30,7 @@ use crate::{
 #[wrapper(Index, RangeOps, AsSlice, BorrowSlice, Hex, Display, FromStr)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct PubkeyHash(
     #[from]
     #[from([u8; 20])]
@@ -79,11 +75,7 @@ impl From<LegacyPk> for PubkeyHash {
 #[wrapper(Index, RangeOps, AsSlice, BorrowSlice, Hex, Display, FromStr)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct ScriptHash(
     #[from]
     #[from([u8; 20])]
@@ -108,11 +100,7 @@ impl From<&RedeemScript> for ScriptHash {
 #[wrapper(Index, RangeOps, AsSlice, BorrowSlice, Hex, Display, FromStr)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct WPubkeyHash(
     #[from]
     #[from([u8; 20])]
@@ -137,11 +125,7 @@ impl From<CompressedPk> for WPubkeyHash {
 #[wrapper(Index, RangeOps, AsSlice, BorrowSlice, Hex, Display, FromStr)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct WScriptHash(
     #[from]
     #[from([u8; 32])]

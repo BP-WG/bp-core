@@ -75,11 +75,9 @@ pub use tapscript::{TapretCommitment, TAPRET_SCRIPT_COMMITMENT_PREFIX};
 pub use tx::TapretError;
 pub use xonlypk::TapretKeyError;
 
-use crate::proof::Method;
-use crate::{Proof, LIB_NAME_BPCORE};
+use crate::LIB_NAME_BPCORE;
 
-/// Marker non-instantiable enum defining LNPBP-12 taproot OP_RETURN (`tapret`)
-/// protocol.
+/// Marker non-instantiable enum defining LNPBP-12 taproot OP_RETURN (`tapret`) protocol.
 pub enum TapretFirst {}
 
 impl CommitmentProtocol for TapretFirst {}
@@ -103,11 +101,7 @@ pub enum TapretPathError {
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BPCORE)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 #[display("{left_node_hash}:{right_node_hash}")]
 pub struct TapretRightBranch {
     left_node_hash: TapNodeHash,
@@ -170,11 +164,7 @@ impl StrictDecode for TapretRightBranch {
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, From)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BPCORE, tags = order, dumb = Self::RightLeaf(default!()))]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 #[display(inner)]
 pub enum TapretNodePartner {
     /// Tapret commitment is on the right side of the tree; i.e the node
@@ -258,11 +248,7 @@ impl TapretNodePartner {
 #[derive(Getters, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BPCORE)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 pub struct TapretPathProof {
     /// Information about the sibling at level 1 of the tree
     partner_node: Option<TapretNodePartner>,
@@ -344,11 +330,7 @@ impl<'data> IntoIterator for &'data TapretPathProof {
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BPCORE)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 pub struct TapretProof {
     /// A merkle path to the commitment inside the taproot script tree. For
     /// each node it also must hold information about the sibling in form of
@@ -373,14 +355,9 @@ impl TapretProof {
         let merkle_root = self.path_proof.original_merkle_root();
         ScriptPubkey::p2tr(self.internal_pk, merkle_root)
     }
-}
 
-impl Proof<Method> for TapretProof {
-    type Error = ConvolveVerifyError;
-
-    fn method(&self) -> Method { Method::TapretFirst }
-
-    fn verify(&self, msg: &Commitment, tx: &Tx) -> Result<(), ConvolveVerifyError> {
+    /// Verifies tapret commitment agains the proof.
+    pub fn verify(&self, msg: &Commitment, tx: &Tx) -> Result<(), ConvolveVerifyError> {
         ConvolveCommitProof::<_, Tx, _>::verify(self, msg, tx)
     }
 }

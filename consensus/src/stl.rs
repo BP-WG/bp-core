@@ -32,9 +32,9 @@ use crate::{
 };
 
 pub const LIB_ID_BP_TX: &str =
-    "stl:9WwTYiP2-OadKCZP-cR0bJ!Y-qruINYX-bXZFj8Y-fsQoGgo#signal-color-cipher";
+    "stl:9WwTYiP2-OadKCZP-cR0bJ_Y-qruINYX-bXZFj8Y-fsQoGgo#signal-color-cipher";
 pub const LIB_ID_BP_CONSENSUS: &str =
-    "stl:q7G95wzt-SxT2BMV-t!PokBt-wNYgZTu-AaYAtM3-rYjlzs4#agenda-wolf-pagoda";
+    "stl:wUfEZiWN-tvMpLYq-~h1iQC3-bHNSjiW-h9d7O0t-i154uQ0#quiz-patent-exit";
 
 #[deprecated(since = "0.10.8", note = "use _bp_tx_stl instead")]
 fn _bitcoin_stl() -> Result<TypeLib, CompileError> { _bp_tx_stl() }

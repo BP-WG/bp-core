@@ -32,11 +32,7 @@ use crate::{BlockDataParseError, ConsensusDecode, ConsensusEncode, LIB_NAME_BITC
 #[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, From)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 #[wrapper(BorrowSlice, Index, RangeOps, Debug, Hex, Display, FromStr)]
 pub struct BlockHash(
     #[from]
@@ -47,11 +43,7 @@ pub struct BlockHash(
 #[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, From)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 #[wrapper(BorrowSlice, Index, RangeOps, Debug, Hex, Display, FromStr)]
 pub struct BlockMerkleRoot(
     #[from]
@@ -63,11 +55,7 @@ pub struct BlockMerkleRoot(
 #[display(LowerHex)]
 #[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", rename_all = "camelCase")
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 pub struct BlockHeader {
     /// Block version, now repurposed for soft fork signalling.
     pub version: i32,

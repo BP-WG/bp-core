@@ -54,7 +54,7 @@ extern crate amplify;
 extern crate strict_encoding;
 #[cfg(feature = "serde")]
 #[macro_use]
-extern crate serde_crate as serde;
+extern crate serde;
 
 #[cfg(feature = "stl")]
 pub mod stl;
