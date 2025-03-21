@@ -21,6 +21,7 @@
 
 use std::fmt;
 use std::fmt::{Formatter, LowerHex};
+use std::num::NonZeroU32;
 use std::str::FromStr;
 
 use amplify::hex::{FromHex, ToHex};
@@ -28,6 +29,8 @@ use amplify::{ByteArray, Bytes32StrRev, Wrapper};
 use commit_verify::{DigestExt, Sha256};
 
 use crate::{BlockDataParseError, ConsensusDecode, ConsensusEncode, LIB_NAME_BITCOIN};
+
+pub type BlockHeight = NonZeroU32;
 
 #[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, From)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
