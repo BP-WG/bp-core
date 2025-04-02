@@ -17,7 +17,7 @@ version = "0.11.1-alpha.1"
 authors = ["Dr Maxim Orlovsky <orlovsky@lnp-bp.org>"]
 homepage = "https://github.com/BP-WG"
 repository = "https://github.com/BP-WG/bp-core"
-rust-version = "1.77.0" # Due to `rustfix`
+rust-version = "1.81.0"
 edition = "2021"
 license = "Apache-2.0"
 
@@ -89,3 +89,6 @@ wasm-bindgen-test = "0.3"
 
 [package.metadata.docs.rs]
 features = ["all"]
+
+[patch.crates-io]
+commit_verify = { git = "https://github.com/zoedberg/client_side_validation", branch = "0.11.1-2" }
