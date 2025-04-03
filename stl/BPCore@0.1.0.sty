@@ -1,5 +1,5 @@
 {-
-  Id: stl:IXCrofWg-Kg2!RIk-Hzlc5GO-7tH2hNB-YeBTdmN-$HZ0tPw#symbol-tropic-grand
+  Id: stl:abxDwrpE-mSRfNo!-x4bvuzi-vlsho8Y-uyxOx7l-vkBy9KE#alfonso-andrea-nitro
   Name: BPCore
   Version: 0.1.0
   Description: Bitcoin client-side-validation library
@@ -12,16 +12,8 @@
 typelib BPCore
 
 import CommitVerify#miller-pancake-elastic
-  use MerkleTree#patriot-answer-oliver
-  use ProtocolId#shadow-eclipse-program
-  use Message#druid-blitz-rover
   use MerkleHash#horse-popcorn-bundle
-  use MerkleBlock#pegasus-delta-eddie
   use MerkleProof#price-aloha-grid
-  use TreeNode#kansas-scarlet-ricardo
-
-import Std#ralph-blue-lucky
-  use U5#orbit-graph-sonic
 
 import Bitcoin#signal-color-cipher
   use Vout#brush-gloria-heroic
@@ -34,23 +26,11 @@ import Bitcoin#signal-color-cipher
   use XOnlyPk#clever-swim-carpet
 
 
-@mnemonic(bread-poncho-pattern)
-data AnchorMerkleBlockOpretProof : mpcProof CommitVerify.MerkleBlock, dbcProof OpretProof
+@mnemonic(percent-active-chess)
+data AnchorOpretProof  : mpcProof CommitVerify.MerkleProof, dbcProof OpretProof
 
-@mnemonic(madrid-vampire-little)
-data AnchorMerkleBlockTapretProof : mpcProof CommitVerify.MerkleBlock, dbcProof TapretProof
-
-@mnemonic(almond-gilbert-urban)
-data AnchorMerkleProofOpretProof : mpcProof CommitVerify.MerkleProof, dbcProof OpretProof
-
-@mnemonic(llama-colony-juice)
-data AnchorMerkleProofTapretProof : mpcProof CommitVerify.MerkleProof, dbcProof TapretProof
-
-@mnemonic(season-perform-tropic)
-data AnchorMerkleTreeOpretProof : mpcProof CommitVerify.MerkleTree, dbcProof OpretProof
-
-@mnemonic(europe-mister-imitate)
-data AnchorMerkleTreeTapretProof : mpcProof CommitVerify.MerkleTree, dbcProof TapretProof
+@mnemonic(balance-patrol-fractal)
+data AnchorTapretProof : mpcProof CommitVerify.MerkleProof, dbcProof TapretProof
 
 @mnemonic(metro-mars-canada)
 data BlindSealTxPtr    : txid TxPtr

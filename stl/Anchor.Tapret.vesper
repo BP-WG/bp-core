@@ -1,4 +1,4 @@
-AnchorMerkleProofTapretProof rec
+AnchorTapretProof rec
   mpcProof rec MerkleProof
     pos is U32
     cofactor is U16

@@ -1,0 +1,7 @@
+AnchorOpretProof rec
+  mpcProof rec MerkleProof
+    pos is U32
+    cofactor is U16
+    path list len=0..32
+      element bytes len=32 aka=MerkleHash
+  dbcProof is Unit aka=OpretProof
