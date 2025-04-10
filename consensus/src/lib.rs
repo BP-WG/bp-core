@@ -67,7 +67,7 @@ pub mod stl;
 mod coding;
 mod sigcache;
 
-pub use block::{BlockHash, BlockHeader, BlockMerkleRoot};
+pub use block::{Block, BlockHash, BlockHeader, BlockMerkleRoot};
 pub use coding::{
     ByteStr, ConsensusDataError, ConsensusDecode, ConsensusDecodeError, ConsensusEncode, LenVarInt,
     VarInt, VarIntArray, VarIntBytes,
@@ -86,8 +86,8 @@ pub use taproot::{
     MIDSTATE_TAPSIGHASH, TAPROOT_ANNEX_PREFIX, TAPROOT_LEAF_MASK, TAPROOT_LEAF_TAPSCRIPT,
 };
 pub use timelocks::{
-    InvalidTimelock, LockHeight, LockTime, LockTimestamp, SeqNo, TimelockParseError,
-    LOCKTIME_THRESHOLD, SEQ_NO_CSV_DISABLE_MASK, SEQ_NO_CSV_TYPE_MASK,
+    InvalidTimelock, LockHeight, LockTime, LockTimestamp, SeqNo, TimeLockInterval,
+    TimelockParseError, LOCKTIME_THRESHOLD, SEQ_NO_CSV_DISABLE_MASK, SEQ_NO_CSV_TYPE_MASK,
 };
 pub use tx::{
     BlockDataParseError, Outpoint, OutpointParseError, Sats, Tx, TxIn, TxOut, TxVer, Txid, Vout,

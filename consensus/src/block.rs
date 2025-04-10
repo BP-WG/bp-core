@@ -27,7 +27,9 @@ use amplify::hex::{FromHex, ToHex};
 use amplify::{ByteArray, Bytes32StrRev, Wrapper};
 use commit_verify::{DigestExt, Sha256};
 
-use crate::{BlockDataParseError, ConsensusDecode, ConsensusEncode, LIB_NAME_BITCOIN};
+use crate::{
+    BlockDataParseError, ConsensusDecode, ConsensusEncode, Tx, VarIntArray, LIB_NAME_BITCOIN,
+};
 
 #[derive(Wrapper, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, From)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
@@ -94,6 +96,35 @@ impl BlockHeader {
         double.input_raw(&enc.finish());
         BlockHash::from_byte_array(double.finish())
     }
+}
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Display)]
+#[display(LowerHex)]
+#[derive(StrictType, StrictEncode, StrictDecode, StrictDumb)]
+#[strict_type(lib = LIB_NAME_BITCOIN)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct Block {
+    pub header: BlockHeader,
+    pub transactions: VarIntArray<Tx>,
+}
+
+impl LowerHex for Block {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.consensus_serialize().to_hex())
+    }
+}
+
+impl FromStr for Block {
+    type Err = BlockDataParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let data = Vec::<u8>::from_hex(s)?;
+        Block::consensus_deserialize(data).map_err(BlockDataParseError::from)
+    }
+}
+
+impl Block {
+    pub fn block_hash(&self) -> BlockHash { self.header.block_hash() }
 }
 
 #[cfg(test)]

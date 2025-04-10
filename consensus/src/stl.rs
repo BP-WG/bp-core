@@ -22,11 +22,10 @@
 
 use strict_types::{CompileError, LibBuilder, TypeLib};
 
-use crate::timelocks::TimeLockInterval;
 use crate::{
-    Bip340Sig, BlockHeader, ByteStr, CompressedPk, ControlBlock, FutureLeafVer, InternalPk,
-    LeafScript, LegacyPk, LegacySig, LockHeight, LockTimestamp, OpCode, OutputPk, PubkeyHash,
-    RedeemScript, ScriptHash, TapCode, TapLeafHash, TapNodeHash, TapScript, Tx, UncompressedPk,
+    Bip340Sig, Block, ByteStr, CompressedPk, ControlBlock, FutureLeafVer, InternalPk, LeafScript,
+    LegacyPk, LegacySig, LockHeight, LockTimestamp, OpCode, OutputPk, PubkeyHash, RedeemScript,
+    ScriptHash, TapCode, TapLeafHash, TapNodeHash, TapScript, TimeLockInterval, Tx, UncompressedPk,
     VBytes, VarInt, WPubkeyHash, WScriptHash, WeightUnits, WitnessProgram, WitnessScript,
     WitnessVer, Wtxid, LIB_NAME_BITCOIN,
 };
@@ -34,7 +33,7 @@ use crate::{
 pub const LIB_ID_BP_TX: &str =
     "stl:9WwTYiP2-OadKCZP-cR0bJ_Y-qruINYX-bXZFj8Y-fsQoGgo#signal-color-cipher";
 pub const LIB_ID_BP_CONSENSUS: &str =
-    "stl:wUfEZiWN-tvMpLYq-~h1iQC3-bHNSjiW-h9d7O0t-i154uQ0#quiz-patent-exit";
+    "stl:ZjGQdfie-nvWslJH-kAQUr7C-CZbacz~-x4ssYLO-0iSA23o#costume-ohio-sharp";
 
 #[deprecated(since = "0.10.8", note = "use _bp_tx_stl instead")]
 fn _bitcoin_stl() -> Result<TypeLib, CompileError> { _bp_tx_stl() }
@@ -71,7 +70,7 @@ fn _bp_consensus_stl() -> Result<TypeLib, CompileError> {
     .transpile::<TapCode>()
     .transpile::<TapScript>()
     .transpile::<ControlBlock>()
-    .transpile::<BlockHeader>()
+    .transpile::<Block>()
     .transpile::<TimeLockInterval>()
     .transpile::<LockTimestamp>()
     .transpile::<LockHeight>()
