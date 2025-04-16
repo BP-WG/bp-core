@@ -73,6 +73,20 @@ impl BlockHash {
         0xbf5beb43_6012afca,
         0x590b1a11_466e2206,
     ]);
+    #[cfg(feature = "liquid")]
+    pub const LIQUID_MAINNET: BlockHash = BlockHash::from_u64_be_array([
+        0x14662758_36220db2,
+        0x944ca059_a3a10ef6,
+        0xfd2ea684_b0688d2c,
+        0x37929688_8a206003,
+    ]);
+    #[cfg(feature = "liquid")]
+    pub const LIQUID_TESTNET: BlockHash = BlockHash::from_u64_be_array([
+        0xa771da8e_52ee6ad5,
+        0x81ed1e9a_99825e5b,
+        0x3b799222_5534eaa2,
+        0xae23244f_e26ab1c1,
+    ]);
 
     pub const fn from_u64_be_array(array: [u64; 4]) -> Self {
         let mut buf = [0u8; 32];
@@ -231,7 +245,7 @@ mod test {
     }
 
     #[test]
-    fn genesis_hashes() {
+    fn bitcoin_genesis_hashes() {
         assert_eq!(
             &BlockHash::GENESIS_MAINNET.to_string(),
             "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"
@@ -251,6 +265,19 @@ mod test {
         assert_eq!(
             &BlockHash::GENESIS_REGTEST.to_string(),
             "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "liquid")]
+    fn liquid_genesis_hashes() {
+        assert_eq!(
+            &BlockHash::LIQUID_MAINNET.to_string(),
+            "1466275836220db2944ca059a3a10ef6fd2ea684b0688d2c379296888a206003"
+        );
+        assert_eq!(
+            &BlockHash::LIQUID_TESTNET.to_string(),
+            "a771da8e52ee6ad581ed1e9a99825e5b3b7992225534eaa2ae23244fe26ab1c1"
         );
     }
 }

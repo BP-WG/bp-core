@@ -26,7 +26,10 @@ chrono = { version = "0.4.38", optional = true }
 
 [features]
 default = ["chrono"]
-all = ["chrono", "stl", "serde"]
+all = ["liquid", "chrono", "stl", "serde"]
+
+liquid = []
+
 stl = ["strict_types"]
 serde = [
     "dep:serde",
