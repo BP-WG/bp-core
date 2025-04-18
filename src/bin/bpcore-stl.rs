@@ -34,7 +34,7 @@ use strict_types::{parse_args, SystemBuilder};
 fn main() {
     let (format, dir) = parse_args();
 
-    let mut lib = bc::stl::bp_tx_stl();
+    let mut lib = bp_tx_stl();
     lib.name = libname!("Tx");
     lib.serialize(
         format,
@@ -81,14 +81,14 @@ fn main() {
         .expect("unable to write to the file");
 
     let std = std_stl();
-    let tx = bp_tx_stl();
+    let consensus = bp_consensus_stl();
     let bp = bp_core_stl();
     let cv = commit_verify_stl();
 
     let sys = SystemBuilder::new()
         .import(bp)
         .unwrap()
-        .import(tx)
+        .import(consensus)
         .unwrap()
         .import(cv)
         .unwrap()

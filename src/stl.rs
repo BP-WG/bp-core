@@ -31,14 +31,14 @@ use strict_types::{CompileError, LibBuilder, TypeLib};
 /// Strict types id for the library providing data types from [`dbc`] and
 /// [`seals`] crates.
 pub const LIB_ID_BPCORE: &str =
-    "stl:abxDwrpE-mSRfNo!-x4bvuzi-vlsho8Y-uyxOx7l-vkBy9KE#alfonso-andrea-nitro";
+    "stl:Pes7Egpg-6IfFCxl-fFGcbh6-sLkFInB-w26eHfd-unAO5JE#juliet-super-dominic";
 
 fn _bp_core_stl() -> Result<TypeLib, CompileError> {
-    LibBuilder::new(libname!(LIB_NAME_BPCORE), tiny_bset! {
-        strict_types::stl::std_stl().to_dependency(),
-        bc::stl::bp_tx_stl().to_dependency(),
-        commit_verify::stl::commit_verify_stl().to_dependency()
-    })
+    LibBuilder::with(libname!(LIB_NAME_BPCORE), [
+        strict_types::stl::std_stl().to_dependency_types(),
+        bc::stl::bp_consensus_stl().to_dependency_types(),
+        commit_verify::stl::commit_verify_stl().to_dependency_types(),
+    ])
     .transpile::<dbc::Anchor<TapretProof>>()
     .transpile::<dbc::Anchor<OpretProof>>()
     .transpile::<seals::txout::ExplicitSeal<TxPtr>>()

@@ -7,21 +7,21 @@
 
 Seals vesper lexicon=types+commitments
 
-SecretSeal commitment hasher=SHA256 tagged=urn:lnp-bp:seals:secret#2024-02-03
-  BlindSealTxid serialized
+commitment SecretSeal, hasher SHA256, tagged urn:lnp-bp:seals:secret#2024-02-03
+  serialized BlindSealTxid
 
-SecretSeal commitment hasher=SHA256 tagged=urn:lnp-bp:seals:secret#2024-02-03
-  BlindSealTxPtr serialized
+commitment SecretSeal, hasher SHA256, tagged urn:lnp-bp:seals:secret#2024-02-03
+  serialized BlindSealTxPtr
 
-BlindSealTxid rec
-  txid bytes len=32 aka=Txid
-  vout is U32 aka=Vout
-  blinding is U64
+rec BlindSealTxid
+  bytes txid, len 32, aka Txid
+  is vout, U32, aka Vout
+  is blinding, U64
 
-BlindSealTxPtr rec
-  txid union TxPtr
-    witnessTx is Unit tag=0
-    txid bytes len=32 wrapped aka=Txid tag=1
-  vout is U32 aka=Vout
-  blinding is U64
+rec BlindSealTxPtr
+  union txid, TxPtr
+    is witnessTx, Unit, tag 0
+    bytes txid, len 32, wrapped, aka Txid, tag 1
+  is vout, U32, aka Vout
+  is blinding, U64
 
