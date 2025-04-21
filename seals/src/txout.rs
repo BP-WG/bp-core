@@ -331,13 +331,10 @@ impl ClientSideWitness for Anchor {
             || self.mpc_proof != other.mpc_proof
             || self.dbc_proof != other.dbc_proof
             || self.fallback_proof != other.fallback_proof
+            || self.mmb_proof != other.mmb_proof
         {
             return Err(AnchorMergeError::AnchorMismatch);
         }
-        self.mmb_proof
-            .map
-            .extend(other.mmb_proof.map)
-            .map_err(|_| AnchorMergeError::TooManyInputs)?;
         Ok(())
     }
 }
