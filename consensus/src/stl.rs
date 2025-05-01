@@ -39,13 +39,13 @@ pub const LIB_ID_BP_CONSENSUS: &str =
 fn _bitcoin_stl() -> Result<TypeLib, CompileError> { _bp_tx_stl() }
 
 fn _bp_tx_stl() -> Result<TypeLib, CompileError> {
-    LibBuilder::new(libname!(LIB_NAME_BITCOIN), None).transpile::<Tx>().compile()
+    LibBuilder::with(libname!(LIB_NAME_BITCOIN), None).transpile::<Tx>().compile()
 }
 
 fn _bp_consensus_stl() -> Result<TypeLib, CompileError> {
-    LibBuilder::new(libname!(LIB_NAME_BITCOIN), tiny_bset! {
-        strict_types::stl::std_stl().to_dependency(),
-    })
+    LibBuilder::with(libname!(LIB_NAME_BITCOIN), [
+        strict_types::stl::std_stl().to_dependency_types()
+    ])
     .transpile::<LegacySig>()
     .transpile::<Bip340Sig>()
     .transpile::<OpCode>()

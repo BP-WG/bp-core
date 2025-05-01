@@ -47,9 +47,6 @@ pub extern crate dbc;
 /// Re-export of `bp-seals` crate.
 pub extern crate seals;
 
-#[cfg(feature = "stl")]
-#[macro_use]
-extern crate amplify;
 #[macro_use]
 extern crate strict_encoding;
 #[cfg(feature = "serde")]

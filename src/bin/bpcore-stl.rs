@@ -81,21 +81,21 @@ fn main() {
         .expect("unable to write to the file");
 
     let std = std_stl();
-    let tx = bp_tx_stl();
+    let bc = bp_consensus_stl();
     let bp = bp_core_stl();
     let cv = commit_verify_stl();
 
     let sys = SystemBuilder::new()
         .import(bp)
         .unwrap()
-        .import(tx)
+        .import(bc)
         .unwrap()
         .import(cv)
         .unwrap()
         .import(std)
         .unwrap()
         .finalize()
-        .expect("not all libraries present");
+        .expect("not all libraries are present");
 
     let dir = dir.unwrap_or_else(|| ".".to_owned());
 
