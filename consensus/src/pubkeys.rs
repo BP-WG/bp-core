@@ -29,6 +29,7 @@ use strict_encoding::{
     DecodeError, ReadStruct, ReadTuple, StrictDecode, StrictEncode, TypedRead, TypedWrite,
     WriteStruct,
 };
+use strict_types::{StrictDeserialize, StrictSerialize};
 
 use crate::LIB_NAME_BITCOIN;
 
@@ -63,6 +64,9 @@ pub enum InvalidPubkey<const LEN: usize> {
     serde(crate = "serde_crate", transparent)
 )]
 pub struct CompressedPk(PublicKey);
+
+impl StrictSerialize for CompressedPk {}
+impl StrictDeserialize for CompressedPk {}
 
 impl CompressedPk {
     fn dumb() -> Self { Self(PublicKey::from_slice(&[2u8; 33]).unwrap()) }

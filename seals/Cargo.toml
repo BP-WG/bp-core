@@ -18,13 +18,13 @@ path = "src/lib.rs"
 
 [dependencies]
 amplify = { workspace = true }
-baid64 = "0.2.2"
+baid64 = "0.4.1"
 single_use_seals = { workspace = true }
 commit_verify = { workspace = true }
 strict_encoding = { workspace = true }
 bp-consensus = { workspace = true }
 bp-dbc = { workspace = true }
-rand = "0.8.5"
+rand = "0.9.1"
 serde_crate = { workspace = true, optional = true }
 
 [features]

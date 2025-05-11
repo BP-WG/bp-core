@@ -34,7 +34,7 @@ use strict_types::{parse_args, SystemBuilder};
 fn main() {
     let (format, dir) = parse_args();
 
-    let mut lib = bc::stl::bp_tx_stl();
+    let mut lib = bp_tx_stl();
     lib.name = libname!("Tx");
     lib.serialize(
         format,
@@ -81,14 +81,14 @@ fn main() {
         .expect("unable to write to the file");
 
     let std = std_stl();
-    let tx = bp_tx_stl();
+    let consensus = bp_consensus_stl();
     let bp = bp_core_stl();
     let cv = commit_verify_stl();
 
     let sys = SystemBuilder::new()
         .import(bp)
         .unwrap()
-        .import(tx)
+        .import(consensus)
         .unwrap()
         .import(cv)
         .unwrap()
@@ -122,15 +122,8 @@ Seals vesper lexicon=types+commitments
     let tt = sys.type_tree("BPCore.BlindSealTxPtr").unwrap();
     writeln!(file, "{tt}").unwrap();
 
-    let tt = sys.type_tree("BPCore.AnchorMerkleTreeTapretProof").unwrap();
-    fs::write(format!("{dir}/Anchor.MerkleTree.Tapret.vesper"), format!("{tt}")).unwrap();
-
-    let tt = sys.type_tree("BPCore.AnchorMerkleTreeOpretProof").unwrap();
-    fs::write(format!("{dir}/Anchor.MerkleTree.Opret.vesper"), format!("{tt}")).unwrap();
-
-    let tt = sys.type_tree("BPCore.AnchorMerkleBlockTapretProof").unwrap();
-    fs::write(format!("{dir}/Anchor.MerkleBlock.Tapret.vesper"), format!("{tt}")).unwrap();
-
-    let tt = sys.type_tree("BPCore.AnchorMerkleProofTapretProof").unwrap();
-    fs::write(format!("{dir}/Anchor.MerkleProof.Tapret.vesper"), format!("{tt}")).unwrap();
+    let tt = sys.type_tree("BPCore.AnchorTapretProof").unwrap();
+    fs::write(format!("{dir}/Anchor.Tapret.vesper"), format!("{tt}")).unwrap();
+    let tt = sys.type_tree("BPCore.AnchorOpretProof").unwrap();
+    fs::write(format!("{dir}/Anchor.Opret.vesper"), format!("{tt}")).unwrap();
 }

@@ -28,7 +28,7 @@ use std::str::FromStr;
 use amplify::hex;
 use bc::{Outpoint, Txid, Vout};
 use commit_verify::{CommitId, Conceal};
-use rand::{thread_rng, RngCore};
+use rand::{rng, RngCore};
 use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
 
 use super::WitnessVoutError;
@@ -130,16 +130,16 @@ impl<Id: SealTxid> TxoSeal for BlindSeal<Id> {
 }
 
 impl<Id: SealTxid> BlindSeal<Id> {
-    /// Creates new seal for the provided outpoint. Uses `thread_rng` to initialize blinding
+    /// Creates new seal for the provided outpoint. Uses `rng` to initialize blinding
     /// factor.
     pub fn rand_from(outpoint: Outpoint) -> Self {
         BlindSeal::new_random(outpoint.txid, outpoint.vout)
     }
 
-    /// Creates new seal for the provided outpoint. Uses `thread_rng` to initialize blinding
+    /// Creates new seal for the provided outpoint. Uses `rng` to initialize blinding
     /// factor.
     pub fn new_random(txid: impl Into<Id>, vout: impl Into<Vout>) -> Self {
-        BlindSeal::with_rng(txid, vout, &mut thread_rng())
+        BlindSeal::with_rng(txid, vout, &mut rng())
     }
 
     /// Creates new seal for the provided outpoint. Uses provided random number generator to create
@@ -165,11 +165,11 @@ impl<Id: SealTxid> BlindSeal<Id> {
 
 impl BlindSeal<TxPtr> {
     /// Creates new seal pointing to a witness transaction of another seal. Takes witness
-    /// transaction output number as argument. Uses `thread_rng` to initialize blinding factor.
+    /// transaction output number as argument. Uses `rng` to initialize blinding factor.
     #[inline]
     pub fn new_random_vout(vout: impl Into<Vout>) -> Self {
         Self {
-            blinding: thread_rng().next_u64(),
+            blinding: rng().next_u64(),
             txid: TxPtr::WitnessTx,
             vout: vout.into(),
         }
