@@ -25,13 +25,12 @@
 //! defined by LNPBP-4.
 
 use std::error::Error;
-use std::marker::PhantomData;
 
 use bc::Tx;
 use commit_verify::mpc::{self, Message, ProtocolId};
 use strict_encoding::{StrictDumb, StrictEncode};
 
-use crate::{DbcMethod, Method, LIB_NAME_BPCORE};
+use crate::LIB_NAME_BPCORE;
 
 mod dbc {
     pub use crate::Proof;
@@ -67,79 +66,26 @@ pub enum VerifyError<E: Error> {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", rename_all = "camelCase")
 )]
-pub struct Anchor<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod = Method> {
+pub struct Anchor<D: dbc::Proof> {
     /// Structured multi-protocol LNPBP-4 data the transaction commits to.
-    pub mpc_proof: L,
+    pub mpc_proof: mpc::MerkleProof,
 
     /// Proof of the DBC commitment.
     pub dbc_proof: D,
-
-    #[strict_type(skip)]
-    #[cfg_attr(feature = "serde", serde(skip))]
-    _method: PhantomData<M>,
 }
 
-impl<L: mpc::Proof + StrictDumb, D: dbc::Proof<M>, M: DbcMethod> Anchor<L, D, M> {
+impl<D: dbc::Proof> Anchor<D> {
     /// Constructs anchor for a given witness transaction id, MPC and DBC
     /// proofs.
-    pub fn new(mpc_proof: L, dbc_proof: D) -> Self {
+    pub fn new(mpc_proof: mpc::MerkleProof, dbc_proof: D) -> Self {
         Self {
             mpc_proof,
             dbc_proof,
-            _method: PhantomData,
         }
     }
-
-    /// Verifies whether one anchor matches another ancor.
-    ///
-    /// This is not the same as `Eq`, since two anchors may reveal different
-    /// messages in their MPC proofs, and this be non-equivalent, at the same
-    /// time matching each other , i.e. having the same merkle root and
-    /// producing the same commitments.
-    #[inline]
-    pub fn matches(&self, other: &Self) -> bool {
-        self.mpc_proof.matches(&other.mpc_proof) && self.dbc_proof == other.dbc_proof
-    }
 }
 
-/// Error merging two [`Anchor`]s.
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
-#[display(doc_comments)]
-pub enum MergeError {
-    /// Error merging two MPC proofs, which are unrelated.
-    #[display(inner)]
-    #[from]
-    MpcMismatch(mpc::MergeError),
-
-    /// anchors can't be merged since they have different DBC proofs.
-    DbcMismatch,
-}
-
-impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleProof, D, M> {
-    /// Reconstructs anchor containing merkle block
-    pub fn into_merkle_block(
-        self,
-        protocol_id: impl Into<ProtocolId>,
-        message: impl Into<Message>,
-    ) -> Result<Anchor<mpc::MerkleBlock, D, M>, mpc::InvalidProof> {
-        let lnpbp4_proof =
-            mpc::MerkleBlock::with(&self.mpc_proof, protocol_id.into(), message.into())?;
-        Ok(Anchor {
-            mpc_proof: lnpbp4_proof,
-            dbc_proof: self.dbc_proof,
-            _method: PhantomData,
-        })
-    }
-
-    /// Reconstructs anchor containing merkle block
-    pub fn to_merkle_block(
-        &self,
-        protocol_id: impl Into<ProtocolId>,
-        message: impl Into<Message>,
-    ) -> Result<Anchor<mpc::MerkleBlock, D, M>, mpc::InvalidProof> {
-        self.clone().into_merkle_block(protocol_id, message)
-    }
-
+impl<D: dbc::Proof> Anchor<D> {
     /// Verifies that the transaction commits to the anchor and the anchor
     /// commits to the given message under the given protocol.
     pub fn verify(
@@ -161,47 +107,5 @@ impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleProof, D, M> {
         message: impl Into<Message>,
     ) -> Result<mpc::Commitment, mpc::InvalidProof> {
         self.mpc_proof.convolve(protocol_id.into(), message.into())
-    }
-}
-
-impl<D: dbc::Proof<M>, M: DbcMethod> Anchor<mpc::MerkleBlock, D, M> {
-    /// Conceals all LNPBP-4 data except specific protocol and produces merkle
-    /// proof anchor.
-    pub fn to_merkle_proof(
-        &self,
-        protocol: impl Into<ProtocolId>,
-    ) -> Result<Anchor<mpc::MerkleProof, D, M>, mpc::LeafNotKnown> {
-        self.clone().into_merkle_proof(protocol)
-    }
-
-    /// Conceals all LNPBP-4 data except specific protocol and converts anchor
-    /// into merkle proof anchor.
-    pub fn into_merkle_proof(
-        self,
-        protocol: impl Into<ProtocolId>,
-    ) -> Result<Anchor<mpc::MerkleProof, D, M>, mpc::LeafNotKnown> {
-        let lnpbp4_proof = self.mpc_proof.to_merkle_proof(protocol.into())?;
-        Ok(Anchor {
-            mpc_proof: lnpbp4_proof,
-            dbc_proof: self.dbc_proof,
-            _method: PhantomData,
-        })
-    }
-
-    /// Conceals all LNPBP-4 data except specific protocol.
-    pub fn conceal_except(
-        &mut self,
-        protocols: impl AsRef<[ProtocolId]>,
-    ) -> Result<usize, mpc::LeafNotKnown> {
-        self.mpc_proof.conceal_except(protocols)
-    }
-
-    /// Merges two anchors keeping revealed data.
-    pub fn merge_reveal(mut self, other: Self) -> Result<Self, MergeError> {
-        if self.dbc_proof != other.dbc_proof {
-            return Err(MergeError::DbcMismatch);
-        }
-        self.mpc_proof.merge_reveal(other.mpc_proof)?;
-        Ok(self)
     }
 }

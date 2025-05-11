@@ -32,21 +32,21 @@ use crate::{
 };
 
 pub const LIB_ID_BP_TX: &str =
-    "stl:9WwTYiP2-OadKCZP-cR0bJ!Y-qruINYX-bXZFj8Y-fsQoGgo#signal-color-cipher";
+    "stl:9WwTYiP2-OadKCZP-cR0bJ_Y-qruINYX-bXZFj8Y-fsQoGgo#signal-color-cipher";
 pub const LIB_ID_BP_CONSENSUS: &str =
-    "stl:q7G95wzt-SxT2BMV-t!PokBt-wNYgZTu-AaYAtM3-rYjlzs4#agenda-wolf-pagoda";
+    "stl:wUfEZiWN-tvMpLYq-~h1iQC3-bHNSjiW-h9d7O0t-i154uQ0#quiz-patent-exit";
 
 #[deprecated(since = "0.10.8", note = "use _bp_tx_stl instead")]
 fn _bitcoin_stl() -> Result<TypeLib, CompileError> { _bp_tx_stl() }
 
 fn _bp_tx_stl() -> Result<TypeLib, CompileError> {
-    LibBuilder::new(libname!(LIB_NAME_BITCOIN), None).transpile::<Tx>().compile()
+    LibBuilder::with(libname!(LIB_NAME_BITCOIN), None).transpile::<Tx>().compile()
 }
 
 fn _bp_consensus_stl() -> Result<TypeLib, CompileError> {
-    LibBuilder::new(libname!(LIB_NAME_BITCOIN), tiny_bset! {
-        strict_types::stl::std_stl().to_dependency(),
-    })
+    LibBuilder::with(libname!(LIB_NAME_BITCOIN), [
+        strict_types::stl::std_stl().to_dependency_types()
+    ])
     .transpile::<LegacySig>()
     .transpile::<Bip340Sig>()
     .transpile::<OpCode>()

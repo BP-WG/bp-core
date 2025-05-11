@@ -67,7 +67,7 @@ pub mod stl;
 mod coding;
 mod sigcache;
 
-pub use block::{BlockHash, BlockHeader, BlockMerkleRoot};
+pub use block::{BlockHash, BlockHeader, BlockHeight, BlockMerkleRoot};
 pub use coding::{
     ByteStr, ConsensusDataError, ConsensusDecode, ConsensusDecodeError, ConsensusEncode, LenVarInt,
     VarInt, VarIntArray, VarIntBytes,

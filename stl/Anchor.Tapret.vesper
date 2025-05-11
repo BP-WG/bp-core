@@ -1,0 +1,18 @@
+rec AnchorTapretProof
+  rec mpcProof, MerkleProof
+    is pos, U32
+    is cofactor, U16
+    list path, len 0..32
+      bytes element, len 32, aka MerkleHash
+  rec dbcProof, TapretProof
+    rec pathProof, TapretPathProof
+      union some, TapretNodePartner, option, wrapped, tag 1
+        bytes leftNode, len 32, wrapped, aka TapNodeHash, tag 0
+          rec rightLeaf, LeafScript, wrapped, tag 1
+            is version, U8, aka LeafVer
+            bytes script, len 0..MAX32, aka ScriptBytes
+          rec rightBranch, TapretRightBranch, wrapped, tag 2
+            bytes leftNodeHash, len 32, aka TapNodeHash
+            bytes rightNodeHash, len 32, aka TapNodeHash
+      is nonce, U8
+    bytes internalPk, len 32, aka InternalPk, aka XOnlyPk
