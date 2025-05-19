@@ -28,11 +28,22 @@ chrono = { version = "0.4.38", optional = true }
 default = ["chrono"]
 all = ["chrono", "stl", "serde"]
 stl = ["strict_types"]
+chrono = ["dep:chrono"]
+strict_types = ["dep:strict_types"]
 serde = [
     "dep:serde",
     "amplify/serde",
     "secp256k1/serde"
 ]
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+rand = { version = "0.9.1", optional = true }
+getrandom = { version = "0.3", features = ["wasm_js"] }
+getrandom2 = { package = "getrandom", version = "0.2", features = ["js"] }
+
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+wasm-bindgen-test = "0.3"
 
 [package.metadata.docs.rs]
 features = ["all"]

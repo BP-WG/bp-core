@@ -164,25 +164,29 @@ dependencies = [
  "amplify",
  "chrono",
  "commit_verify",
+ "getrandom 0.2.16",
+ "getrandom 0.3.2",
+ "rand 0.9.1",
  "secp256k1",
  "serde",
  "strict_encoding",
  "strict_types",
+ "wasm-bindgen",
+ "wasm-bindgen-test",
 ]
 
 [[package]]
 name = "bp-core"
 version = "0.12.0-beta.6"
 dependencies = [
- "amplify",
  "bp-consensus",
  "bp-dbc",
  "bp-seals",
  "commit_verify",
  "getrandom 0.2.16",
- "rand 0.8.5",
+ "getrandom 0.3.2",
+ "rand 0.9.1",
  "serde",
- "single_use_seals",
  "strict_encoding",
  "strict_types",
  "wasm-bindgen",
@@ -197,9 +201,14 @@ dependencies = [
  "base85",
  "bp-consensus",
  "commit_verify",
+ "getrandom 0.2.16",
+ "getrandom 0.3.2",
+ "rand 0.9.1",
  "secp256k1",
  "serde",
  "strict_encoding",
+ "wasm-bindgen",
+ "wasm-bindgen-test",
 ]
 
 [[package]]
@@ -207,14 +216,17 @@ name = "bp-seals"
 version = "0.12.0-beta.6"
 dependencies = [
  "amplify",
- "baid64",
  "bp-consensus",
  "bp-dbc",
  "commit_verify",
- "rand 0.8.5",
+ "getrandom 0.2.16",
+ "getrandom 0.3.2",
+ "rand 0.9.1",
  "serde",
  "single_use_seals",
  "strict_encoding",
+ "wasm-bindgen",
+ "wasm-bindgen-test",
 ]
 
 [[package]]
@@ -353,9 +365,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73fea8450eea4bac3940448fb7ae50d91f034f941199fcd9d909a5a07aa455f0"
 dependencies = [
  "cfg-if",
+ "js-sys",
  "libc",
  "r-efi",
  "wasi 0.14.2+wasi-0.2.4",
+ "wasm-bindgen",
 ]
 
 [[package]]
