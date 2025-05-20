@@ -479,15 +479,12 @@ pub enum AnchorError {
 mod test {
     #![cfg_attr(coverage_nightly, coverage(off))]
 
-    use std::mem;
-
     use amplify::confinement::{Confined, SmallOrdMap};
     use amplify::num::u5;
     use bc::secp256k1::{SecretKey, SECP256K1};
-    use bc::{InternalPk, Sats, ScriptPubkey, SeqNo, TapScript, TxIn, TxOut, Vout};
+    use bc::{InternalPk, Sats, ScriptPubkey, SeqNo, TapLeafHash, TapScript, TxIn, TxOut, Vout};
     use commit_verify::{CommitVerify, Digest};
     use dbc::tapret::{TapretCommitment, TapretPathProof};
-    use derive::TapTree;
     use single_use_seals::SealError;
 
     use super::*;
@@ -564,10 +561,6 @@ mod test {
         let nonce = 0;
         let tapret_commitment = TapretCommitment::with(merkle_tree.commit_id(), nonce);
         let script_commitment = TapScript::commit(&tapret_commitment);
-        // We need unsafe since we use different versions of crates
-        let tap_tree = TapTree::with_single_leaf(unsafe {
-            mem::transmute::<bc::TapScript, derive::TapScript>(script_commitment)
-        });
         let secret = SecretKey::from_byte_array(&[0x66; 32]).unwrap();
         let internal_pk = InternalPk::from(secret.x_only_public_key(SECP256K1).0);
         let tapret_proof = TapretProof {
@@ -599,11 +592,7 @@ mod test {
                 script_pubkey: if tapret {
                     ScriptPubkey::p2tr(
                         internal_pk,
-                        Some(unsafe {
-                            mem::transmute::<derive::TapNodeHash, bc::TapNodeHash>(
-                                tap_tree.merkle_root(),
-                            )
-                        }),
+                        Some(TapLeafHash::with_leaf_script(&script_commitment.into()).into()),
                     )
                 } else {
                     ScriptPubkey::op_return(mpc.as_slice())

@@ -640,7 +640,7 @@ impl ConsensusDecode for ControlBlock {
         let mut buf = vec![];
         reader.read_to_end(&mut buf)?;
         let mut iter = buf.chunks_exact(32);
-        let merkle_branch = iter.by_ref().map(TapBranchHash::from_slice_unsafe);
+        let merkle_branch = iter.by_ref().map(TapBranchHash::from_slice_checked);
         let merkle_branch = TapMerklePath::try_from_iter(merkle_branch)
             .map_err(|_| ConsensusDataError::LongTapMerklePath)?;
         if !iter.remainder().is_empty() {

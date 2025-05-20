@@ -33,7 +33,6 @@
     non_camel_case_types,
     non_snake_case
 )]
-#![cfg_attr(test, allow(unsafe_code))]
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 

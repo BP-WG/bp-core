@@ -25,9 +25,6 @@ bp-consensus = { workspace = true }
 bp-dbc = { workspace = true }
 serde = { workspace = true, optional = true }
 
-[dev-dependencies]
-bp-derive = "0.12.0-beta.6"
-
 [features]
 default = []
 all = ["serde"]
