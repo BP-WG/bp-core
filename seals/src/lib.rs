@@ -23,9 +23,9 @@
 // TODO: Activate no_std once StrictEncoding will support it
 // #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(
-    unsafe_code,
     dead_code,
     missing_docs,
+    unsafe_code,
     unused_variables,
     unused_mut,
     unused_imports,
@@ -33,6 +33,7 @@
     non_camel_case_types,
     non_snake_case
 )]
+#![cfg_attr(test, allow(unsafe_code))]
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 

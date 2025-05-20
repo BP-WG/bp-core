@@ -479,19 +479,34 @@ pub enum AnchorError {
 mod test {
     #![cfg_attr(coverage_nightly, coverage(off))]
 
+    use std::mem;
+
     use amplify::confinement::{Confined, SmallOrdMap};
     use amplify::num::u5;
-    use bc::{Sats, ScriptPubkey, SeqNo, TxIn, TxOut};
-    use commit_verify::Digest;
+    use bc::secp256k1::{SecretKey, SECP256K1};
+    use bc::{InternalPk, Sats, ScriptPubkey, SeqNo, TapScript, TxIn, TxOut, Vout};
+    use commit_verify::{CommitVerify, Digest};
+    use dbc::tapret::{TapretCommitment, TapretPathProof};
+    use derive::TapTree;
+    use single_use_seals::SealError;
 
     use super::*;
+    use crate::mmb::BundleProof;
     use crate::mpc::{MessageMap, MessageSource};
+    use crate::TxoSealError;
 
-    #[test]
-    fn valid_seals() {
+    fn setup_opret() -> (Vec<mmb::Message>, BundleProof, Vec<TxoSeal>, SealWitness<TxoSeal>) {
+        setup(false)
+    }
+
+    fn setup_tapret() -> (Vec<mmb::Message>, BundleProof, Vec<TxoSeal>, SealWitness<TxoSeal>) {
+        setup(true)
+    }
+
+    fn setup(tapret: bool) -> (Vec<mmb::Message>, BundleProof, Vec<TxoSeal>, SealWitness<TxoSeal>) {
         // Construct messages
         let mut msg = [0u8; 32];
-        let messages = (0u8..13)
+        let messages = (0u8..=13)
             .map(|no| {
                 msg[0] = no;
                 mmb::Message::from_byte_array(msg)
@@ -515,13 +530,21 @@ mod test {
             .collect::<Vec<_>>();
         let seals = outpoints
             .iter()
-            .map(|outpoint| TxoSeal {
-                primary: *outpoint,
-                secondary: TxoSealExt::Noise(Noise::with(
-                    WOutpoint::Extern(*outpoint),
-                    noise_engine.clone(),
-                    outpoint.txid[0] as u64,
-                )),
+            .enumerate()
+            .map(|(no, outpoint)| {
+                let wout = if no % 2 == 0 {
+                    WOutpoint::Extern(*outpoint)
+                } else {
+                    WOutpoint::Wout(Vout::from(no as u32))
+                };
+                TxoSeal {
+                    primary: *outpoint,
+                    secondary: TxoSealExt::Noise(Noise::with(
+                        wout,
+                        noise_engine.clone(),
+                        outpoint.txid[0] as u64,
+                    )),
+                }
             })
             .collect::<Vec<_>>();
 
@@ -537,12 +560,27 @@ mod test {
         assert_eq!(merkle_proofs.len(), 1);
         assert_eq!(merkle_proofs[0].0, protocol);
 
+        // Tapret
+        let nonce = 0;
+        let tapret_commitment = TapretCommitment::with(merkle_tree.commit_id(), nonce);
+        let script_commitment = TapScript::commit(&tapret_commitment);
+        // We need unsafe since we use different versions of crates
+        let tap_tree = TapTree::with_single_leaf(unsafe {
+            mem::transmute::<bc::TapScript, derive::TapScript>(script_commitment)
+        });
+        let secret = SecretKey::from_byte_array(&[0x66; 32]).unwrap();
+        let internal_pk = InternalPk::from(secret.x_only_public_key(SECP256K1).0);
+        let tapret_proof = TapretProof {
+            path_proof: TapretPathProof::root(nonce),
+            internal_pk,
+        };
+
         let merkle_proof = merkle_proofs[0].1.clone();
         let anchor = Anchor {
             mmb_proof: bundle.clone(),
             mpc_protocol: protocol,
             mpc_proof: merkle_proof,
-            dbc_proof: None, // Tapret
+            dbc_proof: if tapret { Some(tapret_proof) } else { None },
             fallback_proof: none!(),
         };
 
@@ -558,28 +596,126 @@ mod test {
             })),
             outputs: Confined::from_checked(vec![TxOut {
                 value: Sats::ZERO,
-                script_pubkey: ScriptPubkey::op_return(mpc.as_slice()),
+                script_pubkey: if tapret {
+                    ScriptPubkey::p2tr(
+                        internal_pk,
+                        Some(unsafe {
+                            mem::transmute::<derive::TapNodeHash, bc::TapNodeHash>(
+                                tap_tree.merkle_root(),
+                            )
+                        }),
+                    )
+                } else {
+                    ScriptPubkey::op_return(mpc.as_slice())
+                },
             }]),
             lock_time: default!(),
         };
-        let witness = SealWitness::new(tx.clone(), anchor);
+        let witness = SealWitness::new(tx, anchor);
 
-        for outpoint in &outpoints {
+        (messages, bundle, seals, witness)
+    }
+
+    #[test]
+    fn valid_oprets() {
+        let (messages, bundle, seals, witness) = setup_opret();
+
+        for seal in seals {
+            let outpoint = seal.primary;
             let pos = outpoint.txid[0] as usize;
             if pos == 12 {
-                assert!(!bundle.verify(*outpoint, messages[pos], &tx));
-                assert!(bundle.verify(*outpoint, messages[11], &tx));
+                assert!(!bundle.verify(outpoint, messages[pos], &witness.published));
+                assert!(bundle.verify(outpoint, messages[11], &witness.published));
 
-                assert!(!seals[pos].is_included(messages[pos], &witness));
-                witness.verify_seal_closing(seals[pos], messages[pos]).unwrap_err();
+                assert!(!seal.is_included(messages[pos], &witness));
+                witness.verify_seal_closing(seal, messages[pos]).unwrap_err();
 
-                assert!(seals[pos].is_included(messages[11], &witness));
-                witness.verify_seal_closing(seals[pos], messages[11]).unwrap();
+                assert!(seal.is_included(messages[11], &witness));
+                witness.verify_seal_closing(seal, messages[11]).unwrap();
             } else {
-                assert!(bundle.verify(*outpoint, messages[pos], &tx));
-                assert!(seals[pos].is_included(messages[pos], &witness));
-                witness.verify_seal_closing(seals[pos], messages[pos]).unwrap();
+                assert!(bundle.verify(outpoint, messages[pos], &witness.published));
+                assert!(seal.is_included(messages[pos], &witness));
+                witness.verify_seal_closing(seal, messages[pos]).unwrap();
             }
         }
+    }
+    #[test]
+    fn valid_taprets() {
+        let (messages, bundle, seals, witness) = setup_tapret();
+
+        for seal in seals {
+            let outpoint = seal.primary;
+            let pos = outpoint.txid[0] as usize;
+            if pos == 12 {
+                assert!(!bundle.verify(outpoint, messages[pos], &witness.published));
+                assert!(bundle.verify(outpoint, messages[11], &witness.published));
+
+                assert!(!seal.is_included(messages[pos], &witness));
+                witness.verify_seal_closing(seal, messages[pos]).unwrap_err();
+
+                assert!(seal.is_included(messages[11], &witness));
+                witness.verify_seal_closing(seal, messages[11]).unwrap();
+            } else {
+                assert!(bundle.verify(outpoint, messages[pos], &witness.published));
+                assert!(seal.is_included(messages[pos], &witness));
+                witness.verify_seal_closing(seal, messages[pos]).unwrap();
+            }
+        }
+    }
+
+    #[test]
+    fn invalid_dbc_type() {
+        let (messages, _bundle, seals, mut witness) = setup_tapret();
+        let tapret = witness.client.dbc_proof;
+        witness.client.dbc_proof = None;
+        assert!(matches!(
+            witness.verify_seal_closing(seals[2], messages[2]).unwrap_err(),
+            SealError::Published(TxoSealError::NoTapretProof)
+        ));
+
+        let (messages, _bundle, seals, mut witness) = setup_opret();
+        witness.client.dbc_proof = tapret;
+        assert!(matches!(
+            witness.verify_seal_closing(seals[2], messages[2]).unwrap_err(),
+            SealError::Published(TxoSealError::InvalidProofType)
+        ));
+    }
+
+    #[test]
+    fn mmb_absent_input() {
+        let (messages, bundle, _seals, witness) = setup_opret();
+
+        let fake_outpoint = Outpoint::new(Txid::from_byte_array([0x13; 32]), 12);
+        assert!(!bundle.verify(fake_outpoint, messages[0], &witness.published));
+    }
+
+    #[test]
+    fn mmb_uncommited_msg() {
+        let (messages, mut bundle, seals, witness) = setup_opret();
+
+        // a non-committed message
+        bundle.map.remove(&13).unwrap();
+        assert!(!bundle.verify(seals[13].primary, messages[13], &witness.published));
+    }
+
+    #[test]
+    fn fallback_seal() {
+        let (messages, _bundle, mut seals, witness) = setup_opret();
+
+        seals[1].secondary = TxoSealExt::Fallback(seals[2].primary);
+        witness.verify_seal_closing(seals[1], messages[1]).unwrap();
+        assert!(seals[1].is_included(messages[1], &witness));
+        // And not a wrong message
+        assert!(!seals[1].is_included(messages[2], &witness));
+    }
+
+    #[test]
+    fn anchor_merge() {
+        let (_, _, _, mut witness) = setup_opret();
+        witness.client.merge(witness.client.clone()).unwrap();
+
+        let mut other = witness.client.clone();
+        other.mpc_protocol = mpc::ProtocolId::from_byte_array([0x13u8; 32]);
+        witness.client.merge(other).unwrap_err();
     }
 }
