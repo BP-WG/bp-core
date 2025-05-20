@@ -88,6 +88,8 @@ impl ConvolveCommit<mpc::Commitment, TapretProof, TapretFirst> for InternalPk {
 
 #[cfg(test)]
 mod test {
+    #![cfg_attr(coverage_nightly, coverage(off))]
+
     use std::str::FromStr;
 
     use bc::{IntoTapHash, LeafScript};

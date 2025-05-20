@@ -22,18 +22,21 @@
 // Version 1.0:
 // TODO: Complete block data type implementation
 // TODO: Complete OpCode enumeration
-// TODO: Do a no-std feature
 
-// Coding conventions
+// TODO: Do a no-std feature
+// #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(
-    non_upper_case_globals,
-    non_camel_case_types,
-    non_snake_case,
+    unsafe_code,
+    dead_code,
+    // missing_docs,
+    unused_variables,
     unused_mut,
     unused_imports,
-    dead_code,
-    // TODO: Uncomment missing_docs
+    non_upper_case_globals,
+    non_camel_case_types,
+    non_snake_case
 )]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 #[macro_use]

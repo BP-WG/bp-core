@@ -48,6 +48,8 @@ pub fn bp_core_stl() -> TypeLib { _bp_core_stl().expect("invalid strict type BPC
 
 #[cfg(test)]
 mod test {
+    #![cfg_attr(coverage_nightly, coverage(off))]
+
     use super::*;
 
     #[test]

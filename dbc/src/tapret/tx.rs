@@ -82,6 +82,8 @@ impl ConvolveCommit<mpc::Commitment, TapretProof, TapretFirst> for Tx {
 
 #[cfg(test)]
 mod test {
+    #![cfg_attr(coverage_nightly, coverage(off))]
+
     use std::str::FromStr;
 
     use amplify::hex::FromHex;
@@ -100,6 +102,7 @@ mod test {
             "020000000001027763e2a0ad25d45b63a19c33491b67c5037e72709121290bac5481a5d5d0c9330100000000ffffffff7763e2a0ad25d45b63a19c33491b67c5037e72709121290bac5481a5d5d0c9330400000000ffffffff02026e010000000000225120455dfcc062ef80609b007377f127e4abdb5cb0052158af1fab7aa628c34563f1d508000000000000225120a2788d4208ec6b4b600aef4c13075cf1d47bda0299ed1e6eedce4e7a90fb2a2c0141150df5377a34deded048dc01bff3d4f5f31d8a89fe2fbf1d0295993c1f899b3cefd1a63900ea6346b78edd476524c08ae094ff417bfa525b585ee66ebc26bb9e010141d959f21b498d90c2ff9f5b0bf3aee9158527501162eab2e3d56371714877a97df80caab15e366855aa56443b7d081c234a4ce4d6414815a874624cbe46b643370100000000"
         ).unwrap();
 
+        #[allow(unsafe_code)]
         let internal_pk: XOnlyPublicKey = unsafe {
             ffi::XOnlyPublicKey::from_array_unchecked(<[u8; 64]>::from_hex(
                 "cb5271aa59fc637e29d034ec75363ca241fda5d3939684603b469b185be7e50f18ec6fd539e7dc1fd5fb4cf046d2cef5028a5ca0cdb09a252683e6a6eb2ad61d",

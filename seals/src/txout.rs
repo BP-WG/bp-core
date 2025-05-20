@@ -477,6 +477,8 @@ pub enum AnchorError {
 
 #[cfg(test)]
 mod test {
+    #![cfg_attr(coverage_nightly, coverage(off))]
+
     use amplify::confinement::{Confined, SmallOrdMap};
     use amplify::num::u5;
     use bc::{Sats, ScriptPubkey, SeqNo, TxIn, TxOut};

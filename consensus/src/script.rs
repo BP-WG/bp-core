@@ -334,6 +334,8 @@ mod _serde {
 
 #[cfg(test)]
 mod test {
+    #![cfg_attr(coverage_nightly, coverage(off))]
+
     use amplify::hex::ToHex;
 
     use super::*;
