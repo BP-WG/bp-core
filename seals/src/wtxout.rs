@@ -27,20 +27,30 @@ use commit_verify::{Sha256, StrictHash};
 
 use crate::{Noise, TxoSealExt};
 
+/// A single-use seal definition type allowing seals to point to the output of the same transaction
+/// (witness transaction) which commits to the message defining the seals.
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE, tags = custom, dumb = Self::Wout(strict_dumb!()))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(untagged))]
 pub enum WOutpoint {
+    /// A seal definition pointing to an output of a not-yet-existing witness transaction closing
+    /// some other seals, which will contain a commitment to this seal definition (witness
+    /// transaction).
     #[display("~:{0}")]
     #[strict_type(tag = 0)]
     Wout(Vout),
 
+    /// A seal definition pointing to an output of an already existing transaction.
     #[display(inner)]
     #[strict_type(tag = 1)]
     Extern(Outpoint),
 }
 
+/// A composed single-use seal definition type, which includes a primary and a fallback seal.
+///
+/// The type allows creation of seals pointing to the output of the same transaction (witness
+/// transaction) which commits to the message defining the seals.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display)]
 #[display("{primary}/{secondary}")]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
@@ -49,12 +59,14 @@ pub enum WOutpoint {
 #[commit_encode(strategy = strict, id = StrictHash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct WTxoSeal {
+    /// A primary seal definition.
     pub primary: WOutpoint,
+    /// A fallback seal definition.
     pub secondary: TxoSealExt,
 }
 
 impl WTxoSeal {
-    /// Creates a new witness output-based seal definition without fallback.
+    /// Creates a new witness-output-based seal definition without a fallback.
     ///
     /// # Arguments
     ///
@@ -64,7 +76,7 @@ impl WTxoSeal {
         Self::with(WOutpoint::Wout(vout), noise_engine, nonce)
     }
 
-    /// Creates a new witness output-based seal definition without fallback.
+    /// Creates a new external outpoint-based seal definition without a fallback.
     ///
     /// # Arguments
     ///
@@ -74,6 +86,12 @@ impl WTxoSeal {
         Self::with(WOutpoint::Extern(outpoint), noise_engine, nonce)
     }
 
+    /// Creates a new seal definition without a fallback.
+    ///
+    /// # Arguments
+    ///
+    /// `nonce` is a deterministic incremental number, preventing from creating the same seal if the
+    /// same output is used.
     pub fn with(outpoint: WOutpoint, noise_engine: Sha256, nonce: u64) -> Self {
         Self {
             primary: outpoint,

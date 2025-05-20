@@ -37,6 +37,8 @@ use strict_encoding::{StrictDumb, StrictSum};
 
 use crate::WOutpoint;
 
+/// A noise, which acts as a placeholder for seal definitions lacking fallback seal (see
+/// [`TxoSealExt::Noise`]).
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, From)]
 #[display("{0:x}")]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
@@ -45,6 +47,8 @@ use crate::WOutpoint;
 pub struct Noise(Bytes<40>);
 
 impl Noise {
+    /// Construct a new noise object using entropy from a pre-initialized SHA256 engine, some nonce
+    /// and main [`WTxoSeal`] definition outpoint.
     pub fn with(outpoint: WOutpoint, mut noise_engine: Sha256, nonce: u64) -> Self {
         noise_engine.input_raw(&nonce.to_be_bytes());
         match outpoint {
@@ -64,12 +68,27 @@ impl Noise {
     }
 }
 
+/// Multi-message bundles.
+///
+/// Multi-message bundles allow putting multiple independent messages into a single commitment under
+/// a single MPC protocol. This is achieved by associating each single message with a subset of
+/// witness transaction outputs, which is provably disjoint with other subsets for all other
+/// messages under the same protocol.
+///
+/// The proof of disjoint is in [`mmb::BundleProof`], each individual message is kept in
+/// [`mmb::Message`], and the final commitment to all messages is represented by [`mmb::Commitment`]
+/// structure.
+///
+/// # See also
+///
+/// Multiprotocol commitments in [`commit_verify::mpc`]
 pub mod mmb {
     use amplify::confinement::SmallOrdMap;
     use commit_verify::{CommitmentId, DigestExt, Sha256};
 
     use super::*;
 
+    /// A message for a multi-message bundling.
     #[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
     #[wrapper(Deref, BorrowSlice, Display, FromStr, Hex, Index, RangeOps)]
     #[derive(StrictType, StrictEncode, StrictDecode)]
@@ -81,6 +100,11 @@ pub mod mmb {
         Bytes32,
     );
 
+    /// The final commitment to all messages under a multi-message bundle.
+    ///
+    /// The commitment is produced by a linear strict-encoding of the data in a [`BundleProof`].
+    /// The data are not merklized since, in order to verify the proof, all messages must be anyway
+    /// present in explicit form.
     #[derive(Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, From)]
     #[wrapper(Deref, BorrowSlice, Hex, Index, RangeOps)]
     #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
@@ -102,6 +126,8 @@ pub mod mmb {
         fn from(msg: Commitment) -> Self { mpc::Message::from_byte_array(msg.to_byte_array()) }
     }
 
+    /// The proof that each message is associated with a separate subset of witness transaction
+    /// inputs, and all of these subsets are disjoint.
     #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
     #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
     #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
@@ -109,17 +135,22 @@ pub mod mmb {
     #[commit_encode(strategy = strict, id = Commitment)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct BundleProof {
+        /// Map from a transaction input number to a specific message which is associated with it.
         pub map: SmallOrdMap<u32, Message>,
     }
 
     impl BundleProof {
+        /// Verify that the proof matches the witness transaction structure.
         pub fn verify(&self, seal: Outpoint, msg: Message, tx: &Tx) -> bool {
+            // Verify that there is a witness transaction input which spends a TxO matching the
+            // single-use seal definition.
             let Some(input_index) = tx.inputs().position(|input| input.prev_output == seal) else {
                 return false;
             };
             let Ok(input_index) = u32::try_from(input_index) else {
                 return false;
             };
+            // Check that this output belongs to the same message as expected.
             let Some(expected) = self.map.get(&input_index) else {
                 return false;
             };
@@ -142,6 +173,8 @@ pub mod mpc {
 
     use crate::mmb;
 
+    /// The source of an [`mpc::Message`], which can be either a single message or a multimessage
+    /// bundle (in the form of a proof).
     #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, From)]
     #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
     #[strict_type(lib = dbc::LIB_NAME_BPCORE, tags = custom, dumb = Self::Single(strict_dumb!()))]
@@ -151,15 +184,19 @@ pub mod mpc {
         serde(rename_all = "camelCase", untagged)
     )]
     pub enum MessageSource {
+        /// A single message.
         #[from]
         #[strict_type(tag = 1)]
         Single(Message),
+
+        /// A multi-message bundle.
         #[from]
         #[strict_type(tag = 2)]
         Mmb(mmb::BundleProof),
     }
 
     impl MessageSource {
+        /// Construct a [`mpc::Message`] from the provided source.
         pub fn mpc_message(&self) -> Message {
             match self {
                 MessageSource::Single(message) => *message,
@@ -170,23 +207,30 @@ pub mod mpc {
         }
     }
 
+    /// The message map which associates each protocol with a source of the message (an instance of
+    /// a [`MessageSource`]).
     #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
     #[derive(StrictType, StrictEncode, StrictDecode)]
     #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
     pub struct MessageMap(MediumOrdMap<ProtocolId, MessageSource>);
 
+    /// The information for constructing [`mpc::MerkleTree`].
     #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
     #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
     #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
     pub struct Source {
+        /// The minimal depth of the tree.
         pub min_depth: u5,
+        /// Entropy see for constructing all the non-protocol leafs of the tree.
         pub entropy: u64,
+        /// The protocols and messages to put into the tree.
         pub messages: MessageMap,
     }
 
     impl Source {
+        /// Construct a [`mpc::MerkleTree`] from the source data.
         pub fn into_merkle_tree(self) -> Result<MerkleTree, Error> {
             let messages = self.messages.0.iter().map(|(id, src)| {
                 let msg = src.mpc_message();
@@ -212,37 +256,68 @@ pub mod mpc {
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 pub struct Anchor {
+    /// The proof that each witness transaction input is used only in a single bundle.
     pub mmb_proof: mmb::BundleProof,
+    /// The protocol under which the client-side witness is valid.
     pub mpc_protocol: mpc::ProtocolId,
+    /// The inclusion proof (using multiprotocol commitments) of a commitment under the
+    /// [`mpc_protocol`] into the published witness.
     pub mpc_proof: mpc::MerkleProof,
+    /// The deterministic bitcoin commitment proof that the witness commitment is valid.
     pub dbc_proof: Option<TapretProof>,
     #[cfg_attr(feature = "serde", serde(skip))]
+    /// Reserved for the future proofs regarding fallback seals.
     // TODO: This should become an option once fallback proofs are ready
     pub fallback_proof: ReservedBytes<1>,
 }
 
 impl Anchor {
-    // TODO: Change when the fallback proofs are ready
+    /// Detect whether an anchor corresponds to a fallback proof or not.
+    ///
+    /// # Nota bene
+    ///
+    /// In the current version fallback proofs are not implemented, and this method always returns
+    /// `false`.
+    // TODO: (v0.13) Change when the fallback proofs are ready
     pub fn is_fallback(&self) -> bool { false }
-    // TODO: Change when the fallback proofs are ready
+
+    /// Verify the fallback proof.
+    ///
+    /// # Nota bene
+    ///
+    /// In the current version fallback proofs are not implemented, and this method always returns
+    /// `Ok(()) `(since if there is no fallback proof defined, it is a case of a valid situation).
+    // TODO: (v0.13) Change when the fallback proofs are ready
     pub fn verify_fallback(&self) -> Result<(), AnchorError> { Ok(()) }
 }
 
 /// Proof data for verification of deterministic bitcoin commitment produced from anchor.
+///
+/// This proof is used to do the final verification of the single-use seal closing in the witness
+/// transaction (published witness).
 pub struct Proof {
+    /// The message to which the witness transaction must commit with deterministic bitcoin
+    /// commitment.
+    ///
+    /// The message is produced from the multiprotocol commitment data of an [`Anchor`].
     pub mpc_commit: mpc::Commitment,
+    /// The deterministic bitcoin commitment proof that the witness commitment is valid.
     pub dbc_proof: Option<TapretProof>,
 }
 
+/// The value for a fallback seal definition.
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[display(inner)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE, tags = custom)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(untagged))]
 pub enum TxoSealExt {
+    /// The fallback seal is not defined. The noise data are used instead to obfuscate the main
+    /// seal.
     #[strict_type(tag = 0)]
     Noise(Noise),
 
+    /// The fallback seal is defined as a known UTXO.
     #[strict_type(tag = 1)]
     Fallback(Outpoint),
 }
@@ -251,13 +326,22 @@ impl StrictDumb for TxoSealExt {
     fn strict_dumb() -> Self { TxoSealExt::Noise(Noise::from(Bytes::from_byte_array([0u8; 40]))) }
 }
 
+/// The bitcoin TxO-based single-use seal protocol (see [`SingleUseSeal`]).
+///
+/// # Nota bene
+///
+/// Unlike [`crate::WTxoSeal`], this seal always contains information about the defined seal.
+/// It is constructed once a "previous" witness transaction, which contains a commitment to a
+/// [`crate::WTxoSeal`] definition, is constructed, and its transaction id becomes known.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display)]
 #[display("{primary}/{secondary}")]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TxoSeal {
+    /// A primary seal definition.
     pub primary: Outpoint,
+    /// A fallback seal definition.
     pub secondary: TxoSealExt,
 }
 
@@ -280,7 +364,6 @@ impl SingleUseSeal for TxoSeal {
     }
 }
 
-// TODO: It's not just a transaction, it should be an SPV proof
 impl PublishedWitness<TxoSeal> for Tx {
     type PubId = Txid;
     type Error = TxoSealError;
@@ -339,16 +422,18 @@ impl ClientSideWitness for Anchor {
     }
 }
 
+/// Errors verifying Txo-based single use seal closing with a provided witness, under [`TxoSeal`]
+/// implementation of [`SingleUseSeals`] protocol.
 #[derive(Clone, PartialEq, Eq, Debug, Display, Error, From)]
 #[display(doc_comments)]
 pub enum TxoSealError {
     /// witness transaction contains no taproot or OP_RETURN output.
     NoOutput,
 
-    /// witness transaction first DBC-compatible output doesn't match the provided proof type.
+    /// the first witness transaction DBC-compatible output does not match the provided proof type.
     InvalidProofType,
 
-    /// witness transaction first DBC-compatible output is taproot, but no tapret proof is
+    /// the first witness transaction DBC-compatible output is taproot, but no tapret proof is
     /// provided.
     NoTapretProof,
 
@@ -361,21 +446,27 @@ pub enum TxoSealError {
     Opret(EmbedVerifyError<OpretError>),
 }
 
+/// Error merging information from multiple anchors for the same witness (see [`Anchor::merge`]).
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, Display, Error, From)]
 #[display(doc_comments)]
 pub enum AnchorMergeError {
-    /// anchor mismatch in merge procedure
+    /// anchor mismatch in the merge procedure
     AnchorMismatch,
 
     /// anchor is invalid: too many inputs
     TooManyInputs,
 }
 
+/// An error involving [`Anchor`] into a final [`Proof`] for the single-use seal published witness
+/// verification.
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, Display, Error, From)]
 #[display(inner)]
 pub enum AnchorError {
+    /// Invalid multiprotocol commitment proof (see [`commit_verify::mpc`]).
     #[from]
     Mpc(mpc::InvalidProof),
+
+    /// Invalid multiprotocol bundle (see [`mmb`]).
     #[display("message {0} is not part of the anchor")]
     Mmb(mmb::Message),
 }
