@@ -35,13 +35,16 @@ pub const LIB_ID_BP_TX: &str =
 pub const LIB_ID_BP_CONSENSUS: &str =
     "stl:ZjGQdfie-nvWslJH-kAQUr7C-CZbacz~-x4ssYLO-0iSA23o#costume-ohio-sharp";
 
+#[allow(clippy::result_large_err)]
 #[deprecated(since = "0.10.8", note = "use _bp_tx_stl instead")]
 fn _bitcoin_stl() -> Result<TypeLib, CompileError> { _bp_tx_stl() }
 
+#[allow(clippy::result_large_err)]
 fn _bp_tx_stl() -> Result<TypeLib, CompileError> {
     LibBuilder::with(libname!(LIB_NAME_BITCOIN), None).transpile::<Tx>().compile()
 }
 
+#[allow(clippy::result_large_err)]
 fn _bp_consensus_stl() -> Result<TypeLib, CompileError> {
     LibBuilder::with(libname!(LIB_NAME_BITCOIN), [
         strict_types::stl::std_stl().to_dependency_types()

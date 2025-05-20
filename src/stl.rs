@@ -29,6 +29,7 @@ use strict_types::{CompileError, LibBuilder, TypeLib};
 pub const LIB_ID_BPCORE: &str =
     "stl:BWd2AlwY-vc5WLbC-dyTpptf-W68MmcR-nUrAZNS-dH3FEHo#critic-bermuda-aurora";
 
+#[allow(clippy::result_large_err)]
 fn _bp_core_stl() -> Result<TypeLib, CompileError> {
     LibBuilder::with(libname!(LIB_NAME_BPCORE), [
         strict_types::stl::std_stl().to_dependency_types(),
