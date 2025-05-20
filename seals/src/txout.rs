@@ -209,7 +209,11 @@ pub mod mpc {
 
     /// The message map which associates each protocol with a source of the message (an instance of
     /// a [`MessageSource`]).
-    #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
+    #[derive(
+        Wrapper, WrapperMut, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default, From
+    )]
+    #[wrapper(Deref)]
+    #[wrapper_mut(DerefMut)]
     #[derive(StrictType, StrictEncode, StrictDecode)]
     #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
@@ -469,4 +473,111 @@ pub enum AnchorError {
     /// Invalid multiprotocol bundle (see [`mmb`]).
     #[display("message {0} is not part of the anchor")]
     Mmb(mmb::Message),
+}
+
+#[cfg(test)]
+mod test {
+    use amplify::confinement::{Confined, SmallOrdMap};
+    use amplify::num::u5;
+    use bc::{Sats, ScriptPubkey, SeqNo, TxIn, TxOut};
+    use commit_verify::Digest;
+
+    use super::*;
+    use crate::mpc::{MessageMap, MessageSource};
+
+    #[test]
+    fn valid_seals() {
+        // Construct messages
+        let mut msg = [0u8; 32];
+        let messages = (0u8..13)
+            .map(|no| {
+                msg[0] = no;
+                mmb::Message::from_byte_array(msg)
+            })
+            .collect::<Vec<_>>();
+
+        // Construct bundle proof
+        let mut bundle = mmb::BundleProof {
+            map: SmallOrdMap::from_iter_checked(
+                messages.iter().enumerate().map(|(i, msg)| (i as u32, *msg)),
+            ),
+        };
+        // Make message No 12 equal to 11, so messsage no 12 is not used
+        bundle.map.insert(12, messages[11]).unwrap();
+
+        // Construct seals
+        let noise_engine = Sha256::new_with_prefix("test");
+        let outpoints = messages
+            .iter()
+            .map(|msg| Outpoint::new(Txid::from_byte_array(msg.to_byte_array()), msg[0] as u32))
+            .collect::<Vec<_>>();
+        let seals = outpoints
+            .iter()
+            .map(|outpoint| TxoSeal {
+                primary: *outpoint,
+                secondary: TxoSealExt::Noise(Noise::with(
+                    WOutpoint::Extern(*outpoint),
+                    noise_engine.clone(),
+                    outpoint.txid[0] as u64,
+                )),
+            })
+            .collect::<Vec<_>>();
+
+        let protocol = mpc::ProtocolId::from_byte_array([0xADu8; 32]);
+        let msg_sources = MessageSource::Mmb(bundle.clone());
+        let source = mpc::Source {
+            min_depth: u5::with(3),
+            entropy: 0xFE,
+            messages: MessageMap::from(Confined::from_checked(bmap! { protocol => msg_sources })),
+        };
+        let merkle_tree = source.into_merkle_tree().unwrap();
+        let merkle_proofs = merkle_tree.clone().into_proofs().collect::<Vec<_>>();
+        assert_eq!(merkle_proofs.len(), 1);
+        assert_eq!(merkle_proofs[0].0, protocol);
+
+        let merkle_proof = merkle_proofs[0].1.clone();
+        let anchor = Anchor {
+            mmb_proof: bundle.clone(),
+            mpc_protocol: protocol,
+            mpc_proof: merkle_proof,
+            dbc_proof: None, // Tapret
+            fallback_proof: none!(),
+        };
+
+        // Construct a witness transaction
+        let mpc = merkle_tree.commit_id();
+        let tx = Tx {
+            version: default!(),
+            inputs: Confined::from_iter_checked(messages.iter().map(|msg| TxIn {
+                prev_output: outpoints[msg[0] as usize],
+                sig_script: none!(),
+                sequence: SeqNo::ZERO,
+                witness: none!(),
+            })),
+            outputs: Confined::from_checked(vec![TxOut {
+                value: Sats::ZERO,
+                script_pubkey: ScriptPubkey::op_return(mpc.as_slice()),
+            }]),
+            lock_time: default!(),
+        };
+        let witness = SealWitness::new(tx.clone(), anchor);
+
+        for outpoint in &outpoints {
+            let pos = outpoint.txid[0] as usize;
+            if pos == 12 {
+                assert!(!bundle.verify(*outpoint, messages[pos], &tx));
+                assert!(bundle.verify(*outpoint, messages[11], &tx));
+
+                assert!(!seals[pos].is_included(messages[pos], &witness));
+                witness.verify_seal_closing(seals[pos], messages[pos]).unwrap_err();
+
+                assert!(seals[pos].is_included(messages[11], &witness));
+                witness.verify_seal_closing(seals[pos], messages[11]).unwrap();
+            } else {
+                assert!(bundle.verify(*outpoint, messages[pos], &tx));
+                assert!(seals[pos].is_included(messages[pos], &witness));
+                witness.verify_seal_closing(seals[pos], messages[pos]).unwrap();
+            }
+        }
+    }
 }
