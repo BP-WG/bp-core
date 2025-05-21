@@ -114,8 +114,8 @@ impl CommitVerify<TapretCommitment, TapretFirst> for TapScript {
 #[cfg(feature = "serde")]
 mod _serde {
     use amplify::{Bytes, Wrapper};
-    use serde_crate::de::Error;
-    use serde_crate::{Deserialize, Deserializer, Serialize, Serializer};
+    use serde::de::Error;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
     use super::*;
 
@@ -146,6 +146,8 @@ mod _serde {
 
 #[cfg(test)]
 mod test {
+    #![cfg_attr(coverage_nightly, coverage(off))]
+
     use amplify::ByteArray;
     use commit_verify::{Digest, Sha256};
 

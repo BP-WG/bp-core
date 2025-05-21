@@ -23,17 +23,29 @@ strict_encoding = { workspace = true }
 commit_verify = { workspace = true, features = ["rand"] }
 bp-consensus = { workspace = true }
 secp256k1 = { workspace = true }
-serde_crate = { workspace = true, optional = true }
+serde = { workspace = true, optional = true }
 
 [features]
 default = []
 all = ["serde"]
 serde = [
-    "serde_crate",
+    "dep:serde",
     "bp-consensus/serde",
     "commit_verify/serde",
     "secp256k1/serde"
 ]
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+rand = { version = "0.9.1", optional = true }
+getrandom = { version = "0.3", features = ["wasm_js"] }
+getrandom2 = { package = "getrandom", version = "0.2", features = ["js"] }
+
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+wasm-bindgen-test = "0.3"
+
 [package.metadata.docs.rs]
 features = ["all"]
+
+[lints.rust]
+unexpected_cfgs = { level = "allow", check-cfg = ['cfg(coverage_nightly)'] }

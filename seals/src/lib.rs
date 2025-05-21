@@ -20,15 +20,20 @@
 // limitations under the License.
 
 // Coding conventions
+// TODO: Activate no_std once StrictEncoding will support it
+// #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(
-    non_upper_case_globals,
-    non_camel_case_types,
-    non_snake_case,
+    dead_code,
+    missing_docs,
+    unsafe_code,
+    unused_variables,
     unused_mut,
     unused_imports,
-    dead_code,
-    missing_docs
+    non_upper_case_globals,
+    non_camel_case_types,
+    non_snake_case
 )]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 //! The library provides single-use-seal implementations for bitcoin protocol.
@@ -41,15 +46,12 @@ extern crate strict_encoding;
 extern crate commit_verify;
 #[cfg(feature = "serde")]
 #[macro_use]
-extern crate serde_crate as serde;
+extern crate serde;
 
-pub mod resolver;
-pub mod txout;
-mod secret;
+mod txout;
+mod wtxout;
 
-pub use secret::SecretSeal;
-
-/// Method for closing BP single-use-seals.
-pub trait SealCloseMethod: dbc::DbcMethod {}
-
-impl SealCloseMethod for dbc::Method {}
+pub use txout::{
+    mmb, mpc, Anchor, AnchorError, AnchorMergeError, Noise, TxoSeal, TxoSealError, TxoSealExt,
+};
+pub use wtxout::{WOutpoint, WTxoSeal};

@@ -20,15 +20,20 @@
 // limitations under the License.
 
 // Coding conventions
+// TODO: Activate no_std once StrictEncoding will support it
+// #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(
-    non_upper_case_globals,
-    non_camel_case_types,
-    non_snake_case,
+    unsafe_code,
+    dead_code,
+    missing_docs,
+    unused_variables,
     unused_mut,
     unused_imports,
-    dead_code,
-    missing_docs
+    non_upper_case_globals,
+    non_camel_case_types,
+    non_snake_case
 )]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 //! Deterministic bitcoin commitments library.
@@ -43,7 +48,7 @@
 extern crate amplify;
 #[cfg(feature = "serde")]
 #[macro_use]
-extern crate serde_crate as serde;
+extern crate serde;
 #[macro_use]
 extern crate strict_encoding;
 extern crate commit_verify;
@@ -51,12 +56,7 @@ extern crate commit_verify;
 /// Name of the strict type library generated from the data types in this crate.
 pub const LIB_NAME_BPCORE: &str = "BPCore";
 
-pub mod anchor;
 pub mod keytweak;
 pub mod opret;
 pub mod sigtweak;
 pub mod tapret;
-mod proof;
-
-pub use anchor::Anchor;
-pub use proof::{DbcMethod, Method, MethodParseError, Proof};

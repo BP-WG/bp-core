@@ -21,18 +21,32 @@ strict_encoding = { workspace = true }
 strict_types = { workspace = true, optional = true }
 commit_verify = { workspace = true }
 secp256k1 = { workspace = true }
-serde_crate = { workspace = true, optional = true }
+serde = { workspace = true, optional = true }
 chrono = { version = "0.4.38", optional = true }
 
 [features]
 default = ["chrono"]
 all = ["chrono", "stl", "serde"]
 stl = ["strict_types"]
+chrono = ["dep:chrono"]
+strict_types = ["dep:strict_types"]
 serde = [
-    "serde_crate",
+    "dep:serde",
     "amplify/serde",
     "secp256k1/serde"
 ]
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+rand = { version = "0.9.1", optional = true }
+getrandom = { version = "0.3", features = ["wasm_js"] }
+getrandom2 = { package = "getrandom", version = "0.2", features = ["js"] }
+
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+wasm-bindgen-test = "0.3"
+
 [package.metadata.docs.rs]
 features = ["all"]
+
+[lints.rust]
+unexpected_cfgs = { level = "allow", check-cfg = ['cfg(coverage_nightly)'] }

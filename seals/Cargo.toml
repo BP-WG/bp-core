@@ -18,14 +18,12 @@ path = "src/lib.rs"
 
 [dependencies]
 amplify = { workspace = true }
-baid64 = "0.2.2"
 single_use_seals = { workspace = true }
 commit_verify = { workspace = true }
 strict_encoding = { workspace = true }
 bp-consensus = { workspace = true }
 bp-dbc = { workspace = true }
-rand = "0.8.5"
-serde_crate = { workspace = true, optional = true }
+serde = { workspace = true, optional = true }
 
 [features]
 default = []
@@ -35,8 +33,20 @@ serde = [
     "commit_verify/serde",
     "bp-consensus/serde",
     "bp-dbc/serde",
-    "serde_crate"
+    "dep:serde"
 ]
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+rand = { version = "0.9.1", optional = true }
+getrandom = { version = "0.3", features = ["wasm_js"] }
+getrandom2 = { package = "getrandom", version = "0.2", features = ["js"] }
+
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+wasm-bindgen-test = "0.3"
 
 [package.metadata.docs.rs]
 features = ["all"]
+
+[lints.rust]
+unexpected_cfgs = { level = "allow", check-cfg = ['cfg(coverage_nightly)'] }

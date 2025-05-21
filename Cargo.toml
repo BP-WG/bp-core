@@ -13,25 +13,25 @@ default-members = [
 ]
 
 [workspace.package]
-version = "0.11.0"
+version = "0.12.0-rc.1"
 authors = ["Dr Maxim Orlovsky <orlovsky@lnp-bp.org>"]
 homepage = "https://github.com/BP-WG"
 repository = "https://github.com/BP-WG/bp-core"
-rust-version = "1.77.0" # Due to `rustfix`
+rust-version = "1.81.0" # Due to the need of `Error` trait in `core`
 edition = "2021"
 license = "Apache-2.0"
 
 [workspace.dependencies]
-amplify = "~4.7.0"
-strict_encoding = "~2.7.0"
-strict_types = "~2.7.2"
-commit_verify = "0.11.0"
-single_use_seals = "0.11.0"
-bp-consensus = { version = "0.11.0", path = "./consensus" }
-bp-dbc = { version = "0.11.0", path = "./dbc" }
-bp-seals = { version = "0.11.0", path = "./seals" }
-secp256k1 = { version = "0.30.0", features = ["global-context", "rand"] }
-serde_crate = { package = "serde", version = "1", features = ["derive"] }
+amplify = "4.9.0"
+strict_encoding = "2.9.1"
+strict_types = "2.9.0"
+commit_verify = "0.12.0-rc.1"
+single_use_seals = "0.12.0-rc.1"
+bp-consensus = { version = "0.12.0-rc.1", path = "./consensus" }
+bp-dbc = { version = "0.12.0-rc.1", path = "./dbc" }
+bp-seals = { version = "0.12.0-rc.1", path = "./seals" }
+secp256k1 = { version = "0.30.0", features = ["global-context"] } # NB: v0.31 breaks WASM
+serde = { version = "1", features = ["derive"] }
 
 [package]
 name = "bp-core"
@@ -57,35 +57,37 @@ name = "bpcore-stl"
 required-features = ["stl"]
 
 [dependencies]
-amplify = { workspace = true }
 strict_encoding = { workspace = true }
 strict_types = { workspace = true, optional = true }
 commit_verify = { workspace = true }
-single_use_seals = { workspace = true }
 bp-consensus = { workspace = true }
 bp-dbc = { workspace = true }
 bp-seals = { workspace = true }
-serde_crate = { workspace = true, optional = true }
+serde = { workspace = true, optional = true }
 
 [features]
 default = []
 all = ["chrono", "serde", "stl"]
 chrono = ["bp-consensus/chrono"]
 serde = [
-    "serde_crate",
+    "dep:serde",
     "bp-consensus/serde",
     "bp-dbc/serde",
     "bp-seals/serde",
 ]
-stl = ["strict_types", "strict_types/armor", "bp-consensus/stl", "commit_verify/stl"]
+stl = ["strict_types", "strict_types/armor", "bp-consensus/stl", "commit_verify/stl", "commit_verify/vesper"]
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2"
-rand = { version = "0.8.4", optional = true }
-getrandom = { version = "0.2", features = ["js"] }
+rand = { version = "0.9.1", optional = true }
+getrandom = { version = "0.3", features = ["wasm_js"] }
+getrandom2 = { package = "getrandom", version = "0.2", features = ["js"] }
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
 wasm-bindgen-test = "0.3"
 
 [package.metadata.docs.rs]
 features = ["all"]
+
+[lints.rust]
+unexpected_cfgs = { level = "allow", check-cfg = ['cfg(coverage_nightly)'] }

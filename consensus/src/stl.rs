@@ -22,31 +22,33 @@
 
 use strict_types::{CompileError, LibBuilder, TypeLib};
 
-use crate::timelocks::TimeLockInterval;
 use crate::{
-    Bip340Sig, BlockHeader, ByteStr, CompressedPk, ControlBlock, FutureLeafVer, InternalPk,
-    LeafScript, LegacyPk, LegacySig, LockHeight, LockTimestamp, OpCode, OutputPk, PubkeyHash,
-    RedeemScript, ScriptHash, TapCode, TapLeafHash, TapNodeHash, TapScript, Tx, UncompressedPk,
+    Bip340Sig, Block, ByteStr, CompressedPk, ControlBlock, FutureLeafVer, InternalPk, LeafScript,
+    LegacyPk, LegacySig, LockHeight, LockTimestamp, OpCode, OutputPk, PubkeyHash, RedeemScript,
+    ScriptHash, TapCode, TapLeafHash, TapNodeHash, TapScript, TimeLockInterval, Tx, UncompressedPk,
     VBytes, VarInt, WPubkeyHash, WScriptHash, WeightUnits, WitnessProgram, WitnessScript,
     WitnessVer, Wtxid, LIB_NAME_BITCOIN,
 };
 
 pub const LIB_ID_BP_TX: &str =
-    "stl:9WwTYiP2-OadKCZP-cR0bJ!Y-qruINYX-bXZFj8Y-fsQoGgo#signal-color-cipher";
+    "stl:9WwTYiP2-OadKCZP-cR0bJ_Y-qruINYX-bXZFj8Y-fsQoGgo#signal-color-cipher";
 pub const LIB_ID_BP_CONSENSUS: &str =
-    "stl:q7G95wzt-SxT2BMV-t!PokBt-wNYgZTu-AaYAtM3-rYjlzs4#agenda-wolf-pagoda";
+    "stl:ZjGQdfie-nvWslJH-kAQUr7C-CZbacz~-x4ssYLO-0iSA23o#costume-ohio-sharp";
 
+#[allow(clippy::result_large_err)]
 #[deprecated(since = "0.10.8", note = "use _bp_tx_stl instead")]
 fn _bitcoin_stl() -> Result<TypeLib, CompileError> { _bp_tx_stl() }
 
+#[allow(clippy::result_large_err)]
 fn _bp_tx_stl() -> Result<TypeLib, CompileError> {
-    LibBuilder::new(libname!(LIB_NAME_BITCOIN), None).transpile::<Tx>().compile()
+    LibBuilder::with(libname!(LIB_NAME_BITCOIN), None).transpile::<Tx>().compile()
 }
 
+#[allow(clippy::result_large_err)]
 fn _bp_consensus_stl() -> Result<TypeLib, CompileError> {
-    LibBuilder::new(libname!(LIB_NAME_BITCOIN), tiny_bset! {
-        strict_types::stl::std_stl().to_dependency(),
-    })
+    LibBuilder::with(libname!(LIB_NAME_BITCOIN), [
+        strict_types::stl::std_stl().to_dependency_types()
+    ])
     .transpile::<LegacySig>()
     .transpile::<Bip340Sig>()
     .transpile::<OpCode>()
@@ -71,7 +73,7 @@ fn _bp_consensus_stl() -> Result<TypeLib, CompileError> {
     .transpile::<TapCode>()
     .transpile::<TapScript>()
     .transpile::<ControlBlock>()
-    .transpile::<BlockHeader>()
+    .transpile::<Block>()
     .transpile::<TimeLockInterval>()
     .transpile::<LockTimestamp>()
     .transpile::<LockHeight>()
@@ -96,6 +98,8 @@ pub fn bp_consensus_stl() -> TypeLib {
 
 #[cfg(test)]
 mod test {
+    #![cfg_attr(coverage_nightly, coverage(off))]
+
     use super::*;
 
     #[test]

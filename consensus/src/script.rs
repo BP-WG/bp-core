@@ -30,11 +30,7 @@ use crate::{ScriptHash, VarInt, VarIntBytes, WitnessVer, LIB_NAME_BITCOIN};
 #[wrapper_mut(DerefMut, AsSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct SigScript(ScriptBytes);
 
 impl TryFrom<Vec<u8>> for SigScript {
@@ -59,8 +55,8 @@ impl SigScript {
     /// Constructs script object assuming the script length is less than 4GB.
     /// Panics otherwise.
     #[inline]
-    pub fn from_unsafe(script_bytes: Vec<u8>) -> Self {
-        Self(ScriptBytes::from_unsafe(script_bytes))
+    pub fn from_checked(script_bytes: Vec<u8>) -> Self {
+        Self(ScriptBytes::from_checked(script_bytes))
     }
 
     #[inline]
@@ -72,11 +68,7 @@ impl SigScript {
 #[wrapper_mut(DerefMut, AsSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct ScriptPubkey(ScriptBytes);
 
 impl TryFrom<Vec<u8>> for ScriptPubkey {
@@ -98,8 +90,8 @@ impl ScriptPubkey {
     /// Constructs script object assuming the script length is less than 4GB.
     /// Panics otherwise.
     #[inline]
-    pub fn from_unsafe(script_bytes: Vec<u8>) -> Self {
-        Self(ScriptBytes::from_unsafe(script_bytes))
+    pub fn from_checked(script_bytes: Vec<u8>) -> Self {
+        Self(ScriptBytes::from_checked(script_bytes))
     }
 
     pub fn p2pkh(hash: impl Into<[u8; 20]>) -> Self {
@@ -163,11 +155,7 @@ impl ScriptPubkey {
 #[wrapper_mut(DerefMut, AsSliceMut)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct RedeemScript(ScriptBytes);
 
 impl TryFrom<Vec<u8>> for RedeemScript {
@@ -189,8 +177,8 @@ impl RedeemScript {
     /// Constructs script object assuming the script length is less than 4GB.
     /// Panics otherwise.
     #[inline]
-    pub fn from_unsafe(script_bytes: Vec<u8>) -> Self {
-        Self(ScriptBytes::from_unsafe(script_bytes))
+    pub fn from_checked(script_bytes: Vec<u8>) -> Self {
+        Self(ScriptBytes::from_checked(script_bytes))
     }
 
     pub fn p2sh_wpkh(hash: impl Into<[u8; 20]>) -> Self {
@@ -244,7 +232,7 @@ impl ScriptBytes {
     /// Constructs script object assuming the script length is less than 4GB.
     /// Panics otherwise.
     #[inline]
-    pub fn from_unsafe(script_bytes: Vec<u8>) -> Self {
+    pub fn from_checked(script_bytes: Vec<u8>) -> Self {
         Self(Confined::try_from(script_bytes).expect("script exceeding 4GB"))
     }
 
@@ -312,9 +300,8 @@ impl ScriptBytes {
 #[cfg(feature = "serde")]
 mod _serde {
     use amplify::hex::{FromHex, ToHex};
-    use serde::{Deserialize, Serialize};
-    use serde_crate::de::Error;
-    use serde_crate::{Deserializer, Serializer};
+    use serde::de::Error;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
     use super::*;
 
@@ -347,6 +334,8 @@ mod _serde {
 
 #[cfg(test)]
 mod test {
+    #![cfg_attr(coverage_nightly, coverage(off))]
+
     use amplify::hex::ToHex;
 
     use super::*;

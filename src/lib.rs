@@ -19,15 +19,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// TODO: Activate no_std once StrictEncoding will support it
+// #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(
-    non_upper_case_globals,
-    non_camel_case_types,
-    non_snake_case,
+    unsafe_code,
+    dead_code,
+    missing_docs,
+    unused_variables,
     unused_mut,
     unused_imports,
-    dead_code,
-    missing_docs
+    non_upper_case_globals,
+    non_camel_case_types,
+    non_snake_case
 )]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 //! Core module defines core strict interfaces from informational LNPBP
@@ -47,14 +52,11 @@ pub extern crate dbc;
 /// Re-export of `bp-seals` crate.
 pub extern crate seals;
 
-#[cfg(feature = "stl")]
-#[macro_use]
-extern crate amplify;
 #[macro_use]
 extern crate strict_encoding;
 #[cfg(feature = "serde")]
 #[macro_use]
-extern crate serde_crate as serde;
+extern crate serde;
 
 #[cfg(feature = "stl")]
 pub mod stl;

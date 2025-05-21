@@ -1,5 +1,5 @@
 {-
-  Id: stl:VhPW19SH-c5lzr1y-TLIsx8z-Z5nB!$Q-IgwrAQA-OqXLwUg#austin-story-retro
+  Id: stl:BWd2AlwY-vc5WLbC-dyTpptf-W68MmcR-nUrAZNS-dH3FEHo#critic-bermuda-aurora
   Name: BPCore
   Version: 0.1.0
   Description: Bitcoin client-side-validation library
@@ -11,19 +11,7 @@
 @context
 typelib BPCore
 
-import CommitVerify#miller-pancake-elastic
-  use MerkleTree#patriot-answer-oliver
-  use ProtocolId#shadow-eclipse-program
-  use Message#druid-blitz-rover
-  use MerkleHash#horse-popcorn-bundle
-  use MerkleBlock#pegasus-delta-eddie
-  use MerkleProof#price-aloha-grid
-  use TreeNode#kansas-scarlet-ricardo
-
-import Std#ralph-blue-lucky
-  use U5#orbit-graph-sonic
-
-import Bitcoin#signal-color-cipher
+import Bitcoin#costume-ohio-sharp
   use Vout#brush-gloria-heroic
   use ScriptBytes#equator-cockpit-gong
   use TapNodeHash#paprika-amanda-hunter
@@ -31,58 +19,48 @@ import Bitcoin#signal-color-cipher
   use Txid#shallow-light-reverse
   use InternalPk#habitat-paprika-oliver
   use LeafVer#benefit-carbon-africa
+  use Outpoint#logo-alamo-madam
   use XOnlyPk#clever-swim-carpet
 
+import Std#delete-roman-hair
+  use U5#orbit-graph-sonic
 
-@mnemonic(bread-poncho-pattern)
-data AnchorMerkleBlockOpretProof : mpcProof CommitVerify.MerkleBlock, dbcProof OpretProof
-
-@mnemonic(madrid-vampire-little)
-data AnchorMerkleBlockTapretProof : mpcProof CommitVerify.MerkleBlock, dbcProof TapretProof
-
-@mnemonic(almond-gilbert-urban)
-data AnchorMerkleProofOpretProof : mpcProof CommitVerify.MerkleProof, dbcProof OpretProof
-
-@mnemonic(llama-colony-juice)
-data AnchorMerkleProofTapretProof : mpcProof CommitVerify.MerkleProof, dbcProof TapretProof
-
-@mnemonic(season-perform-tropic)
-data AnchorMerkleTreeOpretProof : mpcProof CommitVerify.MerkleTree, dbcProof OpretProof
-
-@mnemonic(europe-mister-imitate)
-data AnchorMerkleTreeTapretProof : mpcProof CommitVerify.MerkleTree, dbcProof TapretProof
-
-@mnemonic(report-process-stuart)
-data BlindSealTxPtr    : method Method
-                       , txid TxPtr
-                       , vout Bitcoin.Vout
-                       , blinding U64
-
-@mnemonic(baby-region-proxy)
-data BlindSealTxid     : method Method
-                       , txid Bitcoin.Txid
-                       , vout Bitcoin.Vout
-                       , blinding U64
-
-@mnemonic(meaning-extra-sherman)
-data ExplicitSealTxPtr : method Method
-                       , txid TxPtr
-                       , vout Bitcoin.Vout
-
-@mnemonic(june-total-denver)
-data ExplicitSealTxid  : method Method
-                       , txid Bitcoin.Txid
-                       , vout Bitcoin.Vout
-
-@mnemonic(bali-boris-plasma)
-data Method            : opretFirst | tapretFirst
+import CommitVerify#biology-news-adam
+  use Method#subject-justin-cowboy
+  use ProtocolId#shadow-eclipse-program
+  use Message#druid-blitz-rover
+  use MerkleHash#horse-popcorn-bundle
+  use MerkleProof#austria-jaguar-donald
+  use ReservedBytes1#origin-roger-relax
 
 
-@mnemonic(good-village-flex)
-data OpretProof        : ()
+@mnemonic(choice-chemist-brigade)
+data Anchor            : mmbProof BundleProof
+                       , mpcProtocol CommitVerify.ProtocolId
+                       , mpcProof CommitVerify.MerkleProof
+                       , dbcProof TapretProof?
+                       , fallbackProof CommitVerify.ReservedBytes1
 
-@mnemonic(dollar-iris-wizard)
-data SecretSeal        : [Byte ^ 32]
+@mnemonic(beast-normal-road)
+data BundleProof       : map {U32 -> Message}
+
+@mnemonic(druid-blitz-rover)
+data Message           : [Byte ^ 32]
+
+@mnemonic(detect-status-goblin)
+data MessageMap        : {CommitVerify.ProtocolId -> ^ ..0xffffff MessageSource}
+
+@mnemonic(clone-beach-america)
+data MessageSource     : single#1 CommitVerify.Message
+                       | mmb BundleProof
+
+@mnemonic(bruce-gravity-titanic)
+data Noise             : [Byte ^ 40]
+
+@mnemonic(polygon-nixon-guitar)
+data Source            : minDepth Std.U5
+                       , entropy U64
+                       , messages MessageMap
 
 @mnemonic(cabinet-agent-stella)
 data TapretNodePartner : leftNode Bitcoin.TapNodeHash
@@ -98,8 +76,18 @@ data TapretProof       : pathProof TapretPathProof, internalPk Bitcoin.InternalP
 @mnemonic(miracle-patriot-touch)
 data TapretRightBranch : leftNodeHash Bitcoin.TapNodeHash, rightNodeHash Bitcoin.TapNodeHash
 
-@mnemonic(italian-july-eddie)
-data TxPtr             : witnessTx ()
-                       | txid Bitcoin.Txid
+@mnemonic(email-mercy-shock)
+data TxoSeal           : primary Bitcoin.Outpoint, secondary TxoSealExt
+
+@mnemonic(stamp-morning-tulip)
+data TxoSealExt        : noise Noise
+                       | fallback Bitcoin.Outpoint
+
+@mnemonic(clock-absorb-side)
+data WOutpoint         : wout Bitcoin.Vout
+                       | extern Bitcoin.Outpoint
+
+@mnemonic(rapid-arsenal-shirt)
+data WTxoSeal          : primary WOutpoint, secondary TxoSealExt
 
 

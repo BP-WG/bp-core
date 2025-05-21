@@ -25,10 +25,11 @@ use amplify::confinement::{Confined, MediumBlob, SmallBlob, TinyBlob, U32};
 use amplify::{confinement, ByteArray, Bytes32, IoError, Wrapper};
 
 use crate::{
-    Annex, BlockHash, BlockHeader, BlockMerkleRoot, ControlBlock, InternalPk, InvalidLeafVer,
-    LeafVer, LockTime, Outpoint, Parity, RedeemScript, Sats, ScriptBytes, ScriptPubkey, SeqNo,
-    SigScript, Sighash, TapBranchHash, TapLeafHash, TapMerklePath, TapScript, Tx, TxIn, TxOut,
-    TxVer, Txid, Vout, Witness, WitnessScript, LIB_NAME_BITCOIN, TAPROOT_ANNEX_PREFIX,
+    Annex, Block, BlockHash, BlockHeader, BlockMerkleRoot, ControlBlock, InternalPk,
+    InvalidLeafVer, LeafVer, LockTime, Outpoint, Parity, RedeemScript, Sats, ScriptBytes,
+    ScriptPubkey, SeqNo, SigScript, Sighash, TapBranchHash, TapLeafHash, TapMerklePath, TapScript,
+    Tx, TxIn, TxOut, TxVer, Txid, Vout, Witness, WitnessScript, LIB_NAME_BITCOIN,
+    TAPROOT_ANNEX_PREFIX,
 };
 
 /// Bitcoin consensus allows arrays which length is encoded as VarInt to grow up
@@ -124,8 +125,8 @@ impl ByteStr {
 #[cfg(feature = "serde")]
 mod _serde {
     use amplify::hex::{FromHex, ToHex};
-    use serde_crate::de::Error;
-    use serde_crate::{Deserialize, Deserializer, Serialize, Serializer};
+    use serde::de::Error;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
     use super::*;
 
@@ -253,6 +254,25 @@ impl ConsensusDecode for BlockHeader {
             time,
             bits,
             nonce,
+        })
+    }
+}
+
+impl ConsensusEncode for Block {
+    fn consensus_encode(&self, writer: &mut impl Write) -> Result<usize, IoError> {
+        let mut counter = self.header.consensus_encode(writer)?;
+        counter += self.transactions.consensus_encode(writer)?;
+        Ok(counter)
+    }
+}
+
+impl ConsensusDecode for Block {
+    fn consensus_decode(reader: &mut impl Read) -> Result<Self, ConsensusDecodeError> {
+        let header = BlockHeader::consensus_decode(reader)?;
+        let transactions = VarIntArray::<Tx>::consensus_decode(reader)?;
+        Ok(Block {
+            header,
+            transactions,
         })
     }
 }
@@ -620,7 +640,7 @@ impl ConsensusDecode for ControlBlock {
         let mut buf = vec![];
         reader.read_to_end(&mut buf)?;
         let mut iter = buf.chunks_exact(32);
-        let merkle_branch = iter.by_ref().map(TapBranchHash::from_slice_unsafe);
+        let merkle_branch = iter.by_ref().map(TapBranchHash::from_slice_checked);
         let merkle_branch = TapMerklePath::try_from_iter(merkle_branch)
             .map_err(|_| ConsensusDataError::LongTapMerklePath)?;
         if !iter.remainder().is_empty() {
