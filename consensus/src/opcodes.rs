@@ -681,13 +681,185 @@ pub enum OpCode {
     #[display("OP_PUSH_BYTES30")]
     PushBytes30 = OP_PUSHBYTES_30,
 
-    /// Push the next 30 bytes as an array onto the stack.
+    /// Push the next 31 byte as an array onto the stack.
     #[display("OP_PUSH_BYTES31")]
     PushBytes31 = OP_PUSHBYTES_31,
 
     /// Push the next 32 bytes as an array onto the stack.
     #[display("OP_PUSH_BYTES32")]
     PushBytes32 = OP_PUSHBYTES_32,
+
+    /// Push the next 33 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES33")]
+    PushBytes33 = OP_PUSHBYTES_33,
+
+    /// Push the next 34 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES34")]
+    PushBytes34 = OP_PUSHBYTES_34,
+
+    /// Push the next 35 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES35")]
+    PushBytes35 = OP_PUSHBYTES_35,
+
+    /// Push the next 36 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES36")]
+    PushBytes36 = OP_PUSHBYTES_36,
+
+    /// Push the next 37 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES37")]
+    PushBytes37 = OP_PUSHBYTES_37,
+
+    /// Push the next 38 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES38")]
+    PushBytes38 = OP_PUSHBYTES_38,
+
+    /// Push the next 39 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES39")]
+    PushBytes39 = OP_PUSHBYTES_39,
+
+    /// Push the next 40 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES40")]
+    PushBytes40 = OP_PUSHBYTES_40,
+
+    /// Push the next 41 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES41")]
+    PushBytes41 = OP_PUSHBYTES_41,
+
+    /// Push the next 42 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES42")]
+    PushBytes42 = OP_PUSHBYTES_42,
+
+    /// Push the next 43 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES43")]
+    PushBytes43 = OP_PUSHBYTES_43,
+
+    /// Push the next 44 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES44")]
+    PushBytes44 = OP_PUSHBYTES_44,
+
+    /// Push the next 45 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES45")]
+    PushBytes45 = OP_PUSHBYTES_45,
+
+    /// Push the next 46 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES46")]
+    PushBytes46 = OP_PUSHBYTES_46,
+
+    /// Push the next 47 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES47")]
+    PushBytes47 = OP_PUSHBYTES_47,
+
+    /// Push the next 48 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES48")]
+    PushBytes48 = OP_PUSHBYTES_48,
+
+    /// Push the next 49 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES49")]
+    PushBytes49 = OP_PUSHBYTES_49,
+
+    /// Push the next 50 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES50")]
+    PushBytes50 = OP_PUSHBYTES_50,
+
+    /// Push the next 51 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES51")]
+    PushBytes51 = OP_PUSHBYTES_51,
+
+    /// Push the next 52 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES52")]
+    PushBytes52 = OP_PUSHBYTES_52,
+
+    /// Push the next 53 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES53")]
+    PushBytes53 = OP_PUSHBYTES_53,
+
+    /// Push the next 54 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES54")]
+    PushBytes54 = OP_PUSHBYTES_54,
+
+    /// Push the next 55 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES55")]
+    PushBytes55 = OP_PUSHBYTES_55,
+
+    /// Push the next 56 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES56")]
+    PushBytes56 = OP_PUSHBYTES_56,
+
+    /// Push the next 57 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES57")]
+    PushBytes57 = OP_PUSHBYTES_57,
+
+    /// Push the next 58 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES58")]
+    PushBytes58 = OP_PUSHBYTES_58,
+
+    /// Push the next 59 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES59")]
+    PushBytes59 = OP_PUSHBYTES_59,
+
+    /// Push the next 60 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES60")]
+    PushBytes60 = OP_PUSHBYTES_60,
+
+    /// Push the next 61 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES61")]
+    PushBytes61 = OP_PUSHBYTES_61,
+
+    /// Push the next 62 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES62")]
+    PushBytes62 = OP_PUSHBYTES_62,
+
+    /// Push the next 63 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES63")]
+    PushBytes63 = OP_PUSHBYTES_63,
+
+    /// Push the next 64 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES64")]
+    PushBytes64 = OP_PUSHBYTES_64,
+
+    /// Push the next 65 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES65")]
+    PushBytes65 = OP_PUSHBYTES_65,
+
+    /// Push the next 66 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES66")]
+    PushBytes66 = OP_PUSHBYTES_66,
+
+    /// Push the next 67 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES67")]
+    PushBytes67 = OP_PUSHBYTES_67,
+
+    /// Push the next 68 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES68")]
+    PushBytes68 = OP_PUSHBYTES_68,
+
+    /// Push the next 69 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES69")]
+    PushBytes69 = OP_PUSHBYTES_69,
+
+    /// Push the next 70 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES70")]
+    PushBytes70 = OP_PUSHBYTES_70,
+
+    /// Push the next 71 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES71")]
+    PushBytes71 = OP_PUSHBYTES_71,
+
+    /// Push the next 72 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES72")]
+    PushBytes72 = OP_PUSHBYTES_72,
+
+    /// Push the next 73 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES73")]
+    PushBytes73 = OP_PUSHBYTES_73,
+
+    /// Push the next 74 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES74")]
+    PushByte764 = OP_PUSHBYTES_74,
+
+    /// Push the next 75 bytes as an array onto the stack.
+    #[display("OP_PUSH_BYTES75")]
+    PushBytes75 = OP_PUSHBYTES_75,
 
     /// Read the next byte as N; push the next N bytes as an array onto the
     /// stack.
@@ -702,12 +874,77 @@ pub enum OpCode {
     #[display("OP_PUSH_DATA3")]
     PushData4 = OP_PUSHDATA4,
 
+    /// Push the array `0x81` onto the stack.
+    #[display("OP_PUSHNUM_NEG1")]
+    PushNumNeg1 = OP_PUSHNUM_NEG1,
+
+    /// Synonym for OP_RETURN.
+    #[display("OP_RESERVED")]
+    Reserved = OP_RESERVED,
+
     /// Push the array `0x01` onto the stack.
     #[display("OP_PUSHNUM_1")]
     PushNum1 = OP_PUSHNUM_1,
 
-    /// Synonym for OP_RETURN.
-    Reserved = OP_RESERVED,
+    /// Push the array `0x02` onto the stack.
+    #[display("OP_PUSHNUM_2")]
+    PushNum2 = OP_PUSHNUM_2,
+
+    /// Push the array `0x03` onto the stack.
+    #[display("OP_PUSHNUM_3")]
+    PushNum3 = OP_PUSHNUM_3,
+
+    /// Push the array `0x04` onto the stack.
+    #[display("OP_PUSHNUM_4")]
+    PushNum4 = OP_PUSHNUM_4,
+
+    /// Push the array `0x05` onto the stack.
+    #[display("OP_PUSHNUM_5")]
+    PushNum5 = OP_PUSHNUM_5,
+
+    /// Push the array `0x06` onto the stack.
+    #[display("OP_PUSHNUM_6")]
+    PushNum6 = OP_PUSHNUM_6,
+
+    /// Push the array `0x07` onto the stack.
+    #[display("OP_PUSHNUM_7")]
+    PushNum7 = OP_PUSHNUM_7,
+
+    /// Push the array `0x08` onto the stack.
+    #[display("OP_PUSHNUM_8")]
+    PushNum8 = OP_PUSHNUM_8,
+
+    /// Push the array `0x09` onto the stack.
+    #[display("OP_PUSHNUM_9")]
+    PushNum9 = OP_PUSHNUM_9,
+
+    /// Push the array `0x0A` onto the stack.
+    #[display("OP_PUSHNUM_10")]
+    PushNum10 = OP_PUSHNUM_10,
+
+    /// Push the array `0x0B` onto the stack.
+    #[display("OP_PUSHNUM_11")]
+    PushNum11 = OP_PUSHNUM_11,
+
+    /// Push the array `0x0C` onto the stack.
+    #[display("OP_PUSHNUM_12")]
+    PushNum12 = OP_PUSHNUM_12,
+
+    /// Push the array `0x0D` onto the stack.
+    #[display("OP_PUSHNUM_13")]
+    PushNum13 = OP_PUSHNUM_13,
+
+    /// Push the array `0x0E` onto the stack.
+    #[display("OP_PUSHNUM_14")]
+    PushNum14 = OP_PUSHNUM_14,
+
+    /// Push the array `0x0F` onto the stack.
+    #[display("OP_PUSHNUM_15")]
+    PushNum15 = OP_PUSHNUM_15,
+
+    /// Push the array `0x10` onto the stack.
+    #[display("OP_PUSHNUM_16")]
+    PushNum16 = OP_PUSHNUM_16,
 
     /// Fail the script immediately.
     #[display("OP_RETURN")]
