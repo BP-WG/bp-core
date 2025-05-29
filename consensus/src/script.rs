@@ -236,12 +236,25 @@ impl ScriptBytes {
         Self(Confined::try_from(script_bytes).expect("script exceeding 4GB"))
     }
 
+    /// Adds instructions to push a number from 0 to 16 to the stack.
+    ///
+    /// # Panics
+    ///
+    /// If the number is greater than 16
+    pub fn push_num(&mut self, num: u8) {
+        let op = match num {
+            0 => OP_PUSHBYTES_0,
+            n if n <= 16 => OP_PUSHNUM_1 + n - 1,
+            _ => panic!("tried to put a number greater than 16 into a script!"),
+        };
+        self.push(op);
+    }
+
     /// Adds instructions to push some arbitrary data onto the stack.
     ///
-    /// ## Panics
+    /// # Panics
     ///
-    /// The method panics if `data` length is greater or equal to
-    /// 0x100000000.
+    /// The method panics if `data` length is greater or equal to 0x100000000.
     pub fn push_slice(&mut self, data: &[u8]) {
         // Start with a PUSH opcode
         match data.len() as u64 {
