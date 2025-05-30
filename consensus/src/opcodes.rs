@@ -560,6 +560,7 @@ pub const OP_INVALIDOPCODE: u8 = 0xff;
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[non_exhaustive]
 #[repr(u8)]
 pub enum OpCode {
