@@ -612,6 +612,10 @@ pub enum TapCode {
     /// stack.
     #[display("OP_PUSH_DATA3")]
     PushData4 = OP_PUSHDATA4,
+
+    /// OP_CHECKSIGADD post tapscript.
+    #[display("OP_CHECKSIGADD")]
+    CheckSigAdd = OP_CHECKSIGADD,
 }
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
