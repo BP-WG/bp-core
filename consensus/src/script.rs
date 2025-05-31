@@ -241,13 +241,59 @@ impl ScriptBytes {
     /// # Panics
     ///
     /// If the number is greater than 16
-    pub fn push_num(&mut self, num: u8) {
-        let op = match num {
-            0 => OP_PUSHBYTES_0,
-            n if n <= 16 => OP_PUSHNUM_1 + n - 1,
-            _ => panic!("tried to put a number greater than 16 into a script!"),
+    pub fn push_num(&mut self, num: i64) {
+        // Taken from rust-bitcoin
+        //
+        // Encodes an integer in script(minimal CScriptNum) format.
+        //
+        // Writes bytes into the buffer and returns the number of bytes written.
+        //
+        // Note that `write_scriptint`/`read_scriptint` do not roundtrip if the value written
+        // requires more than 4 bytes, this is in line with Bitcoin Core (see
+        // [`CScriptNum::serialize`]).
+        //
+        // [`CScriptNum::serialize`]: <https://github.com/bitcoin/bitcoin/blob/8ae2808a4354e8dcc697f76bacc5e2f2befe9220/src/script/script.h#L345>
+        pub fn write_scriptint(out: &mut [u8; 8], n: i64) -> usize {
+            let mut len = 0;
+            if n == 0 {
+                return len;
+            }
+
+            let neg = n < 0;
+
+            let mut abs = n.unsigned_abs();
+            while abs > 0xFF {
+                out[len] = (abs & 0xFF) as u8;
+                len += 1;
+                abs >>= 8;
+            }
+            // If the number's value causes the sign bit to be set, we need an extra
+            // byte to get the correct value and correct sign bit
+            if abs & 0x80 != 0 {
+                out[len] = abs as u8;
+                len += 1;
+                out[len] = if neg { 0x80u8 } else { 0u8 };
+                len += 1;
+            }
+            // Otherwise we just set the sign bit ourselves
+            else {
+                abs |= if neg { 0x80 } else { 0 };
+                out[len] = abs as u8;
+                len += 1;
+            }
+            len
+        }
+
+        match num {
+            -1 => self.push(OP_PUSHNUM_NEG1),
+            0 => self.push(OP_PUSHBYTES_0),
+            1..=16 => self.push(num as u8 + (OP_PUSHNUM_1 - 1)),
+            _ => {
+                let mut buf = [0u8; 8];
+                let len = write_scriptint(&mut buf, num);
+                self.push_slice(&buf[..len]);
+            }
         };
-        self.push(op);
     }
 
     /// Adds instructions to push some arbitrary data onto the stack.
