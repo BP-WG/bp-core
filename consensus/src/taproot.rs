@@ -613,6 +613,11 @@ pub enum TapCode {
     #[display("OP_PUSH_DATA3")]
     PushData4 = OP_PUSHDATA4,
 
+    /// Pop the top two stack items and push 1 if both are numerically equal, else
+    /// push 0.
+    #[display("OP_NUMEQUAL")]
+    NumEqual = OP_NUMEQUAL,
+
     /// OP_CHECKSIGADD post tapscript.
     #[display("OP_CHECKSIGADD")]
     CheckSigAdd = OP_CHECKSIGADD,
