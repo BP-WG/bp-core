@@ -584,6 +584,7 @@ impl LeafScript {
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8)]
 #[non_exhaustive]
 pub enum TapCode {
@@ -611,6 +612,15 @@ pub enum TapCode {
     /// stack.
     #[display("OP_PUSH_DATA3")]
     PushData4 = OP_PUSHDATA4,
+
+    /// Pop the top two stack items and push 1 if both are numerically equal, else
+    /// push 0.
+    #[display("OP_NUMEQUAL")]
+    NumEqual = OP_NUMEQUAL,
+
+    /// OP_CHECKSIGADD post tapscript.
+    #[display("OP_CHECKSIGADD")]
+    CheckSigAdd = OP_CHECKSIGADD,
 }
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]

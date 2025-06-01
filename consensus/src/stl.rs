@@ -33,7 +33,7 @@ use crate::{
 pub const LIB_ID_BP_TX: &str =
     "stl:9WwTYiP2-OadKCZP-cR0bJ_Y-qruINYX-bXZFj8Y-fsQoGgo#signal-color-cipher";
 pub const LIB_ID_BP_CONSENSUS: &str =
-    "stl:ZjGQdfie-nvWslJH-kAQUr7C-CZbacz~-x4ssYLO-0iSA23o#costume-ohio-sharp";
+    "stl:GplUWnLs-95lWifH-drmTGg8-SX5KKf3-hObNNIz-i7~t7PI#postal-sunday-basket";
 
 #[allow(clippy::result_large_err)]
 #[deprecated(since = "0.10.8", note = "use _bp_tx_stl instead")]
