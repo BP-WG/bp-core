@@ -1,5 +1,5 @@
 {-
-  Id: stl:ZjGQdfie-nvWslJH-kAQUr7C-CZbacz~-x4ssYLO-0iSA23o#costume-ohio-sharp
+  Id: stl:GplUWnLs-95lWifH-drmTGg8-SX5KKf3-hObNNIz-i7~t7PI#postal-sunday-basket
   Name: Bitcoin
   Version: 0.1.0
   Description: Consensus library for bitcoin protocol
@@ -74,7 +74,7 @@ data LockTime          : U32
 @mnemonic(effect-benefit-chemist)
 data LockTimestamp     : U32
 
-@mnemonic(brother-sector-quiet)
+@mnemonic(baggage-wisdom-radar)
 data OpCode            : pushBytes0 | pushBytes1 | pushBytes2 | pushBytes3
                        | pushBytes4 | pushBytes5 | pushBytes6 | pushBytes7
                        | pushBytes8 | pushBytes9 | pushBytes10 | pushBytes11
@@ -83,11 +83,45 @@ data OpCode            : pushBytes0 | pushBytes1 | pushBytes2 | pushBytes3
                        | pushBytes20 | pushBytes21 | pushBytes22 | pushBytes23
                        | pushBytes24 | pushBytes25 | pushBytes26 | pushBytes27
                        | pushBytes28 | pushBytes29 | pushBytes30 | pushBytes31
-                       | pushBytes32 | pushData1#76 | pushData2 | pushData4
-                       | reserved#80 | pushNum1 | return#106 | dup#118
-                       | equal#135 | equalVerify | ripemd160#166 | sha1
-                       | sha256 | hash160 | hash256 | checkSig#172
-                       | checkSigVerify
+                       | pushBytes32 | pushBytes33 | pushBytes34 | pushBytes35
+                       | pushBytes36 | pushBytes37 | pushBytes38 | pushBytes39
+                       | pushBytes40 | pushBytes41 | pushBytes42 | pushBytes43
+                       | pushBytes44 | pushBytes45 | pushBytes46 | pushBytes47
+                       | pushBytes48 | pushBytes49 | pushBytes50 | pushBytes51
+                       | pushBytes52 | pushBytes53 | pushBytes54 | pushBytes55
+                       | pushBytes56 | pushBytes57 | pushBytes58 | pushBytes59
+                       | pushBytes60 | pushBytes61 | pushBytes62 | pushBytes63
+                       | pushBytes64 | pushBytes65 | pushBytes66 | pushBytes67
+                       | pushBytes68 | pushBytes69 | pushBytes70 | pushBytes71
+                       | pushBytes72 | pushBytes73 | pushByte764 | pushBytes75
+                       | pushData1 | pushData2 | pushData4 | pushNumNeg1
+                       | reserved | pushNum1 | pushNum2 | pushNum3
+                       | pushNum4 | pushNum5 | pushNum6 | pushNum7
+                       | pushNum8 | pushNum9 | pushNum10 | pushNum11
+                       | pushNum12 | pushNum13 | pushNum14 | pushNum15
+                       | pushNum16 | nop | ver | if
+                       | notIf | verIf | verNotIf | else
+                       | endIf | verify | return | toAltStack
+                       | fromAltStack | drop2 | dup2 | dup3
+                       | over2 | rot2 | swap2 | ifDup
+                       | depth | drop | dup | nip
+                       | over | pick | roll | rot
+                       | swap | tuck | cat | subStr
+                       | left | right | size | invert
+                       | and | or | xor | equal
+                       | equalVerify | reserved1 | reserved2 | add1
+                       | sub1 | mul2 | div2 | negate
+                       | abs | not | notEqual0 | add
+                       | sub | mul | div | mod
+                       | lShift | rShift | boolAnd | boolOr
+                       | numEqual | numEqualVerify | numNotEqual | lessThan
+                       | greaterThan | lessThanOrEqual | greaterThanOrEqual | min
+                       | max | within | ripemd160 | sha1
+                       | sha256 | hash160 | hash256 | codeSeparator
+                       | checkSig | checkSigVerify | checkMultiSig | checkMultisigVerify
+                       | nop1 | cltv | csv | nop4
+                       | nop5 | nop6 | nop7 | nop8
+                       | nop9 | nop10 | invalidOpCode#255
 
 
 @mnemonic(shadow-scroll-before)
@@ -134,9 +168,9 @@ data SighashType       : flag SighashFlag, anyoneCanPay Std.Bool
 @mnemonic(calypso-travel-script)
 data TapBranchHash     : [Byte ^ 32]
 
-@mnemonic(athlete-serpent-bridge)
+@mnemonic(plato-secure-mexico)
 data TapCode           : pushBytes32#32 | pushData1#76 | pushData2 | pushData4
-                       | reserved#80 | return#106
+                       | reserved#80 | return#106 | numEqual#156 | checkSigAdd#186
 
 
 @mnemonic(micro-brave-pretty)
