@@ -22,48 +22,16 @@
 use std::fs;
 use std::io::Write;
 
-use bc::stl::{bp_consensus_stl, bp_tx_stl};
+use bc::stl::bp_consensus_stl;
 use commit_verify::stl::commit_verify_stl;
 use commit_verify::CommitmentLayout;
 use seals::stl::bp_seals_stl;
 use seals::txout::{ChainBlindSeal, SingleBlindSeal};
-use strict_encoding::libname;
 use strict_types::stl::std_stl;
 use strict_types::{parse_args, SystemBuilder};
 
 fn main() {
     let (format, dir) = parse_args();
-
-    let mut lib = bp_tx_stl();
-    lib.name = libname!("Tx");
-    lib.serialize(
-        format,
-        dir.as_ref(),
-        "0.1.0",
-        Some(
-            "
-  Description: Bitcoin transaction library
-  Author: Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
-  Copyright (C) 2023-2024 LNP/BP Standards Association. All rights reserved.
-  License: Apache-2.0",
-        ),
-    )
-    .expect("unable to write to the file");
-
-    bp_consensus_stl()
-        .serialize(
-            format,
-            dir.as_ref(),
-            "0.1.0",
-            Some(
-                "
-  Description: Consensus library for bitcoin protocol
-  Author: Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
-  Copyright (C) 2023-2024 LNP/BP Standards Association. All rights reserved.
-  License: Apache-2.0",
-            ),
-        )
-        .expect("unable to write to the file");
 
     bp_seals_stl()
         .serialize(

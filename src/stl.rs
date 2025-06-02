@@ -30,7 +30,7 @@ use crate::{txout, SecretSeal, LIB_NAME_SEALS};
 /// Strict types id for the library providing data types from [`dbc`] and
 /// [`seals`] crates.
 pub const LIB_ID_SEALS: &str =
-    "stl:MxS0NGcI-vk6iRH2-uRW9QmO-CGOG9GX-qerCU77-iIHab5M#miranda-melon-mother";
+    "stl:p0b06g9M-oDFrSz4-_Ne1liv-0YVr10s-j8o1zLa-UlQHZBg#balloon-oscar-george";
 
 fn _bp_seals_stl() -> Result<TypeLib, CompileError> {
     LibBuilder::with(libname!(LIB_NAME_SEALS), [

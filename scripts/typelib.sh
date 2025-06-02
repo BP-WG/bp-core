@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-cargo run --features stl --bin bpcore-stl -- --sty
-cargo run --features stl --bin bpcore-stl -- --stl
-cargo run --features stl --bin bpcore-stl -- --sta
+cargo run --features stl,vesper --bin bpseals-stl -- --sty
+cargo run --features stl,vesper --bin bpseals-stl -- --stl
+cargo run --features stl,vesper --bin bpseals-stl -- --sta
