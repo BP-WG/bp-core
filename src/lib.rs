@@ -1,4 +1,4 @@
-// Bitcoin protocol core library.
+// Bitcoin protocol single-use-seals library.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -19,6 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Coding conventions
 #![deny(
     non_upper_case_globals,
     non_camel_case_types,
@@ -30,33 +31,25 @@
 )]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
-//! Core module defines core strict interfaces from informational LNPBP
-//! standards specifying secure and robust practices for function calls
-//! used in main bitcoin protocols:
-//! - consensus-level primitives;
-//! - deterministic bitcoin commitments;
-//! - single-use-seals.
-//!
-//! The goal of this module is to maximally reduce the probability of errors and
-//! mistakes within particular implementations of this paradigms by
-//! standardizing typical workflow processes in a form of interfaces that
-//! will be nearly impossible to use in the wrong form.
+//! The library provides single-use-seal implementations for bitcoin protocol.
 
-/// Re-export of `bp-seals` crate.
-pub extern crate seals;
-
-#[cfg(feature = "stl")]
+#[macro_use]
 extern crate amplify;
-#[cfg(feature = "stl")]
 #[macro_use]
 extern crate strict_encoding;
+#[macro_use]
+extern crate commit_verify;
+#[cfg(feature = "serde")]
+#[macro_use]
+extern crate serde_crate as serde;
 
+pub mod resolver;
+pub mod txout;
+mod secret;
 #[cfg(feature = "stl")]
 pub mod stl;
 
-pub use ::bc::*;
-#[cfg(feature = "stl")]
-#[allow(missing_docs)]
-pub mod bc {
-    pub use bc::stl;
-}
+pub use secret::SecretSeal;
+
+/// Strict types library name.
+pub const LIB_NAME_SEALS: &str = "BPSeals";

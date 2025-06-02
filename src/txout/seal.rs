@@ -80,7 +80,7 @@ impl SealTxid for Txid {
 /// Transaction pointer which can be used to construct graph of seals.
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default, Debug, Display, From)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = crate::LIB_NAME_BPCORE, tags = custom)]
+#[strict_type(lib = crate::LIB_NAME_SEALS, tags = custom)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),

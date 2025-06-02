@@ -30,7 +30,7 @@ use commit_verify::{CommitmentId, DigestExt, Sha256};
 #[derive(Wrapper, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, From)]
 #[wrapper(Deref, BorrowSlice, Hex, Index, RangeOps)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = crate::LIB_NAME_BPCORE)]
+#[strict_type(lib = crate::LIB_NAME_SEALS)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
