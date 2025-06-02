@@ -22,36 +22,33 @@
 //! Strict types library generator methods.
 
 use bc::Txid;
-use dbc::opret::OpretProof;
-use dbc::tapret::TapretProof;
-use dbc::LIB_NAME_BPCORE;
-use seals::txout::TxPtr;
 use strict_types::{CompileError, LibBuilder, TypeLib};
+
+use crate::txout::TxPtr;
+use crate::{txout, SecretSeal, LIB_NAME_SEALS};
 
 /// Strict types id for the library providing data types from [`dbc`] and
 /// [`seals`] crates.
-pub const LIB_ID_BPCORE: &str =
-    "stl:Pes7Egpg-6IfFCxl-fFGcbh6-sLkFInB-w26eHfd-unAO5JE#juliet-super-dominic";
+pub const LIB_ID_SEALS: &str =
+    "stl:p0b06g9M-oDFrSz4-_Ne1liv-0YVr10s-j8o1zLa-UlQHZBg#balloon-oscar-george";
 
-fn _bp_core_stl() -> Result<TypeLib, CompileError> {
-    LibBuilder::with(libname!(LIB_NAME_BPCORE), [
+fn _bp_seals_stl() -> Result<TypeLib, CompileError> {
+    LibBuilder::with(libname!(LIB_NAME_SEALS), [
         strict_types::stl::std_stl().to_dependency_types(),
         bc::stl::bp_consensus_stl().to_dependency_types(),
         commit_verify::stl::commit_verify_stl().to_dependency_types(),
     ])
-    .transpile::<dbc::Anchor<TapretProof>>()
-    .transpile::<dbc::Anchor<OpretProof>>()
-    .transpile::<seals::txout::ExplicitSeal<TxPtr>>()
-    .transpile::<seals::txout::ExplicitSeal<Txid>>()
-    .transpile::<seals::SecretSeal>()
-    .transpile::<seals::txout::BlindSeal<TxPtr>>()
-    .transpile::<seals::txout::BlindSeal<Txid>>()
+    .transpile::<txout::ExplicitSeal<TxPtr>>()
+    .transpile::<txout::ExplicitSeal<Txid>>()
+    .transpile::<SecretSeal>()
+    .transpile::<txout::BlindSeal<TxPtr>>()
+    .transpile::<txout::BlindSeal<Txid>>()
     .compile()
 }
 
 /// Generates strict type library providing data types from [`dbc`] and
 /// [`seals`] crates.
-pub fn bp_core_stl() -> TypeLib { _bp_core_stl().expect("invalid strict type BPCore library") }
+pub fn bp_seals_stl() -> TypeLib { _bp_seals_stl().expect("invalid strict type BPCore library") }
 
 #[cfg(test)]
 mod test {
@@ -59,7 +56,7 @@ mod test {
 
     #[test]
     fn lib_id() {
-        let lib = bp_core_stl();
-        assert_eq!(lib.id().to_string(), LIB_ID_BPCORE);
+        let lib = bp_seals_stl();
+        assert_eq!(lib.id().to_string(), LIB_ID_SEALS);
     }
 }

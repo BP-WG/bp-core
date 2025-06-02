@@ -1,7 +1,0 @@
-rec AnchorOpretProof
-  rec mpcProof, MerkleProof
-    is pos, U32
-    is cofactor, U16
-    list path, len 0..32
-      bytes element, len 32, aka MerkleHash
-  is dbcProof, Unit, aka OpretProof

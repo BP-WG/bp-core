@@ -1,4 +1,4 @@
-// Deterministic bitcoin commitments library.
+// Bitcoin protocol single-use-seals library.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -19,15 +19,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Homomorphic key tweaking-based deterministic commitment scheme.
-//!
-//! **Embed-commit:**
-//! a) `PublicKey, Msg -> PublicKey', PublicKey`;
-//! b) `Set<PublicKey>, Msg -> Set<PublicKey>', PublicKey`;
-//! c) `LockScript, Msg -> LockScript', (LockScript, PublicKey)`;
-//! d) `(psbt::Output, TxOut), Msg -> (psbt::Output, TxOut)', KeytweakProof`;
-//! e) `PSBT, Msg -> PSBT', KeytweakProof`;
-//! **Convolve-commit:**
-//! d) `PubkeyScript, SpkDescriptor, Msg -> PubkeyScript'`;
-//! e) `TxOut, SpkDescriptor, Msg -> TxOut'`;
-//! f) `Tx, SpkDescriptor, Msg -> Tx'`;
+//! Bitcoin single-use-seals defined by a transaction output and closed by
+//! spending that output ("TxOut seals").
+
+pub mod blind;
+mod error;
+pub mod explicit;
+mod seal;
+mod witness;
+
+pub use blind::{BlindSeal, ChainBlindSeal, SingleBlindSeal};
+pub use error::{VerifyError, WitnessVoutError};
+pub use explicit::ExplicitSeal;
+pub use seal::{SealTxid, TxPtr, TxoSeal};
+pub use witness::Witness;

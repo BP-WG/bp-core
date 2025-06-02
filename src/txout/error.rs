@@ -19,9 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::error::Error;
-
-use bc::Outpoint;
+use bc::{Outpoint, Txid};
 
 /// Seal verification errors.
 #[derive(Clone, PartialEq, Eq, Debug, Display, From, Error)]
@@ -31,16 +29,19 @@ use bc::Outpoint;
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", rename_all = "camelCase")
 )]
-pub enum VerifyError<E: Error> {
-    /// the provided witness transaction does not closes seal {0}.
-    WitnessNotClosingSeal(Outpoint),
+pub enum VerifyError {
+    /// the provided witness transaction {0} does not close seal {1}.
+    WitnessNotClosingSeal(Txid, Outpoint),
 
     /// seal lacks witness transaction id information.
     NoWitnessTxid,
 
-    /// invalid DBC commitment.
+    /// witness {0} has no OP_RETURN output for the deterministic bitcoin commitment.
+    NoOpReturn(Txid),
+
+    /// invalid OP_RETURN deterministic bitcoin commitment. commitment.
     #[display(inner)]
-    Dbc(E),
+    Dbc(Txid),
 }
 
 /// Error happening if the seal data holds only witness transaction output

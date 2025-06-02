@@ -1,0 +1,42 @@
+{-
+  Id: stl:p0b06g9M-oDFrSz4-_Ne1liv-0YVr10s-j8o1zLa-UlQHZBg#balloon-oscar-george
+  Name: BPSeals
+  Version: 0.1.0
+  Description: Bitcoin client-side-validation library
+  Author: Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
+  Copyright (C) 2023-2024 LNP/BP Standards Association. All rights reserved.
+  License: Apache-2.0
+-}
+
+@context
+typelib BPSeals
+
+import Bitcoin#postal-sunday-basket
+  use Vout#brush-gloria-heroic
+  use Txid#shallow-light-reverse
+
+
+@mnemonic(metro-mars-canada)
+data BlindSealTxPtr    : txid TxPtr
+                       , vout Bitcoin.Vout
+                       , blinding U64
+
+@mnemonic(halt-crash-valid)
+data BlindSealTxid     : txid Bitcoin.Txid
+                       , vout Bitcoin.Vout
+                       , blinding U64
+
+@mnemonic(velvet-neptune-bazooka)
+data ExplicitSealTxPtr : txid TxPtr, vout Bitcoin.Vout
+
+@mnemonic(chicago-europe-phantom)
+data ExplicitSealTxid  : txid Bitcoin.Txid, vout Bitcoin.Vout
+
+@mnemonic(dollar-iris-wizard)
+data SecretSeal        : [Byte ^ 32]
+
+@mnemonic(italian-july-eddie)
+data TxPtr             : witnessTx ()
+                       | txid Bitcoin.Txid
+
+
