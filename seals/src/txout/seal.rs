@@ -27,9 +27,6 @@ use amplify::hex;
 use bc::{Outpoint, Txid, Vout};
 use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
 
-/// Method for closing single-use-seals.
-pub type CloseMethod = dbc::Method;
-
 /// Methods common for all transaction-output based seal types.
 pub trait TxoSeal {
     /// Returns [`Txid`] part of the seal definition, if known.
@@ -83,7 +80,7 @@ impl SealTxid for Txid {
 /// Transaction pointer which can be used to construct graph of seals.
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default, Debug, Display, From)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = dbc::LIB_NAME_BPCORE, tags = custom)]
+#[strict_type(lib = crate::LIB_NAME_BPCORE, tags = custom)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),

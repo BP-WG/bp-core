@@ -121,9 +121,4 @@ Seals vesper lexicon=types+commitments
     writeln!(file, "{tt}").unwrap();
     let tt = sys.type_tree("BPCore.BlindSealTxPtr").unwrap();
     writeln!(file, "{tt}").unwrap();
-
-    let tt = sys.type_tree("BPCore.AnchorTapretProof").unwrap();
-    fs::write(format!("{dir}/Anchor.Tapret.vesper"), format!("{tt}")).unwrap();
-    let tt = sys.type_tree("BPCore.AnchorOpretProof").unwrap();
-    fs::write(format!("{dir}/Anchor.Opret.vesper"), format!("{tt}")).unwrap();
 }

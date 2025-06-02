@@ -47,7 +47,7 @@ pub type SingleBlindSeal = BlindSeal<Txid>;
 /// about the bitcoin transaction output.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = dbc::LIB_NAME_BPCORE)]
+#[strict_type(lib = crate::LIB_NAME_BPCORE)]
 #[derive(CommitEncode)]
 #[commit_encode(strategy = strict, id = SecretSeal)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]

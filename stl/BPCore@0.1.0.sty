@@ -1,5 +1,5 @@
 {-
-  Id: stl:Pes7Egpg-6IfFCxl-fFGcbh6-sLkFInB-w26eHfd-unAO5JE#juliet-super-dominic
+  Id: stl:GwFu9EuT-TMQloVk-EHLLdP3-TztL7dU-PhPMbkK-1jsbamg#telecom-linda-jacob
   Name: BPCore
   Version: 0.1.0
   Description: Bitcoin client-side-validation library
@@ -11,26 +11,10 @@
 @context
 typelib BPCore
 
-import CommitVerify#violet-panther-herbert
-  use MerkleHash#horse-popcorn-bundle
-  use MerkleProof#price-aloha-grid
-
 import Bitcoin#quiz-patent-exit
   use Vout#brush-gloria-heroic
-  use ScriptBytes#equator-cockpit-gong
-  use TapNodeHash#paprika-amanda-hunter
-  use LeafScript#bison-doctor-oscar
   use Txid#shallow-light-reverse
-  use InternalPk#habitat-paprika-oliver
-  use LeafVer#benefit-carbon-africa
-  use XOnlyPk#clever-swim-carpet
 
-
-@mnemonic(percent-active-chess)
-data AnchorOpretProof  : mpcProof CommitVerify.MerkleProof, dbcProof OpretProof
-
-@mnemonic(balance-patrol-fractal)
-data AnchorTapretProof : mpcProof CommitVerify.MerkleProof, dbcProof TapretProof
 
 @mnemonic(metro-mars-canada)
 data BlindSealTxPtr    : txid TxPtr
@@ -48,25 +32,8 @@ data ExplicitSealTxPtr : txid TxPtr, vout Bitcoin.Vout
 @mnemonic(chicago-europe-phantom)
 data ExplicitSealTxid  : txid Bitcoin.Txid, vout Bitcoin.Vout
 
-@mnemonic(good-village-flex)
-data OpretProof        : ()
-
 @mnemonic(dollar-iris-wizard)
 data SecretSeal        : [Byte ^ 32]
-
-@mnemonic(cabinet-agent-stella)
-data TapretNodePartner : leftNode Bitcoin.TapNodeHash
-                       | rightLeaf Bitcoin.LeafScript
-                       | rightBranch TapretRightBranch
-
-@mnemonic(cotton-ventura-clean)
-data TapretPathProof   : partnerNode TapretNodePartner?, nonce U8
-
-@mnemonic(eternal-druid-round)
-data TapretProof       : pathProof TapretPathProof, internalPk Bitcoin.InternalPk
-
-@mnemonic(miracle-patriot-touch)
-data TapretRightBranch : leftNodeHash Bitcoin.TapNodeHash, rightNodeHash Bitcoin.TapNodeHash
 
 @mnemonic(italian-july-eddie)
 data TxPtr             : witnessTx ()

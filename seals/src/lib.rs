@@ -48,3 +48,6 @@ pub mod txout;
 mod secret;
 
 pub use secret::SecretSeal;
+
+/// Strict types library name.
+pub const LIB_NAME_BPCORE: &str = "BPCore";

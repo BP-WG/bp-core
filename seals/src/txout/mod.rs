@@ -31,5 +31,5 @@ mod witness;
 pub use blind::{BlindSeal, ChainBlindSeal, SingleBlindSeal};
 pub use error::{VerifyError, WitnessVoutError};
 pub use explicit::ExplicitSeal;
-pub use seal::{CloseMethod, SealTxid, TxPtr, TxoSeal};
+pub use seal::{SealTxid, TxPtr, TxoSeal};
 pub use witness::Witness;

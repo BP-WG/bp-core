@@ -22,16 +22,14 @@
 //! Strict types library generator methods.
 
 use bc::Txid;
-use dbc::opret::OpretProof;
-use dbc::tapret::TapretProof;
-use dbc::LIB_NAME_BPCORE;
 use seals::txout::TxPtr;
+use seals::LIB_NAME_BPCORE;
 use strict_types::{CompileError, LibBuilder, TypeLib};
 
 /// Strict types id for the library providing data types from [`dbc`] and
 /// [`seals`] crates.
 pub const LIB_ID_BPCORE: &str =
-    "stl:Pes7Egpg-6IfFCxl-fFGcbh6-sLkFInB-w26eHfd-unAO5JE#juliet-super-dominic";
+    "stl:GwFu9EuT-TMQloVk-EHLLdP3-TztL7dU-PhPMbkK-1jsbamg#telecom-linda-jacob";
 
 fn _bp_core_stl() -> Result<TypeLib, CompileError> {
     LibBuilder::with(libname!(LIB_NAME_BPCORE), [
@@ -39,8 +37,6 @@ fn _bp_core_stl() -> Result<TypeLib, CompileError> {
         bc::stl::bp_consensus_stl().to_dependency_types(),
         commit_verify::stl::commit_verify_stl().to_dependency_types(),
     ])
-    .transpile::<dbc::Anchor<TapretProof>>()
-    .transpile::<dbc::Anchor<OpretProof>>()
     .transpile::<seals::txout::ExplicitSeal<TxPtr>>()
     .transpile::<seals::txout::ExplicitSeal<Txid>>()
     .transpile::<seals::SecretSeal>()
