@@ -140,8 +140,6 @@ impl From<&WitnessScript> for WScriptHash {
     fn from(witness_script: &WitnessScript) -> Self {
         let mut engine = Sha256::default();
         engine.input_raw(witness_script.as_slice());
-        let mut engine2 = Sha256::default();
-        engine2.input_raw(&engine.finish());
-        Self(engine2.finish().into())
+        Self(engine.finish().into())
     }
 }
