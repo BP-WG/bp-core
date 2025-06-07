@@ -22,7 +22,7 @@
 use std::fmt::{self, Display, Formatter};
 use std::iter;
 
-use amplify::{ByteArray, Bytes32, Wrapper};
+use amplify::{ByteArray, Bytes32StrRev, Wrapper};
 use commit_verify::{DigestExt, Sha256};
 use secp256k1::{ecdsa, schnorr};
 
@@ -196,7 +196,7 @@ impl Display for SighashType {
 pub struct Sighash(
     #[from]
     #[from([u8; 32])]
-    pub Bytes32,
+    pub Bytes32StrRev,
 );
 
 impl From<Sighash> for [u8; 32] {
@@ -303,8 +303,7 @@ impl LegacySig {
     pub fn to_vec(self) -> Vec<u8> {
         self.sig
             .serialize_der()
-            .iter()
-            .copied()
+            .into_iter()
             .chain(iter::once(self.sighash_type.into_consensus_u8()))
             .collect()
     }

@@ -238,6 +238,7 @@ impl Sats {
     pub const ZERO: Self = Sats(0);
     #[allow(clippy::inconsistent_digit_grouping)]
     pub const BTC: Self = Sats(1_000_000_00);
+    pub const MAX: Self = Sats(u64::MAX);
 
     pub const fn from_btc(btc: u32) -> Self { Self(btc as u64 * Self::BTC.0) }
     pub fn from_sats(sats: impl Into<u64>) -> Self { Self(sats.into()) }

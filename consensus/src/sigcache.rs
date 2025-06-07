@@ -431,7 +431,12 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
                 let outputs = tx_src.outputs.iter()
                     .take(input_index + 1)  // sign all outputs up to and including this one, but erase
                     .enumerate()            // all of them except for this one
-                    .map(|(n, out)| if n == input_index { out.clone() } else { TxOut::default() });
+                    .map(|(n, out)| if n == input_index {
+                        out.clone()
+                    } else {
+                        // consensus encoding of the "NULL txout" - max amount, empty script_pubkey
+                        TxOut { value: Sats::MAX, script_pubkey: none!() }
+                    });
                 VarIntArray::from_iter_checked(outputs)
             }
             SighashFlag::None => none!(),
