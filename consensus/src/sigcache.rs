@@ -370,7 +370,7 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
         &self,
         input_index: usize,
         script_pubkey: &ScriptPubkey,
-        sighash_type: u32,
+        sighash_type: SighashType,
     ) -> Result<Sighash, SighashError> {
         let tx_src = self.tx.borrow();
         let mut hasher = Sighash::engine();
@@ -386,7 +386,7 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
         let SighashType {
             flag: sighash_flag,
             anyone_can_pay,
-        } = SighashType::from_consensus_u32(sighash_type);
+        } = sighash_type;
 
         if sighash_flag == SighashFlag::Single && input_index >= tx_src.outputs.len() {
             return Ok(Sighash::from(UINT256_ONE));
@@ -443,7 +443,7 @@ impl<Prevout: Borrow<TxOut>, Tx: Borrow<Transaction>> SighashCache<Prevout, Tx> 
         };
         // hash the result
         tx.consensus_encode(&mut hasher)?;
-        sighash_type.consensus_encode(&mut hasher)?;
+        sighash_type.to_consensus_u32().consensus_encode(&mut hasher)?;
 
         Ok(Sighash::from_engine(hasher))
     }
