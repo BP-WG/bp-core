@@ -19,10 +19,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Version 1.0:
-// TODO: Complete block data type implementation
-// TODO: Complete OpCode enumeration
-
 // TODO: Do a no-std feature
 // #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(
