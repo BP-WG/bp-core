@@ -13,7 +13,7 @@ default-members = [
 ]
 
 [workspace.package]
-version = "0.12.0-rc.2"
+version = "0.12.0"
 authors = ["Dr Maxim Orlovsky <orlovsky@lnp-bp.org>"]
 homepage = "https://github.com/BP-WG"
 repository = "https://github.com/BP-WG/bp-core"
@@ -25,11 +25,11 @@ license = "Apache-2.0"
 amplify = "4.9.0"
 strict_encoding = "2.9.1"
 strict_types = "2.9.0"
-commit_verify = "0.12.0-rc.1"
-single_use_seals = "0.12.0-rc.1"
-bp-consensus = { version = "0.12.0-rc.2", path = "./consensus" }
-bp-dbc = { version = "0.12.0-rc.2", path = "./dbc" }
-bp-seals = { version = "0.12.0-rc.2", path = "./seals" }
+commit_verify = "0.12.0"
+single_use_seals = "0.12.0"
+bp-consensus = { version = "0.12.0", path = "./consensus" }
+bp-dbc = { version = "0.12.0", path = "./dbc" }
+bp-seals = { version = "0.12.0", path = "./seals" }
 secp256k1 = { version = "0.30.0", features = ["global-context"] } # NB: v0.31 breaks WASM
 serde = { version = "1", features = ["derive"] }
 

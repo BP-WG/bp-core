@@ -32,11 +32,11 @@ use strict_encoding::{
 use super::TapretFirst;
 use crate::LIB_NAME_BPCORE;
 
-/// Hardcoded tapret script prefix consisting of 29 `OP_RESERVED` pushes,
+/// Hardcoded tapret script prefix consisting of 29 `OP_NOP` pushes,
 /// followed by `OP_RETURN` and `OP_PUSHBYTES_33`.
 pub const TAPRET_SCRIPT_COMMITMENT_PREFIX: [u8; 31] = [
-    0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50,
-    0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x50, 0x6a, 0x21,
+    0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61,
+    0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x6a, 0x21,
 ];
 
 /// Information about tapret commitment.
@@ -93,13 +93,15 @@ impl TapretCommitment {
 }
 
 impl CommitVerify<TapretCommitment, TapretFirst> for TapScript {
-    /// Tapret script consists of 29 `OP_RESERVED` pushes, followed by
+    /// Tapret script consists of 29 `OP_NOP` pushes, followed by
     /// `OP_RETURN`, `OP_PUSHBYTES_33` and serialized commitment data (MPC
     /// commitment + nonce as a single slice).
+    // It was OP_RESERVER1, but with TapCode differentiation it is not there anymore,
+    // so it makes more sense to use OP_NOP here.
     fn commit(commitment: &TapretCommitment) -> Self {
         let mut tapret = TapScript::with_capacity(64);
         for _ in 0..29 {
-            tapret.push_opcode(TapCode::Reserved);
+            tapret.push_opcode(TapCode::Nop);
         }
         tapret.push_opcode(TapCode::Return);
         let mut writer = StreamWriter::in_memory::<33>();
