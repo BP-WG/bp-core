@@ -27,7 +27,7 @@ use strict_types::{CompileError, LibBuilder, TypeLib};
 /// Strict types id for the library providing data types from [`dbc`] and
 /// [`seals`] crates.
 pub const LIB_ID_BPCORE: &str =
-    "stl:F~tZE93U-5uRFQK4-pEPjPNF-MpS9BHq-5suJrQd-1scWikc#point-state-colony";
+    "stl:nvSE47Z1-CpbRP8D-m2tdzo3-zmE6UE9-kU~HJm~-0pTqlGo#lagoon-concept-trade";
 
 #[allow(clippy::result_large_err)]
 fn _bp_core_stl() -> Result<TypeLib, CompileError> {

@@ -40,7 +40,7 @@ use strict_encoding::{
 use crate::opcodes::*;
 use crate::{
     CompressedPk, ConsensusEncode, InvalidPubkey, PubkeyParseError, ScriptBytes, ScriptPubkey,
-    VarInt, VarIntBytes, WitnessVer, LIB_NAME_BITCOIN,
+    TapCode, VarInt, VarIntBytes, WitnessVer, LIB_NAME_BITCOIN,
 };
 
 /// The SHA-256 midstate value for the TapLeaf hash.
@@ -579,48 +579,6 @@ impl LeafScript {
 
     #[inline]
     pub fn tap_leaf_hash(&self) -> TapLeafHash { TapLeafHash::with_leaf_script(self) }
-}
-
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display)]
-#[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_BITCOIN, tags = repr, into_u8, try_from_u8)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[repr(u8)]
-#[non_exhaustive]
-pub enum TapCode {
-    /// Push the next 32 bytes as an array onto the stack.
-    #[display("OP_PUSH_BYTES32")]
-    PushBytes32 = OP_PUSHBYTES_32,
-
-    /// Synonym for OP_RETURN.
-    Reserved = OP_RESERVED,
-
-    /// Fail the script immediately.
-    #[display("OP_RETURN")]
-    #[strict_type(dumb)]
-    Return = OP_RETURN,
-
-    /// Read the next byte as N; push the next N bytes as an array onto the
-    /// stack.
-    #[display("OP_PUSH_DATA1")]
-    PushData1 = OP_PUSHDATA1,
-    /// Read the next 2 bytes as N; push the next N bytes as an array onto the
-    /// stack.
-    #[display("OP_PUSH_DATA2")]
-    PushData2 = OP_PUSHDATA2,
-    /// Read the next 4 bytes as N; push the next N bytes as an array onto the
-    /// stack.
-    #[display("OP_PUSH_DATA3")]
-    PushData4 = OP_PUSHDATA4,
-
-    /// Pop the top two stack items and push 1 if both are numerically equal, else
-    /// push 0.
-    #[display("OP_NUMEQUAL")]
-    NumEqual = OP_NUMEQUAL,
-
-    /// OP_CHECKSIGADD post tapscript.
-    #[display("OP_CHECKSIGADD")]
-    CheckSigAdd = OP_CHECKSIGADD,
 }
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From, Default)]
