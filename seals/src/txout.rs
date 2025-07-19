@@ -27,8 +27,11 @@
 
 use core::error::Error;
 use core::fmt::Debug;
+use std::fmt::{Display, Formatter};
+use std::str::FromStr;
 
 use amplify::{ByteArray, Bytes, Bytes32};
+use base58::{FromBase58, ToBase58};
 use bc::{Outpoint, Tx, Txid};
 use commit_verify::{
     CommitId, ConvolveVerifyError, DigestExt, EmbedVerifyError, ReservedBytes, Sha256,
@@ -42,11 +45,9 @@ use crate::WOutpoint;
 
 /// A noise, which acts as a placeholder for seal definitions lacking fallback seal (see
 /// [`TxoSealExt::Noise`]).
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, From)]
-#[display("{0:x}")]
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
 #[strict_type(lib = dbc::LIB_NAME_BPCORE)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct Noise(Bytes<40>);
 
 impl Noise {
@@ -68,6 +69,62 @@ impl Noise {
         let mut noise = [0xFFu8; 40];
         noise[..32].copy_from_slice(&noise_engine.finish());
         Self(noise.into())
+    }
+}
+
+impl Display for Noise {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let s = self.0[..32].to_base58();
+        f.write_str(&s)
+    }
+}
+
+impl FromStr for Noise {
+    type Err = base58::FromBase58Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let vec = s.from_base58()?;
+        if vec.len() != 32 {
+            return Err(base58::FromBase58Error::InvalidBase58Length);
+        }
+        let mut buf = [0xFFu8; 40];
+        buf[..32].copy_from_slice(&vec);
+        Ok(Self(buf.into()))
+    }
+}
+
+#[cfg(feature = "serde")]
+mod _serde {
+    use amplify::Bytes;
+    use serde::de::Error;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    use super::*;
+
+    impl Serialize for Noise {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer {
+            if serializer.is_human_readable() {
+                self.to_string().serialize(serializer)
+            } else {
+                self.0[..32].serialize(serializer)
+            }
+        }
+    }
+
+    impl<'de> Deserialize<'de> for Noise {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de> {
+            if deserializer.is_human_readable() {
+                let s = String::deserialize(deserializer)?;
+                Self::from_str(&s).map_err(|_| D::Error::custom("invalid Base58 encoding"))
+            } else {
+                let slice = <[u8; 32]>::deserialize(deserializer)?;
+                let mut buf = [0xFF; 40];
+                buf[..32].copy_from_slice(&slice);
+                Ok(Self::from(Bytes::from_byte_array(buf)))
+            }
+        }
     }
 }
 
@@ -494,6 +551,16 @@ mod test {
     use crate::mmb::BundleProof;
     use crate::mpc::{MessageMap, MessageSource};
     use crate::TxoSealError;
+
+    #[test]
+    fn noise_text() {
+        let mut noise = Noise::from(Bytes::from_byte_array([0xADu8; 40]));
+        noise.0[32..].fill(0xFF);
+        let s = noise.to_string();
+        assert_eq!(s, "Cgy8m6ZmJbPC8fGoTgRxLSWyEUPpWzmrfbJX5kkeFdoJ");
+        let noise2 = Noise::from_str(&s).unwrap();
+        assert_eq!(noise, noise2);
+    }
 
     fn setup_opret() -> (Vec<mmb::Message>, BundleProof, Vec<TxoSeal>, SealWitness<TxoSeal>) {
         setup(false)
