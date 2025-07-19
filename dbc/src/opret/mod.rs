@@ -2,10 +2,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-// Written in 2019-2024 by
-//     Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
+// Designed in 2019-2025 by Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
+// Written in 2024-2025 by Dr Maxim Orlovsky <orlovsky@lnp-bp.org>
 //
-// Copyright (C) 2019-2024 LNP/BP Standards Association. All rights reserved.
+// Copyright (C) 2019-2024 LNP/BP Standards Association, Switzerland.
+// Copyright (C) 2024-2025 LNP/BP Labs, Institute for Distributed and Cognitive Systems (InDCS).
+// Copyright (C) 2019-2025 Dr Maxim Orlovsky.
+// All rights under the above copyrights are reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.

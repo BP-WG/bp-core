@@ -22,7 +22,7 @@ Client-side-validation is a paradigm for distributed computing, based on top of
 proof-of-publication/commitment medium layer, which may be a bitcoin blockchain
 or other type of distributed consensus system.
 
-The development of the library is supported by [LNP/BP Standards Association][lnpbp-web]
+The development of the library is supported by [LNP/BP Labs][lnpbp-web]
 ([GitHub page][lnpbp-github]).
 
 The original idea of client-side-validation was proposed by Peter Todd with its
