@@ -26,6 +26,7 @@ use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 
 use amplify::confinement::Confined;
+use base58::{FromBase58, ToBase58};
 use bc::{TapCode, TapScript};
 use commit_verify::{mpc, CommitVerify};
 use strict_encoding::{
@@ -72,17 +73,16 @@ impl TapretCommitment {
 
 impl Display for TapretCommitment {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let s = base85::encode(&self.to_vec());
+        let s = self.to_vec().to_base58();
         f.write_str(&s)
     }
 }
 impl FromStr for TapretCommitment {
     type Err = DeserializeError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let data = base85::decode(s).map_err(|err| {
+        let data = s.from_base58().map_err(|_| {
             DecodeError::DataIntegrityError(format!(
-                "invalid Base85 encoding of tapret data \"{s}\": {}",
-                err.to_string().to_lowercase()
+                "invalid Base58 encoding of tapret data \"{s}\"",
             ))
         })?;
         let data = Confined::try_from(data).map_err(DecodeError::from)?;
@@ -181,10 +181,10 @@ mod test {
     }
 
     #[test]
-    pub fn tapret_commitment_baid64() {
+    pub fn tapret_commitment_base58() {
         let commitment = commitment();
         let s = commitment.to_string();
-        assert_eq!(s, "k#7JerF92P=PEN7cf&`GWfS*?rIEdfEup1%zausI2m");
+        assert_eq!(s, "kCmE8g7LJYxPC977vnhUQv4YqMGc5jzip3Rio6Aqau3yZ");
         assert_eq!(Ok(commitment.clone()), TapretCommitment::from_str(&s));
     }
 }

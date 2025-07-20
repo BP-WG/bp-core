@@ -114,6 +114,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "base58"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6107fe1be6682a68940da878d9e9f5e90ca5745b3dec9fd1bb393c8777d4f581"
+
+[[package]]
 name = "base64"
 version = "0.22.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -200,7 +206,7 @@ name = "bp-dbc"
 version = "0.12.0"
 dependencies = [
  "amplify",
- "base85",
+ "base58",
  "bp-consensus",
  "commit_verify",
  "getrandom 0.2.16",
@@ -218,6 +224,7 @@ name = "bp-seals"
 version = "0.12.0"
 dependencies = [
  "amplify",
+ "base58",
  "bp-consensus",
  "bp-dbc",
  "commit_verify",
